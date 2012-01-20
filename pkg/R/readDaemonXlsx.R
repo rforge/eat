@@ -25,7 +25,7 @@
 
 
 readDaemonXlsx <- function(filename) {
-	inputList <- list()
+	inputList <- list() #inputList zukünftig als S4 Objekt
 	for(i in 1:3) {
 		inputList[[i]] <- read.xlsx2(filename, i, sheetName=NULL, startRow=1,
 			startColumn=1, noRows=NULL, noColumns=NULL, as.data.frame=TRUE,
