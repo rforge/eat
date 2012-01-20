@@ -1,0 +1,12 @@
+Package: eat
+Type: Package
+Title: eat
+Version: 1.4.1
+Depends: R(>= 2.13.2), sendmailR, gdata, xlsx, car, reshape, foreign, date, plyr, parallel
+Date: 2012-01-19
+Author: eat authors <eat-commits@lists.r-forge.r-project.org>
+Maintainer: Martin Hecht <martin.hecht@iqb.hu-berlin.de>
+Description: create and run models
+License: GPL
+LazyLoad: yes
+LazyData: yes

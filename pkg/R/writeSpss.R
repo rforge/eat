@@ -1,0 +1,210 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# function:
+#     writeSpss(dat, values, subunits, units, filedat = "zkddata.txt", filesps = "readZkdData.sps",
+#	              missing.rule = list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 ), 
+#               path = getwd(), sep = "\t", dec = ",", silent = FALSE) 
+#
+# description: schreibt Datensatz gelabelt nach SPSS (soweit Informationen vorhanden sind)
+# 				      angepasste Version von writeForeignSPSS aus dem foreign-Package bzw.
+#               mids2spss aus dem mice-Package 
+#
+# arguments:
+#     dat (data.frame)      ... Datensatz
+#     values (data.frame)   ... ZKD-Inputtabelle für Codes, siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx             
+#     subunits (data.frame) ... ZKD-Inputtabelle für Subunits (Subitems), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
+#     units (data.frame)    ... ZKD-Inputtabelle für Units (Items), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx  
+#     filedat (character)   ... (optional) Name des Files, in das Daten für SPSS geschrieben werden sollen
+#     filesps (character)   ... (optional) Name des Files, in das SPSS-Syntax geschrieben werden soll.
+#     missing.rule (list)   ... (optional) Welche Missing-Typen werden zu was rekodiert?
+#     path (character)      ... (optional) Pfad, in den Files für SPSS geschrieben werden sollen
+#     dec (character)       ... (optional) Dezimaltrennzeichen, das in Daten für SPSS verwendet werden soll
+#     sep (character)       ... (optional) Spaltentrenner, der in Daten für SPSS verwendet werden soll
+#     silent (logical)      ... (optional) Wenn TRUE, werden Namen von codefile und datafile mit Pfad auf Konsole ausgegeben
+
+
+# Version: 	0.2.0
+# Depends: car, foreign, collapseMissings und sunk aus automateModels, Funktionen aus makeInput
+# Status: development
+# Release Date:
+# Author:  Nicole Haag
+#
+# Change Log:
+# * 0.2.0 (2011-11-04, NH): SPSS-Format-Statement für numerische Variablen mit Dezimalstellen angepasst
+#
+# * 0.1.0 (2011-10-27, NH): erstellt
+#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# library(car)
+# library(foreign)
+# source("P:/ZKD/development/collapseMissings_0.2.0.R")
+
+################## TO DO #######
+# Definition von Missings für SPSS
+
+
+#-----------------------------------------------------------------------------------------
+
+writeSpss <- function (dat, values, subunits, units, filedat = "zkddata.txt", filesps = "readZkdData.sps",
+  missing.rule = list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 ), 
+  path = getwd(), sep = "\t", dec = ",", silent = FALSE) {
+  
+  funVersion <- "writeSpss_0.2.0: "
+  
+  varinfo <- makeInputCheckData (values, subunits, units)
+  
+  # reduce varinfo
+  varinfo <- varinfo [ match(colnames(dat), names(varinfo)) ]
+  
+  if (class(dat) != "data.frame") {
+    stop (paste(funVersion, "dat must be a data.frame.", sep = ""))
+  }
+  
+  if (!is.null(path)) {
+    filedat <- file.path(path, filedat)
+    filesps <- file.path(path, filesps)
+  }
+  
+  # treat missings
+  dat <- collapseMissings(dat, missing.rule, item.names=colnames(dat))
+    
+  zkdWriteForeignSPSS(dat, varinfo, datafile = filedat, codefile = filesps, 
+           missing.rule = list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 ),
+           varnames = colnames(dat), sep = sep, dec = dec)
+  if (!silent) {
+    sunk(paste(funVersion, "Data values written to", filedat))
+    sunk(paste(funVersion, "Syntax file written to", filesps))
+  }
+}
+
+#-----------------------------------------------------------------------------------------
+
+adQuote <- function (x) {
+ x <- paste("\"", x, "\"", sep = "")
+ return(x) 
+}
+
+#-----------------------------------------------------------------------------------------
+
+makeNumeric <- function(variable) {
+  if (is.character(variable)) {   
+    nCharacter <- grep("[[:alpha:]]", variable)
+      if (length(nCharacter) == 0) {
+        variable <- as.numeric(variable)
+      }
+  }
+  return(variable)
+}
+
+#-----------------------------------------------------------------------------------------
+
+zkdWriteForeignSPSS <- function(dat, varinfo, datafile, codefile, 
+  missing.rule = list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 ),
+  varnames = NULL, dec = ",", sep = "\t") {
+  
+  funVersion <- "writeSpss_0.1.0: "
+  
+  # make vars numeric (if possible)
+  dat <- data.frame(lapply(dat, makeNumeric), stringsAsFactors = FALSE)
+  eol <- paste(sep, "\n", sep = "")
+  
+  # write dataset
+  write.table(dat, file = datafile, row.names = FALSE,
+      col.names = FALSE, sep = sep, dec = dec, quote = FALSE,
+      na = "", eol = eol)
+      
+  # get varlabels from varinfo
+  varlabels <- lapply(varinfo, "[[", "label" )
+  varlabels <- varlabels [ match(varnames, names(varlabels)) ]
+  if ( any( sapply(varlabels, is.null)) ) {
+		ind <- which ( sapply(varlabels, is.null ) )
+		sunk (paste(funVersion, "Found no variable labels for variable(s) ", paste( varnames[ind], collapse = ", "), ".", sep = ""))
+		varlabels [ ind ] <- ""
+		names (varlabels)  [ ind ]  <- varnames [ ind ]
+	}
+  
+  varlabels <- gsub("\n", " ", varlabels)    
+
+  # make SPSS variable format statements
+  varnames <- gsub("[^[:alnum:]_\\$@#]", "\\.", varnames)
+  dl.varnames <- varnames  
+  
+  chv <- sapply(dat, is.character)  
+  
+  # hier eventuell statt 'is.numeric' 'is.real' ?
+  num <- which(sapply(dat, is.numeric))  
+  lengths <- sapply(dat , function(ll) { if(is.numeric(ll)) { 
+                                      max(nchar(round(na.omit(abs(ll)), digits=0)))
+                                    } else {
+                                      max(nchar(ll))
+                                    }
+                                  })
+  
+  # checken, ob Dezimalstellen vorhanden - wenn ja, dann Format auf Fx.2 -> 2 Dezimalstellen werden angezeigt
+  decimals <- sapply(dat , function(ll) { if(is.numeric(ll)) { 
+                                       max(nchar(na.omit(abs(ll))))
+                                    } else {
+                                      max(nchar(ll))
+                                    }
+                                  })
+  varsWithDecimals <-  names(which(lengths != decimals))
+
+    
+  if (any(lengths > 255L))
+    stop("Cannot handle character variables longer than 255")  
+  
+  if (any(chv)) {
+    lengths <- paste("(", ifelse(chv, "A", "F"), lengths, ")", sep = "")
+  }  else {
+    lengths <- paste ( "(F", lengths, ")", sep = "")
+  }   
+  
+  if (! is.null(varsWithDecimals)){  
+    lengths[which(dl.varnames %in% varsWithDecimals)] <- gsub(")", ".2)", lengths[which(dl.varnames %in% varsWithDecimals)], fixed = TRUE) 
+  }                 
+  dl.varnames <- paste(dl.varnames, lengths)
+  
+  # write codefile
+  if (sep == "\t")
+      freefield <- " free (TAB)\n"
+  if (sep != "\t")
+      freefield <- cat(" free (\"", sep, "\")\n", sep = "")
+  cat("DATA LIST FILE=", adQuote(datafile), freefield,
+      file = codefile)
+  cat(" /", dl.varnames, ".\n\n", file = codefile, append = TRUE,
+      fill = 60, labels = " ")
+  cat("VARIABLE LABELS\n", file = codefile, append = TRUE)
+  cat(" ", paste(varnames, adQuote(varlabels), "\n"), ".\n",
+      file = codefile, append = TRUE)
+
+  # get value labels from varinfo
+  valuesToWrite <- lapply(lapply(varinfo, "[[", "values"), names)
+  valuesToWrite <- lapply ( valuesToWrite, function (ll) { setdiff(ll, names(missing.rule))}) 
+  valuesToWrite <- valuesToWrite [ match(varnames, names(valuesToWrite)) ]
+                                                                            
+  if (any(sapply(valuesToWrite, length) > 0) ) {
+    
+    variablesToLabel <- which(sapply(valuesToWrite, length) > 0)
+    variablesToLabel <- names(valuesToWrite)[variablesToLabel]   
+    
+    cat("\nVALUE LABELS\n", file = codefile, append = TRUE)   
+    
+    for (v in variablesToLabel) {
+      cat(" /", v, "\n", file = codefile, append = TRUE)
+      valueLabels <- sapply ( varinfo[[v]]$values, "[[", "label")
+      valueLabels <- valueLabels[ which(! names(valueLabels) %in% names(missing.rule)) ]
+      valueLabels <- gsub("\n", " ", valueLabels)
+      if (any(nchar(valueLabels) > 120L)) {
+        sunk(paste(funVersion, "Value labels for variable", v , "longer than 120 characters. Only the first 120 characters will be used."))
+        valueLabels <- substring(valueLabels, 1, 120)
+        }   
+      cat(paste("  ", names(valueLabels),
+      adQuote(valueLabels),"\n",  sep = " "), file = codefile,
+      append = TRUE)
+    }
+    cat(" .\n", file = codefile, append = TRUE)
+  }
+  cat("\nEXECUTE.\n", file = codefile, append = TRUE)
+
+}
+
