@@ -25,9 +25,6 @@
 
 
 readDaemonXlsx <- function(filename) {
-	#source ( "p:/ZKD/source.it.all.R" )
-	#source ( "p:/ZKD/ZKDaemon/zkdHelpers_0.4.2.R"  )
-	#zkdHelpers_LoadPackage ( "xlsx" )
 	inputList <- list()
 	for(i in 1:3) {
 		inputList[[i]] <- read.xlsx2(filename, i, sheetName=NULL, startRow=1,
