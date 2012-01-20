@@ -1,4 +1,3 @@
-# Test - bitte wieder entfernen beim nächsten Mal
 # exportPattern("^[[:alpha:]]+")
 export(automateModels)
 export(automateConquestModel)
