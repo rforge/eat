@@ -10,49 +10,13 @@
 #						Text mit der in text.out.method spezifizierten Methode geschrieben
 #				text.out.method (character, default "cat"): entweder "cat" oder "print"
 #
+# 2012-01-23 MH
+# OPTIMIZED: function 'sunk'
 # 2011-12-22 MH
 # OPTIMIZED: function '.find.object' (needed for function 'sunk')
 # 0000-00-00 AA
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-.find.object <- function ( find.object ) {
-
-		env <- sys.parents ()
-		akt.env <- max ( env ) + 1
-		
-		if ( ! identical ( env , integer(0) ) ) {
-			
-				.fun <- function ( ev ) {
-						eval ( parse ( text = paste ( "exists('" , find.object , "')" , sep = "" ) ) , envir = ev )
-				}
-				wo <- mapply ( .fun , env , SIMPLIFY = TRUE )
-				names ( wo ) <- env
-		
-				if ( ! identical ( ( woi <- names ( which ( wo ) ) ) , character(0) ) ) {
-						woherholen <- max ( as.numeric ( woi ) )
-						env <- parent.frame ( akt.env - woherholen )
-						attach ( env , warn.conflicts = FALSE )
-						eval ( parse ( text = paste ( "ret<-" , find.object , sep = "" ) ) )
-						detach ( env )
-				} else ret <- NULL
-		
-		} else ret <- NULL
-		return ( ret )
-}
-# TEST
-# x <- "bla" 
-# .fun3 <- function ( find.object ) {
-		# .find.object ( find.object )
-# }
-# .fun2 <- function ( find.object ) {
-		# .fun3 ( find.object )
-# }
-# .fun1 <- function ( find.object ) {
-		# .fun2 ( find.object )
-# }
-# .fun1 ( "x" )
 
 sunk <- function ( cmd = NULL , path = NULL , write = TRUE , console.output = TRUE , new.file = FALSE , text.on.error = TRUE , text.out.method = NULL ) {
 		
@@ -62,10 +26,10 @@ sunk <- function ( cmd = NULL , path = NULL , write = TRUE , console.output = TR
 		}
 		
 		# gucken ob sunk.path in irgendwelchen Parent-Envs gesetzt
-		if ( is.null ( path ) ) path <- .find.object ( "sunk.path" )
-		
-		# wenn nicht gefunden defaulten
-		if ( is.null ( path ) ) path <- file.path ( getwd () , "sunk.txt" )
+		if ( exists("sunk.path") ) path <- sunk.path else {
+				# wenn nicht gefunden dann defaulten
+				if ( is.null ( path ) ) path <- file.path ( getwd () , "sunk.txt" )
+		}
 		
 		if ( file.exists ( path ) & new.file ) {
 				file.remove ( path )
@@ -76,9 +40,6 @@ sunk <- function ( cmd = NULL , path = NULL , write = TRUE , console.output = TR
 		}
 		if ( file.exists ( path ) ) app <- TRUE else app <- FALSE
 
-		# Parent frame attachen
-		attach ( parent.frame() , warn.conflicts = FALSE )
-		
 		# Testen ob Fehler
 		# wenn Fehler und text.on.error == TRUE dann print / oder cat davor , sonst stoppen
 		tried1 <- try ( parse ( text = cmd ) , silent = TRUE  ) 
