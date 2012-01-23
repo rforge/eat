@@ -8,7 +8,7 @@ source.it.all2
 sources *.R files of \code{folder}
 }
 \usage{
-source.it.all2 ( folder="p:/ZKD/development" , development = TRUE , development.only = FALSE , exclude = NULL )
+source.it.all2 ( folder="p:/ZKD/development" , use.zkd.conv = TRUE , development = TRUE , development.only = FALSE , exclude = NULL )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -16,6 +16,8 @@ source.it.all2 ( folder="p:/ZKD/development" , development = TRUE , development.
   \item{folder}{ folder with *.R files }
   \item{development}{ if \code{TRUE} development versions are sourced (if non-existent the latest stable is sourced or nothing is sourced, see option \code{development.only}\\
 					  if \code{FALSE} stable versions are sourced }
+  \item{use.zkd.conv}{ if \code{TRUE} R files in \code{folder} are checked to be consisten with specific ("zkd") versioning convention \\
+					   if \code{FALSE} all R files in \code{folder} are sourced }					  
   \item{development.only}{ if \code{TRUE} only development versions are sourced \\
 						   if \code{FALSE} stable versions are included }
   \item{exclude}{ character vector of R files that should not be sourced }
