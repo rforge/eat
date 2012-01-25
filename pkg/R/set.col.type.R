@@ -59,17 +59,25 @@ set.col.type <- function ( data , col.type = list ( "character" = NULL ) , verbo
 						# Warn-Level
 						originWarnLevel <- getOption("warn")
 						options(warn = -1)							
-						
+				
 						# Vektoren umwandeln
-						vars.new <- mapply ( function ( var , to ) {
+						vars.new <- mapply ( function ( var , to , ... ) {
 								if ( to %in% c ( "numeric.if.possible" ) ) {
-										str <- paste ( "try(as.numeric.if.possible(var,verbose=FALSE,...),silent=TRUE)" , sep = "" )
+										str <- paste ( "if (!is.numeric(var)) {
+																	tried <- try(var <- as.numeric.if.possible(var,verbose=FALSE,...),silent=TRUE);
+																	if (inherits(tried,'try-error')) var <- var;
+																	var;
+																	} else var" , sep = "" )
 								} else {
-										str <- paste ( "try(as." , to , "(var),silent=TRUE)" , sep = "" )
+										str <- paste ( "if (!is." , to , "(var)) {
+																	tried <- try(var <- as." , to , "(var),silent=TRUE);
+																	if (inherits(tried,'try-error')) var <- var;
+																	var;
+																	} else var" , sep = "" )
 								}
 								eval ( parse ( text = str ) )
-						} , d[,names(col.type)] , col.type , SIMPLIFY = FALSE )
-						
+						} , d[,names(col.type)] , col.type , MoreArgs = list ( ... ) , SIMPLIFY = FALSE )
+					
 						# setzen
 						do <- paste ( mapply ( function ( el ) { paste ( "try(d$" , el , "<-vars.new[['" , el , "']],silent=TRUE)" , sep = "" ) } , names ( vars.new ) ) , collapse = ";" )
 						eval ( parse ( text = do ) )
