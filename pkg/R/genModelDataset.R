@@ -35,6 +35,8 @@
 # Maintainer:
 #
 # Change Log:
+# 2012-01-25 KS
+# CHANGED: print only itemnames that are not in item.grouping
 # 2011-12-20 MH
 # CHANGED: removeNArows replaced by rmNArows
 # 0000-00-00 AA
@@ -118,14 +120,14 @@ genModelDataset <- function( item.grouping , person.grouping , mis.rule , datase
 		  rm ( idiff )
 		}
 	  
-	  if(length(setdiff(names(dataset), item.grouping[,1])) != 0) {
+	  if(length(setdiff( ( items <- colnames ( dataset ) [ which ( ! colnames ( dataset ) %in% c ( id.name , keep ) ) ] ), item.grouping[,1])) != 0) {
 		  # cat(paste("genModelDataset_", vers.nr, ": Folgende Variablen aus Datensatz nicht in item.grouping: \n", sep=""))
-		  cat(paste("genModelDataset_", vers.nr, ": Variables in dataset not in item.grouping: \n", sep=""))
-		  cat(paste( idiff <- setdiff(names(dataset), item.grouping[,1])), "\n")
-	      items <- colnames ( dataset ) [ which ( ! colnames ( dataset ) %in% c ( id.name , keep ) ) ]
-		  if ( any ( welche <- ! items %in% idiff ) ) {
+		  # cat(paste("genModelDataset_", vers.nr, ": Variables in dataset not in item.grouping: \n", sep=""))
+		  # cat(paste( 
+		  idiff <- setdiff(names(dataset), item.grouping[,1]) #), "\n")
+		  if ( any ( welche <-  items %in% idiff ) ) {
 				# cat ( paste ( f.n , "Folgende Variablen aus Datensatz sind Items und nicht in item.grouping:\n" ) )
-				cat ( paste ( f.n , "Variables in dataset are items and not in item.grouping:\n" ) )
+				cat ( paste ( f.n , "These variables in dataset are declared as items and not in item.grouping:\n" ) )
 				cat ( paste ( items [ welche ] , collapse = ", " ) )
 				cat ( "\n" )
 			}
@@ -256,5 +258,6 @@ genModelDataset <- function( item.grouping , person.grouping , mis.rule , datase
 # TEST
 #setwd('c:/temp')
 #load('genModelDatasetBsp.Rdata')
+# keep <- names(dataset)[2:11]
 #keep = c ( "bl" , "sf" )
-#ret <- genModelDataset ( item.grouping=item.grouping , person.grouping=person.grouping , dataset=dataset , id.name = "idstud", keep=keep )
+#ret <- genModelDataset ( item.grouping=item.grouping , person.grouping=person.grouping , dataset=list(dataset) , id.name = "idstud", keep=keep, mis.rule=list ( mvi = 0 , mnr = 0 , mci = 0 , mbd = NA , mir = 0 , mbi = 0 ) )

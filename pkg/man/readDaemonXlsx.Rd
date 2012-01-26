@@ -24,7 +24,7 @@ ZKDaemon. Caution! Sheet order is important (see Datails).
 
 \value{
 A list of data frames containing information that is required by
-\code{\link[automateModels]{automateDataPreparation}}
+\code{\link{automateDataPreparation}}
 }
 
 \author{
