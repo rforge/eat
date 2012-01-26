@@ -3,10 +3,9 @@ Type: Package
 Title: eat
 Version: 1.4.2
 Depends: R(>= 2.14.0), sendmailR, gdata, xlsx, car, reshape, foreign, date, plyr, parallel
-Date: 2012-01-26
+Date: 2012-01-25
 Author: eat authors <eat-commits@lists.r-forge.r-project.org>
 Maintainer: Martin Hecht <martin.hecht@iqb.hu-berlin.de>
-Description: create and run IRT models
 License: GPL
 LazyLoad: yes
 LazyData: yes
