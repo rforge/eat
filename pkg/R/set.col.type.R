@@ -56,10 +56,6 @@ set.col.type <- function ( data , col.type = list ( "character" = NULL ) , verbo
 								v
 						} , col.type , names ( col.type ) , SIMPLIFY = FALSE , USE.NAMES = FALSE ) )
 
-						# Warn-Level
-						originWarnLevel <- getOption("warn")
-						options(warn = -1)							
-				
 						# Vektoren umwandeln
 						vars.new <- mapply ( function ( var , to , ... ) {
 								if ( to %in% c ( "numeric.if.possible" ) ) {
@@ -81,9 +77,6 @@ set.col.type <- function ( data , col.type = list ( "character" = NULL ) , verbo
 						# setzen
 						do <- paste ( mapply ( function ( el ) { paste ( "try(d$" , el , "<-vars.new[['" , el , "']],silent=TRUE)" , sep = "" ) } , names ( vars.new ) ) , collapse = ";" )
 						eval ( parse ( text = do ) )
-
-						# ursprüngliches Warnlevel
-						options(warn = originWarnLevel)
 						
 						# check ob Conversion geklappt
 						notok <- mapply ( function ( var , to ) {
