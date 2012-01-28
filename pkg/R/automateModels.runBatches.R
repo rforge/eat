@@ -50,9 +50,9 @@
 										stop ( )
 										ret <- FALSE
 								}
-						invisible()
+						return(ret)
 				}
-				temp <- mapply ( .fun , batches )
+				ret <- mapply ( .fun , batches )
 	
 		} else if ( run.mode == "parallel" ) {
 				

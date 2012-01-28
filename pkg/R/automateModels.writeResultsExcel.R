@@ -24,8 +24,9 @@
 
 		# Ausgabe
 		# st <- paste ( "\n" , f.n , " Excels werden geschrieben " , sep = "" )
-		st <- paste ( "\n" , f.n , " Excels are being written " , sep = "" )
-		sunk ( "cat(st)" ) 
+		# st <- paste ( "\n" , f.n , " Excels are being written " , sep = "" )
+		# sunk ( "paste ( f.n , ' Excels are being written ' , sep = '' )" ) 
+		sunk ( "Excels are being written" ) 
 
 		
 		# Gesamt-Excel
