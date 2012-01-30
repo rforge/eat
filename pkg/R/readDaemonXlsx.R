@@ -27,8 +27,7 @@
 readDaemonXlsx <- function(filename) {
 	inputList <- list() #inputList zukünftig als S4 Objekt
 	for(i in 1:3) {
-		inputList[[i]] <- read.xlsx2(filename, i, sheetName=NULL, startRow=1,
-			startColumn=1, noRows=NULL, noColumns=NULL, as.data.frame=TRUE,
+		inputList[[i]] <- read.xlsx2(filename, sheetIndex=i, as.data.frame=TRUE,
 			header=TRUE, colClasses="character")
 		inputList[[i]] <- data.frame(lapply(inputList[[i]], as.character), stringsAsFactors=FALSE)
 	}
@@ -39,8 +38,7 @@ readDaemonXlsx <- function(filename) {
 	if(inherits(try (read.xlsx2(filename, 4)), "try-error")) {
 		sunk("No .xlsx sheet unitRecodings available at sheet position 4. InputList will be created without unitRecodings.\n")
 		} else {
-		inputList$unitRecodings <- read.xlsx2(filename, 4, sheetName=NULL, startRow=1,
-			startColumn=1, noRows=NULL, noColumns=NULL, as.data.frame=TRUE,
+		inputList$unitRecodings <- read.xlsx2(filename,sheetIndex=4, as.data.frame=TRUE,
 			header=TRUE, colClasses="character")
 		inputList$unitRecodings <- data.frame(lapply(inputList$unitRecodings, as.character), stringsAsFactors=FALSE)
 		stopifnot(all(c("unit", "value", "valueRecode", "valueType") %in% colnames(inputList$unitRecodings)))
@@ -48,8 +46,7 @@ readDaemonXlsx <- function(filename) {
 	if(inherits(try (read.xlsx2(filename, 5)), "try-error")) {
 		sunk("No .xlsx sheet savFiles available at sheet position 5. InputList will be created without this sheet.\n")
 		} else {
-		inputList$savFiles <- read.xlsx2(filename, 5, sheetName=NULL, startRow=1,
-			startColumn=1, noRows=NULL, noColumns=NULL, as.data.frame=TRUE,
+		inputList$savFiles <- read.xlsx2(filename, sheetIndex=5, as.data.frame=TRUE,
 			header=TRUE, colClasses="character")
 		inputList$savFiles <- data.frame(lapply(inputList$savFiles, as.character), stringsAsFactors=FALSE)
 		stopifnot(all(c("filename", "case.id") %in% colnames(inputList$savFiles)))
@@ -57,8 +54,7 @@ readDaemonXlsx <- function(filename) {
 	if(inherits(try (read.xlsx2(filename, 6)), "try-error")) {
 		sunk("No .xlsx sheet newID available at sheet position 6. InputList will be created without this sheet.\n")
 		} else {
-		inputList$newID <- read.xlsx2(filename, 6, sheetName=NULL, startRow=1,
-			startColumn=1, noRows=NULL, noColumns=NULL, as.data.frame=TRUE,
+		inputList$newID <- read.xlsx2(filename, sheetIndex=6, as.data.frame=TRUE,
 			header=TRUE, colClasses="character")
 		inputList$newID  <- data.frame(lapply(inputList$newID , as.character), stringsAsFactors=FALSE)
 		stopifnot(all(c("key", "value") %in% colnames(inputList$newID )))
@@ -66,8 +62,7 @@ readDaemonXlsx <- function(filename) {
 	if(inherits(try (read.xlsx2(filename, 7)), "try-error")) {
 		sunk("No .xlsx sheet aggregateMissings available at sheet position 7. InputList will be created without this sheet.\n")
 		} else {
-		inputList$aggrMiss <- read.xlsx2(filename, 7, sheetName=NULL, startRow=1,
-			startColumn=1, noRows=NULL, noColumns=NULL, as.data.frame=TRUE,
+		inputList$aggrMiss <- read.xlsx2(filename, sheetIndex=7, as.data.frame=TRUE,
 			header=TRUE, colClasses="character")
 		inputList$aggrMiss  <- data.frame(lapply(inputList$aggrMiss, as.character), stringsAsFactors=FALSE)
 		stopifnot(all(c("vc", "mbd") %in% colnames(inputList$aggrMiss)))
@@ -75,24 +70,21 @@ readDaemonXlsx <- function(filename) {
 	if(inherits(try (read.xlsx2(filename, 8)), "try-error")) {
 		sunk("No .xlsx sheet itemProperties available at sheet position 8. InputList will be created without this sheet.\n")
 		} else {
-		inputList$itemProperties <- read.xlsx2(filename, 8, sheetName=NULL, startRow=1,
-			startColumn=1, noRows=NULL, noColumns=NULL, as.data.frame=TRUE,
+		inputList$itemProperties <- read.xlsx2(filename, sheetIndex=8, as.data.frame=TRUE,
 			header=TRUE, colClasses="character")
 		inputList$itemProperties  <- data.frame(lapply(inputList$itemProperties, as.character), stringsAsFactors=FALSE)
 	}
 	if(inherits(try (read.xlsx2(filename, 9)), "try-error")) {
 		sunk("No .xlsx sheet itemPropertyLabels available at sheet position 9. InputList will be created without this sheet.\n")
 		} else {
-		inputList$itemPropertyLabels <- read.xlsx2(filename, 9, sheetName=NULL, startRow=1,
-			startColumn=1, noRows=NULL, noColumns=NULL, as.data.frame=TRUE,
+		inputList$itemPropertyLabels <- read.xlsx2(filename, sheetIndex=9, as.data.frame=TRUE,
 			header=TRUE, colClasses="character")
 		inputList$itemPropertyLabels  <- data.frame(lapply(inputList$itemPropertyLabels, as.character), stringsAsFactors=FALSE)
 	}
 	if(inherits(try (read.xlsx2(filename, 10)), "try-error")) {
 		sunk("No .xlsx sheet booklets available at sheet position 10. InputList will be created without this sheet.\n")
 		} else {
-		inputList$booklets <- read.xlsx2(filename, 10, sheetName=NULL, startRow=1,
-			startColumn=1, noRows=NULL, noColumns=NULL, as.data.frame=TRUE,
+		inputList$booklets <- read.xlsx2(filename, sheetIndex=10, as.data.frame=TRUE,
 			header=TRUE, colClasses="character")
 		inputList$booklets  <- data.frame(lapply(inputList$booklets, as.character), stringsAsFactors=FALSE)
 		stopifnot(all(c("id", "subunitsequence") %in% colnames(inputList$booklets)))
