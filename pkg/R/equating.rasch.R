@@ -1,12 +1,9 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# equating.rasch
-# Description: 
-# Version: 	0.1.0
-# Status: beta
-# Release Date: 	2011-11-09
 # Author:    Alexander Robitzsch
-# Change Log:
-#				09.11.2011 MH: Kopie aus sirtr_0.7-04.R
+#			 a.robitzsch@bifie.at
+#			 https://www.bifie.at/user/robitzsch-alexander
+#			 
+# Quelle:  	 Kopie aus sirtr_0.7-04.R (09.11.2011)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
