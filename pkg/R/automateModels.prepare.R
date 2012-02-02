@@ -118,7 +118,7 @@
 		# Check ob keine falschen Bezeichner
 		allowedNames <- c ( "pathConquest","method","std.err","distribution","n.plausible","set.constraints",
 							"nodes","p.nodes","f.nodes","n.iterations","converge","deviancechange",
-							"equivalence.table","use.letters","model.statement","na" )
+							"equivalence.table","use.letters","model.statement","na","model.statement" )
 		check <- unique ( names ( unlist (  list4$conquestParameters ) ) )
 		if ( ! all ( w <- ( check %in% allowedNames ) ) ) {
 				errmes <- paste ( "not available names are used in 'conquestParameters':" , 
