@@ -1,12 +1,12 @@
 Package: eat
 Type: Package
 Title: eat
-Version: 1.4.3
+Version: 1.4.4
 Depends: R(>= 2.14.0), sendmailR, gdata, xlsx, car, reshape, foreign, date, plyr, parallel
-Date: 2012-01-28
+Date: 2012-02-06
 Author: eat authors <eat-commits@lists.r-forge.r-project.org>
 Maintainer: Martin Hecht <martin.hecht@iqb.hu-berlin.de>
-Description: create and run models
+Description: The package eat is designed to simplify data preparation and IRT modeling with the software ConQuest within the R programming environment. It includes routines for automation of data preprocessing and an interface to specify and run several IRT models.
 License: GPL
 LazyLoad: yes
 LazyData: yes
