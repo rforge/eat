@@ -3,7 +3,7 @@
 # genConquestSynLab
 # erzeugt Conquest Syntax und Labels
 #
-# Version: 	0.14.0
+# Version: 	0.15.0
 # Imports:
 # Published:
 # Author:   Sebastian Weirich
@@ -74,10 +74,10 @@
 ### Fuer die Statements "group", "regression" und "model" werden aber die bedeutungsspezifischen Hintergrundvariablendefinitionen
 ### "namen.dif.var", "namen.hg.var" und "namen.group.var" benutzt. Bitte die Konsistenz unbedingt pruefen!
 
-genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, namen.dif.var , DIF.char, namen.weight.var, weight.char, namen.all.hg,all.hg.char, namen.group.var=NULL, model = NULL, ANKER = NULL,std.err="quick",name.unidim="dimension_1",
-                              model.statement="item", distribution="normal", jobFolder, subFolder=NULL, name.dataset=NULL, Title=NULL,constraints ="cases", method="gauss", n.plausible=5,n.iterations=1000,nodes=15, p.nodes=2000,f.nodes=2000,converge=0.0001,deviancechange=0.0001,
-                              equivalence.table="wle",var.char,use.letters=use.letters)
-                  {ver           <- "0.14.0"
+genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, namen.dif.var , DIF.char, namen.weight.var, weight.char, namen.all.hg,all.hg.char, namen.group.var=NULL, model = NULL, ANKER = NULL,std.err=c("quick","full","none"),name.unidim="dimension_1",
+                              model.statement="item", distribution=c("normal","discrete"), jobFolder, subFolder=NULL, name.dataset=NULL, Title=NULL,constraints =c("cases","none","items"), method=c("gauss", "quadrature", "montecarlo"), n.plausible=5,n.iterations=1000,nodes=15, p.nodes=2000,f.nodes=2000,converge=0.0001,deviancechange=0.0001,
+                              equivalence.table=c("wle","mle","NULL"),var.char,use.letters=use.letters)
+                  {ver           <- "0.15.0"
                    .mustersyntax <- c("title = ####hier.title.einfuegen####;",
                                       "export logfile >> ####hier.name.einfuegen####.log;",
                                       "datafile ####hier.Pfad.und.Dateiname.einfuegen####;",
@@ -125,12 +125,13 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    syntax    <- gsub("####hier.anzahl.f.nodes.einfuegen####",f.nodes,syntax)
                    syntax    <- gsub("####hier.converge.einfuegen####",converge,syntax)
                    syntax    <- gsub("####hier.deviancechange.einfuegen####",deviancechange,syntax)
-                   syntax    <- gsub("####hier.constraints.einfuegen####",constraints,syntax)
+                   syntax    <- gsub("####hier.constraints.einfuegen####",match.arg(constraints),syntax)
                    syntax    <- gsub("####hier.anzahl.nodes.einfuegen####",nodes,syntax)
-                   syntax    <- gsub("####hier.std.err.einfuegen####",std.err,syntax)
-                   syntax    <- gsub("####hier.distribution.einfuegen####",distribution,syntax)
-                   syntax    <- gsub("####hier.equivalence.table.einfuegen####",equivalence.table,syntax)
+                   syntax    <- gsub("####hier.std.err.einfuegen####",match.arg(std.err),syntax)
+                   syntax    <- gsub("####hier.distribution.einfuegen####",match.arg(distribution),syntax)
+                   syntax    <- gsub("####hier.equivalence.table.einfuegen####",match.arg(equivalence.table),syntax)
 				   syntax    <- gsub("####hier.model.statement.einfuegen####",model.statement,syntax)
+				   method    <- match.arg(method)
 				   if(!is.null(subFolder$out)) 
                    ### entferne ggf. abschliessende Schraegstriche: erledigt nun automateConquestModels
                      {### for (ii in 1:nchar(subFolder$out)) {subFolder$out <- gsub("/$","",subFolder$out)} 
@@ -268,14 +269,9 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    if(length(namen.weight.var) ==0) { ind.4 <- grep("caseweight",syntax)    ### wenn keine Gewichtungsvariable definiert, loesche Statement
                                                stopifnot(length(ind.4)==1)
                                                syntax <- syntax[-ind.4]}
-                   if(is.null(equivalence.table))  { ind.5 <- grep("equivalence",syntax) ## wenn keine Equivalence-Statement definiert, loesche Zeile
+                   if(match.arg(equivalence.table) == "NULL") { ind.5 <- grep("equivalence",syntax) ## wenn keine Equivalence-Statement definiert, lösche Zeile
                                                      stopifnot(length(ind.5)==1)
-                                                     syntax <- syntax[-ind.5]}
-                   if(equivalence.table %in% c("wle","mle") == FALSE)           ### wenn ungueltiges Statement, loesche Zeile
-                                               {sunk(paste("genConquestSynLab_",ver,": Invalid 'Equivalence'-Statement: ",equivalence.table,": Remove Statement from syntax.\n",sep=""))
-                                                ind.5 <- grep("equivalence",syntax) ## wenn keine Equivalence-Statement definiert, loesche Zeile
-                                                stopifnot(length(ind.5)==1)
-                                                syntax <- syntax[-ind.5]}                                               
+                                                     syntax <- syntax[-ind.5]}                                              
                    if(is.null(ANKER))  {ind.2 <- grep("anchor_parameter",syntax)### wenn keine Anker gesetzt, loesche entsprechende Syntaxzeile
                                         syntax <- syntax[-ind.2]}
                    if(!is.null(ANKER)) {ind.2 <- grep("set constraints",syntax) ### wenn Anker gesetzt, setze constraints auf "none"
