@@ -8,7 +8,7 @@ identify common items of groups
 This function identifies items that groups of persons have in common.
 }
 \usage{
-commonItems ( data , group.var , missing = NA )
+commonItems ( data , group.var , missing = NA , uncommon = FALSE , simplify = TRUE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -16,6 +16,8 @@ commonItems ( data , group.var , missing = NA )
   \item{data}{ data.frame }
   \item{group.var}{ group variable in data.frame , eihter numeric indicator of column or column name }  
   \item{missing}{ missing specification }
+  \item{uncommon}{ if \code{TRUE} a vector of uncommon items is additionally returned }
+  \item{simplify}{ if \code{TRUE} a character vector is returned (only in case of 2 groups and uncommon=\code{FALSE}) }
   
 }
 \details{
@@ -29,6 +31,7 @@ commonItems ( data , group.var , missing = NA )
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
 returns a list of all \code{group.var} combinations with character vectors of common item names
+if \code{uncommon=TRUE} a vector of uncommon (unique) items of each group is additionally returned
 
 names of list are both group names concatenated by "|"
 
@@ -52,7 +55,12 @@ Martin Hecht
 \examples{
 data(science1)
 d <- science1[,c("version",science1.items)]
-commonItems ( data = d , group.var = "version" , missing = "mbd" )
+
+# common items ar listed for each combination of groups
+str ( commonItems ( data = d , group.var = "version" , missing = "mbd" ) )
+
+# uncommon items are returned as well
+str ( commonItems ( data = d , group.var = "version" , missing = "mbd" , uncommon = TRUE ) )
 }
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the
