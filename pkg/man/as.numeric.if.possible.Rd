@@ -22,14 +22,7 @@ as.numeric.if.possible ( dataFrame, set.numeric = TRUE, transform.factors = FALS
   \item{maintain.factor.scores}{ Logical. Only relevant if \code{transform.factors = TRUE}. If \code{TRUE}, the nominal values of the 
                                  factor are transformed if possible. If \code{FALSE}, the integer numbers representing the factors' nominal values are returned. See details.  }
   \item{verbose}   {Logical: If \code{TRUE}, informations about the class of the columns in the data.frame are printed to the console.}
-  
-  Factors
 
-Tell R that a variable is nominal by making it a factor. The factor stores the nominal values as a vector of integers 
-in the range [ 1... k ] (where k is the number of unique values in the nominal variable), and an internal vector of 
-character strings (the original values) mapped to these integers. 
-  
-  
 }
 \details{
 In R, factors may represent ordered categories or nominal variables. Depending on the meaning of the variable, a transformation 
