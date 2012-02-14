@@ -47,5 +47,8 @@ echo $contents; } ?>
 
 <p> The <strong>project summary page</strong> you can find <a href="http://<?php echo $domain; ?>/projects/<?php echo $group_name; ?>/"><strong>here</strong></a>. </p>
 
+<br><br>
+A <a href="other/TalkEat2012.pdf">package presentation </a> was given on the <a href="http://www.psychoco.org">Psychoco 2012</a>.
+
 </body>
 </html>
