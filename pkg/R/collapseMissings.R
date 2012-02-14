@@ -17,6 +17,9 @@
 # Maintainer:
 #
 # Change Log:
+# 2012-02-14 KS
+# ADDED: default item.names, short missing.rule extention
+# 0000-00-00 AA
 # 03.11.2011 KS: nicht-character-Spalten überspringen
 # 17.08.2011 MH: auf stable gesetzt wegen besserer Sourcebarkeit
 # 05.08.2011 MH : 	auf Speed optimiert
@@ -34,7 +37,7 @@ collapseMissings.create.recode.string <- function ( missing.rule ) {
 
 }
 
-collapseMissings <- function( dat , missing.rule = NULL , item.names ){
+collapseMissings <- function( dat , missing.rule = NULL , item.names = NULL){
 	
 	# Default-Rule
 	default.rule <- list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 )
@@ -42,9 +45,16 @@ collapseMissings <- function( dat , missing.rule = NULL , item.names ){
 	# Defaults setzen, bei Nutzereingabe Plausichecks
 	if ( is.null ( missing.rule ) ) missing.rule <- default.rule else {
 			stopifnot ( class ( missing.rule ) == "list" )
+			if ( length ( missing.rule ) != length (default.rule ) ) {
+				inter.rule <- default.rule
+				inter.rule[names(missing.rule)] <- missing.rule
+				missing.rule <- inter.rule
+			}
 			stopifnot ( identical ( sort ( names ( missing.rule ) ) , sort ( names ( default.rule ) ) ) )
 			stopifnot ( all ( unlist ( unique ( missing.rule ) ) %in% c(0,NA) ) )
 	}
+	
+	if (is.null (item.names)) {item.names <- colnames(dat)}
 
 	# Plausicheck: Dataframe übergeben?
 		stopifnot ( is.data.frame ( dat ) )
