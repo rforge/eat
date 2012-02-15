@@ -15,7 +15,7 @@ m.model="1pl", Title = NULL, jobName, jobFolder, subFolder=list(), dataName=NULL
 anchor=NULL, pathConquest, method=NULL,std.err=NULL,distribution=NULL, 
 n.plausible=NULL, set.constraints=NULL, nodes=NULL, p.nodes=NULL, f.nodes=NULL, 
 n.iterations=NULL, converge=NULL, deviancechange=NULL, name.unidim=NULL, 
-equivalence.table="wle",use.letters=FALSE)
+equivalence.table="wle",use.letters=FALSE, check.for.linking=FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -141,6 +141,9 @@ optional: character string specifying type of equivalence table to print. Possib
   \item{use.letters}{
 logical: Should values coded als letters? May be relevant only in partial credit models comprising items with more than 10 categories to avoid 
 columns with width 2 in Conquest.  
+}
+  \item{check.for.linking}{
+logical: If \code{TRUE}, items in dataset are checked for being connected with each other via design. 
 }
  
 }

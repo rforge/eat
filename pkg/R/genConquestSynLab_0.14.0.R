@@ -3,7 +3,7 @@
 # genConquestSynLab
 # erzeugt Conquest Syntax und Labels
 #
-# Version: 	0.15.0
+# Version: 	0.16.0
 # Imports:
 # Published:
 # Author:   Sebastian Weirich
@@ -77,7 +77,7 @@
 genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, namen.dif.var , DIF.char, namen.weight.var, weight.char, namen.all.hg,all.hg.char, namen.group.var=NULL, model = NULL, ANKER = NULL,std.err=c("quick","full","none"),name.unidim="dimension_1",
                               model.statement="item", distribution=c("normal","discrete"), jobFolder, subFolder=NULL, name.dataset=NULL, Title=NULL,constraints =c("cases","none","items"), method=c("gauss", "quadrature", "montecarlo"), n.plausible=5,n.iterations=1000,nodes=15, p.nodes=2000,f.nodes=2000,converge=0.0001,deviancechange=0.0001,
                               equivalence.table=c("wle","mle","NULL"),var.char,use.letters=use.letters)
-                  {ver           <- "0.15.0"
+                  {ver           <- "0.16.0"
                    .mustersyntax <- c("title = ####hier.title.einfuegen####;",
                                       "export logfile >> ####hier.name.einfuegen####.log;",
                                       "datafile ####hier.Pfad.und.Dateiname.einfuegen####;",
@@ -275,7 +275,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    if(is.null(ANKER))  {ind.2 <- grep("anchor_parameter",syntax)### wenn keine Anker gesetzt, loesche entsprechende Syntaxzeile
                                         syntax <- syntax[-ind.2]}
                    if(!is.null(ANKER)) {ind.2 <- grep("set constraints",syntax) ### wenn Anker gesetzt, setze constraints auf "none"
-                                        if(constraints != "none") { sunk(paste("genConquestSynLab_",ver,": Anchorparameter were defined. Set constraints to 'none'.\n",sep=""))}
+                                        if(match.arg(constraints) != "none") { sunk(paste("genConquestSynLab_",ver,": Anchorparameter were defined. Set constraints to 'none'.\n",sep=""))}
                                         syntax[ind.2]  <- "set constraints=none;"}
                    if(!is.null(namen.dim))
                                        {lab.dim   <- data.frame(lab.dim.1=c("===>",1:length(namen.dim)), lab.dim.2=c("dimensions",namen.dim), stringsAsFactors=F)

@@ -60,7 +60,7 @@
 ## genConquestDataset <- function(zkdMasterDataset, variablen, ID, model=NULL, DIF.var=NULL, HG.var=NULL, anker = NULL, pfad=getwd(), name.analyse,name.dataset,pfad.dataset)
 
 genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL, na=list(items=NULL, DIF=NULL, HG=NULL, group=NULL, weight=NULL), verbose=TRUE,
-                               model.statement="item", remove.no.answers = FALSE,use.letters=FALSE)
+                               model.statement="item", remove.no.answers = FALSE,use.letters=FALSE, check.for.linking = FALSE)
                  {ver          <- "0.7.0"
                   # if(!exists("write.fwf")) {library(gdata)}                     ### Ankerstatement wird hier nicht verarbeitet, sondern zuletzt einfach an "gen.syntax" uebergeben
                   # if(!exists("recode")) {library(car)}
@@ -76,7 +76,7 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                     {rec.items <- paste(na$items,"=NA",collapse="; ")           ### definiere recodierungsvorschrift
                      for (i in 1:ncol(daten))
                          {daten[,i] <- recode(daten[,i], rec.items)}}
-
+				  if(check.for.linking == TRUE) {foo <- checkLink(daten)}
                   namen.items <- colnames(daten)
                   allVars     <- list(namen.hg.var=HG.var, namen.dif.var=DIF.var, namen.weight.var=weight.var, namen.group.var=group.var)
                   all.Names   <- lapply(allVars, FUN=function(ii) {.existsBackgroundVariables(dat=dat,variable=ii)})
