@@ -21,7 +21,7 @@ as.numeric.if.possible ( dataFrame, set.numeric = TRUE, transform.factors = FALS
   \item{transform.factors }{ Logical: Should columns of class \code{factor} transformed? If \code{FALSE}, columns of class \code{factor} are maintained. If \code{TRUE}, columns of class \code{factor} are attempted to transform.   } 
   \item{maintain.factor.scores}{ Logical. Only relevant if \code{transform.factors = TRUE}. If \code{TRUE}, the nominal values of the 
                                  factor are transformed if possible. If \code{FALSE}, the integer numbers representing the factors' nominal values are returned. See details.  }
-  \item{verbose}   {Logical: If \code{TRUE}, informations about the class of the columns in the data.frame are printed to the console.}
+  \item{verbose}{Logical: If \code{TRUE}, informations about the class of the columns in the data.frame are printed to the console.}
 
 }
 \details{
@@ -35,8 +35,7 @@ and \code{maintain.factor.scores} serve to specify if and how factor variables s
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-Either a logic vector, indicating which columns in teh data.frame are transformable according to the specified conditions, or
-a data.frame in which transformable columns are transformed. 
+Either a logic vector, indicating which columns in the data.frame are transformable according to the specified conditions, ora data.frame in which transformable columns are transformed. 
 }
 \references{
 
