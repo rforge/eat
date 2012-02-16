@@ -46,6 +46,6 @@ get.wle <- function (file) {
                namen.2 <- paste(namen.2,rep(1:(length(namen.2)/2),each=2),sep=".")
                namen   <- c(namen.1,namen.2)
                colnames(input)[1:2] <- c("case","ID")
-               colnames(input)[(ncol(input)- length(namen)+1): ncol(input)] <- namen
+               if(length(col.real.numbers) == 1 ) {colnames(input)[(ncol(input)- length(namen)+1): ncol(input)] <- namen }
                return(input)}
                

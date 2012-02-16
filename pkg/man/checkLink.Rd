@@ -8,7 +8,7 @@ checkLink
 checks whether items in a dataset are linked via design
 }
 \usage{
-checkLink ( dataFrame, sysmis = NA, verbose = TRUE))
+checkLink ( dataFrame, sysmis = NA, verbose = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

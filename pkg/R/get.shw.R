@@ -3,7 +3,7 @@
 # get.shw
 # liest Conquest-Outputfiles (*.shw) als R-Objekte ein
 #
-# Version: 	1.5.0
+# Version: 	1.7.0
 # Published:
 # Author:  Sebastian Weirich
 # Maintainer:
@@ -44,7 +44,7 @@ confidence <- function ( par , error, alpha ) {
 
 
 get.shw <- function (file, dif.term = NULL, split.dif = TRUE, abs.dif.bound = 0.64, sig.dif.bound = 0.43) {
-    funVersion <- "get.shw_1.5.0"
+    funVersion <- "get.shw_1.7.0"
     allInput <- readLines(file)
 
     # find terms
@@ -90,7 +90,7 @@ get.shw <- function (file, dif.term = NULL, split.dif = TRUE, abs.dif.bound = 0.
 		
 		# read term input
         termInput <- crop(allInput[termLines])
-        termInput <- gsub("\\*", "  NA", termInput)
+        termInput <- gsub("\\*    ", "  NA", termInput)
         substituteString <- paste(c("\\(", ")", ","), collapse = "|")
         termInput <- gsub(substituteString, " ", termInput)
 		
@@ -121,9 +121,11 @@ get.shw <- function (file, dif.term = NULL, split.dif = TRUE, abs.dif.bound = 0.
         }
 		if (maxNInputCols > length(outputColNames)) {
             if (maxNInputCols == length(outputColNames) + 1) {
-				if ( termNames [i] != dif.term ) {
-					sunk(paste(funVersion, ": Found one more column than column names. Expect missing column name before 'ESTIMATE'. Check outputfile for term '",
+				if ( !is.null(dif.term) )  {
+				   if( termNames [i] != dif.term ) {
+					   sunk(paste(funVersion, ": Found one more column than column names. Expect missing column name before 'ESTIMATE'. Check outputfile for term '",
 						termNames[i], "' in file: '", file, "'. \n", sep = ""))
+					}	
                 }
 				ind.name <- which(outputColNames == "ESTIMATE")
                 outputColNames <- c(outputColNames[1:ind.name - 1], "add.column", outputColNames[ind.name:length(outputColNames)])
@@ -135,7 +137,7 @@ get.shw <- function (file, dif.term = NULL, split.dif = TRUE, abs.dif.bound = 0.
         }
 		
 		# make output data frame
-        tempTermOutput <- do.call(rbind, termOutput)
+        tempTermOutput <- do.call(rbind, lapply( termOutput, FUN=function(ii) { gsub("\\*","",ii)}   ))
         tempTermOutput[tempTermOutput == "NA"] <- NA
         options(warn = -1)
         termOutput <- data.frame(apply(tempTermOutput, 2, as.numeric))

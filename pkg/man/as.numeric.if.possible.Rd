@@ -56,11 +56,11 @@ Sebastian Weirich
 \examples{
    \code{
    
-   ( dat <- data.frame( X1=c("1",NA,"0"), X2=c("a",NA,"b"), X3=c(TRUE,FALSE,FALSE),  X4=as.factor(c("a",NA,"b")), X5=as.factor(c("5","6","7")) , stringsAsFactors=FALSE) )
+   ( dat <- data.frame( X1 = c("1",NA,"0"), X2 = c("a",NA,"b"), X3 = c(TRUE,FALSE,FALSE),  X4 = as.factor(c("a",NA,"b")), X5 = as.factor(c("5","6","7")) , stringsAsFactors = FALSE) )
    str(dat)
    as.numeric.if.possible(dat)
-   as.numeric.if.possible(dat, transform.factors=T, maintain.factor.scores=F)
-   as.numeric.if.possible(dat, transform.factors=T, maintain.factor.scores=T)
+   as.numeric.if.possible(dat, transform.factors=TRUE, maintain.factor.scores=FALSE)
+   as.numeric.if.possible(dat, transform.factors=TRUE, maintain.factor.scores=TRUE)
   
    }
 }
