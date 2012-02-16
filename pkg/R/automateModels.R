@@ -50,6 +50,7 @@ automateModels <- function ( dataset , id = NULL , context.vars = NULL , items =
 							 q3 = FALSE ,
 							 missing.rule = NULL , 
 							 cross = NULL , subfolder.order = NULL , subfolder.mode = NULL ,
+							 allNAdelete = TRUE ,
 							 additionalSubFolder = NULL ,
 							 run.mode = NULL , n.batches = NULL , run.timeout = 1440 , run.status.refresh = 0.2 ,
 							 all.local.cores = TRUE ,
@@ -71,7 +72,7 @@ automateModels <- function ( dataset , id = NULL , context.vars = NULL , items =
 		
 		### Begrüßung
 		sunk ( paste ( f.n , "Starting automateModels\n" ) ) 
-		sunk ( paste ( f.n , 'Version: 1.4.5 (2012-02-06)\n' ) )
+		sunk ( paste ( f.n , 'Version: 1.4.6 (2012-02-16)\n' ) )
 		sunk ( paste ( f.n , "This version is BETA. Use at your own risk.\n" ) )
 		### Definitionen
 		m.model.available <- c ( "1pl", "2pl", "3pl" , "4pl" ) 
@@ -186,7 +187,7 @@ automateModels <- function ( dataset , id = NULL , context.vars = NULL , items =
 					person.grouping = model.specs$person.grouping ,
 					keep = model.specs$cont.names , 
 					mis.rule = model.specs$missing.rule , 
-					MoreArgs = list ( datasets = misrule.datasets , id.name = id.name )
+					MoreArgs = list ( datasets = misrule.datasets , id.name = id.name , allNAdelete = allNAdelete )
 					, SIMPLIFY = FALSE )
 		# löschen von misspezifizierten Modellen
 		# d.h. Modelle in denen der Datensatz keine Items oder Personen mehr hat

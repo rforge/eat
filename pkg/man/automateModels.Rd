@@ -16,7 +16,7 @@ overwrite.folder = TRUE, analyse.name.prefix = NULL, analyse.name = NULL,
 analyse.name.elements = NULL, data.name = NULL, m.model = NULL, software = NULL, 
 dif = NULL, weight = NULL, anchor = NULL, regression = NULL, 
 adjust.for.regression = FALSE, q3 = FALSE, missing.rule = NULL, cross = NULL, 
-subfolder.order = NULL, subfolder.mode = NULL, additionalSubFolder = NULL, 
+subfolder.order = NULL, subfolder.mode = NULL, allNAdelete = TRUE, additionalSubFolder = NULL, 
 run.mode = NULL, n.batches = NULL, run.timeout = 1440, run.status.refresh = 0.2, 
 all.local.cores = TRUE, email = NULL, smtpServer = NULL, write.txt.dataset = FALSE,
 delete.folder.countdown = 5, conquestParameters = NULL )
@@ -149,6 +149,11 @@ c ( "i.model" , "p.model" , "m.model" , "software" , "dif" , "regression" , "anc
 "none": no subfolders are created
 "full": complete subfolders are created according to 'subfolder.order'
 "intelligent" (default): meaningful subfolders are created
+}
+  \item{allNAdelete}{
+if \code{TRUE} all cases with complete missings on \code{items} are removed,
+if \code{FALSE} these cases are not deleted
+Note: this is a global option, that is set for all modelss
 }
   \item{additionalSubFolder}{
 %%     ~~Describe \code{additionalSubFolder} here~~
