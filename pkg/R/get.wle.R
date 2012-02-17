@@ -13,7 +13,7 @@
 #
 # Change log:
 # 2011-12-28 SW
-# CHANGED: use as.numeric.if.possible() in get.wle()
+# CHANGED: use asNumericIfPossible() in get.wle()
 # 2011-11-30 SW
 # FIXED: problem with multidimensional WLEs and first cases without answers re-repaired
 # 0000-00-00 AA
@@ -36,9 +36,10 @@ get.wle <- function (file) {
                input <- strsplit(input, " +")
                n.spalten <- max ( sapply(input,FUN=function(ii){ length(ii) }) )
                n.wle <- (n.spalten-1) / 4                                       ### Spaltenanzahl sollte ganzzahlig sein.
-               input <- as.numeric.if.possible(data.frame( matrix( t( sapply(input,FUN=function(ii){ ii[1:n.spalten] }) ),length(input),byrow=F), stringsAsFactors=F), set.numeric = TRUE, verbose = FALSE)
+               input <- asNumericIfPossible(data.frame( matrix( t( sapply(input,FUN=function(ii){ ii[1:n.spalten] }) ),length(input),byrow=F), stringsAsFactors=F), set.numeric = TRUE, verbose = FALSE)
                col.min.na <- which( rowSums(is.na(input)) == min(rowSums(is.na(input))))[1]### Zeile mit den am wenigsten fehlenden Elementen
-               col.real.numbers <- which(input[col.min.na,] != round(input[col.min.na,],digits=0))
+               col.numeric <- which ( sapply(input, FUN=function(ii) {class(ii)}) == "numeric" )
+			   col.real.numbers <- na.omit(unlist ( lapply (col.numeric , FUN= function(ii) { ifelse(input[col.min.na,ii] == round(input[col.min.na,ii]), NA, ii)}) ) )
                cat(paste(funVersion,": Found valid WLEs of ", nrow(na.omit(input))," person(s) for ", length(col.real.numbers)/2, " dimension(s).\n",sep=""))
                namen.1 <- as.vector( sapply(1:(length(col.real.numbers)/2),FUN=function(ii){c("n.solved","n.total")}))
                namen.2 <- as.vector( sapply(1:(length(col.real.numbers)/2),FUN=function(ii){c("wle","wle.se")}))
@@ -46,6 +47,6 @@ get.wle <- function (file) {
                namen.2 <- paste(namen.2,rep(1:(length(namen.2)/2),each=2),sep=".")
                namen   <- c(namen.1,namen.2)
                colnames(input)[1:2] <- c("case","ID")
-               if(length(col.real.numbers) == 1 ) {colnames(input)[(ncol(input)- length(namen)+1): ncol(input)] <- namen }
+               if(length(col.real.numbers) > 0 ) {colnames(input)[(ncol(input)- length(namen)+1): ncol(input)] <- namen }
                return(input)}
                

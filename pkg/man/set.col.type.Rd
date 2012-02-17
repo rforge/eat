@@ -16,12 +16,12 @@ set.col.type ( data , col.type = list ( "character" = NULL ) , verbose = FALSE ,
   \item{data}{ data.frame }
   \item{col.type}{ named list of variable names that are to be converted. names of list is conversion type ( "character" , "numeric" , "numeric.if.possible" , "logical" , "integer" or "factor" ) }
   \item{verbose}{ if \code{TRUE} variables that have been converted are printed }
-%%  \item{...}{arguments to be passed to \link{as.numeric.if.possible}}
-  \item{...}{arguments to be passed to as.numeric.if.possible}
+%%  \item{...}{arguments to be passed to \link{asNumericIfPossible}}
+  \item{...}{arguments to be passed to asNumericIfPossible}
 }
 \details{
-%% use \code{col.type="numeric.if.possible"} if conversion to numeric should be tested upfront, see \link{as.numeric.if.possible} for details
-use \code{col.type="numeric.if.possible"} if conversion to numeric should be tested upfront, see as.numeric.if.possible for details
+%% use \code{col.type="numeric.if.possible"} if conversion to numeric should be tested upfront, see \link{asNumericIfPossible} for details
+use \code{col.type="numeric.if.possible"} if conversion to numeric should be tested upfront, see asNumericIfPossible for details
 }
 \value{
 %%  ~Describe the value returned

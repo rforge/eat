@@ -21,7 +21,7 @@ commonItems ( data , group.var , missing = NA , uncommon = FALSE , simplify = TR
   
 }
 \details{
-%% use \code{col.type="numeric.if.possible"} if conversion to numeric should be tested upfront, see \link{as.numeric.if.possible} for details
+%% use \code{col.type="numeric.if.possible"} if conversion to numeric should be tested upfront, see \link{asNumericIfPossible} for details
 
 }
 \value{

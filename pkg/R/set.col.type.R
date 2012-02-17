@@ -60,7 +60,7 @@ set.col.type <- function ( data , col.type = list ( "character" = NULL ) , verbo
 						vars.new <- mapply ( function ( var , to , ... ) {
 								if ( to %in% c ( "numeric.if.possible" ) ) {
 										str <- paste ( "if (!is.numeric(var)) {
-																	tried <- try(var <- as.numeric.if.possible(var,verbose=FALSE,...),silent=TRUE);
+																	tried <- try(var <- asNumericIfPossible(var,verbose=FALSE,...),silent=TRUE);
 																	if (inherits(tried,'try-error')) var <- var;
 																	var;
 																	} else var" , sep = "" )

@@ -21,7 +21,7 @@ exploreDesign ( data , missing = NA , id = NULL , itemsPerPerson = TRUE , person
   
 }
 \details{
-%% use \code{col.type="numeric.if.possible"} if conversion to numeric should be tested upfront, see \link{as.numeric.if.possible} for details
+%% use \code{col.type="numeric.if.possible"} if conversion to numeric should be tested upfront, see \link{asNumericIfPossible} for details
 
 }
 \value{
