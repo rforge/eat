@@ -81,6 +81,14 @@ genModelDataset <- function( item.grouping , person.grouping , mis.rule , datase
 	stopifnot ( ncol ( item.grouping ) > 1 & nrow ( item.grouping ) > 1 )
 	stopifnot ( any (item.grouping[,1] %in% colnames(dataset) ) )
 	
+	# item.grouping in Format chr num num
+	if( any( unname(unlist(lapply(item.grouping, class))) != c("character",  rep("numeric", dim(item.grouping)[2]-1)))) {
+		item.grouping <- set.col.type( item.grouping , list ( "character" = names(item.grouping)[1] , "numeric" = names(item.grouping)[2:dim(item.grouping)[2]] ))
+		item.grouping[,-1] <- apply ( item.grouping[,-1,drop=FALSE] , 2 , function ( spalte ) {
+			if (all(spalte %in% c(1,2))) {spalte <- spalte - 1}
+		} )
+	}
+	
 	# Plausicheck auf Dichotomie
 	temp <- apply ( item.grouping[,-1,drop=FALSE] , 2 , function ( spalte ) {
 			stopifnot ( spalte %in% c(0,1) )
@@ -125,9 +133,10 @@ genModelDataset <- function( item.grouping , person.grouping , mis.rule , datase
 		  # cat(paste("genModelDataset_", vers.nr, ": Variables in dataset not in item.grouping: \n", sep=""))
 		  # cat(paste( 
 		  idiff <- setdiff(names(dataset), item.grouping[,1]) #), "\n")
+		  # kommen wirklich alle Kontextvariablen über keep rein?
 		  if ( any ( welche <-  items %in% idiff ) ) {
 				# cat ( paste ( f.n , "Folgende Variablen aus Datensatz sind Items und nicht in item.grouping:\n" ) )
-				cat ( paste ( f.n , "These variables in dataset are declared as items and not in item.grouping:\n" ) )
+				cat ( paste ( f.n , "These variables in dataset are neither in item.grouping nor in context.vars:\n" ) )
 				cat ( paste ( items [ welche ] , collapse = ", " ) )
 				cat ( "\n" )
 			}
