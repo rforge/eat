@@ -15,7 +15,7 @@ This list contains 3 data frames, each with the following columns:
 \item{Ixx}{Item responses to a selection of 30 test items.}
 }
 }
-\details{code, subunit and unit descriptions are stored in dataset \code{\link[eat]{inputList}}.
+\details{code, subunit and unit descriptions are stored in dataset \code{\link{inputList}}.
 }
 \source{
 %%  ~~ reference to a publication or URL from which the data were obtained ~~

@@ -1,13 +1,13 @@
 \name{inputList}
 \alias{inputList}
 \docType{data}
-\title{Data Frames with Code, Subunit and Unit Information for Datasets in \code{\link[eat]{inputDat}}
+\title{Data Frames with Code, Subunit and Unit Information for Datasets in \code{\link{inputDat}}
 }
 \description{
 These data frames contain information about codes, subunits and units for the
-datasets in \code{\link[eat]{inputDat}} and are necessary inputs for functions
-\code{\link[eat]{automateDataPreparation}}, \code{\link[eat]{checkData}},
-\code{\link[eat]{recodeData}} and \code{aggregateData}.
+datasets in \code{\link{inputDat}} and are necessary inputs for functions
+\code{\link{automateDataPreparation}}, \code{\link{checkData}},
+\code{\link{recodeData}} and \code{aggregateData}.
 }
 \usage{data(inputList)}
 \format{
@@ -23,7 +23,7 @@ A list with three data frames:
         \code{ID} = ID variable;
         \code{TI} = test item;
         \code{CV} = context variable.}
-      \item{unitLabel}{Unit label, to be used by \code{\link[eat]{writeSpss}}.}
+      \item{unitLabel}{Unit label, to be used by \code{\link{writeSpss}}.}
       \item{unitDescription}{Unit description.}
       \item{unitAggregateRule}{Aggregate rule for unit:
         \code{SUM}; \code{MEAN}.}
@@ -36,13 +36,13 @@ A list with three data frames:
       \item{unit}{Unit name, for which subunits are given.}
       \item{subunit}{Subunit name.}
       \item{subunitType}{Subunit types:\code{'?'}.}
-      \item{subunitLabel}{Subunit label, to be used by \code{\link[eat]{writeSpss}}.}
+      \item{subunitLabel}{Subunit label, to be used by \code{\link{writeSpss}}.}
       \item{subunitDescription}{Subunit descriptions.}
       \item{subunitPosition}{Subunit position in test booklet (e.g., line 1).}
       \item{subunitTransniveau}{Subunit transformation level.}
       \item{subunitRecoded}{Name of recoded subunit.}
-      \item{subunitLabelRecoded}{Label for recoded subunit, to be used when \code{\link[eat]{writeSpss}} is applied to a dataset
-                                produced by \code{\link[eat]{recodeData}}.}
+      \item{subunitLabelRecoded}{Label for recoded subunit, to be used when \code{\link{writeSpss}} is applied to a dataset
+                                produced by \code{\link{recodeData}}.}
     } 
 
 	  \item values: Value information, contains the following columns:
@@ -58,10 +58,10 @@ A list with three data frames:
 		\code{mci} = missing -- coding impossible;
 		\code{mbi} = missing -- by intention.
 	  }
-	  \item{valueLabel}{Value labels, to be used by \code{\link[eat]{writeSpss}}.}
+	  \item{valueLabel}{Value labels, to be used by \code{\link{writeSpss}}.}
 	  \item{valueDescription}{Value descriptions.}
-	  \item{valueLabelRecoded}{Labels for recoded values, to be used when \code{\link[eat]{writeSpss}} is applied to a dataset
-								produced by \code{\link[eat]{recodeData}}.}
+	  \item{valueLabelRecoded}{Labels for recoded values, to be used when \code{\link{writeSpss}} is applied to a dataset
+								produced by \code{\link{recodeData}}.}
 	  \item{valueDescriptionRecoded}{Descriptions for recoded values.}
 	}
 	
@@ -79,27 +79,27 @@ A list with three data frames:
 		  \code{mci} = missing -- coding impossible;
 		  \code{mbi} = missing -- by intention.
 	    }
-  	  \item{valueLabel}{Value labels, to be used by \code{\link[eat]{writeSpss}}.}
+  	  \item{valueLabel}{Value labels, to be used by \code{\link{writeSpss}}.}
 	  \item{valueDescription}{Value descriptions.}
-	  \item{valueLabelRecoded}{Labels for recoded values, to be used when \code{\link[eat]{writeSpss}} is applied to a dataset
-								produced by \code{\link[eat]{recodeData}}.}
+	  \item{valueLabelRecoded}{Labels for recoded values, to be used when \code{\link{writeSpss}} is applied to a dataset
+								produced by \code{\link{recodeData}}.}
     }
 
-        \item savFiles: information for \code{\link[eat]{loadSav}}, contains the following columns:
+        \item savFiles: information for \code{\link{loadSav}}, contains the following columns:
 
 	\describe{
       \item{filename}{SPSS filenames}
-      \item{case.id}{ID variable in the respective dataset, used by \code{\link[eat]{mergeData}}}
+      \item{case.id}{ID variable in the respective dataset, used by \code{\link{mergeData}}}
     }
     
- \item newID: information for \code{\link[eat]{mergeData}}, contains the following columns:
+ \item newID: information for \code{\link{mergeData}}, contains the following columns:
 
 	\describe{
       \item{key}{one of the entries should be \code{master-id}}
       \item{value}{the corresponding value; how the ID variable in the final dataset shall be named}
     }
 
- \item aggrMiss: missing aggregation pattern for \code{\link[eat]{aggregateData}}
+ \item aggrMiss: missing aggregation pattern for \code{\link{aggregateData}}
 
 
 }
