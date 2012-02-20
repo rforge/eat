@@ -54,7 +54,6 @@ Sebastian Weirich
 }
 
 \examples{
-   \code{
    
    ( dat <- data.frame( X1 = c("1",NA,"0"), X2 = c("a",NA,"b"), X3 = c(TRUE,FALSE,FALSE),  X4 = as.factor(c("a",NA,"b")), X5 = as.factor(c("5","6","7")) , stringsAsFactors = FALSE) )
    str(dat)
@@ -62,7 +61,6 @@ Sebastian Weirich
    asNumericIfPossible(dat, transform.factors=TRUE, maintain.factor.scores=FALSE)
    asNumericIfPossible(dat, transform.factors=TRUE, maintain.factor.scores=TRUE)
   
-   }
 }
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the
