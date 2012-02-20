@@ -83,10 +83,8 @@ genModelDataset <- function( item.grouping , person.grouping , mis.rule , datase
 	
 	# item.grouping in Format chr num num
 	if( any( unname(unlist(lapply(item.grouping, class))) != c("character",  rep("numeric", dim(item.grouping)[2]-1)))) {
-		item.grouping <- set.col.type( item.grouping , list ( "character" = names(item.grouping)[1] , "numeric" = names(item.grouping)[2:dim(item.grouping)[2]] ))
-		item.grouping[,-1] <- apply ( item.grouping[,-1,drop=FALSE] , 2 , function ( spalte ) {
-			if (all(spalte %in% c(1,2))) {spalte <- spalte - 1}
-		} )
+		item.grouping <- set.col.type( item.grouping , list ( "character" = names(item.grouping) ))
+		item.grouping <- set.col.type( item.grouping , list ( "character" = names(item.grouping)[1] , "numeric" = names(item.grouping)[-1] ))
 	}
 	
 	# Plausicheck auf Dichotomie
