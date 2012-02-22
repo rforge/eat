@@ -2,7 +2,7 @@
 # automateConquestModel
 #
 # Description: calls Functions to prepare, run and report Conquest Models
-# Version: 	0.6.0
+# Version: 	0.7.0
 # Status: stable
 # Release Date: 	2011-11-15
 # Author:    Karoline Sachse, Martin Hecht
@@ -63,16 +63,17 @@
 ###                       (Conquest-handbuch, S.166)
 ### na           ... Liste mit Codes, die als NA zu behandeln sind, für Items und Hintergrundvariablen separat;
 ###                  z.B. na=list(items=c(6,7,8,9,96,97,98,99), DIF=9)
+### verbose      ... logical: should messages printed on console?
 
 automateConquestModel <- function ( dataset, ID, regression=NULL, DIF=NULL, group.var=NULL, weight=NULL, testitems, na=list(items=NULL, DIF=NULL, HG=NULL, group=NULL, weight=NULL), person.grouping=NULL, item.grouping=NULL,
                                     model.statement="item", m.model="1pl", Title = NULL, jobName, jobFolder, subFolder=list(), dataName=NULL, anchor=NULL, pathConquest="C:/ConQuest/console_Feb2007.exe", method=NULL,std.err=NULL,distribution=NULL,
                                     n.plausible=NULL, set.constraints=NULL, nodes=NULL, p.nodes=NULL, f.nodes=NULL, n.iterations=NULL, converge=NULL, deviancechange=NULL, name.unidim=NULL,
-                                    equivalence.table="wle",use.letters=FALSE, check.for.linking = FALSE)	 {
+                                    equivalence.table="wle",use.letters=FALSE, check.for.linking = FALSE, verbose = TRUE)	 {
     
 	original.options <- options("scipen")                         ### lese Option für Anzahl der Nachkommastellen 
     options(scipen = 20)                                          ### setze Option für Anzahl der Nachkommastellen
                   
-    ver <- "0.6.0"
+    ver <- "0.7.0"
     ret <- TRUE
     if(missing(dataset)) {stop(paste("Error in automateConquestModel_",ver,": No dataset specified.\n",sep="")) }
     if(missing(jobName)) {stop(paste("Error in automateConquestModel_",ver,": No 'jobName' choosen.\n",sep="")) }
@@ -168,7 +169,7 @@ automateConquestModel <- function ( dataset, ID, regression=NULL, DIF=NULL, grou
     conquestAnker <- NULL
     if(!is.null(anchor))
       {sunk(paste("automateConquestModel_",ver,": Create list with anchor parameter.\n",sep=""))
-       if(inherits(try( conquestAnker <- genConquestAnker(daten= dataset ,itemspalten= testitems , prm.file=anchor )    ),"try-error"))
+       if(inherits(try( conquestAnker <- genConquestAnker(daten= dataset ,itemspalten= testitems , prm.file=anchor , verbose = verbose)    ),"try-error"))
 		 { ret <- FALSE; sunk(paste("automateConquestModel_",ver,": Error in creating list with anchor parameter.\n",sep="")); stop()}
        flush.console()}
     

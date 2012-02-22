@@ -15,7 +15,7 @@ m.model="1pl", Title = NULL, jobName, jobFolder, subFolder=list(), dataName=NULL
 anchor=NULL, pathConquest, method=NULL,std.err=NULL,distribution=NULL, 
 n.plausible=NULL, set.constraints=NULL, nodes=NULL, p.nodes=NULL, f.nodes=NULL, 
 n.iterations=NULL, converge=NULL, deviancechange=NULL, name.unidim=NULL, 
-equivalence.table="wle",use.letters=FALSE, check.for.linking=FALSE)
+equivalence.table="wle",use.letters=FALSE, check.for.linking=FALSE, verbose = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -86,6 +86,8 @@ dataset is named \code{[jobName].dat}
 }
   \item{anchor}{
 optional: data frame with anchor parameters. First column of \code{anchor} refers to item name, second columns refers to parameter used as reference for anchoring.
+Note: not all items in the data.frame have to occur as anchor parameters in the anchor data frame, as well as not all items in the anchor frame have to occur in 
+the data frame.
 }
   \item{pathConquest}{
  character string with path and name of Conquest console, for example \code{"c:/programme/conquest/console_Feb2007.exe"}
@@ -144,6 +146,9 @@ columns with width 2 in Conquest.
 }
   \item{check.for.linking}{
 logical: If \code{TRUE}, items in dataset are checked for being connected with each other via design. 
+}
+  \item{verbose}{
+logical: If \code{TRUE}, messages are printed on console.  
 }
  
 }

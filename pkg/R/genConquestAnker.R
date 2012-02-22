@@ -4,7 +4,7 @@
 # erzeugt Files mit Quellparametern zur Verankerung in Conquest
 #
 #
-# Version: 	0.4.0
+# Version: 	0.5.0
 # Imports:
 # Published:
 # Author:   Sebastian Weirich
@@ -25,8 +25,8 @@
 ### itemspalten          ... wo stehen Testitems im Datensatz?
 ### prm.file             ... Tabelle mit Quellparametern, als R-Dataframe
 
-genConquestAnker <- function(daten ,itemspalten, prm.file) {
-                    ver <- "0.4.0"
+genConquestAnker <- function(daten ,itemspalten, prm.file, verbose = TRUE) {
+                    ver <- "0.5.0"
                     lab <- data.frame(1:ncol(daten[,itemspalten]), colnames(daten[,itemspalten]) , stringsAsFactors=F)
                     colnames(lab) <- c("===>","item")
                     prm <- prm.file
@@ -48,8 +48,26 @@ genConquestAnker <- function(daten ,itemspalten, prm.file) {
                        }
                     }
                     colnames(prm) <- c("item","parameter")
-                    ind <- intersect(lab$item,prm$item)
-                    ind <- wo.sind(ind,prm$item,quiet=T)
+					ind <- intersect(lab$item,prm$item)
+					if ( verbose == TRUE )  {
+					   sunk(paste("genConquestAnker_",ver,": Found ",nrow(lab), " items in data set.\n",sep=""))
+					   sunk(paste("    Found ",nrow(prm), " items in anchor set.\n",sep=""))
+  					   if(length(ind) == 0) {sunk("Error: No common items found in 'lab.file' and 'prm.file'.\n"); stop()}
+					   if(length(ind) >  0) 
+					     {sunk(paste("genConquestAnker_",ver,": Found ",length(ind), " common anchor items.\n",sep=""))
+						  if (length(ind) < nrow(lab) )  {
+						     missingInAnchors <- setdiff(lab$item, prm$item)
+						     sunk(paste("Following ",length(missingInAnchors)," items in data set without anchor parameters:\n",sep=""))
+							 sunk(paste(paste(missingInAnchors,collapse=", "),"\n",sep=""))
+						  }	
+						  if (length(ind) < nrow(prm) )    {
+						     missingInData <- setdiff(prm$item, lab$item)
+						     sunk(paste("Following ",length(missingInData)," items in anchor set were not found in data set:\n",sep=""))
+							 sunk(paste(paste(missingInData,collapse=", "),"\n",sep=""))
+						  }
+					    }
+					}		
+					ind <- wo.sind(ind,prm$item,quiet=T)
                     prm <- prm[ind,]
                     ind <- wo.sind(prm$item,lab$item,quiet=T)
                     res <- data.frame(ind,prm$parameter,stringsAsFactors=F)
