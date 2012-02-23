@@ -59,7 +59,7 @@
 				
 				sunk ( paste ( einr , "dataset = " , "'data.frame': " , nrow ( dataset ) , " obs. of " , ncol ( dataset ) , " variables" , sep = "" ) )
 				stopifnot ( is.character ( id.name ) )
-				sunk ( paste ( einr , "ID = " , id.name , sep = "" ) )
+				sunk ( paste ( "cat('" , einr , "ID = " , id.name , "\\n')" , sep = "" ) )
 				sunk ( paste ( einr , "regression = " , regression , sep = "" ) )				
 				sunk ( paste ( einr , "DIF = " , dif , sep = "" ) )								
 				sunk ( paste ( einr , "group.var = " , paste ( group , collapse = ", " ) , sep = "" ) )				

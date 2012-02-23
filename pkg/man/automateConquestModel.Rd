@@ -145,7 +145,7 @@ logical: Should values coded als letters? May be relevant only in partial credit
 columns with width 2 in Conquest.  
 }
   \item{checkLink}{
-logical: If \code{TRUE}, items in dataset are checked for being connected with each other via design (function \link{\code{checkLink}} is called)
+logical: If \code{TRUE}, items in dataset are checked for being connected with each other via design (function \code{\link{checkLink}} is called)
 }
   \item{verbose}{
 logical: If \code{TRUE}, messages are printed on console.  

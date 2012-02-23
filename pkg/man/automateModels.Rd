@@ -66,7 +66,7 @@ data.frame with grouping information of persons, first column must be the name o
 character vector of group names chosen for analysis
 }
   \item{checkLink}{
-		logical: If \code{TRUE}, items in dataset are checked for being connected with each other via design (function \link{\code{checkLink}} is called)
+		logical: If \code{TRUE}, items in dataset are checked for being connected with each other via design (function \code{\link{checkLink}} is called)
 		23.02.2012: not yet implemented
 }
 

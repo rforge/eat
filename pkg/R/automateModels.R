@@ -38,7 +38,7 @@ automateModels <- function ( dataset , id = NULL , context.vars = NULL , items =
 							 person.grouping.vars = NULL ,
 							 person.grouping.vars.include.all = FALSE ,
 							 person.grouping = NULL , select.person.group = NULL ,
-							 checkLink = TRUE ,
+							 checkLink = FALSE ,
 							 additional.item.props = NULL ,
 							 folder ,
 							 overwrite.folder = TRUE , 
