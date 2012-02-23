@@ -77,7 +77,7 @@
 
 genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, namen.dif.var , DIF.char, namen.weight.var, weight.char, namen.all.hg,all.hg.char, namen.group.var=NULL, model = NULL, ANKER = NULL,std.err=c("quick","full","none"),name.unidim="dimension_1",
                               model.statement="item", distribution=c("normal","discrete"), jobFolder, subFolder=NULL, name.dataset=NULL, Title=NULL,constraints =c("cases","none","items"), method=c("gauss", "quadrature", "montecarlo"), n.plausible=5,n.iterations=1000,nodes=15, p.nodes=2000,f.nodes=2000,converge=0.0001,deviancechange=0.0001,
-                              equivalence.table=c("wle","mle","NULL"),var.char,use.letters=use.letters, pathConquest)       {
+                              equivalence.table=c("wle","mle","NULL"),var.char,use.letters=use.letters, pathConquest, import = list () )       {
                    ver           <- "0.17.0"
                    .mustersyntax <- c("title = ####hier.title.einfuegen####;",
                                       "export logfile >> ####hier.name.einfuegen####.log;",
@@ -87,10 +87,12 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                                       "codes ####hier.erlaubte.codes.einfuegen####;",
                                       "labels  << ####hier.name.einfuegen####.lab;",
                                       "import anchor_parameters << ####hier.name.einfuegen####.ank;",
+                                      "import init_parameters << ####hier.init_parameters.einfuegen####;",
+                                      "import init_reg_coefficients << ####hier.init_reg_coefficients.einfuegen####;",
+                                      "import init_covariance << ####hier.init_covariance.einfuegen####;",
                                       "caseweight",
                                       "set constraints=####hier.constraints.einfuegen####;",
                                       "set warnings=no,update=yes,n_plausible=####hier.anzahl.pv.einfuegen####,p_nodes=####hier.anzahl.p.nodes.einfuegen####,f_nodes=####hier.anzahl.f.nodes.einfuegen####;",
-                                      "export par    >> ####hier.name.einfuegen####.prm;",
                                       "regression",
                                       "model ####hier.model.statement.einfuegen####;",
                                       "estimate ! method=####hier.method.einfuegen####,iter=####hier.anzahl.iterations.einfuegen####,nodes=####hier.anzahl.nodes.einfuegen####,converge=####hier.converge.einfuegen####,deviancechange=####hier.deviancechange.einfuegen####,stderr=####hier.std.err.einfuegen####,distribution=####hier.distribution.einfuegen####;",
@@ -100,7 +102,10 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                                       "equivalence ####hier.equivalence.table.einfuegen#### >> ####hier.outfolder.einfuegen####\\####hier.name.einfuegen####.equ;",
                                       "show >> ####hier.outfolder.einfuegen####\\####hier.name.einfuegen####.shw;",
 									  "export history >> ####hier.name.einfuegen####.his;",
-                                      "descriptives !estimates=pv >> ####hier.outfolder.einfuegen####\\####hier.name.einfuegen####_pvl.dsc;",
+									  "export par    >> ####hier.name.einfuegen####.prm;",
+									  "export covariance >> ####hier.name.einfuegen####.cov;",
+									  "export reg_coefficients >> ####hier.name.einfuegen####.reg;",
+									  "descriptives !estimates=pv >> ####hier.outfolder.einfuegen####\\####hier.name.einfuegen####_pvl.dsc;",
                                       "descriptives !estimates=wle >> ####hier.outfolder.einfuegen####\\####hier.name.einfuegen####_wle.dsc;",
                                       "quit;")
                    ### Conquest akzeptiert explizite Variablennamen nur in Kleinschreibung!
@@ -134,6 +139,27 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    syntax    <- gsub("####hier.equivalence.table.einfuegen####",match.arg(equivalence.table),syntax)
 				   syntax    <- gsub("####hier.model.statement.einfuegen####",model.statement,syntax)
 				   method    <- match.arg(method)
+				   if(!is.null(import$init_parameters))  {
+				      syntax  <- gsub("####hier.init_parameters.einfuegen####",normalize.path(import$init_parameters))
+				   }	 else {
+				      ind.1 <- grep("import init_parameters",syntax)
+                      stopifnot(length(ind.1) == 1)
+ 				      syntax <- syntax[-ind.1]
+				   }  
+				   if(!is.null(import$init_reg_coefficients))  {
+				      syntax  <- gsub("####hier.init_reg_coefficients.einfuegen####",normalize.path(import$init_reg_coefficients))
+				   }	 else {
+				      ind.2 <- grep("import init_reg_coefficients",syntax)
+                      stopifnot(length(ind.2) == 1)
+ 				      syntax <- syntax[-ind.2]
+				   }
+				   if(!is.null(import$init_covariance))  {
+				      syntax  <- gsub("####hier.init_covariance.einfuegen####",normalize.path(import$init_covariance))
+				   }	 else {
+				      ind.3 <- grep("import init_covariance",syntax)
+                      stopifnot(length(ind.3) == 1)
+ 				      syntax <- syntax[-ind.3]
+				   }
 				   if(!is.null(subFolder$out)) 
                    ### entferne ggf. abschliessende Schraegstriche: erledigt nun automateConquestModels
                      {### for (ii in 1:nchar(subFolder$out)) {subFolder$out <- gsub("/$","",subFolder$out)} 
@@ -263,8 +289,13 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    ind <- grep("labels ",syntax)
                    stopifnot(length(ind)==1)
                    syntax <- c(syntax[1:ind],score.statement,syntax[(ind+1):length(syntax)])
-                   if(length(HG.var)==0) {ind.2 <- grep("regression",syntax)    ### wenn kein HG-model, loesche entsprechende Syntaxzeile
-                                          syntax <- syntax[-ind.2]}
+                   if(length(HG.var)==0) {ind.2 <- grep("regression",syntax)    ### wenn kein HG-model, loesche entsprechende Syntaxzeilen
+                                          stopifnot(length(ind.2)==1)
+										  syntax <- syntax[-ind.2]
+										  ind.3 <- grep("export reg_coefficients",syntax)
+										  stopifnot(length(ind.3)==1)
+										  syntax <- syntax[-ind.3]
+										  }
                    if(length(namen.group.var) ==0) { ind.3 <- grep("group",syntax)    ### wenn keine Gruppen definiert, loesche Statement
                                                stopifnot(length(ind.3)==1)
                                                syntax <- syntax[-ind.3]}
