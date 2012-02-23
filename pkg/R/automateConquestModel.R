@@ -158,7 +158,7 @@ automateConquestModel <- function ( dataset, ID, regression=NULL, DIF=NULL, grou
                                         namen.weight.var=conquestDataset$namen.weight.var, weight.char=conquestDataset$weight.char,method=method,std.err=std.err,model.statement=model.statement,
 										distribution=distribution,model=item.grouping, ANKER=anchor, jobFolder=jobFolder, name.dataset=dataName, subFolder=subFolder, Title=Title, n.plausible=n.plausible,
                                         constraints=set.constraints, n.iterations=n.iterations, nodes=nodes, p.nodes=p.nodes, f.nodes=f.nodes, converge=converge, deviancechange=deviancechange, 
-                                        name.unidim=name.unidim, equivalence.table=equivalence.table,use.letters=use.letters,var.char=conquestDataset$var.char)  ),"try-error"))
+                                        name.unidim=name.unidim, equivalence.table=equivalence.table,use.letters=use.letters,var.char=conquestDataset$var.char,  pathConquest = pathConquest)  ),"try-error"))
       { ret <- FALSE; sunk(paste("automateConquestModel_",ver,": Error in generating syntax and label list.\n",sep="")); stop()}
 
 		flush.console()

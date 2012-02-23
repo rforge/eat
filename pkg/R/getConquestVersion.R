@@ -3,11 +3,10 @@ getConquestVersion <- function ( path.conquest , asDate = TRUE ) {
 
 		wd <- getwd ()
 		f <- file.path ( wd , "delete.cqc" )
-		f <- normalizePath ( f )
 		write ( "quit;" , f )
-
-		path.conquest <- normalizePath ( path.conquest )
 		
+		f <- normalizePath ( f )
+		path.conquest <- normalizePath ( path.conquest )
 		cmd <- paste ( path.conquest , f )
 
 		r <- NULL

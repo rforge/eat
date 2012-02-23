@@ -3,7 +3,7 @@
 # genConquestSynLab
 # erzeugt Conquest Syntax und Labels
 #
-# Version: 	0.16.0
+# Version: 	0.17.0
 # Imports:
 # Published:
 # Author:   Sebastian Weirich
@@ -47,6 +47,7 @@
 # 28.11.2011 (SW): Namen der Dimensionen werden nun ins Labfile uebertragen
 # 05.12.2011 (SW): 'id' durch 'pid' ersetzt; log-file exported
 # 12.12.2011 (SW): table(unlist (...) ) replaced by table.unlist( ... )
+# 23.02.2012 (SW/MH): Conquest History eingefuegt 
 #
 ####################################################################################################################
 
@@ -76,8 +77,8 @@
 
 genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, namen.dif.var , DIF.char, namen.weight.var, weight.char, namen.all.hg,all.hg.char, namen.group.var=NULL, model = NULL, ANKER = NULL,std.err=c("quick","full","none"),name.unidim="dimension_1",
                               model.statement="item", distribution=c("normal","discrete"), jobFolder, subFolder=NULL, name.dataset=NULL, Title=NULL,constraints =c("cases","none","items"), method=c("gauss", "quadrature", "montecarlo"), n.plausible=5,n.iterations=1000,nodes=15, p.nodes=2000,f.nodes=2000,converge=0.0001,deviancechange=0.0001,
-                              equivalence.table=c("wle","mle","NULL"),var.char,use.letters=use.letters)
-                  {ver           <- "0.16.0"
+                              equivalence.table=c("wle","mle","NULL"),var.char,use.letters=use.letters, pathConquest)       {
+                   ver           <- "0.17.0"
                    .mustersyntax <- c("title = ####hier.title.einfuegen####;",
                                       "export logfile >> ####hier.name.einfuegen####.log;",
                                       "datafile ####hier.Pfad.und.Dateiname.einfuegen####;",
@@ -98,6 +99,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                                       "show cases! estimate=wle >> ####hier.outfolder.einfuegen####\\####hier.name.einfuegen####.wle;",
                                       "equivalence ####hier.equivalence.table.einfuegen#### >> ####hier.outfolder.einfuegen####\\####hier.name.einfuegen####.equ;",
                                       "show >> ####hier.outfolder.einfuegen####\\####hier.name.einfuegen####.shw;",
+									  "export history >> ####hier.name.einfuegen####.his;",
                                       "descriptives !estimates=pv >> ####hier.outfolder.einfuegen####\\####hier.name.einfuegen####_pvl.dsc;",
                                       "descriptives !estimates=wle >> ####hier.outfolder.einfuegen####\\####hier.name.einfuegen####_wle.dsc;",
                                       "quit;")
@@ -281,7 +283,11 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                                        {lab.dim   <- data.frame(lab.dim.1=c("===>",1:length(namen.dim)), lab.dim.2=c("dimensions",namen.dim), stringsAsFactors=F)
                                         colnames(lab.dim) <- colnames(lab)
                                         lab       <- rbind(lab,lab.dim)}
-                   ## write(syntax,paste(pfad,"/",Name,".cqc",sep=""),sep="\n")
+				   cq.version <- getConquestVersion( pathConquest )
+				   if(cq.version < as.date("1Jan2007") )
+									   {ind.3 <- grep("export history",syntax)   ### wenn Conquest aelter als 2007, soll history geloescht werden
+                                        syntax <- syntax[-ind.3]}
+				   ## write(syntax,paste(pfad,"/",Name,".cqc",sep=""),sep="\n")
                    return(list(syntax=syntax, lab=lab))}
 
 				   
