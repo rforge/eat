@@ -11,7 +11,7 @@ specify and run several ConQuest models
 automateModels(dataset, id = NULL, context.vars = NULL, items = NULL, 
 item.grouping = NULL, select.item.group = NULL, person.grouping.vars = NULL, 
 person.grouping.vars.include.all = FALSE, person.grouping = NULL, 
-select.person.group = NULL, additional.item.props = NULL, folder, 
+select.person.group = NULL, checkLink = FALSE, additional.item.props = NULL, folder, 
 overwrite.folder = TRUE, analyse.name.prefix = NULL, analyse.name = NULL, 
 analyse.name.elements = NULL, data.name = NULL, m.model = NULL, software = NULL, 
 dif = NULL, weight = NULL, anchor = NULL, regression = NULL, 
@@ -65,6 +65,11 @@ data.frame with grouping information of persons, first column must be the name o
 %%     ~~Describe \code{select.person.group} here~~
 character vector of group names chosen for analysis
 }
+  \item{checkLink}{
+		logical: If \code{TRUE}, items in dataset are checked for being connected with each other via design (function \link{\code{checkLink}} is called)
+		23.02.2012: not yet implemented
+}
+
   \item{additional.item.props}{
 %%     ~~Describe \code{additional.item.props} here~~
 data.frame of additional item information to be merged to model results, first column must be 'item' and contain item names
