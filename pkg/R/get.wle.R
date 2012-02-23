@@ -30,14 +30,15 @@
 ####################################################################################################################
 
 get.wle <- function (file) {
-               funVersion <- "get.wle_1.3.0"
+			   funVersion <- "get.wle_1.3.0"
                input <- readLines (file)
                input <- crop(input)
                input <- strsplit(input, " +")
                n.spalten <- max ( sapply(input,FUN=function(ii){ length(ii) }) )
-               n.wle <- (n.spalten-1) / 4                                       ### Spaltenanzahl sollte ganzzahlig sein.
-               input <- asNumericIfPossible(data.frame( matrix( t( sapply(input,FUN=function(ii){ ii[1:n.spalten] }) ),length(input),byrow=F), stringsAsFactors=F), set.numeric = TRUE, verbose = FALSE)
-               col.min.na <- which( rowSums(is.na(input)) == min(rowSums(is.na(input))))[1]### Zeile mit den am wenigsten fehlenden Elementen
+               input <- data.frame( matrix( t( sapply(input,FUN=function(ii){ ii[1:n.spalten] }) ),length(input),byrow=F), stringsAsFactors=F)
+			   if ( n.spalten %% 2 == 0 ) mk <- colnames (input)[-2] else mk <- colnames (input)
+			   input <- set.col.type ( data=input , col.type=list("numeric.if.possible"=mk) )
+			   col.min.na <- which( rowSums(is.na(input)) == min(rowSums(is.na(input))))[1]### Zeile mit den am wenigsten fehlenden Elementen
                col.numeric <- which ( sapply(input, FUN=function(ii) {class(ii)}) == "numeric" )
 			   col.real.numbers <- na.omit(unlist ( lapply (col.numeric , FUN= function(ii) { ifelse(input[col.min.na,ii] == round(input[col.min.na,ii]), NA, ii)}) ) )
                cat(paste(funVersion,": Found valid WLEs of ", nrow(na.omit(input))," person(s) for ", length(col.real.numbers)/2, " dimension(s).\n",sep=""))
