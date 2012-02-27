@@ -3,7 +3,7 @@
 # genConquestSynLab
 # erzeugt Conquest Syntax und Labels
 #
-# Version: 	0.17.0
+# Version: 	0.18.0
 # Imports:
 # Published:
 # Author:   Sebastian Weirich
@@ -76,9 +76,9 @@
 ### "namen.dif.var", "namen.hg.var" und "namen.group.var" benutzt. Bitte die Konsistenz unbedingt pruefen!
 
 genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, namen.dif.var , DIF.char, namen.weight.var, weight.char, namen.all.hg,all.hg.char, namen.group.var=NULL, model = NULL, ANKER = NULL,std.err=c("quick","full","none"),name.unidim="dimension_1",
-                              model.statement="item", distribution=c("normal","discrete"), jobFolder, subFolder=NULL, name.dataset=NULL, Title=NULL,constraints =c("cases","none","items"), method=c("gauss", "quadrature", "montecarlo"), n.plausible=5,n.iterations=1000,nodes=15, p.nodes=2000,f.nodes=2000,converge=0.0001,deviancechange=0.0001,
+                              model.statement="item", distribution=c("normal","discrete"), jobFolder, subFolder=NULL, name.dataset=NULL, Title=NULL,constraints =c("cases","none","items"), method=c("gauss", "quadrature", "montecarlo"), n.plausible=5,n.iterations=1000,nodes=NULL, p.nodes=2000,f.nodes=2000,converge=0.0001,deviancechange=0.0001,
                               equivalence.table=c("wle","mle","NULL"),var.char,use.letters=use.letters, pathConquest, import = list () )       {
-                   ver           <- "0.17.0"
+                   ver           <- "0.18.0"
                    .mustersyntax <- c("title = ####hier.title.einfuegen####;",
                                       "export logfile >> ####hier.name.einfuegen####.log;",
                                       "datafile ####hier.Pfad.und.Dateiname.einfuegen####;",
@@ -133,12 +133,25 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    syntax    <- gsub("####hier.converge.einfuegen####",converge,syntax)
                    syntax    <- gsub("####hier.deviancechange.einfuegen####",deviancechange,syntax)
                    syntax    <- gsub("####hier.constraints.einfuegen####",match.arg(constraints),syntax)
-                   syntax    <- gsub("####hier.anzahl.nodes.einfuegen####",nodes,syntax)
+                   method    <- match.arg(method)
+				   if(method == "montecarlo")   {
+				     if (is.null(nodes) )   {
+					    sunk(paste("genConquestSynLab_",ver,": '",method,"' has been chosen for estimation method. Number of nodes was not explicitly specified. Set nodes to 1000.\n",sep=""))
+					    nodes <- 1000
+				     }
+					 if(nodes < 100 ) {
+					    sunk(paste("genConquestSynLab_",ver,": Warning: Due to user specification, only ",nodes," nodes are used for '",method,"' estimation. Please note or re-specify your analysis.\n",sep=""))
+					 }
+					} 
+				   if(method != "montecarlo" & is.null(nodes) )   {
+					  sunk(paste("genConquestSynLab_",ver,": Number of nodes was not explicitly specified. Set nodes to 15 for method '",method,"'.\n",sep=""))
+					  nodes <- 15
+				    }
+				   syntax    <- gsub("####hier.anzahl.nodes.einfuegen####",nodes,syntax)
                    syntax    <- gsub("####hier.std.err.einfuegen####",match.arg(std.err),syntax)
                    syntax    <- gsub("####hier.distribution.einfuegen####",match.arg(distribution),syntax)
                    syntax    <- gsub("####hier.equivalence.table.einfuegen####",match.arg(equivalence.table),syntax)
 				   syntax    <- gsub("####hier.model.statement.einfuegen####",model.statement,syntax)
-				   method    <- match.arg(method)
 				   if(!is.null(import$init_parameters))  {
 				      syntax  <- gsub("####hier.init_parameters.einfuegen####",normalize.path(import$init_parameters))
 				   }	 else {

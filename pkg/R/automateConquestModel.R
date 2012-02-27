@@ -86,7 +86,7 @@ automateConquestModel <- function ( dataset, ID, regression=NULL, DIF=NULL, grou
 	if(is.null(subFolder))        {subFolder <- list()} 
   if(is.null(n.plausible))     {n.plausible <- 5}
 	if(is.null(set.constraints)) {set.constraints <- "cases"}
-  if(is.null(nodes))           {nodes <- 15}
+    ### if(is.null(nodes))           {nodes <- 15}	               ### nodes werden erst in genConquestSynLab gesetzt, da sie davon abhängen ob Montecarlo gesetzt ist
 	if(is.null(method))    {
      method   <- "gauss"
      if(!is.null(item.grouping))   {                               ### wunsch von Thilo: wenn mehr als 3500 nodes und keine 'method' explizit spezifiziert: montecarlo
@@ -120,7 +120,7 @@ automateConquestModel <- function ( dataset, ID, regression=NULL, DIF=NULL, grou
 	}		
 	
     sunk(paste("automateConquestModel_",ver,": Use following settings:\n",sep=""))
-    sunk(paste("    constraints: ",set.constraints,"; method: ",method,"; standard error: ",std.err,"; assumed population distribution: ",distribution,"; nodes: ",nodes,"\n",sep=""))
+    sunk(paste("    constraints: ",set.constraints,"; method: ",method,"; standard error: ",std.err,"; assumed population distribution: ",distribution,"\n",sep=""))
     sunk(paste("    max. iterations: ",n.iterations,"; converge: ",paste("0",substring(as.character(converge+1),2),sep=""),"; deviancechange: ",paste("0",substring(as.character(deviancechange+1),2),sep=""),"; f.nodes: ",f.nodes,"; p.nodes: ",p.nodes,"\n",sep=""))
         	  
     ### Verzeichnisangaben dürfen weder mit einem Schrägstrich beginnen noch damit enden!
