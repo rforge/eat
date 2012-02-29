@@ -43,8 +43,10 @@ If both criteria - absolute DIF exceeds \code{abs.dif.bound} and the confidence 
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-A list of data frames, named by the 'TERM'-statements in Conquest showfile, plus an additional data frame with
-regression coefficients when latent linear regression model was specified in Conquest analysis. 
+A list of data frames, named by the 'TERM'-statements in Conquest showfile, plus an additional data frame named \code{regression} 
+with regression coefficients when latent linear regression model was specified in Conquest analysis, plus an additional
+data frame named \code{cov.structure} with covariance and correlation matrix of latent dimensions. If uni-dimensional model is specified, 
+the variance of the latent dimension is given instead.
 If one term was specified as DIF-statement, the corresponding data frame is augmented with additional columns for
 confidence intervals and indicators specifying significant DIF. 
 

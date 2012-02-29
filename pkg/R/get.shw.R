@@ -3,7 +3,7 @@
 # get.shw
 # liest Conquest-Outputfiles (*.shw) als R-Objekte ein
 #
-# Version: 	1.7.0
+# Version: 	1.8.0
 # Published:
 # Author:  Sebastian Weirich
 # Maintainer:
@@ -23,6 +23,7 @@
 # 25.11.2011 SW: "cat" durch "sunk" ersetzt
 # 28.11.2011 SW: Fehler wenn alle Items verankert sind also also kein einziger Standardfehler bestimmt wird,
 #                fuehrte zu falscher Benennung der Spalten: gefixed ... 
+# 28.02.2012 SW: liest nun auch Kovarianz- und Korrelationstabelle ein 
 #
 ####################################################################################################################
 
@@ -218,5 +219,35 @@ get.shw <- function (file, dif.term = NULL, split.dif = TRUE, abs.dif.bound = 0.
 		
 		outputList$regression <- regrOutput
 	}
+	### Kovarianz-/ Korrelationsmatrix einlesen: schwierig, also Trennen nach ein- vs. mehrdimensional. Eindimensional: zweimal "-----" zwischen Beginn und Ende des COVARIANCE-Statements
+    ### allInput muss mit "Scan" neu eingelesen werden, "readLines" klappt nicht ... 
+	allInput <- scan(file,what="character",sep="\n",quiet=TRUE) 
+			  korStart <- grep("COVARIANCE/CORRELATION MATRIX", allInput)
+              korEnd   <- grep("An asterisk next", allInput) 
+              korEnd   <- min(korEnd[korEnd > korStart])
+              korStriche <- grep("-----",allInput)
+              korStriche <- korStriche[korStriche > korStart & korStriche < korEnd]
+              if(length(korStriche) == 2) {                                     ### eindimensional!
+                 varRow    <- grep("Variance", allInput)
+                 variance  <- as.numeric( unlist( lapply(strsplit(allInput[varRow]," +"), FUN=function(ll) {ll[length(ll)]}) ) )
+                 names(variance) <- "variance"
+                 outputList$cov.structure <- variance
+              }
+              if(length(korStriche) > 2) {                                      ### mehrdimensional!
+                 bereich     <- allInput[ (min(korStriche) + 1) : (max(korStriche) - 1 ) ]
+                 bereich     <- bereich[ -grep("----",bereich)]                 
+                 bereich     <- strsplit(crop(bereich),"  +")
+                 for (ii in 2:(length(bereich)-1) )  {
+                     if(ii <= length(bereich[[ii]]) )  {
+                        bereich[[ii]] <- c(bereich[[ii]][1:(ii-1)], NA, bereich[[ii]][ii:length(bereich[[ii]])])
+                     }
+                     if(ii > length(bereich[[ii]]) )  {
+                        bereich[[ii]] <- c(bereich[[ii]][1:(ii-1)], NA)
+                     }
+                 }
+                 bereich.data.frame <- asNumericIfPossible(data.frame(do.call("rbind", bereich[-1]),stringsAsFactors=FALSE), verbose = FALSE)
+                 colnames(bereich.data.frame) <- bereich[[1]]
+                 outputList$cov.structure <- bereich.data.frame
+              }
     return(outputList)
 }
