@@ -62,3 +62,29 @@ getDimensionNames <- function (lab.file, jobFolder, name.analyse, lab.file.only 
 	}	
     return(dimensions)
 }
+
+getDimnamesFromLabfile <- function (lab.file) {
+    funVersion <- "getDimnamesFromLabfile_0.1.0"
+	
+	# find dimensions in lab-file
+    if (!is.character(lab.file)) {
+	   stop(paste(funVersion,": 'lab.file' has to be of class 'character'.\n",sep=""))
+	}
+	lf <- scan(lab.file, what = "character", sep="\n", quiet=TRUE )
+	
+	dimPosition <- which ( grepl ( "^===>\\s+dimensions" , lf ) )
+	if ( length(dimPosition) != 1 ) {
+			dimensions <- NULL
+	} else {
+	
+			endPosition <- which ( grepl ( "^===>" , lf[ dimPosition + 1 : length(lf)]) )[1]
+			if ( is.na ( endPosition ) ) endPosition <- length(lf)
+	
+			lf2 <- lf [ (dimPosition+1):endPosition ]
+			
+			dimensions <- sapply ( strsplit ( lf2 , "\\s+" ) , "[" , 2 )
+		
+	}
+	
+	return(dimensions)
+}

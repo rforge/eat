@@ -37,7 +37,7 @@ get.plausible <- function (file) {
 	# if (!exists("melt")) {
         # library(reshape)
     # }
-
+	
 # input <- read.table(file, sep = "", header = FALSE, fill = TRUE, stringsAsFactors = FALSE)
 	input           <- scan(file,what="character",sep="\n",quiet=TRUE)
   input           <- crop(gsub("-"," -",input) )              ### crop dauert hier zu lange
@@ -57,7 +57,13 @@ get.plausible <- function (file) {
 	output <- input [ isPVrow, ]
 	
 	# find number of dimensions and dimension names from lab file
-	lab.file <- gsub("pvl", "lab", file ) 
+### MH 1.3.12 
+### das ist hier suboptimal, wenn der plausible values file nicht die Endung "pvl" hat, crasht das alles später
+### die Idee ist aber gut, ich versuche das zu optimieren
+#	lab.file <- gsub("pvl", "lab", file ) 
+	lab.file <- gsub ( "\\.[^\\.]+$" , ".lab", file )
+
+
 	
 	# set default
 	dimNames <- NULL
@@ -65,20 +71,28 @@ get.plausible <- function (file) {
     sunk(paste(funVersion, ": Expected label file '",lab.file,"' was not found. Dimension(s) will be labeled by default as 'dim'.\n",sep=""))
   }  
   # if label file exists, default will be replaced
+
+### MH 1.3.12
+### jobFolder auf getwd() setzen ist hochgradig gefährlich!!!
+### Trennung von wd und lab.file falls lab.file mit path, man kann/sollte auch nicht davon ausgehen, das lab.file in getwd() ist
+# wd <- gsub ( "(.*)/[^/]+$" , "\\1", lab.file )
+# if ( identical ( wd , file ) ) wd <- getwd()
+# lab.file <- gsub ( "(.*)/([^/]+)$" , "\\2", lab.file )
+
   if (file.exists(lab.file)) {	
-		dimNames <- getDimensionNames (lab.file = lab.file, jobFolder = getwd(), lab.file.only = TRUE ) 
-		nDimensions <- max(dimNames [ , 1] )
-		dimensionNames <- dimNames [ , 2]
+		# dimNames <- getDimensionNames (lab.file = lab.file, jobFolder = getwd(), lab.file.only = TRUE ) 
+		dimensionNames <- getDimnamesFromLabfile (lab.file = lab.file ) 
+		nDimensions <- length(dimensionNames)
 	}
 	
-	if (is.null(dimNames)) {
+	if (is.null(dimensionNames)) {
 		nDimensions <- ncol(output) - 1
 		dimensionNames <- paste (rep("dim", nDimensions), 1:nDimensions , sep = ".")
 	}
     sunk(paste(funVersion, ": Found ", nPerson, " person(s) and ", nDimensions, " dimension(s).\n",sep=""))
     sunk(paste(funVersion, ": Found ", nPersonPVs, " plausible values for each person and each dimension.\n",sep=""))
 	
-	
+
 	# name output cols
 	output         <- data.frame(sapply(output, FUN=function(ii) {as.numeric(ii)}),stringsAsFactors=FALSE)
 	outputColNames <- c("PVno", paste ( rep( "pv", nDimensions), dimensionNames, sep = ".") )
@@ -89,7 +103,8 @@ get.plausible <- function (file) {
 	isCaseIDrow <- isCaseIDrow [ - length(isCaseIDrow) ]
 	cases <- input[isCaseIDrow, 1:2]
 	colnames(cases) <-  c( "case", "ID")
-
+	cases$case <- as.numeric(cases$case)
+	
 	# find EAPs and posterior standard deviations - all rows that have not been used before
 	isIDorPVrow <- isCaseIDrow + isPVrow  
   posteriorStats <- input [ ! isIDorPVrow , 1:nDimensions,drop=FALSE]
@@ -103,16 +118,18 @@ get.plausible <- function (file) {
 	posteriorStats <- melt ( posteriorStats, id.vars = c("case", "parameter") )
 	posteriorStats$variable = paste ( posteriorStats$parameter, posteriorStats$variable, sep = ".")
 	posteriorStats <- cast (posteriorStats, case ~ variable)
-		
+	
 	# repeat each row in cases nPersonPVs times
 	options (warn = -1)
-	cases <- data.frame ( apply ( cases, 2, function (ii) { rep(ii, each = nPersonPVs) }), stringsAsFactors = FALSE)
-	if ( mean ( is.na ( cases$ID  )) == 1 ) {
-		cases$ID <- cases$case 
+	cases <- do.call ( "rbind" , mapply ( function ( n , d ) d , 1:nPersonPVs , MoreArgs = list ( cases ) , SIMPLIFY = FALSE ) )
+	cases <- cases [ order ( cases$case ) , ]
+	
+	if ( all ( is.na ( cases$ID ) ) )  {
+		cases$ID <- gsub(" ", "0", formatC ( cases$case , width = max ( nchar ( cases$case ) ) ) )
 	}
 	options (warn = 0)
-	output <- data.frame ( cases, output, stringsAsFactors = FALSE ) 
-	
+	output <- data.frame ( cases, output, stringsAsFactors = FALSE )
+ 	
 	# reshape output
 	output <- recast(output, id.var = c( "case", "ID", "PVno"), formula = case + ID ~ variable + PVno)
 
