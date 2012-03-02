@@ -11,7 +11,7 @@ get.history <- function(historyfile, shw.object)
                     colDimensions     <- grep("coef", colnames(shw.object$regression))
                     nameDimensions    <- gsub("coef_","",colnames(shw.object$regression)[colDimensions])
                     colnames(input)[ 3 : (2 + nrow(shw.object$regression) * ((ncol(shw.object$regression)-2) / 2) )] <- paste( rep(shw.object$regression[,1], 2), rep(nameDimensions, each = nrow(shw.object$regression) ) , sep = "_")
-                    korMatrix         <- shw$cov.structure                      ### lese Korrelationsmatrix ein!
+                    korMatrix         <- shw.object$cov.structure                      ### lese Korrelationsmatrix ein!
                     colnames(korMatrix)[-1] <- korMatrix[1:(nrow(korMatrix)-1),1]
                     korMatrix.dimNames <- korMatrix
                     for (rows in 1:nrow(korMatrix.dimNames))   {
