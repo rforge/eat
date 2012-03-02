@@ -19,6 +19,7 @@ adjust.for.regression = FALSE, q3 = FALSE, missing.rule = NULL, cross = NULL,
 subfolder.order = NULL, subfolder.mode = NULL, allNAdelete = TRUE, additionalSubFolder = NULL, 
 run.mode = NULL, n.batches = NULL, run.timeout = 1440, run.status.refresh = 0.2, 
 all.local.cores = TRUE, email = NULL, smtpServer = NULL, write.txt.dataset = FALSE,
+write.xls.results = TRUE,
 delete.folder.countdown = 5, conquestParameters = NULL )
 }
 %- maybe also 'usage' for other objects documented here.
@@ -195,6 +196,9 @@ smtpServer for sending emails, default: "mailhost.cms.hu-berlin.de"
   \item{write.txt.dataset}{
 %%     ~~Describe \code{write.txt.dataset} here~~
 write out datasets as ascii, default: FALSE
+}
+  \item{write.xls.results}{
+if \code{TRUE} (default) results are written to Excel files
 }
   \item{delete.folder.countdown}{
 %%     ~~Describe \code{delete.folder.countdown} here~~

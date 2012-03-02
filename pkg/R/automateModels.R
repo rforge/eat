@@ -56,7 +56,9 @@ automateModels <- function ( dataset , id = NULL , context.vars = NULL , items =
 							 run.mode = NULL , n.batches = NULL , run.timeout = 1440 , run.status.refresh = 0.2 ,
 							 all.local.cores = TRUE ,
 							 email = NULL , smtpServer = NULL , 
-							 write.txt.dataset = FALSE , delete.folder.countdown = 5 ,
+							 write.txt.dataset = FALSE , 
+							 write.xls.results = TRUE ,
+							 delete.folder.countdown = 5 ,
 							 conquestParameters = NULL ) {
 							 
 		### Funktionsname für Meldungen
@@ -73,7 +75,7 @@ automateModels <- function ( dataset , id = NULL , context.vars = NULL , items =
 		
 		### Begrüßung
 		sunk ( paste ( f.n , "Starting automateModels\n" ) ) 
-		sunk ( paste ( f.n , 'Version: 1.4.8 (2012-02-23)\n' ) )
+		sunk ( paste ( f.n , 'Version: 1.4.9 (2012-03-02)\n' ) )
 		sunk ( paste ( f.n , "This version is BETA. Use at your own risk.\n" ) )
 		### Definitionen
 		m.model.available <- c ( "1pl", "2pl", "3pl" , "4pl" ) 
@@ -253,7 +255,7 @@ automateModels <- function ( dataset , id = NULL , context.vars = NULL , items =
 		# Q3 erzeugen
 		results <- make.q3 ( results , model.specs )
 		# Excels erzeugen
-		check <- .automateModels.writeResultsExcel ( results , model.specs$analyse.name , model.specs$folder , folder.aM , additional.item.props )
+		if ( write.xls.results ) check <- .automateModels.writeResultsExcel ( results , model.specs$analyse.name , model.specs$folder , folder.aM , additional.item.props )
 		
 		# auf Platte schreiben
 		save ( model.specs , file = file.path ( folder.aM , "model.specs.Rdata" )  )
