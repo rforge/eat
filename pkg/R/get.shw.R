@@ -47,7 +47,10 @@ confidence <- function ( par , error, alpha ) {
 get.shw <- function (file, dif.term = NULL, split.dif = TRUE, abs.dif.bound = 0.64, sig.dif.bound = 0.43) {
     funVersion <- "get.shw_1.7.0"
     allInput <- readLines(file)
-
+	fDeviance <- grep("Final Deviance", allInput)                      ### find the row with the final deviance
+    stopifnot(length(fDeviance) == 1)
+    fDeviance <- as.numeric(unlist(lapply (strsplit(allInput[fDeviance], " +"), FUN=function(ll) {ll[length(ll)]}) ))
+            
     # find terms
 	termNameLines <- grep("TERM", allInput)
     nTerms <- length(termNameLines)
@@ -212,7 +215,8 @@ get.shw <- function (file, dif.term = NULL, split.dif = TRUE, abs.dif.bound = 0.
         tempRegrOutput[tempRegrOutput == "NA"] <- NA
         options(warn = -1)
         regrOutput <- data.frame(matrix (apply(tempRegrOutput, 2, as.numeric), nrow = nrow(tempRegrOutput), byrow = FALSE))
-        characterCols <- which(colMeans(is.na(regrOutput)) == 1)
+        options(warn = 0)
+		characterCols <- which(colMeans(is.na(regrOutput)) == 1)
         regrOutput[, characterCols] <- tempRegrOutput[, characterCols]
         colnames(regrOutput) <- c("reg.var", paste(rep(c("coef","error"),nDimensions), rep(nameDimensions,each=2),sep="_") )
 		regrOutput$filename <- file
@@ -249,5 +253,6 @@ get.shw <- function (file, dif.term = NULL, split.dif = TRUE, abs.dif.bound = 0.
                  colnames(bereich.data.frame) <- bereich[[1]]
                  outputList$cov.structure <- bereich.data.frame
               }
+	outputList$final.deviance  <- fDeviance		  
     return(outputList)
 }
