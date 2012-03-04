@@ -28,7 +28,7 @@ Character string of the Conquest item analysis file.
 %% ...
 A data.frame according to the corresponding Conquest item analysis file. Each row represents one response categorie of one item. Columns represents 
 item name (\code{item.name}), label (i.e., items' raw score), score (i.e., the 'value' of the corresponding raw score), number of valid responses (\code{n.valid}),
-absolute frequency of the corresponding score (\code{Abs.Freq}), relative frequency of the corresponding score (\code{Rel.Freq}), items' pvalue (\{p}),
+absolute frequency of the corresponding score (\code{Abs.Freq}), relative frequency of the corresponding score (\code{Rel.Freq}), items' pvalue (\code{p}),
 the point biserial correlation (\code{pt.bis}), T (\code{t.value}) and p value (\code{p.value}) for significance test of point biserial correlation differ 
 from zero, thereshold and delta parameter.
 }
