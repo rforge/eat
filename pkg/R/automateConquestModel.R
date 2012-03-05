@@ -98,7 +98,7 @@ automateConquestModel <- function ( dataset, ID, regression=NULL, DIF=NULL, grou
            used.nodes <- nodes
         }
         if( used.nodes > 3500)  {
-          sunk(paste("automateConquestModel_",ver,": Specified model will use ",used.nodes," nodes. Choosen default method "',method,'" probably is not appropriate. \nChange method to 'montecarlo' with 1000 nodes. Otherwise, please specify your settings explicitly.\n",sep=""))
+          sunk(paste("automateConquestModel_",ver,": Specified model will use ",used.nodes," nodes. Choosen default method '",method,"' probably is not appropriate. \nChange method to 'montecarlo' with 1000 nodes. Otherwise, please specify your settings explicitly.\n",sep=""))
           nodes <- 1000
 		  method <- "montecarlo"
        }
