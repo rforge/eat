@@ -1,7 +1,7 @@
 Package: eat
 Type: Package
 Title: eat
-Version: 1.4.11
+Version: 1.4.12
 Depends: R(>= 2.14.0), sendmailR, gdata, xlsx, car, reshape, foreign, date, plyr, parallel
 Date: 2012-03-05
 Author: eat authors <eat-commits@lists.r-forge.r-project.org>

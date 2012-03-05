@@ -1,13 +1,20 @@
 
-log2init <- function ( log.path , out.path = dirname(log.path) , iteration = c("highestLikelihood","last","first") , out.files.suffix = "_INIT" ) {
+log2init <- function ( log.path , out.path = NULL , iteration = c("highestLikelihood","last","first") , out.files.suffix = "_INIT" ) {
 		
 		# kompletter Log-File
 		tried <- try ( l <- readLines( log.path ) , silent = TRUE )
 		if ( inherits ( tried , "try-error" ) ) stop ( paste ( "could not open file" , log.path ) )
 
 		# wenn es ne connection war, dann für später path ziehen
-		if ( !is.character ( log.path ) ) log.path <- summary(log.path)$description
+		if ( inherits ( log.path , "connection" ) ) {
+				log.path.name <- summary(log.path)$description
+				close ( log.path )
+				log.path <- log.path.name
+		}
 		
+		# outpath setzen
+		if ( is.null ( out.path ) ) out.path <- dirname(log.path)
+	
 		# Indikator für Anfang und Ende von Iteration
 		itind <- which ( grepl ( "Iteration =" , l ) )
 		enditind <- which ( grepl ( "Maximum change in item parameters was" , l ) )
@@ -152,7 +159,6 @@ log2init <- function ( log.path , out.path = dirname(log.path) , iteration = c("
 				}
 					
 				### out files
-				
 				bn <- basename ( log.path )
 				# gepackte Extension abcutten falls nötig
 				cutoff <- c ("bz2","zip")
@@ -162,7 +168,8 @@ log2init <- function ( log.path , out.path = dirname(log.path) , iteration = c("
 				bn <- gsub ( paste ( paste("\\." , cutoff , "$" , sep ="") , collapse = "|" ) , "" , bn )
 				
 				# Outfiles bauen
-				if ( ! file.exists ( out.path ) ) dir.create ( out.path , recursive = FALSE )
+				if ( ! file.exists ( out.path ) ) dir.create ( out.path , recursive = TRUE )
+				cov.out <- reg.out <- prm.out <- NULL
 				els <- c("cov","reg","prm")
 				do <- paste ( els , '.out <- file.path ( out.path , paste ( bn , out.files.suffix , ".', els , '" , sep = "" ) );' , sep = "")
 				eval ( parse ( text = do ) )

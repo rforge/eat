@@ -1,22 +1,23 @@
-\name{log2init}
-\alias{log2init}
+\name{plotDevianceChange}
+\alias{plotDevianceChange}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Convert ConQuest Log to ConQuest Init 
+plot deviance change
 }
 \description{
-Convert a ConQuest logfile to ConQuest covariance, regression and item init files
+extract or plot (on console or to pdf) deviance change from ConQuest logfile
 }
 \usage{
-log2init ( log.path , out.path = NULL , iteration = c("highestLikelihood","last","first") , out.files.suffix = "_INIT" )
+plotDevianceChange ( log.path , plot = TRUE , pdf = FALSE , out.path = NULL , extreme.crit = 0.75 ) 
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
 
   \item{log.path}{ full path to or connection of ConQuest logfile }
-  \item{out.path}{ path of output files , if \code{NULL} folder of log.path is defaulted }
-  \item{iteration}{ either "highestLikelihood" (default), "last" or "first", or a number }
-  \item{out.files.suffix}{ suffix to be added to output file names }
+  \item{plot}{ if \code{TRUE} deviance change plot is created }
+  \item{pdf}{ if \code{TRUE} plot ist written to pdf }
+  \item{out.path}{ path for pdf output file }
+  \item{extreme.crit}{ numeric, threshold criterion to remove outliers, is multiplied with standard deviation of deviance change }
   
 }
 \details{
@@ -29,7 +30,7 @@ To avoid warnings and malfunction manually delete the last potentially incomplet
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-writes files to \code{out.path}
+
 
 }
 \references{
@@ -50,7 +51,7 @@ Martin Hecht
 
 \examples{
 \dontrun{
-log2init ( bzfile ( file.path( .Library , "eat/extdata/ConQuest.Log.Example1.log.bz2" ) ) , "c:/temp" )
+plotDevianceChange ( log.path = bzfile ( file.path( .Library , "eat/extdata/ConQuest.Log.Example1.log.bz2" ) ) )
 }
 }
 

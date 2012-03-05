@@ -1,0 +1,125 @@
+
+plotDevianceChange <- function ( log.path , plot = TRUE , pdf = FALSE , out.path = NULL , extreme.crit = 0.75 ) {
+		
+		# kompletter Log-File
+		tried <- try ( l <- readLines( log.path ) , silent = TRUE )
+		if ( inherits ( tried , "try-error" ) ) stop ( paste ( "could not open file" , log.path ) )
+
+		# wenn es ne connection war, dann für später path ziehen
+		if ( inherits ( log.path , "connection" ) ) {
+				log.path.name <- summary(log.path)$description
+				close ( log.path )
+				log.path <- log.path.name
+		}
+		
+		# DevChange Lines
+		d <- which ( grepl ( "Change in the deviance was" , l ) )
+		
+		if ( ! identical ( d , integer(0) ) ) {
+				
+				# Warnung bei unplausibler Parameter-Kombi
+				if ( !plot & pdf ) warning ( "plot=FALSE and pdf=TRUE are not combinable, pdf is set to FALSE" )
+
+				### basename
+				bn <- basename ( log.path )
+				# gepackte Extension abcutten falls nötig
+				cutoff <- c ("bz2","zip")
+				bn <- gsub ( paste ( paste("\\." , cutoff , "$" , sep ="") , collapse = "|" ) , "" , bn )
+				# "log" abcutten	
+				cutoff <- c ("log")
+				bn <- gsub ( paste ( paste("\\." , cutoff , "$" , sep ="") , collapse = "|" ) , "" , bn )	
+				
+				# Deviance Change extrahieren
+				d <- l[d]
+				dv <- as.numeric ( sub ( "^(.*)\\s+(-{0,1}\\d+\\.\\d+)$" , "\\2" , d ) )
+				# Namen ist Iterationsnummer
+				names ( dv ) <- seq ( along = dv ) + 1
+				
+				# Check
+				if ( length ( d ) != length ( dv ) ) stop ( paste ( "could not extract deviance change from" , log.path , " please check." ) )
+				
+				# outlier
+				if ( !is.null (extreme.crit) ) {
+						thresh <- extreme.crit * sd ( dv )
+						dv <- dv[dv<=thresh]
+				}
+	
+				if ( plot ) {
+						
+						# wenn pdf erzeugt werden soll, device öffnen
+						if ( pdf ) {
+								
+								# outpath defaulten
+								if ( is.null ( out.path ) ) out.path <- dirname(log.path)
+								if ( ! file.exists ( out.path ) ) dir.create ( out.path , recursive = TRUE )
+								
+								# file
+								pdf.file = file.path ( out.path , paste( bn , ".pdf" , sep = "" ) ) 
+								
+								#device öffnen
+								pdf ( 	file = pdf.file ,
+										paper = "a4r" , 
+										width = 10.91 , height = 7.48
+									)
+						}
+						
+						### plot ###
+						xvals <- as.numeric ( names ( dv ) )
+						# maximum auf x Achse
+						xm <- ceiling( max(xvals)/10 )*10
+
+						# ticks auf x achse
+						# so setzen dass schön 10er
+						xt <- NULL;	for ( i in c( 1:30 ) ) xt <- c ( xt , (xm/10) %% i == 0 )
+						xt <- max ( which ( xt ) )
+						
+						plot ( xvals , dv ,
+							   type = "o" , 
+							   main = paste ( "Deviance Change Plot for" , bn ) ,
+							   xlab = "Iteration" ,
+							   xlim = c(0,max(xvals)) ,
+							   xaxp = c(0,xm,xt) ,
+							   ylab = "Deviance Change" ,
+							   pch = 20 ,
+							   cex = 0.85 ,
+							   lwd = 0.75
+							   )
+
+						# Linie bei 0
+						abline ( a=0 , b=0 )
+
+						# Punkte unter 0 rot
+						dvr <- dv[dv<0]
+						points( as.numeric ( names ( dvr ) ) , dvr , pch=20, cex = 0.85 , col="red")
+
+						### Modellinformationen in Plot schreiben
+						# aus Conquest
+						w <- which ( grepl ( "\\s+=>\\s*estimate\\s*!" , l ) )
+						if ( ! identical ( w , integer(0) ) ) {
+								est <- l[w]
+								inf1 <- unlist ( strsplit ( est , "," ) )
+								inf1 <- sub ( "\\s+=>\\s*estimate\\s*!\\s*" , "" , inf1 )
+								inf1 <- sub ( ";" , "" , inf1 )
+								report <- c ("method","iter","nodes","converge","deviancechange")
+								inf1 <- inf1[ unname ( unlist ( sapply ( report , function ( r , inf1 ) which ( grepl ( r , inf1 ) ) , inf1 ) ) )]
+						} else inf1 <- character(0)
+					
+						# Verbrauchte Zeit aus Erstellung des Log und letzter save des Log
+						fi <- file.info(log.path)
+						td <- unclass ( fi$mtime - fi$ctime )
+						if ( td > 0 ) {
+								tds <- paste ( "minimal elapsed time:" , formatC ( round ( td , 1 ) , format="f", digits=1) , attr ( td , "units" ) )
+								inf1 <- c ( inf1 , tds )
+						}
+						
+						if (! identical ( inf1 , "character(0)" ) ) mtext( paste ( inf1, collapse = "   " ) )				
+
+						# falls pdf device schließen
+						if ( pdf ) dev.off()
+						
+						invisible ( TRUE )
+				
+				} else return ( dv )
+		
+		} else invisible ( FALSE )
+}
