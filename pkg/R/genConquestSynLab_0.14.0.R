@@ -265,7 +265,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
 					}  
                    if(length(HG.var)>0) {ind.2   <- grep("regression",syntax)
                                          syntax[ind.2] <- paste(crop(paste( c(syntax[ind.2], tolower(namen.hg.var)), collapse=" ")),";",sep="")
-                                         if(method=="gauss") {sunk(paste("genConquestSynLab_",ver," Gaussian quadrature is only available for models without latent regressors.\n",sep=""))
+                                         if(method=="gauss") {sunk(paste("genConquestSynLab_",ver," Gaussian quadrature is only available for models without latent regressors. Use 'Bock-Aitken' instead.\n",sep=""))
                                                                    method <- "quadrature"}
                                          ### method muss "quadrature" sein
                                          }
@@ -297,6 +297,9 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    if(is.null(dim(model)))  {                                ### Wenn Dimensionalität nicht als Q-Matrix, sondern als Liste spezifiziert ist, wird die benötigte Q-Matrix erzeugt
                      model <- .genQMatrix(dimSpecification=model, data=daten,itemCols=itemspalten) 
                    }
+				   if(method != "montecarlo" & nodes^(ncol(model)-1) > 10000 )  {
+				      sunk(paste("genConquestSynLab_",ver," Caution! Specified model will use '",method,"' estimation with ",nodes^(ncol(model)-1)," nodes.\n",sep=""))
+				   }
                    namen.dim <- colnames(model)[-1]
                    score.statement <- .writeScoreStatementMultidim (data=daten, itemCols=itemspalten, qmatrix=model, columnItemNames = 1 ,use.letters=use.letters )
                    ind <- grep("labels ",syntax)

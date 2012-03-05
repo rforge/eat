@@ -80,8 +80,8 @@ automateConquestModel <- function ( dataset, ID, regression=NULL, DIF=NULL, grou
     if(missing(ID))      {stop(paste("Error in automateConquestModel_",ver,": No ID specified.\n",sep="")) }
     if(length(DIF)>1)    {stop(paste("Error in automateConquestModel_",ver,": There can only be one DIF variable.\n",sep="")) }
     if(length(weight)>1) {stop(paste("Error in automateConquestModel_",ver,": There can only be one weight variable.\n",sep="")) }
-    
-    ### Defaults
+
+	### Defaults
 	if(is.null(dataName))        {dataName <- paste(jobName,".dat",sep="")} 
 	if(is.null(subFolder))        {subFolder <- list()} 
   if(is.null(n.plausible))     {n.plausible <- 5}
@@ -89,16 +89,20 @@ automateConquestModel <- function ( dataset, ID, regression=NULL, DIF=NULL, grou
     ### if(is.null(nodes))           {nodes <- 15}	               ### nodes werden erst in genConquestSynLab gesetzt, da sie davon abhängen ob Montecarlo gesetzt ist
 	if(is.null(method))    {
      method   <- "gauss"
-     if(!is.null(item.grouping))   {                               ### wunsch von Thilo: wenn mehr als 3500 nodes und keine 'method' explizit spezifiziert: montecarlo
-        used.nodes <- nodes^(ncol(item.grouping)-1 )               ### das alles geschieht NICHT, wenn der Benutzer explizit 'gauss' oder was-auch-immer wünscht
-     }
-     if(is.null(item.grouping))   {                                            
-        used.nodes <- nodes
-     }
-     if( used.nodes > 3500)  {
-          sunk(paste("automateConquestModel_",ver,": Specified model will use ",used.nodes," nodes. Choosen default method ",method," probably is not appropriate. Change method to 'montecarlo'.\n",sep=""))
-          method <- "montecarlo"
-     }
+     if(is.null(nodes))   {
+	    nodes <- 15
+		if(!is.null(item.grouping))   {                               ### wunsch von Thilo: wenn mehr als 3500 nodes und keine 'method' explizit spezifiziert: montecarlo
+           used.nodes <- nodes^(ncol(item.grouping)-1 )               ### das alles geschieht NICHT, wenn der Benutzer explizit 'gauss' oder was-auch-immer wünscht
+        }
+        if(is.null(item.grouping))   {                                            
+           used.nodes <- nodes
+        }
+        if( used.nodes > 3500)  {
+          sunk(paste("automateConquestModel_",ver,": Specified model will use ",used.nodes," nodes. Choosen default method "',method,'" probably is not appropriate. \nChange method to 'montecarlo' with 1000 nodes. Otherwise, please specify your settings explicitly.\n",sep=""))
+          nodes <- 1000
+		  method <- "montecarlo"
+       }
+	}   
   }
 	if(is.null(std.err))         {std.err  <- "quick"}
 	if(is.null(distribution))    {distribution <- "normal"}
