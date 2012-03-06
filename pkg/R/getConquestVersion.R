@@ -8,7 +8,7 @@ getConquestVersion <- function ( path.conquest , asDate = TRUE ) {
 		f <- normalizePath ( f )
 		path.conquest <- normalizePath ( path.conquest )
 		cmd <- paste ( '"' , path.conquest , '"' , " " , '"' , f , '"' , sep = "" )
-
+browser()
 		r <- NULL
 		ow <- getOption ( "warn" )
 		options ( warn = -1 )
