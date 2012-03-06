@@ -7,7 +7,7 @@ getConquestVersion <- function ( path.conquest , asDate = TRUE ) {
 		
 		f <- normalizePath ( f )
 		path.conquest <- normalizePath ( path.conquest )
-		cmd <- paste ( path.conquest , f )
+		cmd <- paste ( '"' , path.conquest , '"' , " " , '"' , f , '"' , sep = "" )
 
 		r <- NULL
 		ow <- getOption ( "warn" )
