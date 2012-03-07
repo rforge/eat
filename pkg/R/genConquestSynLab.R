@@ -3,7 +3,7 @@
 # genConquestSynLab
 # erzeugt Conquest Syntax und Labels
 #
-# Version: 	0.18.0
+# Version: 	0.19.0
 # Imports:
 # Published:
 # Author:   Sebastian Weirich
@@ -48,6 +48,7 @@
 # 05.12.2011 (SW): 'id' durch 'pid' ersetzt; log-file exported
 # 12.12.2011 (SW): table(unlist (...) ) replaced by table.unlist( ... )
 # 23.02.2012 (SW/MH): Conquest History eingefuegt 
+# 07.03.2012 (MH) INIT Parameter eingefügt
 #
 ####################################################################################################################
 
@@ -78,7 +79,7 @@
 genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, namen.dif.var , DIF.char, namen.weight.var, weight.char, namen.all.hg,all.hg.char, namen.group.var=NULL, model = NULL, ANKER = NULL,std.err=c("quick","full","none"),name.unidim="dimension_1",
                               model.statement="item", distribution=c("normal","discrete"), jobFolder, subFolder=NULL, name.dataset=NULL, Title=NULL,constraints =c("cases","none","items"), method=c("gauss", "quadrature", "montecarlo"), n.plausible=5,n.iterations=1000,nodes=NULL, p.nodes=2000,f.nodes=2000,converge=0.0001,deviancechange=0.0001,
                               equivalence.table=c("wle","mle","NULL"),var.char,use.letters=use.letters, pathConquest, import = list () )       {
-                   ver           <- "0.18.0"
+                   ver           <- "0.19.0"
                    .mustersyntax <- c("title = ####hier.title.einfuegen####;",
                                       "export logfile >> ####hier.name.einfuegen####.log;",
                                       "datafile ####hier.Pfad.und.Dateiname.einfuegen####;",
@@ -87,9 +88,9 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                                       "codes ####hier.erlaubte.codes.einfuegen####;",
                                       "labels  << ####hier.name.einfuegen####.lab;",
                                       "import anchor_parameters << ####hier.name.einfuegen####.ank;",
-                                      "import init_parameters << ####hier.init_parameters.einfuegen####;",
-                                      "import init_reg_coefficients << ####hier.init_reg_coefficients.einfuegen####;",
-                                      "import init_covariance << ####hier.init_covariance.einfuegen####;",
+                                      "/* import init_parameters << ####hier.init_parameters.einfuegen####; */",
+                                      "/* import init_reg_coefficients << ####hier.init_reg_coefficients.einfuegen####; */",
+                                      "/* import init_covariance << ####hier.init_covariance.einfuegen####; */",
                                       "caseweight",
                                       "set constraints=####hier.constraints.einfuegen####;",
                                       "set warnings=no,update=yes,n_plausible=####hier.anzahl.pv.einfuegen####,p_nodes=####hier.anzahl.p.nodes.einfuegen####,f_nodes=####hier.anzahl.f.nodes.einfuegen####;",
@@ -152,27 +153,33 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    syntax    <- gsub("####hier.distribution.einfuegen####",match.arg(distribution),syntax)
                    syntax    <- gsub("####hier.equivalence.table.einfuegen####",match.arg(equivalence.table),syntax)
 				   syntax    <- gsub("####hier.model.statement.einfuegen####",model.statement,syntax)
-				   if(!is.null(import$init_parameters))  {
-				      syntax  <- gsub("####hier.init_parameters.einfuegen####",normalize.path(import$init_parameters))
-				   }	 else {
-				      ind.1 <- grep("import init_parameters",syntax)
-                      stopifnot(length(ind.1) == 1)
- 				      syntax <- syntax[-ind.1]
-				   }  
-				   if(!is.null(import$init_reg_coefficients))  {
-				      syntax  <- gsub("####hier.init_reg_coefficients.einfuegen####",normalize.path(import$init_reg_coefficients))
-				   }	 else {
-				      ind.2 <- grep("import init_reg_coefficients",syntax)
-                      stopifnot(length(ind.2) == 1)
- 				      syntax <- syntax[-ind.2]
-				   }
-				   if(!is.null(import$init_covariance))  {
-				      syntax  <- gsub("####hier.init_covariance.einfuegen####",normalize.path(import$init_covariance))
-				   }	 else {
-				      ind.3 <- grep("import init_covariance",syntax)
-                      stopifnot(length(ind.3) == 1)
- 				      syntax <- syntax[-ind.3]
-				   }
+
+				   # INIT Parameter
+				   syntax    <- gsub("####hier.init_parameters.einfuegen####",paste(jobName,"_INIT.prm",sep=""),syntax)
+				   syntax    <- gsub("####hier.init_reg_coefficients.einfuegen####",paste(jobName,"_INIT.reg",sep=""),syntax)
+				   syntax    <- gsub("####hier.init_covariance.einfuegen####",paste(jobName,"_INIT.cov",sep=""),syntax)
+				   
+				   # if(!is.null(import$init_parameters))  {
+				      # syntax  <- gsub("####hier.init_parameters.einfuegen####",normalize.path(import$init_parameters))
+				   # }	 else {
+				      # ind.1 <- grep("import init_parameters",syntax)
+                      # stopifnot(length(ind.1) == 1)
+ 				      # syntax <- syntax[-ind.1]
+				   # }  
+				   # if(!is.null(import$init_reg_coefficients))  {
+				      # syntax  <- gsub("####hier.init_reg_coefficients.einfuegen####",normalize.path(import$init_reg_coefficients))
+				   # }	 else {
+				      # ind.2 <- grep("import init_reg_coefficients",syntax)
+                      # stopifnot(length(ind.2) == 1)
+ 				      # syntax <- syntax[-ind.2]
+				   # }
+				   # if(!is.null(import$init_covariance))  {
+				      # syntax  <- gsub("####hier.init_covariance.einfuegen####",normalize.path(import$init_covariance))
+				   # }	 else {
+				      # ind.3 <- grep("import init_covariance",syntax)
+                      # stopifnot(length(ind.3) == 1)
+ 				      # syntax <- syntax[-ind.3]
+				   # }
 				   if(!is.null(subFolder$out)) 
                    ### entferne ggf. abschliessende Schraegstriche: erledigt nun automateConquestModels
                      {### for (ii in 1:nchar(subFolder$out)) {subFolder$out <- gsub("/$","",subFolder$out)} 
