@@ -36,7 +36,7 @@ writeSpss(dat, values, subunits, units,
 
 }
 \details{
-This function automates most of the work needed to export a dataset to SPSS. It uses a modified version of \code{writeForeignSPSS()} from the \code{foreign()} package and of \code{mids2spss()} fromt the \code{mice} package. The modified version allows for a choice of the field and decimal separators, makes some improvements to the formatting and provides variable labels and value labels according to the information in the data frames \code{values}, \code{subunits} and \code{units}.
+This function automates most of the work needed to export a dataset to SPSS. It uses a modified version of \code{writeForeignSPSS()} from the \code{foreign} package and of \code{mids2spss()} fromt the \code{mice} package. The modified version allows for a choice of the field and decimal separators, makes some improvements to the formatting and provides variable labels and value labels according to the information in the data frames \code{values}, \code{subunits} and \code{units}.
 
 Examples of data frames \code{values}, \code{subunits} and \code{units} can be found on \code{data(inputList)}
 
