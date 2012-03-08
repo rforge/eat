@@ -73,6 +73,13 @@ plotDevianceChange <- function ( log.path , plot = TRUE , pdf = FALSE , out.path
 						xt <- NULL;	for ( i in c( 1:30 ) ) xt <- c ( xt , (xm/10) %% i == 0 )
 						xt <- max ( which ( xt ) )
 						
+						# Punktgröße setzen (cex)
+						# initial: .85
+						# mit jeden 100 Iteration 0.1 runter
+						# aber mind. 0.4
+						cex <- 0.85 - ( length(dv) / 1000 )
+						if ( cex < 0.40 ) cex <- 0.40
+						
 						plot ( xvals , dv ,
 							   type = "o" , 
 							   main = paste ( "Deviance Change Plot for" , bn ) ,
@@ -81,7 +88,7 @@ plotDevianceChange <- function ( log.path , plot = TRUE , pdf = FALSE , out.path
 							   xaxp = c(0,xm,xt) ,
 							   ylab = "Deviance Change" ,
 							   pch = 20 ,
-							   cex = 0.85 ,
+							   cex = cex ,
 							   lwd = 0.75
 							   )
 
@@ -90,8 +97,13 @@ plotDevianceChange <- function ( log.path , plot = TRUE , pdf = FALSE , out.path
 
 						# Punkte unter 0 rot
 						dvr <- dv[dv<0]
-						points( as.numeric ( names ( dvr ) ) , dvr , pch=20, cex = 0.85 , col="red")
+						points( as.numeric ( names ( dvr ) ) , dvr , pch=20, cex = cex , col="red")
 
+						# letzter Punkt grün und doppelt so groß wenn Modell ordentlich konvergiert
+						shw <- paste ( sub ( "log$" , "" , log.path ) , "shw" , sep = "" )
+						if ( !is.null ( ic <- isConverged ( shw ) ) ) ic <- ic$converged else ic <- FALSE
+						if ( ic ) points( as.numeric ( names(dv)[length(dv)] ) , dv[length(dv)] , pch=20, cex = 2*cex , col="green")
+						
 						### Modellinformationen in Plot schreiben
 						# aus Conquest
 						w <- which ( grepl ( "\\s+=>\\s*estimate\\s*!" , l ) )
@@ -121,5 +133,8 @@ plotDevianceChange <- function ( log.path , plot = TRUE , pdf = FALSE , out.path
 				
 				} else return ( dv )
 		
-		} else invisible ( FALSE )
+		} else {
+				warning ( "plot could not be created. check input." )
+				invisible ( FALSE )
+		}
 }

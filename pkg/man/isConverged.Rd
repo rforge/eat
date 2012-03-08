@@ -13,14 +13,15 @@ isConverged ( path , txt = FALSE )
 %- maybe also 'usage' for other objects documented here.
 \arguments{
 
-  \item{path}{ path to models }
+  \item{path}{ main path of ConQuest models, or a path to a ConQuest shw-file }
   \item{txt}{ if \code{TRUE} a convergence summary is written to convergence_summary.txt in \code{path}, and a file (either "_CONVERGED_" or "_N_O_T_CONVERGED_") is written to each model directory
 			  if \code{FALSE} a data.frame of convergence information is returned }
   
 }
 \details{
-checks recursively in \code{path} for shw files, determines whether model converged or not;
-models that converged, but the solution is not the bese solution ( "At termination the solution was not the best attained solution" ), are treated as not converged
+if \code{path} is a directory, \code{isConverged} checks recursively in \code{path} for shw files;
+alternatively \code{path} can be a full path to a single shw-file.
+models that converged, but the solution is not the best solution ( ConQuest: "At termination the solution was not the best attained solution" ), are treated as not converged
 }
 \value{
 %%  ~Describe the value returned
@@ -29,7 +30,7 @@ models that converged, but the solution is not the bese solution ( "At terminati
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
 depends on \code{txt}
-
+if no shw-files are found \code{NULL} is returned
 }
 \references{
 

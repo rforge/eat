@@ -23,6 +23,7 @@ plotDevianceChange ( log.path , plot = TRUE , pdf = FALSE , out.path = NULL , ex
 \details{
 ConQuest tends to not completely write out log if running and option 'update = yes' is used.
 To avoid warnings and malfunction manually delete the last potentially incomplete iteration from logfile.
+Points below 0 are red; if model converged ( see \code{link{isConverged}} for details ), the last point is larger and green
 }
 \value{
 %%  ~Describe the value returned
