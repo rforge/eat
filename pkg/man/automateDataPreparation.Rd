@@ -6,7 +6,7 @@
 prepare datasets for \code{\link{automateModels}}
 }
 \usage{
-automateDataPreparation( inputDat = NULL, inputList, path = NULL, loadSav,
+automateDataPreparation( datList = NULL, inputList, path = NULL, loadSav,
 checkData, mergeData, recodeData,	aggregateData, scoreData, writeSpss,
 filedat = "zkddata.txt", filesps = "readZkdData.sps",
 aggregatemissings = "use.default", rename = TRUE, recodedData = TRUE,
@@ -14,7 +14,7 @@ correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL,
 missing.rule = list(mvi=0, mnr=0, mci=0, mbd=NA, mir=0, mbi=0))
 }
 \arguments{
-  \item{inputDat}{
+  \item{datList}{
   A list of data frames if no .sav files shall be read in.
 }
   \item{inputList}{
@@ -111,7 +111,7 @@ Karoline Sachse
 \examples{
 inpList <- inputList
 inpDat <- inputDat
-test <- automateDataPreparation (inputList=inpList, inputDat = inpDat,
+test <- automateDataPreparation (datList=inpList, inputDat = inpDat,
         path = "c:/temp/test_eat", loadSav = FALSE, checkData=TRUE,
         mergeData = TRUE, recodeData=TRUE, aggregateData=TRUE, scoreData= TRUE,
         writeSpss=TRUE)

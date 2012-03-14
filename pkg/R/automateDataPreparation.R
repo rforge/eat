@@ -55,7 +55,7 @@
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-automateDataPreparation <- function ( inputDat = NULL, inputList, path = NULL, 
+automateDataPreparation <- function ( datList = NULL, inputList, path = NULL, 
 						loadSav, checkData,  mergeData , recodeData, 
 						aggregateData, scoreData, writeSpss, 
 						filedat = "zkddata.txt", filesps = "readZkdData.sps", 
@@ -69,7 +69,7 @@ automateDataPreparation <- function ( inputDat = NULL, inputList, path = NULL,
 
 
 		###folder erstellen
-		if( is.null ( path ) ) {folder <- getwd()}
+		if( is.null ( path ) ) {path <- getwd()}
 		folder.e <- path
 		folder.aDP <- file.path ( path , "_automateDataPreparation_" )
 		if ( ! file.exists ( folder.aDP ) ) { dir.create ( folder.aDP , recursive = TRUE ) }		
@@ -104,7 +104,7 @@ automateDataPreparation <- function ( inputDat = NULL, inputList, path = NULL,
 		stopifnot(is.logical(correctDigits))
 		stopifnot(is.logical(truncateSpaceChar))
 		
-		if(is.null(inputDat)) {
+		if(is.null(datList)) {
 			stopifnot(loadSav == TRUE)
 			stopifnot(class(inputList$savFiles) == "data.frame")
 		}
@@ -113,8 +113,8 @@ automateDataPreparation <- function ( inputDat = NULL, inputList, path = NULL,
 		if( loadSav== TRUE ) {
 			sunk ( "\n" )
 			sunk ( paste ( f.n , "Load .sav Files\n" ) )
-			if(!is.null(inputDat)) {
-				sunk(paste ( f.n , "If loadSav == TRUE, inputDat will be ignored." ) )
+			if(!is.null(datList)) {
+				sunk(paste ( f.n , "If loadSav == TRUE, datList will be ignored." ) )
 			}
 			savFiles <- inputList$savFiles$filename
 			if( is.null (oldIDs) ) {oldIDs <- inputList$savFiles$case.id}
@@ -124,10 +124,10 @@ automateDataPreparation <- function ( inputDat = NULL, inputList, path = NULL,
 				}
 			}
 			if( is.null (newID) ) {newID <- "ID"}
-			dat <- inputDat <- loadSav(path = folder.e, savFiles = savFiles, oldIDS = oldIDs, newID = newID,
+			dat <- datList <- loadSav(path = folder.e, savFiles = savFiles, oldIDS = oldIDs, newID = newID,
                   correctDigits=correctDigits, truncateSpaceChar = truncateSpaceChar )
 		} 			
-		stopifnot ( class ( inputDat ) == "list" )		
+		stopifnot ( class ( datList ) == "list" )		
 		stopifnot ( class ( inputList ) == "list" )
 		if( is.null (oldIDs) ) {oldIDs <- inputList$savFiles$case.id}
 		stopifnot ( !is.null (oldIDs) )
@@ -135,15 +135,15 @@ automateDataPreparation <- function ( inputDat = NULL, inputList, path = NULL,
 		if( checkData == TRUE ) {
 			sunk ( "\n" )
 			sunk ( paste ( f.n , "Check data...\n" ) )
-			mapply(checkData, inputDat, MoreArgs = list(inputList$values, inputList$subunits, inputList$units))
+			mapply(checkData, datList, MoreArgs = list(inputList$values, inputList$subunits, inputList$units))
 		} else {sunk ( paste ( f.n , "Check was skipped\n" ) )}
 		
 		if( mergeData == TRUE ) {
 			sunk ( "\n" )
 			sunk ( paste ( f.n , "Start merging\n" ) )
-			if( loadSav== TRUE ) {oldIDs <- rep(newID, length(inputDat))}
+			if( loadSav== TRUE ) {oldIDs <- rep(newID, length(datList))}
 			if(is.null(newID)) {newID <- "ID"}
-			dat <- mergeData(newID = newID, datList = inputDat, oldIDs = oldIDs, addMbd=TRUE, writeLog=TRUE)
+			dat <- mergeData(newID = newID, datList = datList, oldIDs = oldIDs, addMbd=TRUE, writeLog=TRUE)
 		} else {sunk ( paste ( f.n , "Merge was skipped\n" ) )}
 		
 		if( recodeData == TRUE ) {
