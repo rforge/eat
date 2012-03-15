@@ -7,35 +7,35 @@ combVec <- function ( v ) {
 		v <- v [ duplicated ( v$comb ) , ]
 }
 
-commonItems <- function ( data , group.var , missing = NA , uncommon = FALSE , simplify = TRUE ) {
+commonItems <- function ( dat , group.var , na = NA , uncommon = FALSE , simplify = TRUE ) {
 			
 		# Checks
-		stopifnot ( is.data.frame ( data ) )
+		stopifnot ( is.data.frame ( dat ) )
 		stopifnot ( length ( group.var ) == 1 )
 		if ( is.numeric ( group.var ) ) {
-				w <- which ( colnames ( data ) == group.var )
+				w <- which ( colnames ( dat ) == group.var )
 				stopifnot ( ! identical ( w , integer(0) ) )
-				group.var <- colnames ( data ) [ w ]
-		} else if ( is.character ( group.var ) ) stopifnot ( group.var %in% colnames ( data ) ) else stop ( "group.var is not numeric or character" )
+				group.var <- colnames ( dat ) [ w ]
+		} else if ( is.character ( group.var ) ) stopifnot ( group.var %in% colnames ( dat ) ) else stop ( "group.var is not numeric or character" )
 
 		# Gruppen auf Gruppenvariable
-		groups <- sort ( unique ( as.character ( data[,group.var] ) ) )
+		groups <- sort ( unique ( as.character ( dat[,group.var] ) ) )
 		
 		# nur ab 2 Gruppen weitermachen , sonst NULL zurückgeben	
-		if ( length ( unique ( data[,group.var] ) ) >= 2 ) {
+		if ( length ( unique ( dat[,group.var] ) ) >= 2 ) {
 		
-				# missing in Datensatz auf NA
-				if ( ! is.na ( missing ) ) {
-						# mis.rule <- eval ( parse ( text = paste ( "list(",missing,"=NA)" ) ) )
-						# data <- collapseMissings ( data , mis.rule ) # das hier wäre am besten
-						### data <- collapseMissings ( data , item.names = colnames ( data ) )
+				# na in Datensatz auf NA
+				if ( ! is.na ( na ) ) {
+						# mis.rule <- eval ( parse ( text = paste ( "list(",na,"=NA)" ) ) )
+						# dat <- collapseMissings ( dat , mis.rule ) # das hier wäre am besten
+						### dat <- collapseMissings ( dat , items = colnames ( dat ) )
 # !!! temporäres workaraound, bis collapseMissings überarbeitet		
-						data[data == missing] <- NA
+						dat[dat == na] <- NA
 				}
 			
 				# Gruppenspezifischer Datensatz
 				dl <- mapply ( function ( gr , group.var , d ) d[ d[,group.var] == gr , !colnames(d)%in%group.var ] ,
-							   groups , MoreArgs = list ( group.var , data ) , SIMPLIFY = FALSE )
+							   groups , MoreArgs = list ( group.var , dat ) , SIMPLIFY = FALSE )
 				
 				# Datensätze reduzieren
 				dl <- mapply ( rmNA , dl , SIMPLIFY = FALSE )

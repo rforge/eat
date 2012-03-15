@@ -8,12 +8,12 @@ remove NA columns and rows from data
 remove columns and rows that are completely NA from data.frame or matrix
 }
 \usage{
-rmNA ( data , remove = TRUE , verbose = FALSE )
+rmNA ( dat , remove = TRUE , verbose = FALSE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
 
-  \item{data}{ data.frame or matrix }
+  \item{dat}{ data.frame or matrix }
   \item{remove}{ if \code{TRUE} columns and rows are removed, if \code{FALSE} a list of identified columns and rows is returned }
   \item{verbose}{ if \code{TRUE} removed columns and rows are printed on output window }
   

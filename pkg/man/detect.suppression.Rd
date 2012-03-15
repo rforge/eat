@@ -8,12 +8,12 @@ detect suppression effects in regression models
 This function detects suppression effects in regression models. 
 }
 \usage{
-detect.suppression ( data , dependent , independent , full.return = FALSE , xlsx.path = NULL )
+detect.suppression ( dat , dependent , independent , full.return = FALSE , xlsx.path = NULL )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
 
-  \item{data}{ data.frame with data to be used }
+  \item{dat}{ data.frame with data to be used }
   \item{dependent}{ dependent variable in regression model }
   \item{independent}{ character vector of independent variables in regression model }
   \item{full.return}{ if \code{FALSE} a data.frame as a quadratic matrix with suppression effects (TRUE/FALSE) of independent variables is returned

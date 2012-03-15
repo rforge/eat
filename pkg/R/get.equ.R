@@ -13,9 +13,9 @@
 #
 ####################################################################################################################
 
-get.equ <- function(file.equ)
+get.equ <- function(file)
            {funVersion     <- "get.equ_1.1.0"
-            input          <- scan(file.equ, what="character", sep="\n", quiet=TRUE)
+            input          <- scan(file, what="character", sep="\n", quiet=TRUE)
             dimensionLines <- grep("Equivalence Table for", input)
             sunk(paste(funVersion, ": Find ", length(dimensionLines), " dimension(s).\n", sep=""))
             endTab         <- grep("================", input)

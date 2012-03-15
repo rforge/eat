@@ -58,7 +58,7 @@
 	datasets.collapsed <- mapply ( collapseMissings ,
 				dat = datasets.red ,
 				missing.rule = mis.rule.unique ,
-				item.names = mis.rule.items ,
+				items = mis.rule.items ,
 				SIMPLIFY = FALSE )	
 	names ( datasets.collapsed ) <- mis.rule.unique.names
 

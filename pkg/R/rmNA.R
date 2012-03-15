@@ -1,10 +1,10 @@
 
-rmNA <- function( data , remove = TRUE , verbose = FALSE ) {
-		d <- rmNAcols ( data = data , remove = remove , verbose = verbose )
+rmNA <- function( dat , remove = TRUE , verbose = FALSE ) {
+		d <- rmNAcols ( dat = dat , remove = remove , verbose = verbose )
 		if ( remove ) {
-				ret <- rmNArows ( data = d , remove = remove , verbose = verbose )
+				ret <- rmNArows ( dat = d , remove = remove , verbose = verbose )
 		} else {
-				d2 <- rmNArows ( data = data , remove = remove , verbose = verbose )
+				d2 <- rmNArows ( dat = dat , remove = remove , verbose = verbose )
 				ret <- list ( "rows" = d , "cols" = d2 )
 		}
 		return ( ret )
@@ -15,9 +15,9 @@ rmNA <- function( data , remove = TRUE , verbose = FALSE ) {
 # ( rmNA ( mat , remove = FALSE ) )
 
 
-rmNArows <- function( data , cols = NULL , tolerance = 0 , cumulate = TRUE , remove = TRUE , verbose = FALSE ) {
+rmNArows <- function( dat , cols = NULL , tolerance = 0 , cumulate = TRUE , remove = TRUE , verbose = FALSE ) {
 		
-		return ( removeNA ( data , cols , tolerance , cumulate , remove , verbose , mode="rows") )
+		return ( removeNA ( dat , cols , tolerance , cumulate , remove , verbose , mode="rows") )
 		
 }
 
@@ -96,43 +96,43 @@ rmNArows <- function( data , cols = NULL , tolerance = 0 , cumulate = TRUE , rem
 #rmNArows( mat , tolerance=1 , cumulate = FALSE , method = "identify") 
 
 
-rmNAcols <- function( data , rows = NULL , tolerance = 0 , cumulate = TRUE , remove = TRUE , verbose = FALSE ) {
+rmNAcols <- function( dat , rows = NULL , tolerance = 0 , cumulate = TRUE , remove = TRUE , verbose = FALSE ) {
 		
 		# data transponieren um removeNA mit mode="cols" zu benutzen
-		data.t <- t(data)
+		dat.t <- t(dat)
 
 		# wieder zum Dataframe machen, da t() nur Matrix zurückgibt
 		# colnames setzen
-		if ( class(data)=="data.frame" ) {
-				data.t <- as.data.frame(data.t)
-				colnames(data.t) <- rownames(data)
+		if ( class(dat)=="data.frame" ) {
+				dat.t <- as.data.frame(dat.t)
+				colnames(dat.t) <- rownames(dat)
 		}
 		
 		# removeNA mit transponierten Datensatz und mode="cols" aufrufen
 		# Hinweis: removeNA ist standardmäßig auf rows löschen programmiert,
 		# deshalb der ganze Spaß mit dem transponieren
-		data.return <- removeNA ( data.t , rows , tolerance , cumulate , remove , verbose , mode="cols")
+		dat.return <- removeNA ( dat.t , rows , tolerance , cumulate , remove , verbose , mode="cols")
 
 		# nur bei method="remove" rücktransponieren, da method="identify" ne Liste liefert,
 		# die nicht transponiert werden darf
 		if ( remove ) { 
-				data.return <- t( data.return )
+				dat.return <- t( dat.return )
 		
 				### wenn Input Dataframe dann
 				# Output nach Dataframe wandeln
 				# ursprüngliche rownames wieder herstellen
 				# Spalten-Klassen setzen
-				if ( class(data)=="data.frame" ) { 
-						data.return <- data.frame(data.return)
-						rownames(data.return) <- rownames(data)
-						# for (colnum in seq(along=data.return))  data.return[,colnum] <- as ( data.return[,colnum] , class(data[, colnames(data.return)[colnum] ]) )
-						col.type <- sapply ( colnames ( data )[ colnames ( data ) %in% colnames ( data.return ) ] , c , simplify = FALSE )
-						names ( col.type ) <- sapply ( data [ colnames ( data ) %in% colnames ( data.return ) ] , class , simplify = FALSE )
-						data.return <- set.col.type ( data.return , col.type )
+				if ( class(dat)=="data.frame" ) { 
+						dat.return <- data.frame(dat.return)
+						rownames(dat.return) <- rownames(dat)
+						# for (colnum in seq(along=dat.return))  dat.return[,colnum] <- as ( dat.return[,colnum] , class(data[, colnames(dat.return)[colnum] ]) )
+						col.type <- sapply ( colnames ( dat )[ colnames ( dat ) %in% colnames ( dat.return ) ] , c , simplify = FALSE )
+						names ( col.type ) <- sapply ( dat [ colnames ( dat ) %in% colnames ( dat.return ) ] , class , simplify = FALSE )
+						dat.return <- set.col.type ( dat.return , col.type )
 				}	
 		}
 
-		return ( data.return )
+		return ( dat.return )
 }
 
 
@@ -214,7 +214,7 @@ rmNAcols <- function( data , rows = NULL , tolerance = 0 , cumulate = TRUE , rem
 
 # "Mutter"-Funktion zu rmNArows und rmNAcol
 # mode ("rows" oder "cols") hinzugefügt um entsprechende verbosemeldungen zu bekommen
-removeNA <- function( data , cols , tolerance , cumulate , remove , verbose , mode="rows" ) {
+removeNA <- function( dat , cols , tolerance , cumulate , remove , verbose , mode="rows" ) {
 		
 		# mode check
 		if ( ! (mode %in% c("rows", "cols") ) ) stop ( paste ( "internal error: mode \"" , mode , "\" is not supported" , sep="" ) )		
@@ -229,25 +229,25 @@ removeNA <- function( data , cols , tolerance , cumulate , remove , verbose , mo
 		
 		# wenn Matrix, diese in Dataframe wandeln, für später merken ob Matrix zurückgegeben werden soll
 		returnMatrix <- FALSE
-		if (is.matrix(data)) { data <- as.data.frame(data) ; returnMatrix <- TRUE }
+		if (is.matrix(dat)) { dat <- as.data.frame(dat) ; returnMatrix <- TRUE }
 
 		# wenn nicht Dataframe, dann stoppen
-		if ( !is.data.frame(data) ) stop ( "'data' is not a matrix or data.frame" )
+		if ( !is.data.frame(dat) ) stop ( "'dat' is not a matrix or data.frame" )
 
 		# wenn Dataframe leer, dann stoppen
-		if ( identical ( data, data.frame() ) ) stop ( "data.frame 'data' is empty" )
+		if ( identical ( dat, data.frame() ) ) stop ( "data.frame 'dat' is empty" )
 
 		# wenn nicht mindestens eine Zeile, stoppen
-		if ( nrow(data) < 1 ) {	
+		if ( nrow(dat) < 1 ) {	
 				mes <- "row"
 				if ( mode == "cols" ) mes <- "column"
-				stop ( paste("data.frame 'data' has less than 1", mes) )
+				stop ( paste("data.frame 'dat' has less than 1", mes) )
 		}	
 		
 		# cols validieren
 		modeForVal <- "cols"
 		if ( mode=="cols" )	modeForVal <- "rows"
-		cols <- validateCols ( data , cols , modeForVal )
+		cols <- validateCols ( dat , cols , modeForVal )
 		
 		# wenn tolerance keine List dann eine draus machen
 		if (!class(tolerance)=="list") { tolerance <- list(tolerance) }		
@@ -266,11 +266,11 @@ removeNA <- function( data , cols , tolerance , cumulate , remove , verbose , mo
 		rows.rm.list <- NULL
 		rows.rm.list <-	mapply(
 						function(cols,tolerance) {
-							if ( ncol(data[,cols, drop=FALSE]) == 1 ) {
-									rows.rm.list <- which ( is.na(data[,cols,drop=FALSE]) )
+							if ( ncol(dat[,cols, drop=FALSE]) == 1 ) {
+									rows.rm.list <- which ( is.na(dat[,cols,drop=FALSE]) )
 							} else { 
-										if (cumulate) rows.rm.list <- unname ( which ( rowSums( !is.na( data[ , cols ] ) ) <= tolerance ) )
-										else rows.rm.list <- unname ( which ( rowSums( !is.na( data[ , cols ] ) ) == tolerance ) )
+										if (cumulate) rows.rm.list <- unname ( which ( rowSums( !is.na( dat[ , cols ] ) ) <= tolerance ) )
+										else rows.rm.list <- unname ( which ( rowSums( !is.na( dat[ , cols ] ) ) == tolerance ) )
 									}
 						}
 						, cols, tolerance , SIMPLIFY=FALSE)
@@ -283,7 +283,7 @@ removeNA <- function( data , cols , tolerance , cumulate , remove , verbose , mo
 		
 				# Zeilen löschen
 				if (! ( identical( rows.rm , integer(0) ) || is.null(rows.rm) ) ) {
-						data <- data[-rows.rm , , drop=FALSE]
+						dat <- dat[-rows.rm , , drop=FALSE]
 						if (verbose) { 
 								l <- length ( rows.rm )
 								if ( l > 1 ) waswere <- "were" else waswere <- "was"
@@ -294,9 +294,9 @@ removeNA <- function( data , cols , tolerance , cumulate , remove , verbose , mo
 				}
 				
 				# falls Matrix als Input, in Matrix zurückwandeln
-				if (returnMatrix) { data <- unname( as.matrix(data) ) }
+				if (returnMatrix) { dat <- unname( as.matrix(dat) ) }
 				
-				return ( data )
+				return ( dat )
 				
 		} else {
 						
@@ -312,13 +312,13 @@ removeNA <- function( data , cols , tolerance , cumulate , remove , verbose , mo
 # bringt verboseungen wenn spalten nicht in datensatz und droppt diese
 # returned ne Liste mit validierten Spalten-Subsets
 # mode gibt an ob in verbosemeldungen von columns oder rows die Rede ist
-validateCols <- function ( data , cols , mode="cols" ) {
+validateCols <- function ( dat , cols , mode="cols" ) {
 
 		# mode check
 		if ( ! (mode %in% c("rows", "cols") ) ) stop ( paste ( "internal error: mode \"" , mode , "\" is not supported" , sep="" ) )		
 
 		# wenn cols nicht angegeben, dann alle Columns
-		if (is.null(cols)) cols <- seq( along=colnames(data) )		
+		if (is.null(cols)) cols <- seq( along=colnames(dat) )		
 
 		# wenn cols keine Liste dann eine draus machen
 		if (!class(cols)=="list") { cols <- list(cols) }
@@ -330,7 +330,7 @@ validateCols <- function ( data , cols , mode="cols" ) {
 					else if ( class(cols)=="numeric" || class(cols)=="integer" ) cols [ which ( abs(cols) %in% seq(along=colnames) ) ]
 					else return(NULL)
 				}
-				, colnames(data) )	
+				, colnames(dat) )	
 
 				
 		lapply ( cols, function (cols, colnames) {
@@ -338,7 +338,7 @@ validateCols <- function ( data , cols , mode="cols" ) {
 					else if ( class(cols)=="numeric" || class(cols)=="integer" ) cols [ which ( seq(along=colnames) %in% abs(cols) ) ]
 					else return(NULL)
 				}
-				, colnames(data) )	
+				, colnames(dat) )	
 		
 		# verboseungen		
 		mes <- "column"

@@ -1,15 +1,10 @@
-
-# 2011-12-23 MH
-# NEW: function sort.dfr.by.names
-# 0000-00-00 AA
-
-sortDfrByNames <- function ( dfr , col.order = NULL , row.order = NULL , warn = TRUE ) {
+sortDatByNames <- function ( dat , col.order = NULL , row.order = NULL , warn = TRUE ) {
 	
 		# Checks
-		stopifnot ( is.data.frame ( dfr ) )
+		stopifnot ( is.data.frame ( dat ) )
 		
-		ucol <- unique ( colnames ( dfr ) )
-		urow <- unique ( rownames ( dfr ) )
+		ucol <- unique ( colnames ( dat ) )
+		urow <- unique ( rownames ( dat ) )
 		
 		if ( ! ( is.null ( col.order ) & is.null ( row.order ) ) ) {
 				
@@ -40,26 +35,19 @@ sortDfrByNames <- function ( dfr , col.order = NULL , row.order = NULL , warn = 
 		
 				if ( ! is.null ( col.order ) ) {
 						col.o <- na.omit ( match ( col.order , ucol ) )
-						col.o <- c ( col.o , which ( ! seq ( along = colnames ( dfr ) ) %in% col.o ) )
-						dfr <- dfr [ , col.o ]
+						col.o <- c ( col.o , which ( ! seq ( along = colnames ( dat ) ) %in% col.o ) )
+						dat <- dat [ , col.o ]
 				} 
 
 				if ( ! is.null ( row.order ) ) {
 						row.o <- na.omit ( match ( row.order , urow ) )
-						row.o <- c ( row.o , which ( ! seq ( along = rownames ( dfr ) ) %in% row.o ) )
-						dfr <- dfr [ row.o , ]
+						row.o <- c ( row.o , which ( ! seq ( along = rownames ( dat ) ) %in% row.o ) )
+						dat <- dat [ row.o , ]
 				}
 		}
 		
-		return ( dfr )
+		return ( dat )
 		
 }
 
-# dfr <- data.frame ( matrix ( rnorm ( 100 ) , ncol = 10 ) )
-# colnames ( dfr ) <- paste ( "X" , 10:1 , sep = "" )
-# rownames ( dfr ) <- paste ( "X" , 11:2 , sep = "" )
-# dfr
-
-## sort data.frame by 'col.order' and 'row.order'
-# sort.dfr.by.names ( dfr , paste ( "X" , 1:10 , sep = "" ) , paste ( "X" , 2:11 , sep = "" ) )
 

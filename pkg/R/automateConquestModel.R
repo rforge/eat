@@ -32,13 +32,13 @@
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-### dataset         ... Datensatz als R-dataframe
+### dat             ... Datensatz als R-dataframe
 ### ID              ... Name oder Spaltennummer der ID-Variablen
 ### regression      ... optional: Variablen für das latente Regressionsmodell, entweder als Vektor mit Spaltennummern oder Variablennamen
 ### DIF             ... optional: DIF-Variable, entweder als Spaltennummer oder als Variablenname
 ### group.var       ... optional: Gruppenvariable(n), entweder als Vektor/Skalar mit Spaltennummern oder Variablennamen
 ### weight			    ... optional: Gewichtungsvariable, entweder als Vektor/Skalar mit Spaltennummern oder Variablennamen
-### testitems       ... Spaltennummern oder Variablennamen der Testitems 
+### items           ... Spaltennummern oder Variablennamen der Testitems 
 ### person.grouping ... WIRD HIER NOCH NICHT VERARBEITET
 ### item.groping    ... Q-Matrix zur Spezifikation der Zugehörigkeit von Items zu latenten Dimensionen 
 ### m.model         ... WIRD HIER NICHT VERARBEITET
@@ -65,7 +65,7 @@
 ###                  z.B. na=list(items=c(6,7,8,9,96,97,98,99), DIF=9)
 ### verbose      ... logical: should messages printed on console?
 
-automateConquestModel <- function ( dataset, ID, regression=NULL, DIF=NULL, group.var=NULL, weight=NULL, testitems, na=list(items=NULL, DIF=NULL, HG=NULL, group=NULL, weight=NULL), person.grouping=NULL, item.grouping=NULL,
+automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.var=NULL, weight=NULL, items, na=list(items=NULL, DIF=NULL, HG=NULL, group=NULL, weight=NULL), person.grouping=NULL, item.grouping=NULL,
                                     model.statement="item", m.model="1pl", Title = NULL, jobName, jobFolder, subFolder=list(), dataName=NULL, anchor=NULL, pathConquest="C:/ConQuest/console_Feb2007.exe", method=NULL,std.err=NULL,distribution=NULL,
                                     n.plausible=NULL, set.constraints=NULL, nodes=NULL, p.nodes=NULL, f.nodes=NULL, n.iterations=NULL, converge=NULL, deviancechange=NULL, name.unidim=NULL,
                                     equivalence.table="wle",use.letters=FALSE, checkLink = FALSE, verbose = TRUE)	 {
@@ -75,7 +75,7 @@ automateConquestModel <- function ( dataset, ID, regression=NULL, DIF=NULL, grou
                   
     ver <- "0.7.0"
     ret <- TRUE
-    if(missing(dataset)) {stop(paste("Error in automateConquestModel_",ver,": No dataset specified.\n",sep="")) }
+    if(missing(dat)) {stop(paste("Error in automateConquestModel_",ver,": No dataset specified.\n",sep="")) }
     if(missing(jobName)) {stop(paste("Error in automateConquestModel_",ver,": No 'jobName' choosen.\n",sep="")) }
     if(missing(ID))      {stop(paste("Error in automateConquestModel_",ver,": No ID specified.\n",sep="")) }
     if(length(DIF)>1)    {stop(paste("Error in automateConquestModel_",ver,": There can only be one DIF variable.\n",sep="")) }
@@ -146,7 +146,7 @@ automateConquestModel <- function ( dataset, ID, regression=NULL, DIF=NULL, grou
 	# library(debug)
 	# mtrace(genConquestDataset)
 
-		if(inherits(try( conquestDataset <- genConquestDataset ( dat=dataset, variablen= testitems, ID=ID, DIF.var=DIF, HG.var=regression, group.var=group.var, weight.var=weight, na=na,
+		if(inherits(try( conquestDataset <- genConquestDataset ( dat=dat, variablen= items, ID=ID, DIF.var=DIF, HG.var=regression, group.var=group.var, weight.var=weight, na=na,
                                                                  use.letters=use.letters, checkLink = checkLink)  ),"try-error"))
       { ret <- FALSE; sunk(paste("automateConquestModel_",ver,": Fehler beim Aufbereiten des Datensatzes fuer Conquest.\n",sep="")); stop()}
     
@@ -173,7 +173,7 @@ automateConquestModel <- function ( dataset, ID, regression=NULL, DIF=NULL, grou
     conquestAnker <- NULL
     if(!is.null(anchor))
       {sunk(paste("automateConquestModel_",ver,": Create list with anchor parameter.\n",sep=""))
-       if(inherits(try( conquestAnker <- genConquestAnker(daten= dataset ,itemspalten= testitems , prm.file=anchor , verbose = verbose)    ),"try-error"))
+       if(inherits(try( conquestAnker <- genConquestAnker(daten= dat ,itemspalten= items , prm.file=anchor , verbose = verbose)    ),"try-error"))
 		 { ret <- FALSE; sunk(paste("automateConquestModel_",ver,": Error in creating list with anchor parameter.\n",sep="")); stop()}
        flush.console()}
     

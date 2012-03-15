@@ -10,12 +10,12 @@ In contrast to \code{as.numeric}, Function transforms only "transformable" colum
 only a logical vector is given, indicating which columns are transformable.
 }
 \usage{
-asNumericIfPossible ( dataFrame, set.numeric = TRUE, transform.factors = FALSE, maintain.factor.scores = TRUE, verbose = TRUE )
+asNumericIfPossible ( dat, set.numeric = TRUE, transform.factors = FALSE, maintain.factor.scores = TRUE, verbose = TRUE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
 
-  \item{dataFrame}{ A data.frame which columns should be transformed. }
+  \item{dat}{ A data.frame which columns should be transformed. }
   \item{set.numeric}{ Logical: If \code{TRUE}, data.frame with transformed columns is returned. If \code{FALSE}, a
                       logical vector is returned, indicating which columns are transformable.  }
   \item{transform.factors }{ Logical: Should columns of class \code{factor} transformed? If \code{FALSE}, columns of class \code{factor} are maintained. If \code{TRUE}, columns of class \code{factor} are attempted to transform.   } 

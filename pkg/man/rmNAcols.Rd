@@ -8,12 +8,12 @@ remove NA columns from data
 remove columns that are completely or partially NA from data.frame or matrix
 }
 \usage{
-rmNAcols ( data , rows = NULL , tolerance = 0 , cumulate = TRUE , remove = TRUE , verbose = FALSE )
+rmNAcols ( dat , rows = NULL , tolerance = 0 , cumulate = TRUE , remove = TRUE , verbose = FALSE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
 
-  \item{data}{ data.frame or matrix }
+  \item{dat}{ data.frame or matrix }
   \item{rows}{ rows to include, can be a list of vectors to specify row subsets }  
   \item{tolerance}{ number of non-NA cells that are "tolerated", can be a list corresponding to \code{rows} }
   \item{cumulate}{ if \code{TRUE}, \code{tolerance} is cumulated; if \code{FALSE}, exact \code{tolerance} is used }  

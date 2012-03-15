@@ -8,11 +8,11 @@ set type of variable in data.frame
 converts type of column(s) to "character" , "numeric" , "logical" , "integer" or "factor" 
 }
 \usage{
-set.col.type ( data , col.type = list ( "character" = NULL ) , verbose = FALSE , ... )
+set.col.type ( dat , col.type = list ( "character" = NULL ) , verbose = FALSE , ... )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{data}{ data.frame }
+  \item{dat}{ data.frame }
   \item{col.type}{ named list of variable names that are to be converted. names of list is conversion type ( "character" , "numeric" , "numeric.if.possible" , "logical" , "integer" or "factor" ) }
   \item{verbose}{ if \code{TRUE} variables that have been converted are printed }
   \item{...}{arguments to be passed to \link{asNumericIfPossible}}

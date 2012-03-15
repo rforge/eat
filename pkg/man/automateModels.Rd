@@ -8,7 +8,7 @@ automateModels
 specify and run several ConQuest models
 }
 \usage{
-automateModels(dataset, id = NULL, context.vars = NULL, items = NULL, 
+automateModels(dat, id = NULL, context.vars = NULL, items = NULL, 
 item.grouping = NULL, select.item.group = NULL, person.grouping.vars = NULL, 
 person.grouping.vars.include.all = FALSE, person.grouping = NULL, 
 select.person.group = NULL, checkLink = FALSE, additional.item.props = NULL, folder, 
@@ -24,22 +24,22 @@ delete.folder.countdown = 5, conquestParameters = NULL )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{dataset}{
-%%     ~~Describe \code{dataset} here~~
+  \item{dat}{
+%%     ~~Describe \code{dat} here~~
 data.frame containing all variables
 type of variables ("id" , "context.vars" or "items") must be set using options \code{id}, \code{context.vars}, \code{items}
 }
   \item{id}{
 %%     ~~Describe \code{id} here~~
-name or column number of 'id' variable in \code{dataset}
+name or column number of 'id' variable in \code{dat}
 }
   \item{context.vars}{
 %%     ~~Describe \code{context.vars} here~~
-names or column numbers of 'context' variables ( e.g. sex, school , ... ) in \code{dataset}
+names or column numbers of 'context' variables ( e.g. sex, school , ... ) in \code{dat}
 }
   \item{items}{
 %%     ~~Describe \code{items} here~~
-names or column numbers of 'item' variables in \code{dataset}
+names or column numbers of 'item' variables in \code{dat}
 if omitted, all variables that are not classified as 'id' or 'context' variables are treated as 'items'
 }
   \item{item.grouping}{

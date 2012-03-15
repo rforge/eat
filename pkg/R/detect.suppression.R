@@ -14,7 +14,7 @@
 		# pred.str <- paste ( sapply ( additional.preds , function ( pred ) { paste ( "d[,'" , pred , "']" , sep = "" ) } ) , collapse = " + " )
 		lm.str <- paste ( pred , " ~ " , paste ( preds , collapse = " + " ) , sep = "" )
 		# Modell
-		m <- lm ( formula = lm.str , data = d )
+		m <- lm ( formula = lm.str , dat = d )
 		
 		# vorhergesagte Werte
 		pred_fitted <- unname ( m$fitted.values )
@@ -43,7 +43,7 @@
 		return ( e )
 }
 
-detect.suppression <- function ( data , dependent , independent , full.return = FALSE , xlsx.path = NULL ) {
+detect.suppression <- function ( dat , dependent , independent , full.return = FALSE , xlsx.path = NULL ) {
 
 		# alle bivariaten Prädiktorkombinationen
 		komb <- expand.grid ( independent , independent )
@@ -66,7 +66,7 @@ detect.suppression <- function ( data , dependent , independent , full.return = 
 		.fun2 <- function ( komb , dep , d ) {
 				.calc.supression ( komb[[1]] , komb[[2]] , dep , d )
 		}
-		r <- do.call ( "rbind" , mapply ( .fun2 , komb , MoreArgs = list ( dependent , data ) , SIMPLIFY = FALSE , USE.NAMES = FALSE ) )
+		r <- do.call ( "rbind" , mapply ( .fun2 , komb , MoreArgs = list ( dependent , dat ) , SIMPLIFY = FALSE , USE.NAMES = FALSE ) )
 
 		# wenn angefordert oder wenn Excel geschrieben werden soll, dann die Ergebnis-Matrix bauen
 		if ( ( ! full.return ) | ( ! is.null ( xlsx.path ) ) ) {

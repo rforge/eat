@@ -5,7 +5,7 @@
 \description{converts character missings of different types to 0 or NA
 }
 \usage{
-collapseMissings(dat, missing.rule = NULL, item.names)
+collapseMissings(dat, missing.rule = NULL, items)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -15,7 +15,7 @@ data frame containing character missings (e.g. type 'mbd' - missing by design)
   \item{missing.rule}{
 list, definition how to recode distinct missings in dataset. See details for default.
 }
-  \item{item.names}{
+  \item{items}{
 character vector containing column names of the data frames whose character missings are to be collapsed
 }
 }
@@ -50,7 +50,7 @@ Karoline Sachse, Martin Hecht
 	dat1 <- inputDat[[1]]  # get first dataset from inputDat
 	datColMis <- collapseMissings(dat = dat1, 
 	missing.rule = list(mvi = 0 ,mnr = 0 ,mci = 0 ,mbd = NA ,mir = 0 ,mbi = 0), 
-	item.names=colnames(dat1)[- c(1:2)])
+	items=colnames(dat1)[- c(1:2)])
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

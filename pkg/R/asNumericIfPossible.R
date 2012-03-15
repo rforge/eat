@@ -19,23 +19,23 @@
 ### maintain.factor.scores: wenn Faktoren auch transformiert werden sollen, sollen ihre Faktorwerte übernommen werden?
 
 
-asNumericIfPossible <- function(dataFrame, set.numeric=TRUE, transform.factors=FALSE, maintain.factor.scores = TRUE, verbose=TRUE)   {
+asNumericIfPossible <- function(dat, set.numeric=TRUE, transform.factors=FALSE, maintain.factor.scores = TRUE, verbose=TRUE)   {
             funVersion  <- "asNumericIfPossible_0.5.0"
             originWarnLevel <- getOption("warn")
             wasInputVector  <- FALSE
-            if(class(dataFrame) != "data.frame" ) {
+            if(class(dat) != "data.frame" ) {
               if(verbose == TRUE) {cat(paste(funVersion, ": Warning! Argument of 'asNumericIfPossible' has to be of class 'data.frame'. Object will be converted to data.frame.\n",sep=""))}
-              dataFrame <- data.frame(dataFrame, stringsAsFactors=FALSE)
-              wasInputVector <- ifelse(ncol(dataFrame) == 1, TRUE, FALSE)
+              dat <- data.frame(dat, stringsAsFactors=FALSE)
+              wasInputVector <- ifelse(ncol(dat) == 1, TRUE, FALSE)
             }
-            currentClasses <- sapply(dataFrame, FUN=function(ii) {class(ii)})
+            currentClasses <- sapply(dat, FUN=function(ii) {class(ii)})
             summaryCurrentClasses <- names(table(currentClasses))
             if ( verbose == TRUE)   {
                cat(paste(funVersion, ": Current data frame consists of following ",length(summaryCurrentClasses), " classe(s):\n    ",sep=""))
                cat(paste(summaryCurrentClasses,collapse=", ")); cat("\n")
             }
             options(warn = -1)                                                  ### zuvor: schalte Warnungen aus!
-            numericable <- sapply(dataFrame, FUN=function(ii)   {
+            numericable <- sapply(dat, FUN=function(ii)   {
                   n.na.old       <- sum(is.na(ii))
                   transformed    <- as.numeric(ii)
                   transformed.factor <- as.numeric(as.character(ii))
@@ -49,19 +49,19 @@ asNumericIfPossible <- function(dataFrame, set.numeric=TRUE, transform.factors=F
                   }
                   return(ret)})
             options(warn = originWarnLevel)                                     ### danach: schalte Warnungen zurück in Ausgangszustand
-            changeVariables <- colnames(dataFrame)[numericable[1,]]
+            changeVariables <- colnames(dat)[numericable[1,]]
             changeFactorWithIndices   <- NULL
             if(transform.factors == TRUE & maintain.factor.scores == TRUE)   {
-               changeFactorWithIndices   <- names(which(sapply(changeVariables,FUN=function(ii) {class(dataFrame[[ii]])=="factor"})))
+               changeFactorWithIndices   <- names(which(sapply(changeVariables,FUN=function(ii) {class(dat[[ii]])=="factor"})))
                changeFactorWithIndices   <- setdiff(changeFactorWithIndices, names(which(numericable[2,] == FALSE)) )
                changeVariables           <- setdiff(changeVariables, changeFactorWithIndices)
             }
             if(length(changeVariables) >0)   {                                  ### hier werden alle Variablen (auch Faktoren, wenn maintain.factor.scores = FALSE) ggf. geändert
-               do <- paste ( mapply ( function ( ii ) { paste ( "try(dataFrame$'" , ii , "' <- as.numeric(dataFrame$'",ii, "'), silent=TRUE)" , sep = "" ) } , changeVariables  ) , collapse = ";" )
+               do <- paste ( mapply ( function ( ii ) { paste ( "try(dat$'" , ii , "' <- as.numeric(dat$'",ii, "'), silent=TRUE)" , sep = "" ) } , changeVariables  ) , collapse = ";" )
                eval ( parse ( text = do ) )
             }
             if(length(changeFactorWithIndices) >0)   {                          ### hier werden ausschließlich FAKTOREN, wenn maintain.factor.scores = TRUE, ggf. geändert
-               do <- paste ( mapply ( function ( ii ) { paste ( "try(dataFrame$'" , ii , "' <- as.numeric(as.character(dataFrame$'",ii, "')), silent=TRUE)" , sep = "" ) } , changeFactorWithIndices  ) , collapse = ";" )
+               do <- paste ( mapply ( function ( ii ) { paste ( "try(dat$'" , ii , "' <- as.numeric(as.character(dat$'",ii, "')), silent=TRUE)" , sep = "" ) } , changeFactorWithIndices  ) , collapse = ";" )
                eval ( parse ( text = do ) )
             }
             if(set.numeric==FALSE) {return(numericable[1,])}
@@ -69,10 +69,10 @@ asNumericIfPossible <- function(dataFrame, set.numeric=TRUE, transform.factors=F
               if(verbose == TRUE)      {
                  if( sum ( numericable[1,] == FALSE ) > 0 )  {
                      cat(paste("Following ",sum ( numericable[1,] == FALSE )," variable(s) won't be transformed:\n    ",sep=""))
-                     cat(paste(colnames(dataFrame)[as.numeric(which(numericable[1,] == FALSE))],collapse= ", ")); cat("\n")
+                     cat(paste(colnames(dat)[as.numeric(which(numericable[1,] == FALSE))],collapse= ", ")); cat("\n")
                  }
               }
-              if(wasInputVector == TRUE) {dataFrame <- unname(unlist(dataFrame))}
-              return(dataFrame)
+              if(wasInputVector == TRUE) {dat <- unname(unlist(dat))}
+              return(dat)
            }
          }

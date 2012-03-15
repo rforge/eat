@@ -1,9 +1,9 @@
-get.history <- function(historyfile, shw.object)
+get.history <- function(file, shw.object)
                {## if(!exists("recode")) {library(car)}
  				if (missing(shw.object))  {
                    cat("No shw-Object specified. Columns of historyfile will not be labeled.\n")
                 }
-                input           <- read.table(historyfile, header = FALSE, sep = "\t", dec=".")
+                input           <- read.table(file, header = FALSE, sep = "\t", dec=".")
                 while(length(table(input[,ncol(input)])) == 0) {input <- input[,-ncol(input)]}                   
                 colnames(input)[1:2] <-  c("iteration","deviance")              ### obere Zeile: letzte Spalte ausschließlich NA? wenn ja, entferne sie!
                 if (!missing(shw.object))  {                                    ### alles ist fertig eingelesen; jetzt müssen nur noch die Spalten sinnfällig benannt werden!

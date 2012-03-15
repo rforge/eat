@@ -5,16 +5,16 @@
 # NEW: function set.col.type
 # 0000-00-00 AA
 
-set.col.type <- function ( data , col.type = list ( "character" = NULL ) , verbose = FALSE , ... ) {
+set.col.type <- function ( dat , col.type = list ( "character" = NULL ) , verbose = FALSE , ... ) {
 
 		# Definitionen
-		d <- data
+		d <- dat
 
 		# Checks
 		notlist <- ! inherits ( col.type , "list" )
-		if ( notlist ) warning ( "'col.type' is not a list. 'data' is returned unchanged." )
+		if ( notlist ) warning ( "'col.type' is not a list. 'dat' is returned unchanged." )
 		notdataframe <- ! inherits ( d , "data.frame" )
-		if ( notdataframe ) warning ( "'data' is not a data.frame. 'data' is returned unchanged." )
+		if ( notdataframe ) warning ( "'dat' is not a data.frame. 'dat' is returned unchanged." )
 		
 		# weiter wenn Checks ok
 		if ( ! any ( c ( notlist , notdataframe ) ) ) {

@@ -4,12 +4,12 @@
 \title{Reads equivalence table created in Conquest analysis.}
 \description{Reads Conquest files comprising equivalence tables for MLE or WLE parameters.}
 \usage{
-get.equ(file.equ)
+get.equ(file)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{file.equ}{
-%%     ~~Describe \code{file.equ} here~~
+  \item{file}{
+%%     ~~Describe \code{file} here~~
 Character string of the Conquest equ-file.
 }
 }

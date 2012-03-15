@@ -13,16 +13,16 @@
 #
 ####################################################################################################################
 
-checkLink <- function(dataFrame, sysmis = NA, verbose = TRUE)   {
-             if(!is.na(sysmis))  {
-               na <- which(is.na(dataFrame))
+checkLink <- function(dat, na = NA, verbose = TRUE)   {
+             if(!is.na(na))  {
+               na <- which(is.na(dat))
                if(length(na)>0)  {
-                  cat(paste("Warning: '",sysmis,"' was specified to denote 'sysmis' in the data. ",length(na)," 'NA'-values were found in the dataset anyway. \n         Hence, ",sysmis," and 'NA' will be handled as 'sysmis'.\n",sep=""))
+                  cat(paste("Warning: '",na,"' was specified to denote 'sysmis' in the data. ",length(na)," 'NA'-values were found in the dataset anyway. \n         Hence, ",na," and 'NA' will be handled as 'sysmis'.\n",sep=""))
                }
                # if(!exists("recode")) {library(car)}
-               dataFrame <- as.data.frame(lapply(dataFrame, FUN=function(ii) {recode(ii, paste(sysmis,"= NA",collapse="; ") ) } ) )
+               dat <- as.data.frame(lapply(dat, FUN=function(ii) {recode(ii, paste(na,"= NA",collapse="; ") ) } ) )
              }
-             non.missing.cases <- lapply(dataFrame, FUN=function(ii) {which(!is.na(ii))})
+             non.missing.cases <- lapply(dat, FUN=function(ii) {which(!is.na(ii))})
              all.cases <- non.missing.cases[[1]]
              i <- 2
              total.abbruch     <- FALSE
@@ -43,11 +43,11 @@ checkLink <- function(dataFrame, sysmis = NA, verbose = TRUE)   {
                   }
                   i <- i + 1
              }
-             if (length(all.cases) != nrow(dataFrame))   {
+             if (length(all.cases) != nrow(dat))   {
                 if (verbose == TRUE) {cat("WARNING! Dataset is not completely linked.\n") }
                 return(FALSE)
              }
-             if (length(all.cases) == nrow(dataFrame))   {
+             if (length(all.cases) == nrow(dat))   {
                 if (verbose == TRUE) {cat("Dataset is completely linked.\n") }
                 return(TRUE)
              }  }

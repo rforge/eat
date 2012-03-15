@@ -8,14 +8,14 @@ explore data design
 explore data structure with respect to specific missing code (e.g. "missing by design")
 }
 \usage{
-exploreDesign ( data , missing = NA , id = NULL , itemsPerPerson = TRUE , personsPerItem = TRUE )
+exploreDesign ( dat , na = NA , id = NULL , itemsPerPerson = TRUE , personsPerItem = TRUE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
 
-  \item{data}{ data.frame }
-  \item{missing}{ missing specification }
-  \item{id}{ id variable in \code{data} if exists }
+  \item{dat}{ data.frame }
+  \item{na}{ missing specification }
+  \item{id}{ id variable in \code{dat} if exists }
   \item{itemsPerPerson}{ logical , if \code{TRUE} items per person list is returned }
   \item{personsPerItem}{ logical , if \code{TRUE} persons per item list is returned}
   
@@ -52,7 +52,7 @@ Martin Hecht
 \examples{
 data(science1)
 d <- science1[,!colnames(science1) \%in\% science1.context.vars]
-design <- exploreDesign ( data = d , missing = "mbd" , id = "id" )
+design <- exploreDesign ( dat = d , na = "mbd" , id = "id" )
 str(design)
 }
 

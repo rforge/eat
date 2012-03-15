@@ -33,7 +33,7 @@
 #				0.2.6 13.08.2011 item.eval rausgenommen da z.Z. buggy
 #				21.06.2011 MH: Version 0.0.1 l‰uft mit automateConquestModel zusammen testm‰ﬂig schon gut
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-automateModels <- function ( dataset , id = NULL , context.vars = NULL , items = NULL ,
+automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NULL ,
 							 item.grouping = NULL , select.item.group = NULL , 
 							 person.grouping.vars = NULL ,
 							 person.grouping.vars.include.all = FALSE ,
@@ -75,7 +75,7 @@ automateModels <- function ( dataset , id = NULL , context.vars = NULL , items =
 		
 		### Begr¸ﬂung
 		sunk ( paste ( f.n , "Starting automateModels\n" ) ) 
-		sunk ( paste ( f.n , 'Version: 1.4.14 (2012-03-08)\n' ) )
+		sunk ( paste ( f.n , 'Version: 1.4.15 (2012-03-15)\n' ) )
 		sunk ( paste ( f.n , "This version is BETA. Use at your own risk.\n" ) )
 		### Definitionen
 		m.model.available <- c ( "1pl", "2pl", "3pl" , "4pl" ) 
@@ -83,15 +83,15 @@ automateModels <- function ( dataset , id = NULL , context.vars = NULL , items =
 		cross.available <- c ( "all" , "item.groups" , "person.groups" ) 
 		
 		### Datensatz Treatment
-		retlist <- .automateModels.datasetTreatment ( dataset , id , context.vars , items )
-		dataset <- retlist$dataset
+		retlist <- .automateModels.datasetTreatment ( dat , id , context.vars , items )
+		dat <- retlist$dataset
 		id.name <- retlist$id.name
 		cont.names <- retlist$cont.names
 		item.names <- retlist$item.names
 		rm ( retlist )
 		### wenn person.grouping.vars spezifiziert, dann hieraus person.grouping bauen
 		if ( !is.null ( person.grouping.vars ) ) {				
-				person.grouping <- .automateModels.grouping.vars.to.grouping ( dataset , person.grouping.vars , person.grouping.vars.include.all , id.name )
+				person.grouping <- .automateModels.grouping.vars.to.grouping ( dat , person.grouping.vars , person.grouping.vars.include.all , id.name )
 				sunk ( paste ( f.n , "Info:" , "person.grouping is" , paste ( colnames ( person.grouping )[-1] , collapse = ", " ) , ".\n" ) ) 
 		}
 	
@@ -105,12 +105,12 @@ automateModels <- function ( dataset , id = NULL , context.vars = NULL , items =
 		### Default f¸r Item-Grouping und Person-Grouping
 		if ( is.null ( item.grouping ) ) { 
 					# Default Item-Grouping erzeugen
-					item.grouping <- .automateModels.set.item.grouping.default ( dataset , item.names )
+					item.grouping <- .automateModels.set.item.grouping.default ( dat , item.names )
 					# in select.item.group rein, damit sp‰ter nicht rausgekickt wird
 					#select.item.group <- c ( select.item.group , colnames ( item.grouping )[2] )
 				}
 		if ( is.null ( person.grouping ) ) {
-					person.grouping <- .automateModels.set.person.grouping.default ( dataset , id.name )
+					person.grouping <- .automateModels.set.person.grouping.default ( dat , id.name )
 					#select.person.group <- c ( select.person.group , colnames ( person.grouping )[2] )
 				}
 		if ( ! inherits ( item.grouping , "list" ) ) item.grouping <- list ( item.grouping )
@@ -156,7 +156,7 @@ automateModels <- function ( dataset , id = NULL , context.vars = NULL , items =
 		if ( any ( !is.null ( unlist( model.specs$cross ) ) ) ) model.specs <- .automateModels.crossModels ( model.specs )
 		
 		### spezielle Aufbereitung f¸r Conquest "Multigruppen" Treatment
-		model.specs <- .automateModels.conquest.multigroup ( model.specs , dataset )
+		model.specs <- .automateModels.conquest.multigroup ( model.specs , dat )
 		
 		### Datensatz modellspezifisch aufbereiten
 		# id.name modellspezifisch setzen 
@@ -180,7 +180,7 @@ automateModels <- function ( dataset , id = NULL , context.vars = NULL , items =
 					} , model.specs$item.grouping , MoreArgs = list ( item.names ) , SIMPLIFY=FALSE )	
 		# missing.rule-spezifische Datens‰tze aus Gesamtdatensatz bilden
 		misrule.datasets <- .automateModels.create.misrule.datasets (
-							dataset , items=item.names , items.list=model.specs$item.names , 
+							dat , items=item.names , items.list=model.specs$item.names , 
 							mis.rule=model.specs$missing.rule , folder = folder.aM , 
 							write.txt.dataset = write.txt.dataset ) 
 						
@@ -260,7 +260,7 @@ automateModels <- function ( dataset , id = NULL , context.vars = NULL , items =
 		# auf Platte schreiben
 		save ( model.specs , file = file.path ( folder.aM , "model.specs.Rdata" )  )
 		save ( results , file = file.path ( folder.aM , "results.Rdata" )  )
-		save ( dataset , file = file.path ( folder.aM , "dataset.Rdata" )  )
+		save ( dat , file = file.path ( folder.aM , "dat.Rdata" )  )
 		save ( id.name , file = file.path ( folder.aM , "id.name.Rdata" )  )
 		save ( cont.names , file = file.path ( folder.aM , "cont.names.Rdata" )  )
 		save ( item.names , file = file.path ( folder.aM , "item.names.Rdata" )  )

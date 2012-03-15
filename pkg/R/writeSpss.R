@@ -66,7 +66,7 @@ writeSpss <- function (dat, values, subunits, units, filedat = "zkddata.txt", fi
   }
   
   # treat missings
-  dat <- collapseMissings(dat, missing.rule, item.names=colnames(dat))
+  dat <- collapseMissings(dat, missing.rule, items=colnames(dat))
     
   zkdWriteForeignSPSS(dat, varinfo, datafile = filedat, codefile = filesps, 
            missing.rule = list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 ),

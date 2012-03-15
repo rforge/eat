@@ -1,5 +1,5 @@
-\name{sortDfrByNames}
-\alias{sortDfrByNames}
+\name{sortDatByNames}
+\alias{sortDatByNames}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 sort data.frame by colnames and/or rownames
@@ -8,12 +8,12 @@ sort data.frame by colnames and/or rownames
 specify new colnames and/or rownames order, data.frame is sorted in accordance
 }
 \usage{
-sortDfrByNames ( dfr , col.order = NULL , row.order = NULL , warn = TRUE )
+sortDatByNames ( dat , col.order = NULL , row.order = NULL , warn = TRUE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
 
-  \item{dfr}{ data.frame }
+  \item{dat}{ data.frame }
   \item{col.order}{ character vector of colnames in new order }
   \item{row.order}{ character vector of rownames in new order }
   \item{warn}{logical, if \code{TRUE} warnings are printed on output window if \code{col.order}/\code{row.order} do not correspond to colnames/rownames resp.}
@@ -48,13 +48,13 @@ Martin Hecht
 }
 
 \examples{
-dfr <- data.frame ( matrix ( rnorm ( 100 ) , ncol = 10 ) )
-colnames ( dfr ) <- paste ( "X" , 10:1 , sep = "" )
-rownames ( dfr ) <- paste ( "X" , 11:2 , sep = "" )
-dfr
+dat <- data.frame ( matrix ( rnorm ( 100 ) , ncol = 10 ) )
+colnames ( dat ) <- paste ( "X" , 10:1 , sep = "" )
+rownames ( dat ) <- paste ( "X" , 11:2 , sep = "" )
+dat
 
 # sort data.frame by 'col.order' and 'row.order'
-sortDfrByNames ( dfr , paste ( "X" , 1:10 , sep = "" ) , paste ( "X" , 2:11 , sep = "" ) )
+sortDatByNames ( dat , paste ( "X" , 1:10 , sep = "" ) , paste ( "X" , 2:11 , sep = "" ) )
 }
 
 

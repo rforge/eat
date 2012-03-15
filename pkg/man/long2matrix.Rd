@@ -8,24 +8,24 @@ long2matrix
 transforms long format data.frame into a matrix format data.frame
 }
 \usage{
-long2matrix ( data , sort = TRUE , triangle = NULL ,
+long2matrix ( dat , sort = TRUE , triangle = NULL ,
 				force.diagonal = FALSE , exclude.diagonal = FALSE ,
 				long2matrix = TRUE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
 
-  \item{data}{ data.frame with columns "row" , "col" , "val" }
+  \item{dat}{ data.frame with columns "row" , "col" , "val" }
   \item{sort}{ sort rows and columns of matrix }
   \item{triangle}{ if not \code{NULL} a symmetric matrix will be constructed
 				   available options are "upper" , "lower" , "both" }
-  \item{force.diagonal}{ a diagonal is forced into matrix even if no diagonal elements are in \code{data}  }
+  \item{force.diagonal}{ a diagonal is forced into matrix even if no diagonal elements are in \code{dat}  }
   \item{exclude.diagonal}{ the diagonal is excluded if possible }
-  \item{long2matrix}{ if \code{FALSE} \code{data} is not transformed }  
+  \item{long2matrix}{ if \code{FALSE} \code{dat} is not transformed }  
   
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+WARNING: This function seems to be buggy. Do not use it or use it with care.
 }
 \value{
 %%  ~Describe the value returned
@@ -59,15 +59,15 @@ d1 <- data.frame (
 "val" = c ( 1 , 5 , 4 , 3 , 2 , 6 ) , stringsAsFactors = FALSE )
 
 # unsorted matrix
-long2matrix  ( data = d1 , sort = FALSE )
+long2matrix  ( dat = d1 , sort = FALSE )
 # sorted by default
-long2matrix  ( data = d1 )
+long2matrix  ( dat = d1 )
 # extract upper triangle of symmetric matrix
-long2matrix  ( data = d1 , triangle = "upper" )
+long2matrix  ( dat = d1 , triangle = "upper" )
 # exclude diagonal elements
-long2matrix  ( data = d1 , triangle = "upper" , exclude.diagonal = TRUE )
+long2matrix  ( dat = d1 , triangle = "upper" , exclude.diagonal = TRUE )
 # if full matrix ("both" triangles) is requested, the diagonal cannot be excluded, option is ignored
-long2matrix  ( data = d1 , triangle = "both" , exclude.diagonal = TRUE )
+long2matrix  ( dat = d1 , triangle = "both" , exclude.diagonal = TRUE )
 
 # no diagonal elements are specified
 d2 <- data.frame (
@@ -75,9 +75,9 @@ d2 <- data.frame (
 "col" = c ( "v3" , "v3" , "v2" ) , 
 "val" = c ( 5 , 3 , 2 ) , stringsAsFactors = FALSE )
 
-long2matrix ( data = d2 )
+long2matrix ( dat = d2 )
 # diagonal is set (with NAs)
-long2matrix ( data = d2 , triangle = "upper" , force.diagonal = TRUE )
+long2matrix ( dat = d2 , triangle = "upper" , force.diagonal = TRUE )
 }
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the

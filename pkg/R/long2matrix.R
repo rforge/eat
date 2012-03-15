@@ -25,12 +25,12 @@
 		return ( d )
 }
 
-long2matrix <- function ( data , sort = TRUE , triangle = NULL ,
+long2matrix <- function ( dat , sort = TRUE , triangle = NULL ,
 						  force.diagonal = FALSE , exclude.diagonal = FALSE ,
 						  long2matrix = TRUE ) {
 
 		# Definitionen
-		d <- data
+		d <- dat
 		
 		# Checks
 		stopifnot ( ncol ( d ) == 3 )
@@ -230,19 +230,19 @@ long2matrix <- function ( data , sort = TRUE , triangle = NULL ,
 # "col" = c ( "v1" , "v3" , "v2" , "v1" , "v2" , "v3" ) , 
 # "val" = c ( 1 , 5 , 4 , 3 , 2 , 6 ) , stringsAsFactors = FALSE )
 
-# long2matrix  ( data = d1 , sort = FALSE )
-# long2matrix  ( data = d1 )
-# long2matrix  ( data = d1 , triangle = "upper" )
-# long2matrix  ( data = d1 , triangle = "upper" , exclude.diagonal = TRUE )
-# long2matrix  ( data = d1 , triangle = "both" , exclude.diagonal = TRUE )
+# long2matrix  ( dat = d1 , sort = FALSE )
+# long2matrix  ( dat = d1 )
+# long2matrix  ( dat = d1 , triangle = "upper" )
+# long2matrix  ( dat = d1 , triangle = "upper" , exclude.diagonal = TRUE )
+# long2matrix  ( dat = d1 , triangle = "both" , exclude.diagonal = TRUE )
 
 # d2 <- data.frame (
 # "row" = c ( "v2" , "v1" , "v1" ) , 
 # "col" = c ( "v3" , "v3" , "v2" ) , 
 # "val" = c ( 5 , 3 , 2 ) , stringsAsFactors = FALSE )
 
-# long2matrix ( data = d2 )
-# long2matrix ( data = d2 , triangle = "upper" , force.diagonal = TRUE )
+# long2matrix ( dat = d2 )
+# long2matrix ( dat = d2 , triangle = "upper" , force.diagonal = TRUE )
 		   
 
 

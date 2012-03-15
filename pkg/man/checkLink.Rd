@@ -8,13 +8,13 @@ checkLink
 checks whether items in a dataset are linked via design
 }
 \usage{
-checkLink ( dataFrame, sysmis = NA, verbose = TRUE)
+checkLink ( dat, na = NA, verbose = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
 
-  \item{dataFrame}{ A data.frame where all columns denote test items }
-  \item{sysmis}{ character string specifying values to be treat as missing by design  }
+  \item{dat}{ A data.frame where all columns denote test items }
+  \item{na}{ character string specifying values to be treat as missing by design  }
   \item{verbose}{ logical: Should output printed to console? }
   
 

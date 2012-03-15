@@ -37,7 +37,7 @@ collapseMissings.create.recode.string <- function ( missing.rule ) {
 
 }
 
-collapseMissings <- function( dat , missing.rule = NULL , item.names = NULL){
+collapseMissings <- function( dat , missing.rule = NULL , items = NULL){
 	
 	# Default-Rule
 	default.rule <- list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 )
@@ -54,7 +54,7 @@ collapseMissings <- function( dat , missing.rule = NULL , item.names = NULL){
 			stopifnot ( all ( unlist ( unique ( missing.rule ) ) %in% c(0,NA) ) )
 	}
 	
-	if (is.null (item.names)) {item.names <- colnames(dat)}
+	if (is.null (items)) {items <- colnames(dat)}
 
 	# Plausicheck: Dataframe übergeben?
 		stopifnot ( is.data.frame ( dat ) )
@@ -81,7 +81,7 @@ collapseMissings <- function( dat , missing.rule = NULL , item.names = NULL){
 	# Rekodieren
 	tr <- NULL
 	for( i in 1:dim(dat)[2]) {tr[i] <- is.character(dat[,i]) }
-	item.names.chr <- colnames(dat[,tr])[which(colnames(dat[,tr]) %in% item.names)]
+	item.names.chr <- colnames(dat[,tr])[which(colnames(dat[,tr]) %in% items)]
 	if(!is.null(item.names.chr)) {
 		dat <- data.frame ( mapply ( function ( dat , name , item.names.chr ) {
 				if ( name %in% item.names.chr ) 
@@ -89,7 +89,7 @@ collapseMissings <- function( dat , missing.rule = NULL , item.names = NULL){
 				else dat
 			} , dat , colnames ( dat ) , MoreArgs = list ( item.names.chr ) , SIMPLIFY = FALSE ) , stringsAsFactors=FALSE )	
 		} else {
-		sunk("collapseMissings found no character column in item.names - no missings collapsed !!! \n")
+		sunk("collapseMissings found no character column in items - no missings collapsed !!! \n")
 		}
 	
 	return ( dat )
@@ -99,9 +99,9 @@ collapseMissings <- function( dat , missing.rule = NULL , item.names = NULL){
 # TESTS
 # missing.rule = list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 )
 # dat <- data.frame ( v1 = c("1", "mnr") , v2 = c("mbd","mbi") , stringsAsFactors=FALSE )
-# item.names <- c ( "v1" , "v2" )
+# items <- c ( "v1" , "v2" )
 # str(dat)
-# dat2 <- collapseMissings( dat , missing.rule = NULL , item.names )
+# dat2 <- collapseMissings( dat , missing.rule = NULL , items )
 # dat2
 # str(dat2)
 

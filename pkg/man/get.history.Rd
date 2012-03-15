@@ -4,11 +4,11 @@
 \title{Reads Conquest history files.}
 \description{Reads Conquest history file comprising parameter estimates of each iteration. }
 \usage{
-get.history(historyfile, shw.object)
+get.history(file, shw.object)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{historyfile}{
+  \item{file}{
 %%     ~~Describe \code{file} here~~
 Character string of the Conquest history file.
 }

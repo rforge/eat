@@ -7,8 +7,8 @@ Generate Models and Estimate Them Using ConQuest
 \code{automateConquestModel} facilitates data analysis using the software ConQuest. It automatically writes ConQuest syntax, label, anchor and data files.
 }
 \usage{
-automateConquestModel(dataset, ID, regression=NULL, DIF=NULL, group.var=NULL, 
-weight=NULL, testitems, na=list(items=NULL, DIF=NULL, HG=NULL, group=NULL, 
+automateConquestModel(dat, ID, regression=NULL, DIF=NULL, group.var=NULL, 
+weight=NULL, items, na=list(items=NULL, DIF=NULL, HG=NULL, group=NULL, 
 weight=NULL), person.grouping=NULL, item.grouping=NULL, model.statement="item", 
 m.model="1pl", Title = NULL, jobName, jobFolder, subFolder=list(), dataName=NULL, 
 anchor=NULL, pathConquest, method=NULL, std.err=NULL ,distribution=NULL, 
@@ -18,7 +18,7 @@ equivalence.table="wle", use.letters=FALSE, checkLink=FALSE, verbose=TRUE)
 }
 
 \arguments{
-  \item{dataset}{
+  \item{dat}{
     A data frame containing all variables necessary for analysis.
 }
   \item{ID}{
@@ -36,7 +36,7 @@ equivalence.table="wle", use.letters=FALSE, checkLink=FALSE, verbose=TRUE)
   \item{weight}{
 	Name or column number of one weighting variable. 
 }
-  \item{testitems}{
+  \item{items}{
 	Names or column numbers of variables with item responses.
 }
   \item{na}{
@@ -50,7 +50,7 @@ equivalence.table="wle", use.letters=FALSE, checkLink=FALSE, verbose=TRUE)
 }
   \item{person.grouping}{
 	A named data frame indicating which persons should be grouped. 
-	The first column contains the identifier variable and must have the same name as the respective column in \code{dataset}. The other columns contain grouping definitions and must be named with the respective group names. A value of 1 indicates that this item is part of the scale, a value of 0 indicates that the respective item is NOT part of the scale.
+	The first column contains the identifier variable and must have the same name as the respective column in \code{dat}. The other columns contain grouping definitions and must be named with the respective group names. A value of 1 indicates that this item is part of the scale, a value of 0 indicates that the respective item is NOT part of the scale.
 }
   \item{model.statement}{
 	A character string which appears in ConQuest syntax as model statement. If \code{model.statement} is not specified, the model statement in the ConQuest syntax is to \code{item} by default. When a DIF variable is specified, statement is set to \code{item - [name of DIF variable] + item*[name of DIF variable]} by default. 

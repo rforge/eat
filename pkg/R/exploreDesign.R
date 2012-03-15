@@ -1,36 +1,36 @@
 
-exploreDesign <- function ( data , missing = NA , id = NULL , itemsPerPerson = TRUE , personsPerItem = TRUE ) {
+exploreDesign <- function ( dat , na = NA , id = NULL , itemsPerPerson = TRUE , personsPerItem = TRUE ) {
 
 		# wenn keine Id da
 		if ( is.null ( id ) ) {
-				data$row <- as.character ( seq ( along = rownames ( data ) ) )
+				dat$row <- as.character ( seq ( along = rownames ( dat ) ) )
 				id = "row"
 		}
-		stopifnot ( any ( colnames ( data ) %in% id ) )
+		stopifnot ( any ( colnames ( dat ) %in% id ) )
 		
 		if ( ! all ( !itemsPerPerson , !personsPerItem ) ) {
 		
 				# items
-				items <- colnames ( data ) [ ! colnames ( data ) %in% id ]
+				items <- colnames ( dat ) [ ! colnames ( dat ) %in% id ]
 				
 				# persons
-				persons <- data[,id]
+				persons <- dat[,id]
 				
 				# Items jeder Person
 				if ( itemsPerPerson ) {
-						rows <- mapply ( function ( p , d , id ) { d [ d[,id] == p , items , drop = FALSE ] } , persons , MoreArgs = list ( data , id ) , SIMPLIFY = FALSE )
-						ret <- items.per.person <- mapply ( function ( row , missing ) {
-								if ( is.na ( missing ) ) w <- sapply ( row , is.na ) else w <- sapply ( row , function ( z ) z == missing )
+						rows <- mapply ( function ( p , d , id ) { d [ d[,id] == p , items , drop = FALSE ] } , persons , MoreArgs = list ( dat , id ) , SIMPLIFY = FALSE )
+						ret <- items.per.person <- mapply ( function ( row , na ) {
+								if ( is.na ( na ) ) w <- sapply ( row , is.na ) else w <- sapply ( row , function ( z ) z == na )
 								colnames ( row ) [ !w ]
-						} , rows , MoreArgs = list ( missing ) , SIMPLIFY = FALSE )
+						} , rows , MoreArgs = list ( na ) , SIMPLIFY = FALSE )
 				}
 			
 				# Personen jedes Items
 				if ( personsPerItem ) {
-						ret <- persons.per.item <- mapply ( function ( d , idv , missing ) {
-								if ( is.na ( missing ) ) w <- is.na(d) else w <- d == missing
+						ret <- persons.per.item <- mapply ( function ( d , idv , na ) {
+								if ( is.na ( na ) ) w <- is.na(d) else w <- d == na
 								idv[ !w ]
-						} , data [ , items , drop = FALSE ] , MoreArgs = list ( data [ , id ] , missing ) , SIMPLIFY = FALSE )
+						} , dat [ , items , drop = FALSE ] , MoreArgs = list ( dat [ , id ] , na ) , SIMPLIFY = FALSE )
 				}
 				
 				# Rückgabe
