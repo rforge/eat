@@ -111,7 +111,7 @@ Karoline Sachse
 \examples{
 inpList <- inputList
 inpDat <- inputDat
-test <- automateDataPreparation (datList=inpList, inputDat = inpDat,
+test <- automateDataPreparation (inputList=inpList, datList = inpDat,
         path = "c:/temp/test_eat", loadSav = FALSE, checkData=TRUE,
         mergeData = TRUE, recodeData=TRUE, aggregateData=TRUE, scoreData= TRUE,
         writeSpss=TRUE)
