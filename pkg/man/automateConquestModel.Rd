@@ -1,7 +1,7 @@
 \name{automateConquestModel}
 \alias{automateConquestModel}
 \title{
-Generate Models and Estimate Them Using ConQuest
+Specify Models and Write Corresponding Input for ConQuest Software
 }
 \description{
 \code{automateConquestModel} facilitates data analysis using the software ConQuest. It automatically writes ConQuest syntax, label, anchor and data files.
@@ -25,13 +25,13 @@ equivalence.table="wle", use.letters=FALSE, checkLink=FALSE, verbose=TRUE)
     Name or column number of the identifier (ID) variable.
 }
   \item{regression}{
-    Names or column numbers of one or more context variables (e.g., sex, school). This variables will be used for latent regression in ConQuest.
+    Names or column numbers of one or more context variables (e.g., sex, school). These variables will be used for latent regression in ConQuest.
 }
   \item{DIF}{
 	Name or column number of one grouping variable for which differential item functioning analysis is to be done.
 }
   \item{group.var}{
-	Names or column numbers of one or more grouping variables.
+	Names or column numbers of one or more grouping variables. Descriptive statistics for WLEs and Plausible Values will be computed separately for each group in ConQuest.
 }
   \item{weight}{
 	Name or column number of one weighting variable. 
@@ -40,29 +40,27 @@ equivalence.table="wle", use.letters=FALSE, checkLink=FALSE, verbose=TRUE)
 	Names or column numbers of variables with item responses.
 }
   \item{na}{
-	 A named list of numerical vectors indicating valuesto be considered as missing. Specific missing codes can be defined for each type of variable. 
+	 A named list of numerical vectors indicating values to be considered as missing. Specific missing codes can be defined for each type of variable. 
 	% hier noch hinschreiben, welche Variablentypen es gibt.
 }
 
   \item{item.grouping}{
-	A named data frame indicating which items should be grouped in scales. 
-	The first column contains the names of all items and must be named \code{item}. The other columns contain scale definitions and must be named with the respective scale names. A value of 1 indicates that this item is part of the scale, a value of 0 indicates that the respective item is NOT part of the scale.
+	A named data frame indicating how items should be grouped to dimensions. The first column contains the names of all items and must be named \code{item}. The other columns contain dimension definitions and must be named with the respective dimension names. A value of 1 indicates that an item loads on this dimension, a value of 0 indicates that the respective item does not load on this dimension.
 }
   \item{person.grouping}{
-	A named data frame indicating which persons should be grouped. 
-	The first column contains the identifier variable and must have the same name as the respective column in \code{dat}. The other columns contain grouping definitions and must be named with the respective group names. A value of 1 indicates that this item is part of the scale, a value of 0 indicates that the respective item is NOT part of the scale.
+	A named data frame indicating which persons should be grouped. The first column contains the identifier variable and must have the same name as the respective column in \code{dat}. The other columns contain grouping definitions and must be named with the respective group names. A value of 1 indicates that a person belongs to this group, a value of 0 indicates that the respective person does not belong to this group.
 }
   \item{model.statement}{
-	A character string which appears in ConQuest syntax as model statement. If \code{model.statement} is not specified, the model statement in the ConQuest syntax is to \code{item} by default. When a DIF variable is specified, statement is set to \code{item - [name of DIF variable] + item*[name of DIF variable]} by default. 
+	A character string with the model statement to use in the ConQuest syntax. If \code{model.statement == NULL}, the model statement in the ConQuest syntax is set to \code{item} by default. When a DIF variable is specified, the model statement is set to \code{item - [name of DIF variable] + item*[name of DIF variable]} by default. 
 }
   \item{m.model}{
 	A character string specifying the IRT model used for analysis. At the time, only \code{"1PL"} is available.
 }
   \item{Title}{
-A character string with the analysis title for ConQuest syntax. If no title is specified, informations about computer and user name and R version are printed in ConQuest syntax.
+A character string with the analysis title for the ConQuest syntax. If \code{Title == NULL}, informations about computer and user name and R version are used as title.
 }
   \item{jobName}{
-A character string specifying the analysis name. All Conquest input and output files will named by \code{jobName} and their corresponding extensions. 
+A character string specifying the analysis name. All Conquest input and output files will named \code{jobName} with their corresponding extensions. 
 }
   \item{jobFolder}{
  A character string specifying the folder where all analysis files will be written to, for example \code{"C:/programme/analysis"}
@@ -75,8 +73,7 @@ Character strings must be named \code{data} and \code{out}, for example \code{su
 A character string specifying the dataset name if it is intended to be different from the name specified by \code{jobName}. If \code{dataName == NULL}, the dataset is named \code{[jobName].dat} 
 }
   \item{anchor}{
-	A named data frame with anchor parameters. 
-	The first column contains the names of all anchor items and must be named \code{item}. The second column contains anchor parameters. 
+	A named data frame with anchor parameters. The first column contains the names of all anchor items and must be named \code{item}. The second column contains anchor parameters. 
 	Anchor items can be a subset of the items in the dataset and vice versa. 
 }
   \item{pathConquest}{
@@ -95,21 +92,21 @@ A character string indicating the  a priori trait distribution. Possible options
 See ConQuest manual pp.167 for details on population distributions.
 }
   \item{n.plausible}{
-An integer value specifying the number of plausible values to draw. Default is 5.
+An integer value specifying the number of plausible values to draw. The default value is 5.
 }
   \item{set.constraints}{
 A character string specifying how the scale should be constrained. Possible options are \code{"cases"} (default), \code{"items"} and \code{"none"}. When anchor parameter are specified in \code{anchor}, constraints will be set to \code{"none"}. 
 }
   \item{nodes}{
-An integer value specifying the number of nodes to be used in the analysis. Default is 15.
+An integer value specifying the number of nodes to be used in the analysis. The default value is 15.
 }
   \item{p.nodes}{
 An integer value specifying the number of nodes that are used in the approximation of the posterior distributions, which are
-used in the drawing of plausible values and in the calculation of EAP estimates. The default is 2000.
+used in the drawing of plausible values and in the calculation of EAP estimates. The default value is 2000.
 }
   \item{f.nodes}{
 An integer value specifying the number of nodes that are used in the approximation of the posterior distributions in the
-calculation of fit statistics. The default is 2000.
+calculation of fit statistics. The default value is 2000.
 }
   \item{n.iterations}{
 An integer value specifying the maximum number of iterations for which estimation will proceed without improvement in the
@@ -122,7 +119,7 @@ An integer value specifiying the convergence criterion for parameter estimates. 
 An integer value specifiying the convergence criterion for the deviance. The estimation will terminate when  the change in the deviance between successive iterations of the EM algorithm is less than \code{deviancechange}. The default value is 0.0001.
 }
   \item{name.unidim}{
-optional: character string with name of one latent dimension, if not specified in labels. 
+A character string with the name of one latent dimension. Alternatively, the dimension name can be specified using the argument  \code{item.grouping}. 
 }
   \item{equivalence.table}{
 A character string specifying the type of equivalence table to print. Possible options are \code{"wle"} (default), \code{"mle"} and \code{NULL}. 
@@ -149,7 +146,7 @@ written to \code{"C:/output/analysis1"}.
 No results are returned to console. Input files and batch string are written to disk in specified folder(s). 
 }
 \references{
-%% ~put references to the literature/web site here ~
+Wu, M.L., Adams, R.J., Wilson, M.R., & Haldane, S.A. (2007). ACER ConQuest Version 2.0. Generalised Item Response Modeling Software. Camberwell, Victoria: ACER Press.
 }
 \author{
 Sebastian Weirich, Karoline Sachse, Martin Hecht

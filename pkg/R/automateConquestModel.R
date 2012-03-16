@@ -76,7 +76,7 @@ automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.va
     ver <- "0.7.0"
     ret <- TRUE
     if(missing(dat)) {stop(paste("Error in automateConquestModel_",ver,": No dataset specified.\n",sep="")) }
-    if(missing(jobName)) {stop(paste("Error in automateConquestModel_",ver,": No 'jobName' choosen.\n",sep="")) }
+    if(missing(jobName)) {stop(paste("Error in automateConquestModel_",ver,": No 'jobName' chosen.\n",sep="")) }
     if(missing(ID))      {stop(paste("Error in automateConquestModel_",ver,": No ID specified.\n",sep="")) }
     if(length(DIF)>1)    {stop(paste("Error in automateConquestModel_",ver,": There can only be one DIF variable.\n",sep="")) }
     if(length(weight)>1) {stop(paste("Error in automateConquestModel_",ver,": There can only be one weight variable.\n",sep="")) }
@@ -98,7 +98,7 @@ automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.va
            used.nodes <- nodes
         }
         if( used.nodes > 3500)  {
-          sunk(paste("automateConquestModel_",ver,": Specified model will use ",used.nodes," nodes. Choosen default method '",method,"' probably is not appropriate. \nChange method to 'montecarlo' with 1000 nodes. Otherwise, please specify your settings explicitly.\n",sep=""))
+          sunk(paste("automateConquestModel_",ver,": Specified model will use ",used.nodes," nodes. Chosen default method '",method,"' probably is not appropriate. \nChange method to 'montecarlo' with 1000 nodes. Otherwise, please specify your settings explicitly.\n",sep=""))
           nodes <- 1000
 		  method <- "montecarlo"
        }
