@@ -1,42 +1,34 @@
 \name{get.plausible}
 \alias{get.plausible}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{Reads Conquest plausible values files}
-\description{Function reads Conquest plausible value files and transforms them into a R data frame.}
+\title{Read ConQuest Plausible Values Output Files}
+\description{This function reads ConQuest plausible value files and automatically identifies the number of cases, the number of plausible values and the number of dimensions.}
 \usage{
 get.plausible(file)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{file}{
 %%     ~~Describe \code{file} here~~
-Character string of the Conquest plausible values file to be read in. 
+Character string with the name of the ConQuest plausible values file. 
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
-Funktion identifies number of cases, number of plausible values and number of dimensions. 
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
-A data frame, where each row corresponds to one case. Columns are labeled with dimension names and number
-of corresponding plausible value. 
+A data frame with one row per person containing the following columns:
 
- \item{case}{Case number. Each row represents one person.}
- \item{ID}{Case ID, if listed in Conquest plausible values file.}
- \item{pv}{Plausible value. Denotation of columns names is pv.[name of dimension]_[number of plausible value]. For example, pv.reading_6 refers to the 6th plausible value of reading dimension.}
- \item{eap}{Expectation value of the a posterio distribution of the corresponding dimension.}
- \item{eap.se}{Standard error of the EAP estimate.}
+ \item{case}{Case number} 
+ \item{ID}{Identifier for this case}
+ \item{pv}{Plausible value. Columns are named \code{pv.[name of dimension]_[number of plausible value]}. For example, pv.reading_6 refers to the 6th plausible value of reading dimension.}
+ \item{eap}{Expected\emph{a posteriori} ability estimate for this person. Columns are named \code{eap.[name of dimension]}}
+ \item{eap.se}{Standard error of the EAP estimate. Columns are named \code{eap.se.[name of dimension]}}
 
 }
 \references{
-%% ~put references to the literature/web site here ~
+See pp.230 of Wu, M.L., Adams, R.J., Wilson, M.R., & Haldane, S.A. (2007). \emph{ACER ConQuest Version 2.0. Generalised Item Response Modeling Software}. Camberwell, Victoria: ACER Press.
 }
 \author{
-%%  ~~who you are~~
+Sebastian Weirich
 }
 \note{
 %%  ~~further notes~~
@@ -50,5 +42,5 @@ of corresponding plausible value.
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+%\keyword{ ~kwd1 }
+%\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

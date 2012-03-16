@@ -1,7 +1,7 @@
 \name{get.shw}
 \alias{get.shw}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{Reads Conquest showfiles}
+\title{Read ConQuest showfiles}
 \description{Function reads Conquest showfiles and transforms them into a R list of data frames.}
 \usage{
 get.shw(file, dif.term = NULL, split.dif = TRUE, 
@@ -51,14 +51,18 @@ If one term was specified as DIF-statement, the corresponding data frame is augm
 confidence intervals and indicators specifying significant DIF. 
 
 Each data frame corresponding to a 'TERM' statement contains following columns:
+ \item{item.nr}{Item number}
  \item{item}{Name of item}
  \item{ESTIMATE}{Estimated difficulty of item}
  \item{ERROR}{Standard error of estimated item difficulty}
- \item{MNSQ}{Item's 'Outfit'}
- \item{MNSQ.1}{Items's 'Infit'}
- \item{CI}{Lower and upper bound confidence intervals}
- \item{T}{T values, corresponding to confidence intervals}
- \item{filename}{Name of show file read in}
+ \item{outfit}{Item's 'Outfit'}
+ \item{outfit.ci.lb}{Lower bound of the outfit confidence interval}
+ \item{outfit.ci.ub}{Upper bound of the outfit confidence interval}
+ \item{outfit.t}{T-value for outfit}
+ \item{infit}{Items's 'Infit'}
+ \item{infit.ci.lb}{Lower bound of the infit confidence interval}
+ \item{infit.ci.ub}{Upper bound of the infit confidence interval}
+ \item{infit.t}{T-value for infit}
  \item{abs.dif}{Only for DIF analysis. Absolute DIF, computed as 2*[group-specific parameter].}
  \item{ci.lb}{Lower bound confidence interval for specific significance level of 90, 95 or 99 percent.}
  \item{ci.ub}{Upper bound confidence interval for specific significance level of 90, 95 or 99 percent.}
@@ -74,7 +78,7 @@ Rows represent the regressors, columns represent the latent dimension to which t
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Sebastian Weirich
 }
 \note{
 %%  ~~further notes~~

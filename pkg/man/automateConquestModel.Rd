@@ -146,7 +146,7 @@ written to \code{"C:/output/analysis1"}.
 No results are returned to console. Input files and batch string are written to disk in specified folder(s). 
 }
 \references{
-Wu, M.L., Adams, R.J., Wilson, M.R., & Haldane, S.A. (2007). ACER ConQuest Version 2.0. Generalised Item Response Modeling Software. Camberwell, Victoria: ACER Press.
+Wu, M.L., Adams, R.J., Wilson, M.R., & Haldane, S.A. (2007). \emph{ACER ConQuest Version 2.0. Generalised Item Response Modeling Software}. Camberwell, Victoria: ACER Press.
 }
 \author{
 Sebastian Weirich, Karoline Sachse, Martin Hecht

@@ -1,8 +1,8 @@
 \name{get.wle}
 \alias{get.wle}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{Reads Conquest WLE or MLE files.}
-\description{Reads Conquest files comprising maximum likelihood estimates (MLE) or weighted likelihood estimates (WLE).}
+\title{Read ConQuest WLE or MLE Output Files.}
+\description{Read Conquest files comprising maximum likelihood estimates (MLE) or weighted likelihood estimates (WLE).}
 \usage{
 get.wle(file)
 }
@@ -10,7 +10,7 @@ get.wle(file)
 \arguments{
   \item{file}{
 %%     ~~Describe \code{file} here~~
-Character string of the Conquest MLE or WLE file to be read in.
+Character string with the name of the ConQuest MLE or WLE file.
 }
 }
 \details{
@@ -22,24 +22,21 @@ Character string of the Conquest MLE or WLE file to be read in.
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-A data frame with columns according to the corresponding MLE or WLE file. For each dimension of the analysis
-number of solved items, number of presented items, point estimate and its standard error is given. Each row 
-represents one person. Columns are named as follows: 
+A data frame with one row per person containing the following columns.  
 
- \item{case}{Case number. Each row represents one person.} 
- \item{n.solved}{Number of solved items by the i-th person.}
- \item{n.total}{Number of total items presented to the i-th person.}
- \item{wle}{WLE or MLE estimate.}
- \item{wle.se}{Standard error of WLE or MLE estimate.} 
+ \item{case}{Case number} 
+ \item{ID}{Identifier for this case}
+ \item{n.solved}{Number of items this person answered correctly}
+ \item{n.total}{Number of total items presented to this person}
+ \item{wle}{WLE or MLE estimate. The last number of the columns name indicates the dimension the WLE or MLE estimate belongs to.}
+ \item{wle.se}{Standard error of WLE or MLE estimate. The last number of the columns name indicates the dimension the WLE or MLE estimate belongs to.} 
 
-The last number of columns names represents the dimension the WLE or MLE estimate belongs to. 
- 
 }
 \references{
-%% ~put references to the literature/web site here ~
+See pp.230 of Wu, M.L., Adams, R.J., Wilson, M.R., & Haldane, S.A. (2007). \emph{ACER ConQuest Version 2.0. Generalised Item Response Modeling Software}. Camberwell, Victoria: ACER Press.
 }
 \author{
-%%  ~~who you are~~
+Sebastian Weirich
 }
 \note{
 %%  ~~further notes~~
@@ -53,5 +50,5 @@ The last number of columns names represents the dimension the WLE or MLE estimat
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+%\keyword{ ~kwd1 }
+%\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
