@@ -21,7 +21,7 @@ isConverged <- function ( path , txt = FALSE ) {
 						
 						# kompletter show-File
 						tried <- try ( l <- readLines( shwf ) , silent = TRUE )
-						if ( inherits ( tried , "try-error" ) ) stop ( paste ( "could not open file" , log.path ) )
+						if ( inherits ( tried , "try-error" ) ) stop ( paste ( "could not open file" , shwf ) )
 						
 						c1 <- "Iterations terminated because the deviance convergence criteria was reached"
 						c2 <- "Iterations terminated because the convergence criteria were reached"
