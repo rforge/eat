@@ -57,7 +57,7 @@
 								model.nr.str , "to automateConquestModel ..." ) )
 				stopifnot ( is.data.frame ( dataset ) )
 				
-				sunk ( paste ( einr , "dataset = " , "'data.frame': " , nrow ( dataset ) , " obs. of " , ncol ( dataset ) , " variables" , sep = "" ) )
+				sunk ( paste ( einr , "dat = " , "'data.frame': " , nrow ( dataset ) , " obs. of " , ncol ( dataset ) , " variables" , sep = "" ) )
 				stopifnot ( is.character ( id.name ) )
 				sunk ( paste ( "cat('" , einr , "ID = " , id.name , "\\n')" , sep = "" ) )
 				sunk ( paste ( einr , "regression = " , regression , sep = "" ) )				
@@ -66,7 +66,7 @@
 				sunk ( paste ( einr , "weight = " , paste ( weight , collapse = ", " ) , sep = "" ) )				
 				stopifnot ( is.character ( group ) | is.null ( group ) )
 				stopifnot ( is.character ( item.names ) )
-				sunk ( paste ( einr , "testitems = " , "chr [1:" , length ( item.names ) , "] " , sep = "" ) )	
+				sunk ( paste ( einr , "items = " , "chr [1:" , length ( item.names ) , "] " , sep = "" ) )	
 				stopifnot ( is.data.frame ( person.grouping ) )			
 				sunk ( paste ( einr , "person.grouping = " , "'data.frame': " , nrow ( person.grouping ) , " obs. of " , ncol ( person.grouping ) , " variables" , sep = "" ) )
 				stopifnot ( is.data.frame ( item.grouping )	)			
@@ -103,13 +103,13 @@
 				
 				# Übergabe an automateConquestModel speichern fürs debuggen
 				eval ( parse ( text = 
-						"dataset = dataset ;
+						"dat = dataset ;
 						ID = id.name ;
 						regression = regression ;
 						DIF = dif ;
 						group.var = group ;
 						weight = weight ;
-						testitems = item.names;
+						items = item.names;
 						person.grouping = person.grouping ;
 						item.grouping = item.grouping ;
 						m.model = m.model ;
@@ -136,13 +136,13 @@
 						na = conquestParameters$na"
 				) )
 				save ( list = c (
-						"dataset",
+						"dat",
 						"ID",
 						"regression",
 						"DIF",
 						"group.var",
 						"weight",
-						"testitems",
+						"items",
 						"person.grouping",
 						"item.grouping",
 						"m.model",
@@ -172,13 +172,13 @@
 				
 				# automateConquestModel aufrufen
 				#ret <- TRUE
-				ret <- automateConquestModel ( dataset = dataset ,
+				ret <- automateConquestModel ( dat = dataset ,
 										ID = id.name ,
 										regression = regression ,
 										DIF = dif ,
 										group.var = group ,
 										weight = weight ,
-										testitems = item.names,
+										items = item.names,
 										person.grouping = person.grouping ,
 										item.grouping = item.grouping ,
 										m.model = m.model ,
