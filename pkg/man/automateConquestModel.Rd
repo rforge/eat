@@ -78,6 +78,7 @@ A character string specifying the dataset name if it is intended to be different
 }
   \item{pathConquest}{
  A character string with path and name of the ConQuest console, for example \code{"c:/programme/conquest/console_Feb2007.exe"}
+ if \code{NULL} the newest executable in file.path(.Library,"eat/winexe/conquest") is used
  }
   \item{method}{
 A character string indicating which method should be used for analysis. Possible options are \code{"gauss"} (default), \code{"quadrature"} and \code{"montecarlo"}.
