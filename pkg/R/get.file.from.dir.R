@@ -57,6 +57,9 @@ get.file.from.dir <- function ( dr , ext = "exe" , vers = c("newest","oldest") ,
 					 ) )
 		}
 		
+		# Output bei verbose
+		if ( ( crit.level == "verbose" ) & !is.null ( fl ) ) cat ( paste ( "get.file.from.dir: file '" , fl , "' is returned." ) )
+		
 		return ( fl )
 }
 
