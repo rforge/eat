@@ -1,5 +1,62 @@
 
-plotDevianceChange <- function ( log.path , plot = TRUE , pdf = FALSE , out.path = NULL , extreme.crit = 0.75 ) {
+plotDevianceChange <- function ( path , plot = TRUE , pdf = FALSE , out.path = NULL , extreme.crit = 0.75 , pdftk.path = NULL ) {
+
+		# auf isdir prüfen, dabei connection "abfangen"
+		if ( ! inherits ( path , "connection" ) ) isdir <- file.info(path)$isdir else isdir <- FALSE
+		
+		# wenn Verzeichnis dann rekursiv alle log files rausziehen
+		# wenn kein Verzeichnis dann einfach so weiterpassen
+		if ( isdir ) {
+				f <- list.files(path = path , 
+						   pattern = "\\.log$" , all.files = FALSE,
+						   full.names = TRUE, recursive = TRUE,
+						   ignore.case = FALSE, include.dirs = FALSE)
+		} else f <- list ( path )
+		
+		# Schleife über Change Plot erstellen
+		pdfs <- sapply ( f , .plotDevianceChange , plot = plot , pdf = pdf , out.path = out.path , extreme.crit = extreme.crit , simplify = FALSE )
+	
+		# wenn pdf == TRUE dann einzel pdfs mit pdftk zusammenmergen
+		if ( isdir & pdf ) {
+		
+				# pdftk default
+				if ( is.null ( pdftk.path ) ) pdftk.path <- get.file.from.dir(dr=file.path(.Library,"eat/winexe/pdftk"), ext="exe", vers="newest", crit.level="silent" )
+				
+				# wenn gefunden weiter
+				if ( !is.null ( pdftk.path ) ) {
+						
+						# outpath defaulten
+						if ( is.null ( out.path ) ) out.path <- path						
+						
+						# out.name
+						out.name <- "deviance_change_plots.pdf"
+						out.path <- file.path ( path , out.name )
+						
+						# pdftk
+						pdftk.str <- paste ( pdftk.path , " " ,
+											 paste ( paste ( '"' , pdfs , '"' , sep="" ) , collapse = " " ) ,
+											 ' cat output "' ,
+											 out.path , '" dont_ask' , sep = "" )
+						
+						# run
+						system(command=pdftk.str, intern = FALSE,
+							   ignore.stdout = FALSE, ignore.stderr = FALSE,
+							   wait = FALSE, input = NULL, show.output.on.console = FALSE,
+							   minimized = TRUE, invisible = TRUE)
+						
+				}
+		}
+		
+		# return 
+		if ( plot ) {
+				invisible ( pdfs )
+		} else {
+				if ( isdir ) return ( pdfs ) else return ( unlist ( pdfs , recursive = FALSE ) )
+		}
+		
+}
+
+.plotDevianceChange <- function ( log.path , plot , pdf , out.path , extreme.crit ) {
 		
 		# kompletter Log-File
 		tried <- try ( l <- readLines( log.path ) , silent = TRUE )
@@ -47,6 +104,7 @@ plotDevianceChange <- function ( log.path , plot = TRUE , pdf = FALSE , out.path
 				if ( plot ) {
 						
 						# wenn pdf erzeugt werden soll, device öffnen
+						# sonst neues Konsolen Plot window
 						if ( pdf ) {
 								
 								# outpath defaulten
@@ -61,7 +119,7 @@ plotDevianceChange <- function ( log.path , plot = TRUE , pdf = FALSE , out.path
 										paper = "a4r" , 
 										width = 10.91 , height = 7.48
 									)
-						}
+						} else windows()
 						
 						### plot ###
 						xvals <- as.numeric ( names ( dv ) )
@@ -127,14 +185,18 @@ plotDevianceChange <- function ( log.path , plot = TRUE , pdf = FALSE , out.path
 						if (! identical ( inf1 , "character(0)" ) ) mtext( paste ( inf1, collapse = "   " ) )				
 
 						# falls pdf device schließen
-						if ( pdf ) dev.off()
-						
-						invisible ( TRUE )
+						if ( pdf ) {
+								dev.off()
+								invisible ( pdf.file )
+						} else {
+								# bei erfolgreichen plot (auf die Konsole)
+								invisible ( TRUE )
+						}
 				
 				} else return ( dv )
 		
 		} else {
 				warning ( "plot could not be created. check input." )
-				invisible ( FALSE )
+				invisible ( NULL )
 		}
 }

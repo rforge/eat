@@ -249,7 +249,13 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 		results <- .automateModels.collect.results ( model.specs , additionalSubFolder ) 		
 		# Personenmittel auf 0, wenn adjust.for.regression gesetzt
 		# if ( adjust.for.regression ) results <- .automateModels.adjust.for.regression ( results )
-	
+		
+		# Convergence Summary schreiben
+		isConverged ( folder , txt = TRUE )
+		
+		# Deviance Change Plots
+		plotDevianceChange ( folder , plot = TRUE , pdf = TRUE )
+		
 		# Itembewertung durchführen
 		# results <- .automateModels.item.eval ( results )
 		# Q3 erzeugen

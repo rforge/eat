@@ -8,14 +8,19 @@ source.it.all
 sources *.R files of \code{folder}
 }
 \usage{
-source.it.all ( folder="p:/ZKD/development" , develop.modules = NULL , return.stable = FALSE )
+source.it.all ( folder="p:/ZKD/development" , use.zkd.conv = TRUE , development = TRUE , development.only = FALSE , exclude = NULL )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
 
   \item{folder}{ folder with *.R files }
-  \item{develop.modules}{ character vector of R files that should be sourced in development status }
-  \item{return.stable}{ if \code{TRUE} nothing is sourced and a vector of all stable versions is returned }
+  \item{development}{ if \code{TRUE} development versions are sourced (if non-existent the latest stable is sourced or nothing is sourced, see option \code{development.only}\\
+					  if \code{FALSE} stable versions are sourced }
+  \item{use.zkd.conv}{ if \code{TRUE} R files in \code{folder} are checked to be consisten with specific ("zkd") versioning convention \\
+					   if \code{FALSE} all R files in \code{folder} are sourced }					  
+  \item{development.only}{ if \code{TRUE} only development versions are sourced \\
+						   if \code{FALSE} stable versions are included }
+  \item{exclude}{ character vector of R files that should not be sourced }
 
 }
 \details{
@@ -27,14 +32,13 @@ source.it.all ( folder="p:/ZKD/development" , develop.modules = NULL , return.st
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-\item{return.stable = FALSE }{sources R files}
-\item{return.stable = TRUE }{character vector of stable R files}
+sources R files
 }
 \references{
 
 }
 \author{
-Christiane Penk, Martin Hecht
+Martin Hecht, Christiane Penk
 }
 \note{
 %%  ~~further notes~~

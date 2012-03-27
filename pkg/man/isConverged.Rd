@@ -48,11 +48,8 @@ Martin Hecht
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 
-\examples{
-\dontrun{
-isConverged ( log.path = bzfile ( file.path( .Library , "eat/extdata/ConQuest.Log.Example1.log.bz2" ) ) )
-}
-}
+%% \examples{
+%% \dontrun{ }}
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

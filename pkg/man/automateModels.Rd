@@ -246,6 +246,53 @@ Martin Hecht, Karoline Sachse, Sebastian Weirich, Christiane Penk, Malte Jansen,
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 
+\examples{
+\dontrun{
+# 'folder' must be specified, WARNING: this folder is deleted by automateModels!!!
+#
+# if software="conquest" (currently the only and default option) the path of the
+# 		windows executable ConQuest console must be specified by setting
+#		conquestParameters = list ("pathConquest"="<path_to_your_conquest.exe>")
+#				e.g. conquestParameters = list ("pathConquest"=""C:/ConQuest/console.exe"")
+# if not explicitely specified it is searched for in 
+#		file.path(.Library,"eat/winexe/conquest")
+#				e.g. "C:/R/R-2.14.2/library/eat/winexe/conquest"
+#		you can put your ConQuest executable there
+#
+# load example data
+# (these are simulated achievement test data)
+data ( science1 )
+#
+### Example 1: running a unidimensional Rasch model with all variables in dataset 'science1'
+# all variables in 'science1' must be classified as either 'id', 'context.vars' or 'items'
+# 'items' may be omitted, then it is defaulted to variables that are not 'id' or 'context.vars'
+automateModels ( dat = science1, id = "id", context.vars = science1.context.vars,
+				 folder = "C:/temp/automateModelsExample1" )
+#
+### Example 2: running a multidimensional Rasch model
+# option 'item.grouping' specifies dimensions and mapping of items to dimensions
+# 'item.grouping' is a data.frame with item names in first column ('item')
+#		and dimensions in further columns, mapping of items to dimension is
+#		indicated by 0 (item loads not on dimension) or 1 (item loads on dimension)
+#		(have a look at the example item.grouping 'science1.scales')
+# since 6 dimensions are specified in 'science1.scales' a 6-dimensional Rasch model is run
+# this example runs some time + convergence is suboptimal
+automateModels ( item.grouping = science1.scales, dat = science1, id = "id",
+				 context.vars = science1.context.vars, folder = "C:/temp/automateModelsExample2" )
+#
+### Example 3: running several unidimensional Rasch models in a row
+# we use item.grouping = 'science1.scales' with 6 dimensions
+# instead of running one 6-dimensional model we will run 6 unidimensional models
+# by specifying cross = "item.groups"
+# note: all cores on machine are used, so if you have for example 2 cores, 2 windows consoles
+#		running ConQuest will pop up ( to reduce cpu usage on current machine, set
+#		all.local.cores = FALSE )
+automateModels ( cross = "item.groups", item.grouping = science1.scales, dat = science1,
+				 id = "id", context.vars = science1.context.vars,
+				 folder = "C:/temp/automateModelsExample3" )
+}
+}
+
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{ ~kwd1 }
