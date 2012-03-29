@@ -266,7 +266,7 @@ data ( science1 )
 ### Example 1: running a unidimensional Rasch model with all variables in dataset 'science1'
 # all variables in 'science1' must be classified as either 'id', 'context.vars' or 'items'
 # 'items' may be omitted, then it is defaulted to variables that are not 'id' or 'context.vars'
-automateModels ( dat = science1, id = "id", context.vars = science1.context.vars,
+ex1 <- automateModels ( dat = science1, id = "id", context.vars = science1.context.vars,
 				 folder = "C:/temp/automateModels/Example1" )
 #
 ### Example 2: running a multidimensional Rasch model
@@ -277,21 +277,21 @@ automateModels ( dat = science1, id = "id", context.vars = science1.context.vars
 #		(have a look at the example item.grouping 'science1.scales')
 # since 6 dimensions are specified in 'science1.scales' a 6-dimensional Rasch model is run
 # this example runs some time + convergence is suboptimal
-automateModels ( item.grouping = science1.scales, dat = science1, id = "id",
+ex2 <- automateModels ( item.grouping = science1.scales, dat = science1, id = "id",
 				 context.vars = science1.context.vars, folder = "C:/temp/automateModels/Example2" )
 #
 ### Example 3: running several unidimensional Rasch models in a row
 # we use item.grouping = 'science1.scales' with 6 dimensions
 # instead of running one 6-dimensional model we will run 6 unidimensional models
 # by specifying cross = "item.groups"
-automateModels ( cross = "item.groups", item.grouping = science1.scales, dat = science1,
+ex3 <- automateModels ( cross = "item.groups", item.grouping = science1.scales, dat = science1,
 				 id = "id", context.vars = science1.context.vars,
 				 folder = "C:/temp/automateModels/Example3" )
 #
 ### Example 4: running 15 2-dimensional models (every scale combined with every other)
 # Option 'select.item.group' is used to specify various combinations of dimensions
 # it is a list of 15 character vectors that incorporate scale names (from 'item.grouping' data)
-automateModels ( select.item.group =
+ex4 <- automateModels ( select.item.group =
 				 list ( c("BioKno","BioPro"),c("BioKno","CheKno"),c("BioKno","ChePro"),
 				 c("BioKno","PhyKno"),c("BioKno","PhyPro"),c("BioPro","CheKno"),c("BioPro","ChePro"),
 				 c("BioPro","PhyKno"),c("BioPro","PhyPro"),c("CheKno","ChePro"),c("CheKno","PhyKno"),
@@ -305,7 +305,7 @@ automateModels ( select.item.group =
 # to include the complete analysis (all grades) 'person.grouping.vars.include.all' is set to TRUE
 # to trigger separate person subgroup analyses 'cross' must be set to "person.groups"
 # with this specification 3 models are run: all grades (9 and 10), grade 9, grade 10
-automateModels ( person.grouping.vars = "grade",
+ex5 <- automateModels ( person.grouping.vars = "grade",
 				 person.grouping.vars.include.all = TRUE,
 				 cross = "person.groups",
 				 dat = science1, id = "id", context.vars = science1.context.vars,
@@ -314,7 +314,7 @@ automateModels ( person.grouping.vars = "grade",
 ### Example 6: running Rasch models for several person subgroups and scales
 # cross = "all" triggers unidimensional models with the combination of scales and person subgroups
 # in this example every scale is run with grade 9 and with grade 10 separately (=12 models)
-automateModels ( person.grouping.vars = "grade",
+ex6 <- automateModels ( person.grouping.vars = "grade",
 				 item.grouping = science1.scales,
 				 cross = "all",
 				 dat = science1, id = "id", context.vars = science1.context.vars,

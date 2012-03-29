@@ -43,7 +43,7 @@ get.person.par <- function ( results ) {
 		kennwerte <- unlist ( unlist ( kennwerte , recursive = FALSE ) , recursive = FALSE )
 
 		# Einzeldataframes zusammenmergen, die gelistet sind
-		personenkennwerte <- do.call ( "rbind" , kennwerte )
+		personenkennwerte <- do.call ( "rbind.fill" , kennwerte )
 		rownames ( personenkennwerte ) <- 1:nrow( personenkennwerte )
 		v <- colnames ( personenkennwerte ) [ ! colnames ( personenkennwerte ) %in% c ( "analysis" , "dimension" , "group" , "person" ) ]
 		personenkennwerte <- set.col.type ( personenkennwerte , list ( "numeric" = v ) )

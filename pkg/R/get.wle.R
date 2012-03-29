@@ -37,7 +37,7 @@ get.wle <- function (file) {
                n.spalten <- max ( sapply(input,FUN=function(ii){ length(ii) }) )
                input <- data.frame( matrix( t( sapply(input,FUN=function(ii){ ii[1:n.spalten] }) ),length(input),byrow=F), stringsAsFactors=F)
 			   if ( n.spalten %% 2 == 0 ) mk <- colnames (input)[-2] else mk <- colnames (input)
-			   input <- set.col.type ( data=input , col.type=list("numeric.if.possible"=mk) )
+			   input <- set.col.type ( dat=input , col.type=list("numeric.if.possible"=mk) )
 			   col.min.na <- which( rowSums(is.na(input)) == min(rowSums(is.na(input))))[1]### Zeile mit den am wenigsten fehlenden Elementen
                col.numeric <- which ( sapply(input, FUN=function(ii) {class(ii)}) == "numeric" )
 			   col.real.numbers <- na.omit(unlist ( lapply (col.numeric , FUN= function(ii) { ifelse(input[col.min.na,ii] == round(input[col.min.na,ii]), NA, ii)}) ) )

@@ -6,7 +6,6 @@
 # 0000-00-00 AA
 
 set.col.type <- function ( dat , col.type = list ( "character" = NULL ) , verbose = FALSE , ... ) {
-
 		# Definitionen
 		d <- dat
 
@@ -72,8 +71,8 @@ set.col.type <- function ( dat , col.type = list ( "character" = NULL ) , verbos
 																	} else var" , sep = "" )
 								}
 								eval ( parse ( text = str ) )
-						} , d[,names(col.type)] , col.type , MoreArgs = list ( ... ) , SIMPLIFY = FALSE )
-					
+						} , d[,names(col.type), drop = FALSE] , col.type , MoreArgs = list ( ... ) , SIMPLIFY = FALSE )
+			
 						# setzen
 						do <- paste ( mapply ( function ( el ) { paste ( "try(d$" , el , "<-vars.new[['" , el , "']],silent=TRUE)" , sep = "" ) } , names ( vars.new ) ) , collapse = ";" )
 						eval ( parse ( text = do ) )

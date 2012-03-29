@@ -281,7 +281,7 @@ readConquestOutput <- function (jobFolder, subFolder = NULL, item.grouping, name
 	# Dimensionsschleife
 	.fun1 <- function ( dim.name , dim.num , wle.dat , pv.dat ) {
 			wle <- cbind ( "ID"=wle.dat [ , "ID" ] ,  wle.dat [ , grepl ( paste ( "\\." , dim.num , "$" , sep = "" ) , colnames ( wle.dat ) ) ] , stringsAsFactors = FALSE )
-			eap <- cbind ( "ID"=pv.dat [ , "ID" ] ,  pv.dat [ , grepl ( "^eap\\..*$"  , colnames ( pv.dat ) ) ] , stringsAsFactors = FALSE )
+			eap <- cbind ( "ID"=pv.dat [ , "ID" ] ,  pv.dat [ , grepl ( paste(dim.name,"$",sep="")  , colnames ( pv.dat ) ) ] , stringsAsFactors = FALSE )
 			pv <- cbind ( "ID"=pv.dat [ , "ID" ] ,  pv.dat [ , grepl ( paste ( "\\." , dim.name , "_\\d+$" , sep = "" ) , colnames ( pv.dat ) ) ] , stringsAsFactors = FALSE )
 		
 			# Personenschleife
