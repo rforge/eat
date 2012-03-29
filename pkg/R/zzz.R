@@ -1,3 +1,33 @@
-.First.lib <- function(lib, pkg){
-	packageStartupMessage ( paste ( "\neat version: 1.5.0-96 (2012-03-29)\nThis version is BETA. Use at your own risk.\n" ) )
+
+.onAttach <- function(lib, pkg){
+	packageStartupMessage ( paste ( "\n===========================================\neat version: 1.5.1-97 (2012-03-29)\nThis version is BETA. Use at your own risk.\n===========================================\n" ) )
+	install.eat.dependencies ()
+	}
+
+install.eat.dependencies <- function ( ) {
+
+		pkgs <- c("car","date","foreign","gdata","reshape","sendmailR","xlsx")
+
+		oldwarn <- getOption ( "warn" )
+		options ( warn = -1 )
+		ex <- sapply ( pkgs , require , character.only = TRUE , quietly = FALSE , warn.conflicts = FALSE )
+		options ( warn = oldwarn )
+
+		inst <- names ( ex [ !ex ] )
+
+		if ( ! identical ( inst , character(0) ) ) {
+			
+				oldwarn <- getOption ( "warn" )
+				options ( warn = 2 )
+				tried <- try ( install.packages( inst , repos = c("http://ftp5.gwdg.de/pub/misc/cran","http://ftp.yalwa.org/cran") ) , silent = TRUE )
+				options ( warn = oldwarn )
+				if ( inherits ( tried , "try-error" ) ) {
+						stop ( tried )
+				} else {
+						ex <- sapply ( inst , require , character.only = TRUE , quietly = FALSE , warn.conflicts = TRUE )
+				}
+
+		}
+
+		invisible ( TRUE )
 }

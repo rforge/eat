@@ -75,7 +75,7 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 		
 		### Begrüßung
 		sunk ( paste ( f.n , "Starting automateModels\n" ) ) 
-		sunk ( paste ( f.n , 'Version: 1.5.0-96 (2012-03-29)\n' ) )
+		sunk ( paste ( f.n , 'Version: 1.5.1-97 (2012-03-29)\n' ) )
 		sunk ( paste ( f.n , "This version is BETA. Use at your own risk.\n" ) )
 		### Definitionen
 		m.model.available <- c ( "1pl", "2pl", "3pl" , "4pl" ) 
