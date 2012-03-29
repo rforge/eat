@@ -1,12 +1,12 @@
 
 .onAttach <- function(lib, pkg){
-	packageStartupMessage ( paste ( "\n===========================================\neat version: 1.5.1-97 (2012-03-29)\nThis version is BETA. Use at your own risk.\n===========================================\n" ) )
+	packageStartupMessage ( paste ( "\n===========================================\neat version: 1.5.2-98 (2012-03-29)\nThis version is BETA. Use at your own risk.\n===========================================\n" ) )
 	install.eat.dependencies ()
 	}
 
 install.eat.dependencies <- function ( ) {
 
-		pkgs <- c("car","date","foreign","gdata","reshape","sendmailR","xlsx")
+		pkgs <- c("car","date","foreign","gdata","reshape","sendmailR","xlsx","parallel")
 
 		oldwarn <- getOption ( "warn" )
 		options ( warn = -1 )
