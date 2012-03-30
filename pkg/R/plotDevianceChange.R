@@ -57,7 +57,7 @@ plotDevianceChange <- function ( path , plot = TRUE , pdf = FALSE , out.path = N
 }
 
 .plotDevianceChange <- function ( log.path , plot , pdf , out.path , extreme.crit ) {
-		
+	
 		# kompletter Log-File
 		tried <- try ( l <- readLines( log.path ) , silent = TRUE )
 		if ( inherits ( tried , "try-error" ) ) stop ( paste ( "could not open file" , log.path ) )
@@ -96,7 +96,7 @@ plotDevianceChange <- function ( path , plot = TRUE , pdf = FALSE , out.path = N
 				if ( length ( d ) != length ( dv ) ) stop ( paste ( "could not extract deviance change from" , log.path , " please check." ) )
 				
 				# outlier
-				if ( !is.null (extreme.crit) ) {
+				if ( !is.null (extreme.crit) & length(dv)<1 ) {
 						thresh <- extreme.crit * sd ( dv )
 						dv <- dv[dv<=thresh]
 				}
