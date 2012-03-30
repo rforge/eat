@@ -14,7 +14,7 @@
 		# pred.str <- paste ( sapply ( additional.preds , function ( pred ) { paste ( "d[,'" , pred , "']" , sep = "" ) } ) , collapse = " + " )
 		lm.str <- paste ( pred , " ~ " , paste ( preds , collapse = " + " ) , sep = "" )
 		# Modell
-		m <- lm ( formula = lm.str , dat = d )
+		m <- lm ( formula = lm.str , data = d )
 		
 		# vorhergesagte Werte
 		pred_fitted <- unname ( m$fitted.values )

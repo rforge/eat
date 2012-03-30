@@ -56,9 +56,8 @@ Martin Hecht
 \examples{
 \dontrun{
 plotDevianceChange ( path = bzfile ( file.path( .Library , "eat/extdata/ConQuest.Log.Example1.log.bz2" ) ) )
-}
 plotDevianceChange ( path = bzfile ( file.path( .Library , "eat/extdata/ConQuest.Log.Example1.log.bz2" ) ) , plot = FALSE )
-}
+}}
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
