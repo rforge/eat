@@ -96,7 +96,7 @@ plotDevianceChange <- function ( path , plot = TRUE , pdf = FALSE , out.path = N
 				if ( length ( d ) != length ( dv ) ) stop ( paste ( "could not extract deviance change from" , log.path , " please check." ) )
 				
 				# outlier
-				if ( !is.null (extreme.crit) & length(dv)<1 ) {
+				if ( !is.null (extreme.crit) & length(dv)>1 ) {
 						thresh <- extreme.crit * sd ( dv )
 						dv <- dv[dv<=thresh]
 				}
