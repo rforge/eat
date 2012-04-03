@@ -38,7 +38,7 @@ collapseMissings.create.recode.string <- function ( missing.rule ) {
 }
 
 collapseMissings <- function( dat , missing.rule = NULL , items = NULL){
-	
+
 	# Default-Rule
 	default.rule <- list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 )
  
@@ -75,8 +75,6 @@ collapseMissings <- function( dat , missing.rule = NULL , items = NULL){
 			# paste ( "'" , orig , "'='" , as.character ( neu ) , "'" , sep="" )
 	# } , names( missing.rule ) , missing.rule , SIMPLIFY=TRUE ) ) , collapse = "; " )	
 	rec.str <- collapseMissings.create.recode.string ( missing.rule )
-	
-	 
 	 
 	# Rekodieren
 	tr <- NULL
@@ -85,13 +83,13 @@ collapseMissings <- function( dat , missing.rule = NULL , items = NULL){
 	if(!is.null(item.names.chr)) {
 		dat <- data.frame ( mapply ( function ( dat , name , item.names.chr ) {
 				if ( name %in% item.names.chr ) 
-					recode ( dat , rec.str , as.numeric.result = FALSE )
+					car::recode ( dat , rec.str , as.numeric.result = FALSE )
 				else dat
 			} , dat , colnames ( dat ) , MoreArgs = list ( item.names.chr ) , SIMPLIFY = FALSE ) , stringsAsFactors=FALSE )	
 		} else {
 		sunk("collapseMissings found no character column in items - no missings collapsed !!! \n")
 		}
-	
+		
 	return ( dat )
   
  }
