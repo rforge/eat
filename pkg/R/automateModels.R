@@ -74,8 +74,9 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 		sunk.path <- file.path ( folder.aM , "automateModels.Log.txt" )
 		
 		### Begrüßung
-		sunk ( paste ( f.n , "Starting automateModels\n" ) ) 
-		sunk ( paste ( f.n , 'Version: 1.5.2-98 (2012-03-29)\n' ) )
+		sunk ( paste ( f.n , "Starting automateModels\n" ) , new.file = TRUE ) 
+		sunk ( paste ( f.n , 'Version: 1.5.3-103 (2012-04-05)\n' ) )
+		sunk ( paste ( f.n , '         Humungous Easter Egg\n' ) )
 		sunk ( paste ( f.n , "This version is BETA. Use at your own risk.\n" ) )
 		### Definitionen
 		m.model.available <- c ( "1pl", "2pl", "3pl" , "4pl" ) 

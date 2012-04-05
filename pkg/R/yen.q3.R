@@ -1,3 +1,12 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Author:    Alexander Robitzsch
+#			 a.robitzsch@bifie.at
+#			 https://www.bifie.at/user/robitzsch-alexander
+#			 
+# Quelle:  	 Kopie aus sirtr_??, Version nicht mehr identifizierbar
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 # Yen's Q3 statistic (1984)
 yen.q3 <- function( dat , theta , b , progress = T ){
         # INPUT:

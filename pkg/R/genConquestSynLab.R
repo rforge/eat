@@ -78,7 +78,7 @@
 
 genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, namen.dif.var , DIF.char, namen.weight.var, weight.char, namen.all.hg,all.hg.char, namen.group.var=NULL, model = NULL, ANKER = NULL,std.err=c("quick","full","none"),name.unidim="dimension_1",
                               model.statement="item", distribution=c("normal","discrete"), jobFolder, subFolder=NULL, name.dataset=NULL, Title=NULL,constraints =c("cases","none","items"), method=c("gauss", "quadrature", "montecarlo"), n.plausible=5,n.iterations=1000,nodes=NULL, p.nodes=2000,f.nodes=2000,converge=0.0001,deviancechange=0.0001,
-                              equivalence.table=c("wle","mle","NULL"),var.char,use.letters=use.letters, pathConquest, import = list () )       {
+                              equivalence.table=c("wle","mle","NULL"),var.char,use.letters=use.letters, allowAllScoresEverywhere, pathConquest, import = list () )       {
                    ver           <- "0.19.0"
                    .mustersyntax <- c("title = ####hier.title.einfuegen####;",
                                       "export logfile >> ####hier.name.einfuegen####.log;",
@@ -270,7 +270,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
 						syntax[ind.model] <- paste("model item - ",tolower(namen.dif.var)," + item*",tolower(namen.dif.var),";",sep="")
 					  }
 					}  
-                   if(length(HG.var)>0) {ind.2   <- grep("regression",syntax)
+                   if(length(HG.var)>0) {ind.2   <- grep("^regression$",syntax)
                                          syntax[ind.2] <- paste(crop(paste( c(syntax[ind.2], tolower(namen.hg.var)), collapse=" ")),";",sep="")
                                          if(method=="gauss") {sunk(paste("genConquestSynLab_",ver," Gaussian quadrature is only available for models without latent regressors. Use 'Bock-Aitken' instead.\n",sep=""))
                                                                    method <- "quadrature"}
@@ -308,9 +308,9 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
 				      sunk(paste("genConquestSynLab_",ver," Caution! Specified model will use '",method,"' estimation with ",nodes^(ncol(model)-1)," nodes.\n",sep=""))
 				   }
                    namen.dim <- colnames(model)[-1]
-                   score.statement <- .writeScoreStatementMultidim (data=daten, itemCols=itemspalten, qmatrix=model, columnItemNames = 1 ,use.letters=use.letters )
+                   score.statement <- .writeScoreStatementMultidim (data=daten, itemCols=itemspalten, qmatrix=model, columnItemNames = 1 ,use.letters=use.letters, allowAllScoresEverywhere = allowAllScoresEverywhere  )
                    ind <- grep("labels ",syntax)
-                   stopifnot(length(ind)==1)
+				stopifnot(length(ind)==1)
                    syntax <- c(syntax[1:ind],score.statement,syntax[(ind+1):length(syntax)])
                    if(length(HG.var)==0) {ind.2 <- grep("regression",syntax)    ### wenn kein HG-model, loesche entsprechende Syntaxzeilen
                                           stopifnot(length(ind.2)==1)
@@ -365,7 +365,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
 ### columnItemNames         ... in welcher Spalte der q-Matrix stehen Itemnamen? 
 ### columnsDimension        ... in welchen Spalten der Q-Matrix stehen die Dimensionen?
 ###                             Default: in erster Spalte stehen Itemnamen, in allen übrigen Spalten stehen Indikatoren für Dimensionen
-.writeScoreStatementMultidim <- function(data, itemCols, qmatrix, columnItemNames = 1 ,columnsDimensions = -1, use.letters=use.letters ) {
+.writeScoreStatementMultidim <- function(data, itemCols, qmatrix, columnItemNames = 1 ,columnsDimensions = -1, use.letters=use.letters, allowAllScoresEverywhere ) {
             n.dim      <- (1:ncol(qmatrix) )[-columnItemNames]                  ### wieviele Dimensionen?
             deleteRows <- which( rowSums(qmatrix[,n.dim,drop=F]) == 0)          ### lösche Items aus Q-Matrix, die auf keiner Dimension laden
             if(length(deleteRows)>0)   {
@@ -394,38 +394,8 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
             rowsToDelete <- which(is.na(score.matrix[, max(scoreColumns) + 1])) ### welche Zeilen in Score.matrix können gelöscht werden?
             if(length(rowsToDelete)>0) {score.matrix <- score.matrix[-rowsToDelete, ]}
             for (ii in 1:nrow(score.matrix)) {score.matrix[,ii] <- as.character(score.matrix[,ii])}
-            itemdata <- data[,itemCols]
-            for (i in 1:nrow(score.matrix))  {                                  ### trage Rohwerte in Matrix ein!
-                minMaxRawdata <- names(table.unlist(itemdata[,na.omit(as.numeric(score.matrix[i,(scoreColumns[length(scoreColumns)]+1):ncol(score.matrix)]))]))
-                minMaxRawdata <- minMaxRawdata[c(1,length(minMaxRawdata))]
-                if(use.letters==FALSE) {
-                   min.max.values   <- c(0, length(minMaxRawdata[1] : minMaxRawdata[2]) - 1)
-                   minMaxRawdata <- paste(minMaxRawdata[1] : minMaxRawdata[2], collapse=" ")
-                }
-                if(use.letters==TRUE)  {
-                   min.max.values   <- c(0, which(LETTERS == minMaxRawdata[2]) )
-                   minMaxRawdata <- paste(LETTERS[which(LETTERS == minMaxRawdata[1]) : which(LETTERS == minMaxRawdata[2])], collapse=" ")
-				        }
-                score.matrix[i,1] <- paste("(",minMaxRawdata,")",collapse="")
-			      }
-            for (i in scoreColumns)  {                                          ### Trage scores in Matrix ein!
-                for (ii in 1:nrow(score.matrix))   {
-                    if(score.matrix[ii,i] == 0)  {
-                        score.matrix[ii,i] <- "()"
-					          }
-                    if(score.matrix[ii,i] == 1)  {
-                       min.max.values <- names(table.unlist(itemdata[,na.omit(as.numeric(score.matrix[ii,(scoreColumns[length(scoreColumns)]+1):ncol(score.matrix)]))]))
-                       if(use.letters==FALSE)  {
-                          min.max.values   <- min.max.values[1] : min.max.values[length(min.max.values)]
-                          min.max.values   <- 0:(length(min.max.values)-1)
-						           }
-                       if(use.letters==TRUE)  {
-                          min.max.values   <- paste( which(LETTERS==min.max.values[1]):which(LETTERS==min.max.values[length(min.max.values)]) - 1, collapse=" ")
-						           }
-                       score.matrix[ii,i] <- paste("(",paste(min.max.values,collapse=" "),")",collapse="")
-					          }
-				        }
-			      }
+            itemdata <- data[,itemCols, drop = FALSE]
+			score.matrix <- fromMinToMax(dat = itemdata, score.matrix = score.matrix, qmatrix = qmatrix, allowAllScoresEverywhere = allowAllScoresEverywhere, use.letters = use.letters)
             kollapse <- lapply(1:nrow(score.matrix), FUN=function(ii) {na.omit(as.numeric(score.matrix[ii,-c(1,scoreColumns)]))})
             kollapse.diff   <- lapply(kollapse,FUN=function(ii) {c(diff(ii),1000)})
             kollapse.ascend <- lapply(kollapse.diff, FUN=function(ii) {unique(c(0, which(ii!=1)))})
@@ -449,3 +419,28 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
             score.statement <- sapply(1:nrow(score.matrix), FUN=function(ii) { paste(score.matrix[ii,],collapse=" ")})
             return(score.statement)
 		}	
+
+### Hilfsfunktion für .writeScoreStatementMultidim()
+fromMinToMax <- function(dat, score.matrix, qmatrix, allowAllScoresEverywhere, use.letters)    {
+			    all.values <- as.list(as.data.frame(apply(as.matrix(score.matrix), MARGIN = 1, FUN = function(ii) { names(table.unlist(dat[,na.omit(as.numeric(ii[grep("^X", names(ii))]))]))  }) , stringsAsFactors = FALSE))
+				if ( allowAllScoresEverywhere == TRUE ) {
+                    all.values <- lapply(all.values, FUN = function(ii) {sort(asNumericIfPossible(unique( unlist ( all.values ) ), verbose = FALSE ) ) } )
+                }     
+                if(use.letters == TRUE )  {minMaxRawdata  <- unlist ( lapply( all.values, FUN = function (ii) {paste("(",paste(LETTERS[which(LETTERS == ii[1]) : which(LETTERS == ii[length(ii)])], collapse=" "),")") } ) ) }
+                if(use.letters == FALSE ) {minMaxRawdata  <- unlist ( lapply( all.values, FUN = function (ii) {paste("(",paste(ii[1] : ii[length(ii)],collapse = " "),")")  } ) ) }
+                scoring <- unlist( lapply( minMaxRawdata , FUN = function(ii) { paste("(", paste( 0 : (length(unlist(strsplit(ii, " ")))-3), collapse = " "),")")}) )
+                stopifnot(length(scoring) == length( minMaxRawdata ) )
+                stopifnot(length(scoring) == nrow(score.matrix ) )
+                options(warn = -1)                                              ### warnungen aus
+                for (i in 1:nrow(score.matrix))    {
+                    score.matrix$score[i] <- minMaxRawdata[i]
+                    targetColumns         <- intersect ( grep("Var",colnames(score.matrix)), which(as.numeric(score.matrix[i,]) == 1 ) ) 
+                    stopifnot(length(targetColumns) > 0 )
+                    score.matrix[i,targetColumns]  <- scoring[i] 
+                    nonTargetColumns      <- intersect ( grep("Var",colnames(score.matrix)), which(as.numeric(score.matrix[i,]) == 0 ) )
+                    if ( length ( nonTargetColumns ) > 0 )    {
+                       score.matrix[i,nonTargetColumns]  <- "()"
+                    }
+                }
+                options(warn = 0)                                               ### warnungen wieder an
+                return(score.matrix)}    

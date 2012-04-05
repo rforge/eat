@@ -231,14 +231,16 @@
 		}
 
 		### alles auf character
-		dataset <- data.frame ( mapply ( function ( spalte , name , f.n ) {
+		fun <- function ( spalte , name , f.n ) {
 				if ( ! inherits ( spalte , "character" ) ) {
-						# sunk ( paste ( f.n , "Info: Variable" , name , "wurde in 'character' umgewandelt."  , "\n" ) )
+						
 						sunk ( paste ( f.n , "Info: Variable" , name , "has been converted to 'character'."  , "\n" ) )
 
 						as.character ( spalte )
 				} else spalte
-		} , dataset , colnames ( dataset ) , MoreArgs = list ( f.n ) , SIMPLIFY = FALSE ) , stringsAsFactors = FALSE )
+		}
+		dataset <- data.frame ( mapply ( fun , dataset , colnames ( dataset ) , MoreArgs = list ( f.n ) , SIMPLIFY = FALSE ) , stringsAsFactors = FALSE )
+
 		
 		# return setzen
 		ret <- list ( dataset = dataset , id.name = id.name , cont.names = cont.names , item.names = item.names )

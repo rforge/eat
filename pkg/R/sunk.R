@@ -19,18 +19,18 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 sunk <- function ( cmd = NULL , path = NULL , write = TRUE , console.output = TRUE , new.file = FALSE , text.on.error = TRUE , text.out.method = NULL ) {
-		
+	
 		if ( ! is.character ( cmd ) ) {
 				cat ( "sunk: Paramter 'cmd' must be character." )
 				stop ( )
 		}
-		
 		# gucken ob sunk.path in irgendwelchen Parent-Envs gesetzt
-		if ( exists("sunk.path") ) path <- sunk.path else {
-				# wenn nicht gefunden dann defaulten
-				if ( is.null ( path ) ) path <- file.path ( getwd () , "sunk.txt" )
+
+	if(is.null(path	)) {
+		   if(is.null( path <- find.object("sunk.path"))) {
+		      path <- file.path ( getwd () , "sunk.txt" )
+		    }
 		}
-		
 		if ( file.exists ( path ) & new.file ) {
 				file.remove ( path )
 				# warten bis gelöscht

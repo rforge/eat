@@ -1,10 +1,12 @@
 \name{automateConquestModel}
 \alias{automateConquestModel}
 \title{
-Specify Models and Write Corresponding Input for ConQuest Software
+automateConquestModel: Write all requirend Input for a single ConQuest Run.
 }
 \description{
-\code{automateConquestModel} facilitates data analysis using the software ConQuest. It automatically writes ConQuest syntax, label, anchor and data files.
+\code{automateConquestModel} facilitates data analysis using the software ConQuest. It automatically writes ConQuest syntax, label, anchor and data files
+for a single model specified by several arguments in R. Moreover, a batch file is created to start the analysis. For automatically specifying and running 
+several models in a row, see \code{automateModels}.
 }
 \usage{
 automateConquestModel(dat, ID, regression=NULL, DIF=NULL, group.var=NULL, 
@@ -63,7 +65,7 @@ A character string with the analysis title for the ConQuest syntax. If \code{Tit
 A character string specifying the analysis name. All Conquest input and output files will named \code{jobName} with their corresponding extensions. 
 }
   \item{jobFolder}{
- A character string specifying the folder where all analysis files will be written to, for example \code{"C:/programme/analysis"}
+ A character string specifying an already existing folder where all analysis files will be written to, for example \code{"C:/programme/analysis"}
 }
   \item{subFolder}{
 A named list of character strings specifying a maximum of two folders relative to \code{jobFolder} for data and output files. 
@@ -161,6 +163,61 @@ Sebastian Weirich, Karoline Sachse, Martin Hecht
 \seealso{
 \code{\link{automateModels}}, \code{\link{checkLink}}
 }
+
+\examples{
+\dontrun{
+#
+# if software="conquest" (currently the only and default option) the path of the
+# 		windows executable ConQuest console must be specified by setting
+#		conquestParameters = list ("pathConquest"="<path_to_your_conquest.exe>")
+#				e.g. conquestParameters = list ("pathConquest"=""C:/ConQuest/console.exe"")
+# if not explicitely specified it is searched for in 
+#		file.path(.Library,"eat/winexe/conquest")
+#				e.g. "C:/R/R-2.14.2/library/eat/winexe/conquest"
+#		you can put your ConQuest executable there
+#
+# load example data
+# (these are simulated achievement test data)
+# Note: all examples corresponding to examples in help file of 'automateModels'
+data ( science1 )
+#
+### Example 1: create input files for a unidimensional Rasch model with all variables in dataset 'science1'
+# only variables of 'science1' you want to use for analysis must be classified. In unidimensional Rasch model, 
+# 'id' and 'items' have to be specified
+# automateConquestModel needs data with collapsed missing
+science1.collapsed <- collapseMissings(science1, items = science1.items)
+dir.create("C:/temp")
+ex1 <- automateConquestModel ( dat = science1.collapsed, ID = "id", items = science1.items, 
+				jobFolder = "C:/temp", jobName = "rasch_unidim")
+#
+### Example 2: create input files for a multidimensional Rasch model
+# option 'item.grouping' specifies dimensions and mapping of items to dimensions
+# 'item.grouping' is a data.frame with item names in first column ('item')
+#		and dimensions in further columns, mapping of items to dimension is
+#		indicated by 0 (item loads not on dimension) or 1 (item loads on dimension)
+#		(have a look at the example item.grouping 'science1.scales')
+# since 6 dimensions are specified in 'science1.scales' input for a 6-dimensional Rasch model is run
+# running this example may take some time + convergence is suboptimal. This is only for illustration. 
+# Note: in higher dimensional modes, number of nodes increased to 2^[number of dimensions]. If not explicitly 
+# specified by the user, automateModels automatically uses the estimator 'montecarlo', if nodes increased 3500
+science1.collapsed <- collapseMissings(science1, items = science1.items)
+dir.create("C:/temp")
+ex2 <- automateConquestModel ( item.grouping = science1.scales, dat = science1.collapsed, ID = "id", items = science1.items,
+				 jobFolder = "C:/temp", jobName = "rasch_multidim" )
+
+### Example 3: create input files for a multidimensional Rasch model with latent regression
+# variable and explicit use of estimator 'Bock-Aitken' (as 'montecarlo' is not available for models with latent regression
+# unless all items are anchored. 
+
+science1.collapsed <- collapseMissings(science1, items = science1.items)
+# in Conquest, latent regressors have to be numeric
+science1.collapsed$sex.numeric <- as.numeric(science1.collapsed$sex)
+dir.create("C:/temp")
+ex3 <- automateConquestModel ( item.grouping = science1.scales, dat = science1.collapsed, ID = "id", items = science1.items,
+				 regression = "sex.numeric", method = "quadrature", jobFolder = "C:/temp", jobName = "rasch_multidim_regression" )
+}
+}
+
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
