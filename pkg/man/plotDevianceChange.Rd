@@ -8,18 +8,16 @@ plot deviance change
 extract or plot (on console or to pdf) deviance change from ConQuest logfile
 }
 \usage{
-plotDevianceChange ( path , plot = TRUE , pdf = FALSE , out.path = NULL , extreme.crit = 0.75 , pdftk.path = NULL ) 
+plotDevianceChange ( path , plot = TRUE , pdf = FALSE , out.path = NULL , extreme.crit = 0.75 ) 
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
 
-  \item{path}{ full path to or connection of ConQuest logfile, or just a path (in which ConQuest logfiles are to be searched for) }
+  \item{path}{ full path to or connection of ConQuest logfile, or just a path (in which ConQuest logfiles are to be (recursively) searched for) }
   \item{plot}{ if \code{TRUE} deviance change plot is created }
   \item{pdf}{ if \code{TRUE} plot ist written to pdf }
   \item{out.path}{ path for pdf output file }
   \item{extreme.crit}{ numeric, threshold criterion to remove outliers, is multiplied with standard deviation of deviance change }
-  \item{pdftk.path}{ if more than one pdf are created (implies \code{plot=TRUE}, \code{pdf=TRUE} and \code{path} beeing a directory) pdftk merges these pdf files into one single pdf file "deviance_change_plots.pdf";
-					 \code{pdftk.path} is the path to the pdftk exexutable, if \code{NULL} it is searched in file.path(.Library,"eat/winexe/pdftk"), if not found it will not happen with no warning issued }
   
 }
 \details{
@@ -55,8 +53,8 @@ Martin Hecht
 
 \examples{
 \dontrun{
-plotDevianceChange ( path = bzfile ( file.path( .Library , "eat/extdata/ConQuest.Log.Example1.log.bz2" ) ) )
-plotDevianceChange ( path = bzfile ( file.path( .Library , "eat/extdata/ConQuest.Log.Example1.log.bz2" ) ) , plot = FALSE )
+plotDevianceChange ( path = file.path( .Library , "eat/extdata/ConQuest.Log.Example1.log.bz2" ) )
+plotDevianceChange ( path = file.path( .Library , "eat/extdata/ConQuest.Log.Example1.log.bz2" ) , plot = FALSE )
 }}
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the

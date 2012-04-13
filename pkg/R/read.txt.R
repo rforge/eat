@@ -1,5 +1,5 @@
 
-read.txt <- function ( path , read.function = c ( "readLines" , "read.table" , "read.csv" , "read.csv2" , "read.delim" , "read.delim2" ) , file.ext = NULL , ... ) {
+read.txt <- function ( path , read.function = c ( "readLines" , "read.table" , "read.csv" , "read.csv2" , "read.delim" , "read.delim2" ) , file.ext = NULL , simplify = TRUE , ... ) {
 
 		read.function <- match.arg ( read.function , c ( "readLines" , "read.table" , "read.csv" , "read.csv2" , "read.delim" , "read.delim2" ) )
 
@@ -13,29 +13,59 @@ read.txt <- function ( path , read.function = c ( "readLines" , "read.table" , "
 		
 		# Schleife über alle cons
 		.fun <- function ( cons , read.function , ... ) {
-				ret <- do.call ( read.function , list ( cons , ... ) )
-				close ( cons )
+
+				# für doCall muss Argumente-Name abhängig von read.function gesetzt werden :-(
+				conArg <- c (			"con"       , rep ( "file" , 5 ) )
+				names ( conArg ) <- c ( "readLines" , "read.table" , "read.csv" , "read.csv2" , "read.delim" , "read.delim2" )
+				conlist <- list ( cons )
+				names ( conlist ) <- conArg[read.function]
+				
+				# jetzt kann man schön die entsprechende read.function callen
+				ret <- doCall ( read.function , ... , alwaysArgs = conlist )
+
+				# Connection schließen wenn nicht schon von read.function
+				try ( close ( cons ) , silent = TRUE )
 				return ( ret )
 		}
 		ret <- mapply ( .fun , cons , MoreArgs = list ( read.function , ... ) , SIMPLIFY = FALSE )
 
 		if ( length ( ret ) == 0 ) ret <- NULL
 		
+		if ( length ( ret ) == 1 & simplify ) ret <- unlist ( unname ( ret ) , recursive = FALSE )
+		
 		return ( ret )		
 }
 
 .read.txt <- function ( path , file.ext , ... ) {
 
+	# compressed file types, MUSS KORRESPONDIEREN mit zip2con
+	compr.ext <- c ( "bz2" )
+
 	# wenn schon connection dann einfach listen
 	if ( inherits ( path , "connection" ) ) {
 			path.name <- summary(path)$description
 			ret <- list ( path )
+			# ggf. Kompressions-Endung ab
+			path.name <- sub ( paste ( paste ( "\\." , compr.ext , "$" , sep = "" ) , collapse = "|" ) , "" , path.name )
 			names ( ret ) <- path.name
 	} else {
-
+	
 			# Checks
 			c1 <- is.character ( path )
 			c2 <- ifelse ( c1 , file.exists ( path ) , FALSE )
+			
+			# wenn nicht existiert, dann versuchen ob ein gezippter File existiert
+			if ( !c2 ) {
+					test <- paste ( path , "." , compr.ext , sep = "" )
+					# falls mehrere existieren, 1. nehmen
+					ex <- test [ sapply ( test , file.exists ) ][1]
+					if ( ! identical ( ex , character(0) ) ) {
+							path <- ex
+							c2 <- TRUE
+					}
+			}
+
+			# weitere Checks
 			c3 <- ifelse ( c1 , (file.access ( path , mode = 2 ) == 0) , FALSE )
 			
 			if ( !all ( c ( c1 , c2 , c3 ) ) ) {
@@ -46,21 +76,19 @@ read.txt <- function ( path , read.function = c ( "readLines" , "read.table" , "
 					# wenn directory, dann alle Files ziehen
 					isdir <- file.info(path)$isdir
 					if ( isdir ) {
-							path <- list.files( path = path , 
-												full.names = TRUE ,
-												include.dirs = FALSE ,
-												... )												
+							path <- doCall ( "list.files" , ... , alwaysArgs = list ( path = path , 
+																			  full.names = TRUE ,
+																			  include.dirs = FALSE ) )												
 					}			
 
-					# compressed file types, MUSS KORRESPONDIEREN mit zip2con
-					compr.ext <- c ( "bz2" )
+
 					
 					# Pattern um Files mit spezifischer Endung zu finden
 					# dabei kompressierte File mitbeachten (diese müssen vor der Kompressions-Endung die file.extension haben
 					file.ext.pat <- NULL
 					if ( is.character ( file.ext ) ) {
 							file.ext <- crop ( file.ext , "." )
-							if (nchar (file.ext) > 0 & all(!file.ext %in% compr.ext) ) {
+							if ( all ( sapply ( file.ext , nchar ) > 0 ) & all(!file.ext %in% compr.ext) ) {
 									file.ext.pat <- paste ( 
 															paste ( paste ( "\\.",file.ext,"$" , sep ="" ), collapse = "|" ) , 
 															paste ( unname ( unlist ( sapply ( file.ext , function ( fe , ce ) paste ( paste ( "\\." , fe , "\\." , ce , "$" , sep = "" ) ) ,

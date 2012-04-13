@@ -8,17 +8,19 @@ read text files
 reads (compressed) text files with specific method
 }
 \usage{
-read.txt ( path , read.function = c ( "readLines" , "read.table" , "read.csv" , "read.csv2" , "read.delim" , "read.delim2" ) , file.ext = NULL , ... )
+read.txt ( path , read.function = c ( "readLines" , "read.table" , "read.csv" , "read.csv2" , "read.delim" , "read.delim2" ) , file.ext = NULL , simplify = TRUE , ... )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{path}{ either directory, file, list of directories, list of files, vector of directories or vector of files }
   \item{read.function}{ function to read in txt files, \link{bzfile}, \link{read.table}, \link{read.csv}, \link{read.csv2}, \link{read.delim}, or \link{read.delim2} }
   \item{file.ext}{ character, extension of files that are to be read, extensions of compressed files are ignored, that means that \code{file.ext} refers to extension of uncompressed file and extension of compressed file without compression extension }
+  \item{simplify}{logical, if \code{TRUE} list is unlisted if of length 1, if \code{FALSE} always a list is returned}
   \item{...}{ arguments passed to function used as \code{read.function}; if path is (list/vector of) directory/ies, arguments 'all.files', 'recursive', 'pattern' and 'ignore.case' can be passed to \link{list.files} that is used to get all compressed files from directory }
 }
 \details{
-	reads text files with specific read function (\code{read.function}); compressed files are automatically uncompressed depending on their extension, see \link{zip2con} for supported compression types
+	reads text files with specific read function (\code{read.function}); compressed files are automatically uncompressed depending on their extension, see \link{zip2con} for supported compression types;
+	if \code{path} is a single file that does not exists, it is searched for a compressed file with this name, if found this is used
 }
 \value{
 %%  ~Describe the value returned
@@ -26,7 +28,7 @@ read.txt ( path , read.function = c ( "readLines" , "read.table" , "read.csv" , 
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-returns list of read in files;
+returns list of read in files (also see \code{simplify});
 names of list are file names (full path) without compression extension;
 if \code{path} is not processable \code{NULL} is returned, or (when multiple files are processed) it is not appended to return list
 }
