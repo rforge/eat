@@ -159,7 +159,7 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                      mis.1   <- which(mis == 0)
                      if(length(mis.1)>0) {stop(paste("genConquestDataset_",ver,": At least one HG-variable without any values.",sep=""))}
                      mis.2   <- which(mis == 1)
-                     if(length(mis.1)>0) {sunk(paste("genConquestDataset_",ver,": Warning: At least one HG-variable is a constant.\n"))}
+                     if(length(mis.2)>0) {sunk(paste("genConquestDataset_",ver,": Warning: At least one HG-variable is a constant.\n"))}
                      hg.char <- sapply(1:length(namen.hg.var), FUN=function(ii) {max(nchar(as.character(na.omit(dat[,namen.hg.var[ii]]))))})
                   ## hg.char[hg.char>12] <- 12                                  ### begrenze Characterzahl nach oben
                      num     <- unlist(lapply(1:length(namen.hg.var),FUN=function(ii) {length( unique(c(grep("[[:digit:]]",dat[,namen.hg.var[ii]]),which(is.na(dat[,namen.hg.var[ii]])))))}))
