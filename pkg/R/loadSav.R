@@ -58,7 +58,8 @@ loadSav <- function ( path=getwd(), savFiles=NULL, oldIDS, newID, correctDigits=
            ### hier beginnt das eigentliche Einlesen
            allDataFrames <- NULL
            for (i in seq(along=savFiles)) {
-                file.i <- data.frame(read.spss(file.path(path,savFiles[i]),to.data.frame=FALSE, use.value.labels=FALSE), stringsAsFactors=FALSE)
+
+				suppressWarnings( file.i <- data.frame(read.spss(file.path(path,savFiles[i]),to.data.frame=FALSE, use.value.labels=FALSE), stringsAsFactors=FALSE) )
                 idCol  <- unique(unlist(lapply(oldIDS, FUN=function(ii) {grep(ii,colnames(file.i))})))
                 if(length(idCol)<1) {
                    stop(paste("Error in ",funVersion,": None of the specified 'oldIDS' were found in dataset ",savFiles[i],".\n",sep="")) 
@@ -69,9 +70,18 @@ loadSav <- function ( path=getwd(), savFiles=NULL, oldIDS, newID, correctDigits=
                 colnames(file.i)[idCol] <- newID
                 ### Leerzeichen abschnipseln 
                 if(truncateSpaceChar == TRUE)  {
-                    file.i <- do.call("data.frame", lapply(file.i, crop))                        
-                }
-                ### Stelligkeitskorrektur
+                    # FALSCH
+					#file.i <- do.call("data.frame", lapply(file.i, crop))                        
+					file.i <- do.call("data.frame", list ( lapply(file.i, crop), stringsAsFactors = FALSE ) )
+				} else {
+					# Umwandlung nach Character ( wird bei if(truncateSpaceChar == TRUE) auch schon mit impliziert )
+					file.i <- set.col.type ( file.i )
+				}
+                
+				# Check auf alles character
+				stopifnot ( all ( sapply ( file.i , is.character ) ) )
+				
+				### Stelligkeitskorrektur
                 if(correctDigits == TRUE) {
                    colsToCorrect <- lapply(1:ncol(file.i), FUN=function(ii) { sort(unique(nchar(file.i[,ii])))})        
                    options(warn = -1)                                          

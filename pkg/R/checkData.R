@@ -62,33 +62,32 @@
 
 #-----------------------------------------------------------------------------------------
 
-checkData <- function (dat, values, subunits, units) {
-  funVersion <- "checkData_1.1.0: "
+	checkData <- function (dat, values, subunits, units) {
+	  funVersion <- "checkData_1.1.0: "	 
+		varinfo <- makeInputCheckData (values, subunits, units)
+		
+		if (class(dat) != "data.frame") {
+			stop (paste(funVersion, "dat must be a data.frame.", sep = ""))
+		}
 	 
-	varinfo <- makeInputCheckData (values, subunits, units)
-	
-	if (class(dat) != "data.frame") {
-		stop (paste(funVersion, "dat must be a data.frame.", sep = ""))
+		# ID-Check <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	  # find ID - stop if ID cannot be found
+		#	sunk(paste(funVersion, "Checking IDs", sep =""))
+	  idvarname <- getID(varinfo)
+	  .checkData.checkID (dat, idvarname)
+
+	  
+		# Variables-Check <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	  #	sunk(paste(funVersion, "Checking variables", sep = ""))
+	  .checkData.checkVars(dat, varinfo)
+		
+		# check missing values
+	  .checkData.checkMissings(dat, varinfo, idvarname)
+
+	  # check for invalid codes
+	  .checkData.checkCodes(dat, varinfo, idvarname)
+	  
 	}
- 
- 	# ID-Check <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-  # find ID - stop if ID cannot be found
-	#	sunk(paste(funVersion, "Checking IDs", sep =""))
-  idvarname <- getID(varinfo)
-  .checkData.checkID (dat, idvarname)
-
-  
-	# Variables-Check <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-  #	sunk(paste(funVersion, "Checking variables", sep = ""))
-  .checkData.checkVars(dat, varinfo)
-	
-	# check missing values
-  .checkData.checkMissings(dat, varinfo, idvarname)
-
-  # check for invalid codes
-  .checkData.checkCodes(dat, varinfo, idvarname)
-  
-}
 
 
 
@@ -121,10 +120,9 @@ getID <- function(varinfo) {
 
 #-----------------------------------------------------------------------------------------
 
+
 .checkData.checkID <- function(dat, idvarname) {
-
   funVersion <- ".checkData.checkID: "	
-
   # check dat for specified id variable
 	if (is.na(match(idvarname, colnames(dat)))) {
 		stop(paste(funVersion, "ID variable ", idvarname, "not found in dataset.", sep = ""))
