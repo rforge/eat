@@ -80,7 +80,7 @@ automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.va
     if(missing(dat)) {stop(paste("Error in automateConquestModel_",ver,": No dataset specified.\n",sep="")) }
     if(missing(jobName)) {stop(paste("Error in automateConquestModel_",ver,": No 'jobName' chosen.\n",sep="")) }
     if(missing(ID))      {stop(paste("Error in automateConquestModel_",ver,": No ID specified.\n",sep="")) }
-    if(length(DIF)>1)    {stop(paste("Error in automateConquestModel_",ver,": There can only be one DIF variable.\n",sep="")) }
+    # if(length(DIF)>1)    {stop(paste("Error in automateConquestModel_",ver,": There can only be one DIF variable.\n",sep="")) }
     if(length(weight)>1) {stop(paste("Error in automateConquestModel_",ver,": There can only be one weight variable.\n",sep="")) }
 
 	### Defaults

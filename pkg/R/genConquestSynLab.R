@@ -209,7 +209,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
 
                    ### sind Leistungsdaten dichotom? (Geht schneller als alte Variante: auskommentiert) 
                    testdaten <- daten[,itemspalten,drop=FALSE]
-                   poo <- unique(names(unlist(lapply(1:ncol(testdaten), FUN=function(ii) {table(testdaten[,ii])}))))
+                   poo <- unique(names(unlist(lapply(testdaten, FUN=function(ii) {table(ii)}))))
                    if(length(poo) !=2 ) {sunk(paste("genConquestSynLab_",ver,": Warning: data does not seem to be dichotomous.\n",sep=""))}
                    # if(length(table(unlist(daten[,itemspalten]))) !=2 ) {cat("genConquestSynLab_",ver,": Warning: data does not seem to be dichotomous.\n")}
                    
@@ -238,7 +238,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    beginn    <- NULL
                    if(length(namen.all.hg)>0)                                   ### untere Zeile: wieviele "character" haben Hintergrundvariablen?
                     {all.hg.char.kontroll <- all.hg.char
-                     all.hg.char <- sapply(1:length(namen.all.hg), FUN=function(ii) {max(nchar(as.character(na.omit(daten[,namen.all.hg[ii]]))))})
+                     all.hg.char <- sapply(namen.all.hg, FUN=function(ii) {max(nchar(as.character(na.omit(daten[,ii]))))})
                      if(!all(all.hg.char == all.hg.char.kontroll)) {stop(paste("genConquestSynLab_",ver,": Error: Unconsistent column definition for HG variables.\n",sep="")) }
                      ### Trage nun die Spalten in das Format-Statement ein: Fuer ALLE expliziten Variablen
                      for (ii in 1:length(namen.all.hg))
@@ -261,13 +261,13 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    syntax    <- gsub("####hier.Pfad.und.Dateiname.einfuegen####", conq.data.pfad ,syntax,fixed=T)
 				   if(length(DIF.var)>0)  {                                        
                      if(model.statement != "item") {
-                        sunk(paste("genConquestSynLab_",ver," Caution! DIF variable was specified. Expect model statement to be: 'item - ",tolower(namen.dif.var)," + item*",tolower(namen.dif.var),"'.\n",sep=""))
+                        sunk(paste("genConquestSynLab_",ver," Caution! DIF variable was specified. Expect model statement to be: 'item - ",paste("model item - ",paste(tolower(namen.dif.var),collapse=" - ") ," + ", paste("item*",tolower(namen.dif.var),collapse=" + "), ";",sep=""),"'.\n",sep=""))
                         sunk(paste("    However, '",model.statement,"' will uses as 'model statement'.\n",sep=""))
                       }
                      if(model.statement == "item") {
                         ind.model <- grep("model item", syntax)                   ### Ändere model statement
                         stopifnot(length(ind.model)==1)
-						syntax[ind.model] <- paste("model item - ",tolower(namen.dif.var)," + item*",tolower(namen.dif.var),";",sep="")
+                        syntax[ind.model] <- paste("model item - ",paste(tolower(namen.dif.var),collapse=" - ") ," + ", paste("item*",tolower(namen.dif.var),collapse=" + "), ";",sep="")
 					  }
 					}  
                    if(length(HG.var)>0) {ind.2   <- grep("^regression$",syntax)
@@ -277,11 +277,12 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                                          ### method muss "quadrature" sein
                                          }
                    if(length(namen.group.var)>0)
-                                        {ind.3   <- grep("group",syntax)
+                                        {ind.3   <- grep("^group$",syntax)
+                                         stopifnot(length(ind.3) == 1)
                                          syntax[ind.3] <- paste(crop(paste( c(syntax[ind.3], tolower(namen.group.var)), collapse=" ")),";",sep="")
                                          ### gebe gruppenspezifische Descriptives
-                                         add.syntax.pv  <- sapply(1:length(namen.group.var), FUN=function(ii) {paste("descriptives !estimates=pv, group=",tolower(namen.group.var[ii])," >> ",normalize.path(subFolder$out),rep("\\",length(subFolder$out)),jobName,"_",tolower(namen.group.var[ii]),"_pvl.dsc;",sep="")} ) 
-                                         add.syntax.wle <- sapply(1:length(namen.group.var), FUN=function(ii) {paste("descriptives !estimates=wle, group=",tolower(namen.group.var[ii])," >> ",normalize.path(subFolder$out),rep("\\",length(subFolder$out)),jobName,"_",tolower(namen.group.var[ii]),"_wle.dsc;",sep="")} ) 
+                                         add.syntax.pv  <- as.vector(sapply(namen.group.var, FUN=function(ii) {paste("descriptives !estimates=pv, group=",tolower(ii)," >> ",normalize.path(subFolder$out),rep("\\",length(subFolder$out)),jobName,"_",tolower(ii),"_pvl.dsc;",sep="")} ) )
+                                         add.syntax.wle <- as.vector(sapply(namen.group.var, FUN=function(ii) {paste("descriptives !estimates=wle, group=",tolower(ii)," >> ",normalize.path(subFolder$out),rep("\\",length(subFolder$out)),jobName,"_",tolower(ii),"_wle.dsc;",sep="")} ))
                                          ind.3    <- grep("quit",syntax)
                                          stopifnot(length(ind.3)==1)
                                          syntax   <- c(syntax[1:(ind.3-1)],add.syntax.pv, add.syntax.wle, syntax[ind.3:length(syntax)])
@@ -312,25 +313,25 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    ind <- grep("labels ",syntax)
 				stopifnot(length(ind)==1)
                    syntax <- c(syntax[1:ind],score.statement,syntax[(ind+1):length(syntax)])
-                   if(length(HG.var)==0) {ind.2 <- grep("regression",syntax)    ### wenn kein HG-model, loesche entsprechende Syntaxzeilen
+                   if(length(HG.var)==0) {ind.2 <- grep("^regression$",syntax)    ### wenn kein HG-model, loesche entsprechende Syntaxzeilen
                                           stopifnot(length(ind.2)==1)
 										  syntax <- syntax[-ind.2]
 										  ind.3 <- grep("export reg_coefficients",syntax)
 										  stopifnot(length(ind.3)==1)
 										  syntax <- syntax[-ind.3]
 										  }
-                   if(length(namen.group.var) ==0) { ind.3 <- grep("group",syntax)    ### wenn keine Gruppen definiert, loesche Statement
+                   if(length(namen.group.var) ==0) { ind.3 <- grep("^group$",syntax)    ### wenn keine Gruppen definiert, loesche Statement
                                                stopifnot(length(ind.3)==1)
                                                syntax <- syntax[-ind.3]}
-                   if(length(namen.weight.var) ==0) { ind.4 <- grep("caseweight",syntax)    ### wenn keine Gewichtungsvariable definiert, loesche Statement
+                   if(length(namen.weight.var) ==0) { ind.4 <- grep("^caseweight$",syntax)    ### wenn keine Gewichtungsvariable definiert, loesche Statement
                                                stopifnot(length(ind.4)==1)
                                                syntax <- syntax[-ind.4]}
-                   if(match.arg(equivalence.table) == "NULL") { ind.5 <- grep("equivalence",syntax) ## wenn keine Equivalence-Statement definiert, lösche Zeile
+                   if(match.arg(equivalence.table) == "NULL") { ind.5 <- grep("^equivalence",syntax) ## wenn keine Equivalence-Statement definiert, lösche Zeile
                                                      stopifnot(length(ind.5)==1)
                                                      syntax <- syntax[-ind.5]}                                              
                    if(is.null(ANKER))  {ind.2 <- grep("anchor_parameter",syntax)### wenn keine Anker gesetzt, loesche entsprechende Syntaxzeile
                                         syntax <- syntax[-ind.2]}
-                   if(!is.null(ANKER)) {ind.2 <- grep("set constraints",syntax) ### wenn Anker gesetzt, setze constraints auf "none"
+                   if(!is.null(ANKER)) {ind.2 <- grep("^set constraints",syntax) ### wenn Anker gesetzt, setze constraints auf "none"
                                         if(match.arg(constraints) != "none") { sunk(paste("genConquestSynLab_",ver,": Anchorparameter were defined. Set constraints to 'none'.\n",sep=""))}
                                         syntax[ind.2]  <- "set constraints=none;"}
                    if(!is.null(namen.dim))
@@ -339,7 +340,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                                         lab       <- rbind(lab,lab.dim)}
 				   cq.version <- getConquestVersion( pathConquest )
 				   if(cq.version < as.date("1Jan2007") )
-									   {ind.3 <- grep("export history",syntax)   ### wenn Conquest aelter als 2007, soll history geloescht werden
+									   {ind.3 <- grep("^export history",syntax)   ### wenn Conquest aelter als 2007, soll history geloescht werden
                                         syntax <- syntax[-ind.3]}
 				   ## write(syntax,paste(pfad,"/",Name,".cqc",sep=""),sep="\n")
                    return(list(syntax=syntax, lab=lab))}
@@ -422,7 +423,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
 
 ### Hilfsfunktion für .writeScoreStatementMultidim()
 fromMinToMax <- function(dat, score.matrix, qmatrix, allowAllScoresEverywhere, use.letters)    {
-			    all.values <- as.list(as.data.frame(apply(as.matrix(score.matrix), MARGIN = 1, FUN = function(ii) { names(table.unlist(dat[,na.omit(as.numeric(ii[grep("^X", names(ii))]))]))  }) , stringsAsFactors = FALSE))
+			    all.values <- alply(as.matrix(score.matrix), .margin = 1, .fun = function(ii) { names(table.unlist(dat[,na.omit(as.numeric(ii[grep("^X", names(ii))]))]))  })
 				if ( allowAllScoresEverywhere == TRUE ) {
                     all.values <- lapply(all.values, FUN = function(ii) {sort(asNumericIfPossible(unique( unlist ( all.values ) ), verbose = FALSE ) ) } )
                 }     

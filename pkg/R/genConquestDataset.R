@@ -4,7 +4,7 @@
 # erzeugt Conquest Datensatz
 # hervorgegangen aus prep.Conquest
 #
-# Version: 	0.7.0
+# Version: 	0.8.0
 # Depends:  gdata
 # Imports:
 # Published:
@@ -32,6 +32,7 @@
 # 15.11.2011: MH gestabled
 # 25.11.2011: SW 'cat' durch 'sunk' ersetzt
 # 12.12.2011: SW assign-befehl entfernt 
+# 10.05.2012: SW more than one DIF variable
 #
 ####################################################################################################################
 
@@ -61,7 +62,7 @@
 
 genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL, na=list(items=NULL, DIF=NULL, HG=NULL, group=NULL, weight=NULL), verbose=TRUE,
                                model.statement="item", remove.no.answers = FALSE,use.letters=FALSE, checkLink = FALSE)
-                 {ver          <- "0.7.0"
+                 {ver          <- "0.8.0"
                   # if(!exists("write.fwf")) {library(gdata)}                     ### Ankerstatement wird hier nicht verarbeitet, sondern zuletzt einfach an "gen.syntax" uebergeben
                   # if(!exists("recode")) {library(car)}
                   ### Datensatz darf keine missingstatements "mbd","mci" etc enthalten
@@ -75,7 +76,7 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                   if(!is.null(na$items)) 
                     {rec.items <- paste(na$items,"=NA",collapse="; ")           ### definiere recodierungsvorschrift
                      for (i in 1:ncol(daten))
-                         {daten[,i] <- recode(daten[,i], rec.items)}}
+                         {daten[,i] <- car:::recode(daten[,i], rec.items)}}
 				  if(checkLink == TRUE) {foo <- checkLink(daten)}
                   namen.items <- colnames(daten)
                   allVars     <- list(namen.hg.var=HG.var, namen.dif.var=DIF.var, namen.weight.var=weight.var, namen.group.var=group.var)
@@ -109,13 +110,13 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                   if(length(intersect(namen.group.var, namen.items))>0) {stop(paste("genConquestDataset_",ver,": Testitems and group variables overlap.\n",sep=""))}
                                     
                   ### geprueft wird: enthaelt IRGENDEIN Testitem gar keine gueltigen Werte?
-                  n.werte <- lapply(1:ncol(daten), FUN=function(ii) {table(daten[,ii])})
+                  n.werte <- lapply(daten, FUN=function(ii) {table(ii)})
                   options(warn = -1)                                            ### zuvor: schalte Warnungen aus!
                   only.null.eins <- unlist( lapply(n.werte, FUN=function(ii) {all( names(ii) == c("0","1") ) }) )
                   options(warn = 0)                                             ### danach: schalte Warnungen wieder an!
-                  n.werte <- sapply(1:length(n.werte), FUN=function(ii) {length(n.werte[[ii]])})
+                  n.werte <- sapply(n.werte, FUN=function(ii) {length(ii)})
                   n.mis   <- which(n.werte == 0)
-				  namen.items.weg <- NULL
+				          namen.items.weg <- NULL
                   if(length(n.mis) >0) {sunk(paste("genConquestDataset_",ver,": Serious warning: ",length(n.mis)," testitems(s) without any values.\n",sep=""))
                                         if(verbose == TRUE) {sunk(paste(colnames(daten)[which(n.werte == 0)], collapse=", ")); sunk("\n") }
                                         stop()										
@@ -137,7 +138,7 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                                                {sunk("WARNING: Sure you want to use 'model statement = item' even when items are not dichotomous?\n")} }
                   
                   ### identifiziere Faelle mit ausschliesslich missings
-                 all.values   <- table(unique(unlist(lapply(1:ncol(daten), FUN=function(ii) {names(table(daten[,ii]))}))))
+                 all.values   <- table(unique(unlist(lapply(daten, FUN=function(ii) {names(table(ii))}))))
                   if(length(all.values)!=2) {sunk(paste("genConquestDataset_",ver,": Warning: Found more than two non missing codes in overall testitems. Data does not seem to fit to the Rasch model.\n",sep=""))}
                   if(length(all.values)==2) {if(!all(names(all.values) == c("0","1"))) {sunk("Warning: Found codes departing from 0 and 1 in testitems. Data does not seem to fit to the Rasch model.\n")}}
                   weg.variablen <- rowSums(is.na(daten))                        ### identifiziere Fälle mit ausschließlich missings
@@ -149,92 +150,62 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                                                       sunk("Cases with missings on all items will be kept.\n")}}
                   hg.char <- NULL; DIF.char <- NULL; weight.char <- NULL; all.hg.char <- NULL        ### obere Zeile: wieviele Character haben die Variablen?
                   weg.dif <- NULL; weg.hg <- NULL; weg.weight <- NULL; namen.all.hg <- NULL
-                  
-				    if(!is.null(HG.var))                                          
-                    {if(!is.null(na$HG))                                        ### bevor irgendwas anderes geschieht, werden, sofern spezifiziert, die HG-Variablen recodiert
+                              if(!is.null(HG.var))    {
+                     if(!is.null(na$HG))                                        ### bevor irgendwas anderes geschieht, werden, sofern spezifiziert, die HG-Variablen recodiert
                        {rec.hg <- paste(na$HG,"=NA",collapse="; ")              ### definiere recodierungsvorschrift
                         for (i in 1:ncol(dat[,namen.hg.var,drop=F]))
-                            {dat[,namen.hg.var[i]] <- recode(dat[,namen.hg.var[i]], rec.hg)}}## untere Zeile: wieviele "character" haben Hintergrundvariablen?
-                     mis     <- sapply(1:length(namen.hg.var), FUN=function(ii) {length(table(dat[,namen.hg.var[ii]]))})
-                     mis.1   <- which(mis == 0)
-                     if(length(mis.1)>0) {stop(paste("genConquestDataset_",ver,": At least one HG-variable without any values.",sep=""))}
-                     mis.2   <- which(mis == 1)
-                     if(length(mis.2)>0) {sunk(paste("genConquestDataset_",ver,": Warning: At least one HG-variable is a constant.\n"))}
-                     hg.char <- sapply(1:length(namen.hg.var), FUN=function(ii) {max(nchar(as.character(na.omit(dat[,namen.hg.var[ii]]))))})
-                  ## hg.char[hg.char>12] <- 12                                  ### begrenze Characterzahl nach oben
-                     num     <- unlist(lapply(1:length(namen.hg.var),FUN=function(ii) {length( unique(c(grep("[[:digit:]]",dat[,namen.hg.var[ii]]),which(is.na(dat[,namen.hg.var[ii]])))))}))
-                     if(!all(num==nrow(dat)))                                   ### HG-Variablen müssen numerisch sein, das will conquest so. Für diese Prüfung sind also NA und numerische Werte erlaubt
-                       {sunk(paste("genConquestDataset_",ver,": Warning: Found ",length(which(num!=nrow(dat)))," HG variable(s) with non missing non-numeric values. Conquest will collapse.\n",sep=""))
-                        if(verbose==TRUE) {sunk(paste( namen.hg.var[which(num!=nrow(dat))],collapse=", ")); sunk("\n")}}
-                     mis.spec <- unlist(lapply(1:length(namen.hg.var), FUN=function(ii) { sum(is.na(dat[,namen.hg.var[ii]]))}))
-                     if(!all(mis.spec==0))                                      ### auf welchen HG-Variablen gibt es wieviele missings?
-                       {sunk(paste("genConquestDataset_",ver,": Warning: Found ",length(which(mis.spec!=0))," HG variable(s) with missing value(s). Conquest probably will collapse.\n",sep=""))
-                        if(verbose==TRUE) {sunk(paste( namen.hg.var[which(mis.spec!=0)],collapse=", ")); sunk("\n") } }
-                     dat.hg  <- data.frame(dat[,namen.hg.var,drop=F],stringsAsFactors=F)
-                     weg.hg  <- attr(na.omit(dat.hg), "na.action")
-                     # if(length(weg.hg)>0)
-                     #  {cat(paste("Remove ",length(weg.hg)," cases with missings on HG variables.\n",sep=""))}
-                    }
-					   
-                  if(!is.null(group.var))  {                                       
+                            {dat[,namen.hg.var[i]] <- car:::recode(dat[,namen.hg.var[i]], rec.hg)}}## untere Zeile: wieviele "character" haben Hintergrundvariablen?
+                     hg.info <- lapply(namen.hg.var, FUN = function(ii) {.checkContextVars(x = dat[,ii], varname=ii, type="HG", itemdaten=daten)})
+                     dat[,namen.hg.var] <- do.call("cbind", unlist(hg.info, recursive = FALSE)[3*(1:length(hg.info))-2])
+                     weg.hg             <- unique(do.call("c", unlist(hg.info, recursive = FALSE)[3*(1:length(hg.info))]))
+                     hg.char            <- do.call("c", unlist(hg.info, recursive = FALSE)[3*(1:length(hg.info))-1])
+                     if(length(weg.hg)>0)                                       ### untere Zeile: dies geschieht erst etwas später, wenn datensatz zusammengebaut ist
+                       {sunk(paste("genConquestDataset_",ver,": Found ",length(weg.hg)," cases with missings on at least one HG variable.\n",sep=""))}
+                  }
+                  if(!is.null(group.var))  {
                      if(!is.null(na$group))                                     ### bevor irgendwas anderes geschieht, werden, sofern spezifiziert, die HG-Variablen recodiert
                        {rec.group <- paste(na$group,"=NA",collapse="; ")        ### definiere recodierungsvorschrift
                         for (i in 1:ncol(dat[,namen.group.var,drop=F]))
-                            {dat[,namen.group.var[i]] <- recode(dat[,namen.group.var[i]], rec.group)}}
-                     ### missings auf Gruppenvariablen?
-                     mis.group <- unlist( lapply(1:length(namen.group.var), FUN=function(ii){sum(is.na(dat[,namen.group.var[ii]]))}))
-                     if(!all(mis.group==0))
-                       {sunk(paste("genConquestDataset_",ver,": Warning: Found ",length(which(mis.group!=0))," group variable(s) with missing value(s). Conquest probably will collapse.\n",sep=""))
-                        sunk(paste( namen.group.var[which(mis.group!=0)],collapse=", ")); sunk("\n") }
-                    }
-                  
-                   if(!is.null(DIF.var))  {
-                     if(length(DIF.var)!=1) {stop("Use only one DIF-variable.")}
+                            {dat[,namen.group.var[i]] <- car:::recode(dat[,namen.group.var[i]], rec.group)}}
+                     group.info <- lapply(namen.group.var, FUN = function(ii) {.checkContextVars(x = dat[,ii], varname=ii, type="group", itemdaten=daten)})
+                     dat[,namen.group.var] <- do.call("cbind", unlist(group.info, recursive = FALSE)[3*(1:length(group.info))-2])
+                     weg.group             <- unique(do.call("c", unlist(group.info, recursive = FALSE)[3*(1:length(group.info))]))
+                     group.char            <- do.call("c", unlist(group.info, recursive = FALSE)[3*(1:length(group.info))-1])
+                     if(length(weg.group)>0)                                       ### untere Zeile: dies geschieht erst etwas später, wenn datensatz zusammengebaut ist
+                       {sunk(paste("genConquestDataset_",ver,": Found ",length(weg.group)," cases with missings on group variable.\n",sep=""))}
+                   }
+                  if(!is.null(DIF.var))  {
                      if(!is.null(na$DIF))                                       ### bevor irgendwas anderes geschieht, werden, sofern spezifiziert, die DIF-Variablen recodiert
                        {rec.dif <- paste(na$DIF,"=NA",collapse="; ")            ### definiere recodierungsvorschrift
-                        dat[,namen.dif.var] <- recode(dat[,namen.dif.var], rec.dif)}
-                     if(length(table(dat[,namen.dif.var])) == 0) {stop("No valid values in DIF variable.")}
-                     DIF.char <- max(nchar(as.character(na.omit(dat[,namen.dif.var]))))
-                     if(length(table(dat[,namen.dif.var]))!=2) {sunk("Serious problem: DIF-variable does not seem to be dichotomous.\n")}
-                     weg.dif <- which(is.na(dat[,namen.dif.var]))
-                       if(length(weg.dif)>0)                                      ### untere Zeile: dies geschieht erst etwas spaeter, wenn datensatz zusammengebaut ist
+                        for (i in 1:ncol(dat[,namen.dif.var,drop=F]))
+                            {dat[,namen.dif.var[i]] <- car:::recode(dat[,namen.dif.var[i]], rec.hg)}}
+                     dif.info <- lapply(namen.dif.var, FUN = function(ii) {.checkContextVars(x = dat[,ii], varname=ii, type="DIF", itemdaten=daten)})
+                     dat[,namen.dif.var] <- do.call("cbind", unlist(dif.info, recursive = FALSE)[3*(1:length(dif.info))-2])
+                     weg.dif             <- unique(do.call("c", unlist(dif.info, recursive = FALSE)[3*(1:length(dif.info))]))
+                     dif.char            <- do.call("c", unlist(dif.info, recursive = FALSE)[3*(1:length(dif.info))-1])
+                     if(length(weg.dif)>0)                                      ### untere Zeile: dies geschieht erst etwas später, wenn datensatz zusammengebaut ist
                        {sunk(paste("genConquestDataset_",ver,": Found ",length(weg.dif)," cases with missings on DIF variable.\n",sep=""))}
-					 ### geprüft werden Testitems: keine Werte? konstant? aber diesmal für DIF-Gruppen getrennt
-                     n.werte <- lapply(daten, FUN=function(ii){by(ii, INDICES=list(dat[,namen.dif.var]), FUN=table)})
-                     completeMissingGroupwise <- data.frame(t(sapply(n.werte, function(ll){lapply(ll, length)})), stringsAsFactors = FALSE)
-                     for (i in seq(along=completeMissingGroupwise)) {
-                          missingCat.i <- which(completeMissingGroupwise[,i] == 0)
-                          if(length(missingCat.i) > 0) {
-                             sunk(paste("genConquestDataset_",ver,": Warning: Following items with no values in DIF group ",i,": \n",sep=""))
-                             sunk(paste(rownames(completeMissingGroupwise)[missingCat.i],collapse=", ")); sunk("\n")
-                          }
-                          constantCat.i <- which(completeMissingGroupwise[,i] == 1)
-                          if(length(constantCat.i) > 0) {
-                             sunk(paste("genConquestDataset_",ver,": Warning: Following items are constants in DIF group ",i,":\n",sep=""))
-                             sunk(paste(rownames(completeMissingGroupwise)[constantCat.i],collapse=", ")); sunk("\n")
-                          }
-                     }
-                   }
-                  if(!is.null(weight.var)) {
-                     if(length(weight.var)!=1) {stop("Use only one weight variable.")}
+                  }
+                  if(!is.null(weight.var))
+                    {if(length(weight.var)!=1) {stop("Use only one weight variable.")}
                      if(!is.null(na$weight))                                    ### bevor irgendwas anderes geschieht, werden, sofern spezifiziert, die DIF-Variablen recodiert
                        {rec.weight <- paste(na$weight,"=NA",collapse="; ")      ### definiere recodierungsvorschrift
-                        dat[,namen.weight.var] <- recode(dat[,namen.weight.var], rec.weight)}
-                     if(length(table(dat[,namen.weight.var])) == 0) {stop("No valid values in weight variable.")}
-                     weight.char <- max(nchar(as.character(na.omit(dat[,namen.weight.var]))))
-                     weg.weight <- which(is.na(dat[,namen.weight.var]))
-                       if(length(weg.weight)>0)                                   ### untere Zeile: dies geschieht erst etwas spaeter, wenn datensatz zusammengebaut ist
-                       {sunk(paste("genConquestDataset_",ver,": Found ",length(weg.weight)," cases with missings on weight variable.\n",sep=""))}
-				   }
+                        dat[,namen.weight.var] <- car:::recode(dat[,namen.weight.var], rec.weight)}
+                     weight.info <- lapply(namen.weight.var, FUN = function(ii) {.checkContextVars(x = dat[,ii], varname=ii, type="weight", itemdaten=daten)})
+                     dat[,namen.weight.var] <- do.call("cbind", unlist(weight.info, recursive = FALSE)[3*(1:length(weight.info))-2])
+                     weg.weight             <- unique(do.call("c", unlist(weight.info, recursive = FALSE)[3*(1:length(weight.info))]))
+                     weight.char            <- do.call("c", unlist(weight.info, recursive = FALSE)[3*(1:length(weight.info))-1])
+                     if(length(weg.weight)>0)                                   ### untere Zeile: dies geschieht erst etwas später, wenn datensatz zusammengebaut ist
+                       {sunk(paste("genConquestDataset_",ver,": Found ",length(weg.weight)," cases with missings on weight variable.\n",sep=""))}}
                   namen.all.hg <- unique(c(namen.dif.var,namen.hg.var,namen.group.var,namen.weight.var))## Achtung: group- und DIF- bzw. group- und HG-Variablen duerfen sich ueberschneiden!
-                  if(!is.null(namen.all.hg)) {all.hg.char <- sapply(1:length(namen.all.hg), FUN=function(ii) {max(nchar(as.character(na.omit(dat[,namen.all.hg[ii]]))))})}
-                  var.char <- sapply(1:ncol(daten), FUN=function(ii) {max(nchar(as.character(na.omit(daten[,ii]))))})
+                  if(!is.null(namen.all.hg)) {all.hg.char <- sapply(namen.all.hg, FUN=function(ii) {max(nchar(as.character(na.omit(dat[,ii]))))})}
+                  var.char <- sapply(daten, FUN=function(ii) {max(nchar(as.character(na.omit(ii))))})
                   no.number <- setdiff(1:length(var.char), grep("[[:digit:]]",var.char))
                   if(length(no.number)>0) {var.char[no.number] <- 1}            ### -Inf steht dort, wo nur missings sind, hier soll die Characterbreite auf 1 gesetzt sein
                   if(use.letters == TRUE)                                       ### sollen Buchstaben statt Ziffern beutzt werden? Dann erfolgt hier Recodierung.
                     {rec.statement <- paste(0:25,"='",LETTERS,"'",sep="",collapse="; ")
                      for (i in 1:ncol(daten))                                   ### Warum erst hier? Weil Prüfungen (auf Dichotomität etc. vorher stattfinden sollen)
-                         {daten[,i] <- recode(daten[,i], rec.statement)}
+                         {daten[,i] <- car:::recode(daten[,i], rec.statement)}
                      var.char <- rep(1,ncol(daten))
 				    }                            ### var.char muß nun neu geschrieben werden, da nun alles wieder einstellig ist!
                   daten <- data.frame(ID=as.character(dat[,ID]), dat[,namen.all.hg,drop=F], daten, stringsAsFactors=F)
@@ -249,7 +220,42 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                   return(list(daten.dat = daten, daten.width = fixed.width,namen.items=namen.items, namen.hg.var=namen.hg.var, namen.dif.var=namen.dif.var,DIF.char=DIF.char,namen.group.var=namen.group.var, namen.weight.var=namen.weight.var, weight.char=weight.char,namen.all.hg=namen.all.hg,all.hg.char=all.hg.char,var.char=max(var.char)))
 				}
 				  
-				  
+.checkContextVars <- function(x, varname, type, itemdaten)   {
+                     if(missing(varname))  {varname <- "ohne Namen"}
+                     if(class(x) != "numeric")  {                               ### ist Variable numerisch?
+                        if (type == "weight") {stop(paste(type, " variable has to be 'numeric' necessarily. Automatic transformation is not recommended. Please transform by yourself.\n",sep=""))}
+                        sunk(paste(type, " variable has to be 'numeric'. Variable '",varname,"' of class '",class(x),"' will be transformed to 'numeric'.\n",sep=""))
+                        x <- unlist(asNumericIfPossible(dat = data.frame(x, stringsAsFactors = FALSE), transform.factors = TRUE, maintain.factor.scores = FALSE, verbose=FALSE))
+                        if(class(x) != "numeric")  {                            ### erst wenn asNumericIfPossible fehlschlägt, wird mit Gewalt numerisch gemacht, denn für Conquest MUSS es numerisch sein
+                           x <- as.numeric(as.factor(x))
+                        }
+                        sunk(paste("    '", varname, "' was converted into numeric variable of ",length(table(x))," categories. Please check whether this was intended.\n",sep=""))
+                     }
+                     mis     <- length(table(x))
+                     if(mis == 0 )  {stop(paste("Error: ",type," Variable '",varname,"' without any values.",sep=""))}
+                     if(mis == 1 )  {stop(paste("Error: ",type," Variable '",varname,"' is a constant.",sep=""))}
+                     if(type == "DIF" | type == "group") {if(mis > 10)   {sunk(paste("Serious warning: ",type," Variable '",varname,"' with more than 10 categories. Recommend recoding. \n",sep=""))}}
+                     char    <- max(nchar(as.character(na.omit(x))))
+                     weg     <- which(is.na(x))
+                     if(length(weg) > 0 ) {sunk(paste("Warning: Found ",length(weg)," cases with missing on ",type," variable '",varname,"'. Conquest probably will collapse unless cases are not deleted.\n",sep=""))}
+                     if(type == "DIF" ) {
+                                   if(mis > 2 )   {sunk(paste(type, " Variable '",varname,"' does not seem to be dichotomous.\n",sep=""))}
+                                   n.werte <- lapply(itemdaten, FUN=function(iii){by(iii, INDICES=list(x), FUN=table)})
+                                   completeMissingGroupwise <- data.frame(t(sapply(n.werte, function(ll){lapply(ll, length)})), stringsAsFactors = FALSE)
+                                   for (iii in seq(along=completeMissingGroupwise)) {
+                                        missingCat.i <- which(completeMissingGroupwise[,iii] == 0)
+                                        if(length(missingCat.i) > 0) {
+                                           sunk(paste("Warning: Following items with no values in ",type," variable '",varname,"', group ",iii,": \n",sep=""))
+                                           sunk(paste(rownames(completeMissingGroupwise)[missingCat.i],collapse=", ")); cat("\n")
+                                        }
+                                        constantCat.i <- which(completeMissingGroupwise[,iii] == 1)
+                                        if(length(constantCat.i) > 0) {
+                                           sunk(paste("Warning: Following items are constants in ",type," variable '",varname,"', group ",iii,":\n",sep=""))
+                                           sunk(paste(rownames(completeMissingGroupwise)[constantCat.i],collapse=", ")); cat("\n")
+                                        }
+                                   }
+                     }
+                     return(list(x = x, char = char, weg = weg))}
 				  
 				  
 .existsBackgroundVariables <- function(dat, variable )  {

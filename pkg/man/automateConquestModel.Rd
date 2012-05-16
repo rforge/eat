@@ -190,7 +190,7 @@ dir.create("C:/temp")
 ex1 <- automateConquestModel ( dat = science1.collapsed, ID = "id", items = science1.items, 
 				jobFolder = "C:/temp", jobName = "rasch_unidim")
 #
-### Example 2: create input files for a multidimensional Rasch model
+### Example 2: create input files for a multidimensional Rasch model with DIF
 # option 'item.grouping' specifies dimensions and mapping of items to dimensions
 # 'item.grouping' is a data.frame with item names in first column ('item')
 #		and dimensions in further columns, mapping of items to dimension is
@@ -200,21 +200,34 @@ ex1 <- automateConquestModel ( dat = science1.collapsed, ID = "id", items = scie
 # running this example may take some time + convergence is suboptimal. This is only for illustration. 
 # Note: in higher dimensional modes, number of nodes increased to 2^[number of dimensions]. If not explicitly 
 # specified by the user, automateModels automatically uses the estimator 'montecarlo', if nodes increased 3500
+# Note: As DIF variable(s) have to be numeric in Conquest, factor variables (e.g. "sex" with male/female)
+# will be expressed as numeric indicator variables.
 science1.collapsed <- collapseMissings(science1, items = science1.items)
 dir.create("C:/temp")
 ex2 <- automateConquestModel ( item.grouping = science1.scales, dat = science1.collapsed, ID = "id", items = science1.items,
-				 jobFolder = "C:/temp", jobName = "rasch_multidim" )
+			 DIF = "sex", jobFolder = "C:/temp", jobName = "rasch_multidim" )
 
-### Example 3: create input files for a multidimensional Rasch model with latent regression
-# variable and explicit use of estimator 'Bock-Aitken' (as 'montecarlo' is not available for models with latent regression
-# unless all items are anchored. 
+### Example 3: create input files for a multidimensional multigroup Rasch model with latent regression
+# Note: As regression and group variables have to be numeric, factor variables (e.g. "sex" with male/female)
+# will be expressed as numeric indicator variables.
+# Moreover, unless estimation method is not specified explicitly, automateConquestModel chooses 'montecarlo' for
+# estimation as 'gaussian quadrature' is not available due to latent regression model and 'Bock-Aitken' would use
+# 11390625 nodes. Note: As 'montecarlo' needs to fix all item parameter when latent regression is applied, the
+# parameters estimated in example 2 are used as anchor parameters here.
+# Warning: This example may take a considerable amount of time. It's only for instruction.
 
 science1.collapsed <- collapseMissings(science1, items = science1.items)
 # in Conquest, latent regressors have to be numeric
-science1.collapsed$sex.numeric <- as.numeric(science1.collapsed$sex)
 dir.create("C:/temp")
+# Run example 2 to gain item parameters
+ex2 <- automateConquestModel ( item.grouping = science1.scales, dat = science1.collapsed, ID = "id", items = science1.items,
+			 DIF = "sex", jobFolder = "C:/temp", jobName = "rasch_multidim" )
+setwd("C:/temp")
+system ( "rasch_multidim.bat" ,	 wait = TRUE , show.output.on.console = FALSE , invisible = FALSE )
+### get ANCHOR parametern
+prm <-  get.shw("rasch_multidim.shw")[[1]][,2:3]
 ex3 <- automateConquestModel ( item.grouping = science1.scales, dat = science1.collapsed, ID = "id", items = science1.items,
-				 regression = "sex.numeric", method = "quadrature", jobFolder = "C:/temp", jobName = "rasch_multidim_regression" )
+				 anchor = prm, group = "track", regression = "grade", jobFolder = "C:/temp", jobName = "rasch_multidim_regression_group" )
 }
 }
 
