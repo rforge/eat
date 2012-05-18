@@ -6,7 +6,7 @@
 
 install.eat.dependencies <- function ( ) {
 
-		pkgs <- c("car","date","foreign","gdata","reshape","sendmailR","xlsx","R.utils","parallel")
+		pkgs <- c("car","date","foreign","gdata","reshape","sendmailR","xlsx","R.utils","parallel","psych")
 
 		oldwarn <- getOption ( "warn" )
 		options ( warn = -1 )

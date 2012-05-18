@@ -56,11 +56,12 @@ get.q3 <- function ( results ) {
 				
 		}
 		q3.long <- mapply ( .fun1 , r , names ( r ) , SIMPLIFY = FALSE )
-	
+		
 		# nach wide
 		.fun7 <- function ( l ) {
 				if ( ! ( nrow ( l ) == 0 ) ) {
-						wide <- long2matrix ( l[ , ! colnames ( l ) %in% c ( "dim" ) ] , triangle = "lower")
+						# wide <- long2matrix ( l[ , ! colnames ( l ) %in% c ( "dim" ) ] , triangle = "lower")
+						wide <- long2symmatrix ( dat = l[ , ! colnames ( l ) %in% c ( "dim" ) ] , triangle = "lower" , full.symmetric = TRUE , include.diagonal = FALSE )
 						item.scale <- l [ ! duplicated ( l$row ) , "dim" ]
 						names ( item.scale ) <- l [ ! duplicated ( l$row ) , "row" ]
 						wide <- cbind ( "Dimension" = item.scale[ rownames ( wide ) ] , wide )
@@ -68,6 +69,6 @@ get.q3 <- function ( results ) {
 		return ( wide )
 		}
 		ret <- mapply ( .fun7 , q3.long , SIMPLIFY = FALSE )
-		
+
 		return ( ret )
 }		

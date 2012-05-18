@@ -117,7 +117,14 @@ write.results.xlsx.q3 <- function ( results , path ) {
 						sheetNames <- make.unique ( substr ( els.names , 1 , 20 ) )
 						sheetName <- sheetNames[which ( els.names == el.name )]
 						write.xlsx2 ( el , file.path ( path , paste( out.name , ".xlsx", sep="") ), sheetName = sheetName , row.names = TRUE , append=append)				
-						save ( el , file = file.path ( path , paste( out.name , ".Rdata", sep="" ) ) )
+						q3 <- el
+						save ( q3 , file = file.path ( path , paste( out.name , ".Rdata", sep="" ) ) )
+						
+						# q3 descriptives
+						q3.descriptives <- q3.descriptives(q3)
+						write.xlsx2 ( q3.descriptives , file.path ( path , paste( out.name , "_descriptives.xlsx", sep="") ), sheetName = "q3_descriptives" , row.names = FALSE , append=FALSE)
+						save ( q3.descriptives , file = file.path ( path , paste( out.name , "_descriptives.Rdata", sep="" ) ) )
+						
 				}
 				return(TRUE)
 		}
