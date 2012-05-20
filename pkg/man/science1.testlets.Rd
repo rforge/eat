@@ -1,5 +1,3 @@
-
-
 \name{science1.testlets}
 
 \docType{data}
@@ -14,7 +12,7 @@ This data frame contains testlet definitions as dummy codes for usage with \code
 
 %\usage{ }
 
-\format{'data.frame':   185 obs. of  53 variables}
+\format{'data.frame':   185 obs. of  54 variables}
 
 %\source{}
 
