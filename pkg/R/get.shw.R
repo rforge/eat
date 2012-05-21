@@ -141,7 +141,7 @@ get.shw <- function (file, dif.term = NULL, split.dif = TRUE, abs.dif.bound = 0.
         }
 		
 		# make output data frame
-        tempTermOutput <- do.call(rbind, lapply( termOutput, FUN=function(ii) { gsub("\\*","",ii)}   ))
+        tempTermOutput <- do.call(rbind, lapply( termOutput, FUN=function(ii) { c(gsub("\\*","",ii), rep(NA,times = maxNInputCols - length(ii) ))}   ))
         tempTermOutput[tempTermOutput == "NA"] <- NA
         options(warn = -1)
         termOutput <- data.frame(apply(tempTermOutput, 2, as.numeric))

@@ -1,6 +1,6 @@
 
 .onAttach <- function(lib, pkg){
-	packageStartupMessage ( paste ( "\n===========================================\neat version: 1.5.6-109 (2012-05-16)\n             Huffy Coypu\nThis version is BETA. Use at your own risk.\n===========================================\n" ) )
+	packageStartupMessage ( paste ( "\n===========================================\neat version: 1.5.6-112 (2012-05-20)\n             Huffy Coypu\nThis version is BETA. Use at your own risk.\n===========================================\n" ) )
 	install.eat.dependencies ()
 	}
 

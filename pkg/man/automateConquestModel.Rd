@@ -16,7 +16,8 @@ m.model="1pl", Title = NULL, jobName, jobFolder, subFolder=list(), dataName=NULL
 anchor=NULL, pathConquest, method=NULL, std.err=NULL ,distribution=NULL, 
 n.plausible=NULL, set.constraints=NULL, nodes=NULL, p.nodes=NULL, f.nodes=NULL, 
 n.iterations=NULL, converge=NULL, deviancechange=NULL, name.unidim=NULL, 
-equivalence.table="wle", use.letters=FALSE, checkLink=FALSE, verbose=TRUE)
+equivalence.table="wle", use.letters=FALSE, checkLink=FALSE, verbose=TRUE,
+export = list(logfile = TRUE, systemfile = TRUE, history = TRUE, covariance = TRUE, reg_coefficients = TRUE, designmatrix = TRUE))
 }
 
 \arguments{
@@ -136,7 +137,10 @@ A logical value indicating whether the items in dataset are checked for being co
   \item{verbose}{
  A logical value indicating whether messages are printed on the \R console. 
 }
- 
+  \item{export}{
+ A named or unnamed list or vector of logical elements indicating whether Conquest should create logfile, systemfile, history file, covariance file, file of regression coefficients and file of designmatrix.
+}
+
 }
 
 \details{

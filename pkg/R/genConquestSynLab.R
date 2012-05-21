@@ -78,7 +78,9 @@
 
 genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, namen.dif.var , DIF.char, namen.weight.var, weight.char, namen.all.hg,all.hg.char, namen.group.var=NULL, model = NULL, ANKER = NULL,std.err=c("quick","full","none"),name.unidim="dimension_1",
                               model.statement="item", distribution=c("normal","discrete"), jobFolder, subFolder=NULL, name.dataset=NULL, Title=NULL,constraints =c("cases","none","items"), method=c("gauss", "quadrature", "montecarlo"), n.plausible=5,n.iterations=1000,nodes=NULL, p.nodes=2000,f.nodes=2000,converge=0.0001,deviancechange=0.0001,
-                              equivalence.table=c("wle","mle","NULL"),var.char,use.letters=use.letters, allowAllScoresEverywhere, pathConquest, import = list () )       {
+                              equivalence.table=c("wle","mle","NULL"),var.char,use.letters = use.letters, allowAllScoresEverywhere, pathConquest,
+                              export )       {
+                   export.default <- list(logfile = TRUE, systemfile = TRUE, history = TRUE, covariance = TRUE, reg_coefficients = TRUE, designmatrix = TRUE)
                    ver           <- "0.19.0"
                    .mustersyntax <- c("title = ####hier.title.einfuegen####;",
                                       "export logfile >> ####hier.name.einfuegen####.log;",
@@ -106,9 +108,11 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
 									  "export par    >> ####hier.name.einfuegen####.prm;",
 									  "export covariance >> ####hier.name.einfuegen####.cov;",
 									  "export reg_coefficients >> ####hier.name.einfuegen####.reg;",
-									  "descriptives !estimates=pv >> ####hier.outfolder.einfuegen####\\####hier.name.einfuegen####_pvl.dsc;",
-                                      "descriptives !estimates=wle >> ####hier.outfolder.einfuegen####\\####hier.name.einfuegen####_wle.dsc;",
-                                      "quit;")
+ 									  "export designmatrix >> ####hier.name.einfuegen####.mat;",
+                    "put >> ####hier.name.einfuegen####.cqs;",
+                    "descriptives !estimates=pv >> ####hier.outfolder.einfuegen####\\####hier.name.einfuegen####_pvl.dsc;",
+                    "descriptives !estimates=wle >> ####hier.outfolder.einfuegen####\\####hier.name.einfuegen####_wle.dsc;",
+                    "quit;")
                    ### Conquest akzeptiert explizite Variablennamen nur in Kleinschreibung!
                    if(!all(namen.hg.var == tolower(namen.hg.var)))
                      {sunk(paste("genConquestSynLab_",ver,": Warning: Conquest allows only lower case letters for explicit variables. Print HG variables in lower cases.\n",sep=""))}
@@ -209,7 +213,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
 
                    ### sind Leistungsdaten dichotom? (Geht schneller als alte Variante: auskommentiert) 
                    testdaten <- daten[,itemspalten,drop=FALSE]
-                   poo <- unique(names(unlist(lapply(testdaten, FUN=function(ii) {table(ii)}))))
+                   poo <- table.unlist(testdaten)
                    if(length(poo) !=2 ) {sunk(paste("genConquestSynLab_",ver,": Warning: data does not seem to be dichotomous.\n",sep=""))}
                    # if(length(table(unlist(daten[,itemspalten]))) !=2 ) {cat("genConquestSynLab_",ver,": Warning: data does not seem to be dichotomous.\n")}
                    
@@ -313,8 +317,9 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    ind <- grep("labels ",syntax)
 				stopifnot(length(ind)==1)
                    syntax <- c(syntax[1:ind],score.statement,syntax[(ind+1):length(syntax)])
-                   if(length(HG.var)==0) {ind.2 <- grep("^regression$",syntax)    ### wenn kein HG-model, loesche entsprechende Syntaxzeilen
-                                          stopifnot(length(ind.2)==1)
+                   if(length(HG.var)==0) {
+                      ind.2 <- grep("^regression$",syntax)    ### wenn kein HG-model, loesche entsprechende Syntaxzeilen
+                      stopifnot(length(ind.2)==1)
 										  syntax <- syntax[-ind.2]
 										  ind.3 <- grep("export reg_coefficients",syntax)
 										  stopifnot(length(ind.3)==1)
@@ -338,10 +343,24 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                                        {lab.dim   <- data.frame(lab.dim.1=c("===>",1:length(namen.dim)), lab.dim.2=c("dimensions",namen.dim), stringsAsFactors=F)
                                         colnames(lab.dim) <- colnames(lab)
                                         lab       <- rbind(lab,lab.dim)}
-				   cq.version <- getConquestVersion( pathConquest )
-				   if(cq.version < as.date("1Jan2007") )
-									   {ind.3 <- grep("^export history",syntax)   ### wenn Conquest aelter als 2007, soll history geloescht werden
-                                        syntax <- syntax[-ind.3]}
+            classes.export <- sapply(export, FUN = function(ii) {class(ii)})
+            if(!all(classes.export == "logical"))  {stop("All list elements of argument 'export' have to be of class 'logical'.\n")}
+            export <- userSpecifiedList ( l = export, l.default = export.default )
+            weg <- names(export[which(export == FALSE)])
+            if(length(weg)>0)    {                                       ### hier wird, was nicht exportiert werden soll, aus Syntax gelöscht.
+               for (ii in seq(along=weg) ) {
+                    ind.x <- grep(paste("export ", weg[ii], sep=""), syntax)
+                    stopifnot(length(ind.x) == 1)
+                    syntax <- syntax[-ind.x]
+               }
+            }
+            if(export$history == TRUE)  {
+               cq.version <- getConquestVersion( pathConquest )
+				       if(cq.version < as.date("1Jan2007") ) {
+									ind.3 <- grep("^export history",syntax)   ### wenn Conquest aelter als 2007, soll history geloescht werden
+                  syntax <- syntax[-ind.3]
+               }
+            }
 				   ## write(syntax,paste(pfad,"/",Name,".cqc",sep=""),sep="\n")
                    return(list(syntax=syntax, lab=lab))}
 
@@ -423,7 +442,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
 
 ### Hilfsfunktion für .writeScoreStatementMultidim()
 fromMinToMax <- function(dat, score.matrix, qmatrix, allowAllScoresEverywhere, use.letters)    {
-			    all.values <- alply(as.matrix(score.matrix), .margin = 1, .fun = function(ii) { names(table.unlist(dat[,na.omit(as.numeric(ii[grep("^X", names(ii))]))]))  })
+			    all.values <- alply(as.matrix(score.matrix), .margins = 1, .fun = function(ii) { names(table.unlist(dat[,na.omit(as.numeric(ii[grep("^X", names(ii))]))]))  })
 				if ( allowAllScoresEverywhere == TRUE ) {
                     all.values <- lapply(all.values, FUN = function(ii) {sort(asNumericIfPossible(unique( unlist ( all.values ) ), verbose = FALSE ) ) } )
                 }     

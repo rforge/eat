@@ -75,7 +75,7 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 		
 		### Begrüßung
 		sunk ( paste ( f.n , "Starting automateModels\n" ) , new.file = TRUE ) 
-		sunk ( paste ( f.n , 'Version: 1.5.6-109 (2012-05-16)\n' ) )
+		sunk ( paste ( f.n , 'Version: 1.5.6-112 (2012-05-20)\n' ) )
 		sunk ( paste ( f.n , '         Huffy Coypu\n' ) )
 		sunk ( paste ( f.n , "This version is BETA. Use at your own risk.\n" ) )
 		### Definitionen
