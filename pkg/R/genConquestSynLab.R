@@ -109,7 +109,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
 									  "export covariance >> ####hier.name.einfuegen####.cov;",
 									  "export reg_coefficients >> ####hier.name.einfuegen####.reg;",
  									  "export designmatrix >> ####hier.name.einfuegen####.mat;",
-                    "put >> ####hier.name.einfuegen####.cqs;",
+                    "put >> ####hier.name.einfuegen####.cqs; /* export systemfile */",
                     "descriptives !estimates=pv >> ####hier.outfolder.einfuegen####\\####hier.name.einfuegen####_pvl.dsc;",
                     "descriptives !estimates=wle >> ####hier.outfolder.einfuegen####\\####hier.name.einfuegen####_wle.dsc;",
                     "quit;")
@@ -321,10 +321,10 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                       ind.2 <- grep("^regression$",syntax)    ### wenn kein HG-model, loesche entsprechende Syntaxzeilen
                       stopifnot(length(ind.2)==1)
 										  syntax <- syntax[-ind.2]
-										  ind.3 <- grep("export reg_coefficients",syntax)
-										  stopifnot(length(ind.3)==1)
-										  syntax <- syntax[-ind.3]
-										  }
+										  # ind.3 <- grep("export reg_coefficients",syntax)
+										  # stopifnot(length(ind.3)==1)
+										  # syntax <- syntax[-ind.3]
+										   }
                    if(length(namen.group.var) ==0) { ind.3 <- grep("^group$",syntax)    ### wenn keine Gruppen definiert, loesche Statement
                                                stopifnot(length(ind.3)==1)
                                                syntax <- syntax[-ind.3]}
@@ -343,9 +343,9 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                                        {lab.dim   <- data.frame(lab.dim.1=c("===>",1:length(namen.dim)), lab.dim.2=c("dimensions",namen.dim), stringsAsFactors=F)
                                         colnames(lab.dim) <- colnames(lab)
                                         lab       <- rbind(lab,lab.dim)}
-            classes.export <- sapply(export, FUN = function(ii) {class(ii)})
-            if(!all(classes.export == "logical"))  {stop("All list elements of argument 'export' have to be of class 'logical'.\n")}
-            export <- userSpecifiedList ( l = export, l.default = export.default )
+	        classes.export <- sapply(export, FUN = function(ii) {class(ii)})
+			if(!all(classes.export == "logical"))  {stop("All list elements of argument 'export' have to be of class 'logical'.\n")}
+            export <- as.list(userSpecifiedList ( l = export, l.default = export.default ))
             weg <- names(export[which(export == FALSE)])
             if(length(weg)>0)    {                                       ### hier wird, was nicht exportiert werden soll, aus Syntax gelöscht.
                for (ii in seq(along=weg) ) {
@@ -354,7 +354,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                     syntax <- syntax[-ind.x]
                }
             }
-            if(export$history == TRUE)  {
+            if(export["history"] == TRUE)  {
                cq.version <- getConquestVersion( pathConquest )
 				       if(cq.version < as.date("1Jan2007") ) {
 									ind.3 <- grep("^export history",syntax)   ### wenn Conquest aelter als 2007, soll history geloescht werden

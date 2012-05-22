@@ -60,7 +60,7 @@
 				sunk ( paste ( einr , "dat = " , "'data.frame': " , nrow ( dataset ) , " obs. of " , ncol ( dataset ) , " variables" , sep = "" ) )
 				stopifnot ( is.character ( id.name ) )
 				sunk ( paste ( "cat('" , einr , "ID = " , id.name , "\\n')" , sep = "" ) )
-				sunk ( paste ( einr , "regression = " , regression , sep = "" ) )				
+				sunk ( paste ( einr , "regression = " , paste(regression, collapse=", ") , sep = "" ) )				
 				sunk ( paste ( einr , "DIF = " , dif , sep = "" ) )								
 				sunk ( paste ( einr , "group.var = " , paste ( group , collapse = ", " ) , sep = "" ) )				
 				sunk ( paste ( einr , "weight = " , paste ( weight , collapse = ", " ) , sep = "" ) )				
@@ -98,7 +98,9 @@
 				sunk ( paste ( "cat('" ,  einr , "equivalence.table = " , conquestParameters$equivalence.table , sep = "" , "\n')" ) )				
 				sunk ( paste ( "cat('" ,  einr , "use.letters = " , conquestParameters$use.letters , sep = "" , "\n')" ) )				
 				sunk ( paste ( "cat('" ,  einr , "model.statement = " , conquestParameters$model.statement , sep = "" , "\n')" ) )				
-				sunk ( paste ( "cat('" ,  einr , "na = " , conquestParameters$na , sep = "" , "\n')" ) )				
+				sunk ( paste ( "cat('" ,  einr , "na = " , conquestParameters$na , sep = "" , "\n')" ) )
+				if(!is.null(names(conquestParameters$export)))   { string.s <- paste(names(conquestParameters$export), "=", conquestParameters$export) } else { string.s <- conquestParameters$export }
+				sunk ( paste ( "cat('" ,  einr , "export = " , paste(string.s , collapse = ", " ), "\n')" ) )
 				sunk ( "cat('\n\n')" )
 				
 				# Übergabe an automateConquestModel speichern fürs debuggen
@@ -133,8 +135,10 @@
 						equivalence.table = conquestParameters$equivalence.table ;			
 						use.letters = conquestParameters$use.letters ;
 						model.statement = conquestParameters$model.statement ;
-						na = conquestParameters$na"
+						na = conquestParameters$na;
+						export = conquestParameters$export"
 				) )
+
 				save ( list = c (
 						"dat",
 						"ID",
@@ -166,7 +170,8 @@
 						"equivalence.table" ,
 						"use.letters" ,
 						"model.statement" ,
-						"na"
+						"na" , 
+						"export"
 						)
 				, file = file.path ( folder , paste ( analyse.name , "_autConMod_par.Rdata" , sep = "" ) ) )
 				
@@ -202,7 +207,8 @@
 										equivalence.table = conquestParameters$equivalence.table ,			
 										use.letters = conquestParameters$use.letters ,
 										model.statement = conquestParameters$model.statement ,
-										na = conquestParameters$na
+										na = conquestParameters$na , 
+										export = conquestParameters$export , 									
 										)				
 
 				if ( ret ) sunk ( paste ( ".automateModels.createModel.create:" , model.nr.str ,

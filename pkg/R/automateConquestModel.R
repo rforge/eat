@@ -86,20 +86,21 @@ automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.va
 	### Defaults
 	if(is.null(dataName))        {dataName <- paste(jobName,".dat",sep="")} 
 	if(is.null(subFolder))        {subFolder <- list()} 
-  if(is.null(n.plausible))     {n.plausible <- 5}
+    if(is.null(n.plausible))     {n.plausible <- 5}
 	if(is.null(set.constraints)) {set.constraints <- "cases"}
+	if(is.null(export))          {export <- list(logfile = TRUE, systemfile = TRUE, history = TRUE, covariance = TRUE, reg_coefficients = TRUE, designmatrix = TRUE) }
     ### if(is.null(nodes))           {nodes <- 15}	               ### nodes werden erst in genConquestSynLab gesetzt, da sie davon abhängen ob Montecarlo gesetzt ist
 	if(is.null(method))    {
      method   <- "gauss"
      if(is.null(nodes))   {
 	    nodes <- 15
-		if(!is.null(item.grouping))   {                               ### wunsch von Thilo: wenn mehr als 3500 nodes und keine 'method' explizit spezifiziert: montecarlo
+	 if(!is.null(item.grouping))   {                               ### wunsch von Thilo: wenn mehr als 3500 nodes und keine 'method' explizit spezifiziert: montecarlo
            used.nodes <- nodes^(ncol(item.grouping)-1 )               ### das alles geschieht NICHT, wenn der Benutzer explizit 'gauss' oder was-auch-immer wünscht
         }
-        if(is.null(item.grouping))   {                                            
+     if(is.null(item.grouping))   {                                            
            used.nodes <- nodes
         }
-        if( used.nodes > 3500)  {
+     if( used.nodes > 3500)  {
           sunk(paste("automateConquestModel_",ver,": Specified model will use ",used.nodes," nodes. Chosen default method '",method,"' probably is not appropriate. \nChange method to 'montecarlo' with 1000 nodes. Otherwise, please specify your settings explicitly.\n",sep=""))
           nodes <- 1000
 		  method <- "montecarlo"

@@ -87,7 +87,6 @@
 							stopifnot ( inherits ( element2 , checkType ) | inherits ( element2 , "NULL" ) )
 					} )							
 				} , list3 , list3.checkType , SIMPLIFY=FALSE )	
-
 		### Plausichecks/Aufbereiten list4 ( alle Elemente die "skalar" schon Listen sind )
 		# umwandeln in Liste wenn "skalare" Liste
 		list4 <- sapply ( list4 , function ( element ) {
@@ -118,8 +117,11 @@
 		# Check ob keine falschen Bezeichner
 		allowedNames <- c ( "pathConquest","method","std.err","distribution","n.plausible","set.constraints",
 							"nodes","p.nodes","f.nodes","n.iterations","converge","deviancechange",
-							"equivalence.table","use.letters","model.statement","na","model.statement" )
-		check <- unique ( names ( unlist (  list4$conquestParameters ) ) )
+							"equivalence.table","use.letters","model.statement","na","export" )
+		
+		# check <- unique ( names ( unlist ( list4$conquestParameters ) ) )
+		check <- names ( sapply ( list4$conquestParameters , names ) )
+		
 		if ( ! all ( w <- ( check %in% allowedNames ) ) ) {
 				errmes <- paste ( "not available names are used in 'conquestParameters':" , 
 									paste ( check[!w] , collapse = ", " ), "\n" )

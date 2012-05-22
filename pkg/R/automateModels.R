@@ -61,6 +61,11 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 							 delete.folder.countdown = 5 ,
 							 conquestParameters = NULL ) {
 							 
+		# hotfix, 22. Mai 2012, der sagt, dass selbst wenn der Benutzer das, was Conquest exportieren soll, als Liste spezifiziert, es nicht als Liste, sondern als (genameder) Vektor an automateModels weitergegeben wird.
+		# versteht ihr nicht? wir auch nicht ... 
+		if(!is.null(conquestParameters$export)) {conquestParameters$export <- unlist(conquestParameters$export)}
+		
+		
 		### Funktionsname für Meldungen
 		f. <- "automateModels"
 		f.n <- paste ( f. , ":" , sep = "" )
