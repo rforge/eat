@@ -442,12 +442,16 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
 
 ### Hilfsfunktion für .writeScoreStatementMultidim()
 fromMinToMax <- function(dat, score.matrix, qmatrix, allowAllScoresEverywhere, use.letters)    {
-			    all.values <- alply(as.matrix(score.matrix), .margins = 1, .fun = function(ii) { names(table.unlist(dat[,na.omit(as.numeric(ii[grep("^X", names(ii))]))]))  })
+				
+				all.values <- alply(as.matrix(score.matrix), .margins = 1, .fun = function(ii) { names(table.unlist(dat[,na.omit(as.numeric(ii[grep("^X", names(ii))]))]))  })
 				if ( allowAllScoresEverywhere == TRUE ) {
                     all.values <- lapply(all.values, FUN = function(ii) {sort(asNumericIfPossible(unique( unlist ( all.values ) ), verbose = FALSE ) ) } )
                 }     
                 if(use.letters == TRUE )  {minMaxRawdata  <- unlist ( lapply( all.values, FUN = function (ii) {paste("(",paste(LETTERS[which(LETTERS == ii[1]) : which(LETTERS == ii[length(ii)])], collapse=" "),")") } ) ) }
-                if(use.letters == FALSE ) {minMaxRawdata  <- unlist ( lapply( all.values, FUN = function (ii) {paste("(",paste(ii[1] : ii[length(ii)],collapse = " "),")")  } ) ) }
+                if(use.letters == FALSE ) {
+						all.values <- sapply ( all.values , function ( v ) v[!v %in% c(letters,LETTERS)] , simplify = FALSE )
+						minMaxRawdata  <- unlist ( lapply( all.values, FUN = function (ii) {paste("(",paste(ii[1] : ii[length(ii)],collapse = " "),")")  } ) )
+				}
                 scoring <- unlist( lapply( minMaxRawdata , FUN = function(ii) { paste("(", paste( 0 : (length(unlist(strsplit(ii, " ")))-3), collapse = " "),")")}) )
                 stopifnot(length(scoring) == length( minMaxRawdata ) )
                 stopifnot(length(scoring) == nrow(score.matrix ) )
