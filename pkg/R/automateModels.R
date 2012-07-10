@@ -49,6 +49,7 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 							 dif = NULL , weight = NULL , anchor = NULL , regression = NULL , 
 							 adjust.for.regression = FALSE , 
 							 q3 = FALSE ,
+							 icc = FALSE ,
 							 missing.rule = NULL , 
 							 cross = NULL , subfolder.order = NULL , subfolder.mode = NULL ,
 							 allNAdelete = TRUE ,
@@ -80,7 +81,7 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 		
 		### Begrüßung
 		sunk ( paste ( f.n , "Starting automateModels\n" ) , new.file = TRUE ) 
-		sunk ( paste ( f.n , 'Version: 1.5.8-116 (2012-05-29)\n' ) )
+		sunk ( paste ( f.n , 'Version: 1.5.9-117 (2012-07-10)\n' ) )
 		sunk ( paste ( f.n , '         \n' ) )
 		sunk ( paste ( f.n , "This version is BETA. Use at your own risk.\n" ) )
 		### Definitionen
@@ -268,6 +269,9 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 		results <- make.q3 ( results , model.specs )
 		# Excels erzeugen
 		if ( write.xls.results ) check <- .automateModels.writeResultsExcel ( results , model.specs$analyse.name , model.specs$folder , folder.aM , additional.item.props )
+		
+		# ICCs schreiben
+		if ( icc ) temp <- automateModels.plot.icc ( results , model.specs )
 		
 		# auf Platte schreiben
 		save ( model.specs , file = file.path ( folder.aM , "model.specs.Rdata" )  )

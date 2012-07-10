@@ -15,7 +15,7 @@ select.person.group = NULL, checkLink = FALSE, additional.item.props = NULL, fol
 overwrite.folder = TRUE, analyse.name.prefix = NULL, analyse.name = NULL, 
 analyse.name.elements = NULL, data.name = NULL, m.model = NULL, software = NULL, 
 dif = NULL, weight = NULL, anchor = NULL, regression = NULL, 
-adjust.for.regression = FALSE, q3 = FALSE, missing.rule = NULL, cross = NULL, 
+adjust.for.regression = FALSE, q3 = FALSE, icc = FALSE, missing.rule = NULL, cross = NULL, 
 subfolder.order = NULL, subfolder.mode = NULL, allNAdelete = TRUE, additionalSubFolder = NULL, 
 run.mode = NULL, n.batches = NULL, run.timeout = 1440, run.status.refresh = 0.2, 
 all.local.cores = TRUE, email = NULL, smtpServer = NULL, write.txt.dataset = FALSE,
@@ -133,6 +133,10 @@ if FALSE (default) item parameters (difficulty) are centered on the mean of the 
   \item{q3}{
 %%     ~~Describe \code{missing.rule} here~~
 Logical: If \code{TRUE}, Yen's Q3 statistic is computed.
+}
+  \item{icc}{
+%%     ~~Describe \code{missing.rule} here~~
+Logical: If \code{TRUE}, pdfs of item icc are generated.
 }
   \item{missing.rule}{
 %%     ~~Describe \code{missing.rule} here~~
