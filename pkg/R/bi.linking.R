@@ -5,20 +5,26 @@
 		bi.linking.name <- paste ( analyse.1 , analyse.2 , sep = "---" )
 
 		### 1. Analyse
-		matr.1 <- sapply ( results[[analyse.1]][[1]][[1]] , "[" , simplify = TRUE )
-		b.list.1 <- unlist ( matr.1 [ which ( rownames ( matr.1 ) == "b" ) , ]	) 
-		b.se.list.1 <- unlist ( matr.1 [ which ( rownames ( matr.1 ) == "b.se" ) , ] )
-		b.df.1 <- data.frame ( "item" = names ( b.list.1 ) , 
-						"itemdiff" = b.list.1 ,
-						stringsAsFactors = FALSE )
-
+		# matr.1 <- sapply ( results[[analyse.1]][[1]][[1]] , "[" , simplify = TRUE )
+		# b.list.1 <- unlist ( matr.1 [ which ( rownames ( matr.1 ) == "b" ) , ]	) 
+		# b.se.list.1 <- unlist ( matr.1 [ which ( rownames ( matr.1 ) == "b.se" ) , ] )
+		# b.df.1 <- data.frame ( "item" = names ( b.list.1 ) , 
+						# "itemdiff" = b.list.1 ,
+						# stringsAsFactors = FALSE )
+		matr.1 <- get.item.par ( results[analyse.1] )
+		b.df.1 <- matr.1[,c("item","b")]
+		b.list.1 <- matr.1[,"b"]
+		names(b.list.1) <- matr.1[,"item"]
+		b.se.list.1 <- matr.1[,"b.se"]
+		names(b.se.list.1) <- matr.1[,"item"]
+		
 		### 2. Analyse
-		matr.2 <- sapply ( results[[analyse.2]][[1]][[1]] , "[" , simplify = TRUE )
-		b.list.2 <- unlist ( matr.2 [ which ( rownames ( matr.2 ) == "b" ) , ]	)
-		b.se.list.2 <- unlist ( matr.2 [ which ( rownames ( matr.2 ) == "b.se" ) , ] )
-		b.df.2 <- data.frame ( "item" = names ( b.list.2 ) ,
-						"itemdiff" = b.list.2 ,
-						stringsAsFactors = FALSE )
+		matr.2 <- get.item.par ( results[analyse.2] )
+		b.df.2 <- matr.2[,c("item","b")]
+		b.list.2 <- matr.2[,"b"]
+		names(b.list.2) <- matr.2[,"item"]		
+		b.se.list.2 <- matr.2[,"b.se"]
+		names(b.se.list.2) <- matr.2[,"item"]		
 
 		# common Items
 		intsec <- intersect ( b.df.1$item , b.df.2$item )
@@ -45,7 +51,7 @@
 									   "bi.linking.name" = rep ( bi.linking.name , length ( prikey ) ) ,
 									   "analyse.1" = rep ( analyse.1 , length ( prikey ) ) ,
 									   "analyse.2" = rep ( analyse.2 , length ( prikey ) ) ,									   
-									   "scale" = rep ( scale.name , length ( prikey ) ) ,									   
+									   # "scale" = rep ( scale.name , length ( prikey ) ) ,									   
 									   "item" = prikey ,
 									   "b.1" = unname ( b.list.1[prikey] ) ,
 									   "b.1.trans" = out$transf.par[,2] ,
@@ -53,6 +59,11 @@
 									   "b.se.1" =  unname ( b.se.list.1[prikey] ) ,
 									   "b.se.2" =  unname ( b.se.list.2[prikey] ) ,
 											stringsAsFactors = FALSE )
+				
+				if ( !is.null ( scale.name ) ) {
+						dfr$scale <- rep ( scale.name , length ( prikey ) )
+						dfr <- reinsort.col ( dfr , "scale" , "analyse.2" )
+				}
 			
 				# gecentered
 				# dfr$b.1.c <- dfr$b.1 - mean ( dfr$b.1 , na.rm = TRUE )
@@ -195,7 +206,7 @@
 			
 			link.names <- names ( results )
 			bi.link.matrix <- .expand.grid.triangle ( link.names , lower = lower.triangle )
-			ret <- list ( .bi.linking.call ( results , bi.link.matrix , method ) )
+			ret <- list ( .bi.linking.call ( results , bi.link.matrix , method , NULL ) )
 			names ( ret ) <- "all"
 			return ( ret )
 	}
@@ -204,7 +215,7 @@
 	
 }
 
-bi.linking <- function ( results , scales=NULL , folder=NULL , file.name=NULL , method = NULL , lower.triangle = TRUE ) {
+bi.linking <- function ( results , folder=NULL , file.name=NULL , method = NULL , lower.triangle = TRUE , scales=NULL ) {
 
 		# Begrueßung
 		cat ( "Linking startet...\n" )
@@ -240,7 +251,8 @@ bi.linking <- function ( results , scales=NULL , folder=NULL , file.name=NULL , 
 				} , out , MoreArgs = list ( kennwert ) , USE.NAMES = FALSE )
 		} , kennwerte , SIMPLIFY = FALSE )
 		scale.agg.stats <- mapply ( function ( scd ) {
-				data.frame ( "min" = min ( scd ) , "max" = max ( scd ) , "mean" =  mean ( scd ) , "sd" = sd ( scd ) )
+				scd <- as.vector (scd)
+				data.frame ( "min" = min ( scd , na.rm=TRUE ) , "max" = max ( scd , na.rm=TRUE ) , "mean" =  mean ( scd , na.rm=TRUE ) , "sd" = sd(as.vector (scd),na.rm=TRUE) )
 		} , scale.descr , SIMPLIFY = FALSE )
 		scale.agg.stats.dfr <- data.frame ( cbind ( "B" = unname ( unlist ( scale.agg.stats$B ) ) , "error" = unname ( unlist ( scale.agg.stats$error ) ) , "Ncommon" = unname ( unlist ( scale.agg.stats$Ncommon ) ) ) )
 		rownames ( scale.agg.stats.dfr ) <- names ( scale.agg.stats$B )
@@ -290,18 +302,20 @@ bi.linking <- function ( results , scales=NULL , folder=NULL , file.name=NULL , 
 					}
 	
 					# Konstante + Error
+					if ( ( ncol ( out$B ) - 4 ) > 0 ) addNA <- rep ( NA , ncol ( out$B ) - 4 ) else addNA <- NULL
 					towrite <- rbind ( "B Matrix" = rep ( NA , ncol ( out$B ) ) , out$B , 
-									   "B min max mean sd" = c ( min ( B_ ) , max ( B_ ) , mean ( B_ ) , sd ( B_ ) , rep ( NA , ncol ( out$B ) - 4 ) ) ,
-									   "B ALL SCALES min max mean sd" = c ( unname ( unlist ( scale.agg.stats$B ) ) , rep ( NA , ncol ( out$B ) - 4 ) ) ,
+									   "B min max mean sd" = c ( min ( B_ ) , max ( B_ ) , mean ( B_ ) , sd ( B_ ) , addNA )  ,
+									   "B ALL SCALES min max mean sd" = c ( unname ( unlist ( scale.agg.stats$B ) ) , addNA ) ,
 									   "error Matrix" =  rep ( NA , ncol ( out$B ) ) , out$error ,
-									   "error min max mean sd" = c ( min ( error_ ) , max ( error_ ) , mean ( error_ ) , sd ( error_ ) , rep ( NA , ncol ( out$B ) - 4 ) ) ,
-									   "error ALL SCALES min max mean sd" = c ( unname ( unlist ( scale.agg.stats$error ) ) , rep ( NA , ncol ( out$B ) - 4 ) ) ,
+									   "error min max mean sd" = c ( min ( error_ ) , max ( error_ ) , mean ( error_ ) , sd ( error_ ) , addNA ) ,
+									   "error ALL SCALES min max mean sd" = c ( unname ( unlist ( scale.agg.stats$error ) ) , addNA ) ,
 									   "Ncommon Matrix" =  rep ( NA , ncol ( out$B ) ) , out$Ncommon ,
-									   "Ncommon min max mean sd" = c ( min ( Ncommon_ ) , max ( Ncommon_ ) , mean ( Ncommon_ ) , sd ( Ncommon_ ) , rep ( NA , ncol ( out$B ) - 4 ) ) ,  									   
-									   "Ncommon ALL SCALES min max mean sd" = c ( unname ( unlist ( scale.agg.stats$Ncommon ) ) , rep ( NA , ncol ( out$B ) - 4 ) ) , 
+									   "Ncommon min max mean sd" = c ( min ( Ncommon_ ) , max ( Ncommon_ ) , mean ( Ncommon_ ) , sd ( Ncommon_ ) , addNA ) ,  									   
+									   "Ncommon ALL SCALES min max mean sd" = c ( unname ( unlist ( scale.agg.stats$Ncommon ) ) , addNA ) , 
 									   "rownames von 'error' und 'Ncommon' manuell nachbearbeiten!" =  rep ( NA , ncol ( out$B ) ) ,
-									   "Spalte(n) ist/sind Referenzgruppe(n)" =  rep ( NA , ncol ( out$B ) ) ,
-									   "2. Analyse ist die Referenzanalyse." =  rep ( NA , ncol ( out$B ) ) )
+									   "Spalte(n) ist/sind Referenzgruppe(n)" =  rep ( NA , ncol ( out$B ) )
+									   # "2. Analyse ist die Referenzanalyse." =  rep ( NA , ncol ( out$B ) ) 
+									   )
 										
 					if ( file.exists ( path ) ) app <- TRUE else app <- FALSE
 					write.xlsx2 ( x = towrite , file = path ,

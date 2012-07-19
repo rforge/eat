@@ -8,16 +8,12 @@ bi.linking
 Links results from several analysis. Each analysis is linked with each other. 
 }
 \usage{
-bi.linking ( results , scales=NULL , folder=NULL , file.name=NULL , method = NULL , lower.triangle = TRUE )
+bi.linking ( results , folder=NULL , file.name=NULL , method = NULL , lower.triangle = TRUE , scales=NULL )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{results}{
 result list from automateModels run
-}
-  \item{scales}{
-Character vector of scales for which linking should separately done. If NULL, all analysis in the results list are linked.
-Note: due to suboptimalities in development process, analysis name must contain scale!!
 }
   \item{folder}{
 output folder, will be emptied!
@@ -31,6 +27,11 @@ set linking method to either "Mean-Mean" , "Haebara" or "Stocking-Lord" (default
   \item{lower.triangle}{
 set reference groups for the linking
 }
+  \item{scales}{
+Character vector of scales for which linking should separately done. If NULL, all analysis in the results list are linked.
+Note: due to suboptimalities in development process, analysis name must contain 'scale'! use this option with care!!
+}
+
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
@@ -59,6 +60,28 @@ Martin Hecht
 \seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
+
+\examples{
+\dontrun{
+# 'folder' must be specified, WARNING: this folder is deleted by automateModels!!!
+#
+# load example data
+# this is the results structure returned from running Example 5 of \link{automateModels}
+# see there for details of analyses
+#
+data ( ex5 )
+#
+# ex5 contains the results of 3 analyses:
+names(ex5)
+# [1] "all.i__grade.10"  "all.i__grade.9"   "all.i__grade.all"
+#
+# each pair of these 3 analyses are linked together by bi.linking
+# if not run together, you can easily combine analyses from seperate \link{automateModels} runs by calling c(<analysis1>,<analysis2>,...)
+# in this case make sure that analysis names are unique
+#
+# start linking, results are written to folder and are returned 
+ex5_linked <- bi.linking ( ex5 , folder = "C:/temp/automateModels/Example5/Linking" , file.name = "ex5_linked" )
+}}
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
