@@ -81,6 +81,28 @@ names(ex5)
 #
 # start linking, results are written to folder and are returned 
 ex5_linked <- bi.linking ( ex5 , folder = "C:/temp/automateModels/Example5/Linking" , file.name = "ex5_linked" )
+#
+#
+# if you want to link analyses for which no \code{automateModels} results structure is available
+# you can use \link{make.link.dummy} to create a structure similar to \code{automateModels} results structure
+# this can be used as input for \code{bi.linking}
+#
+# e.g. let's add an additional analysis for which only item difficulty and standard errors are available
+# this information must be in a data.frame, see \link{make.link.dummy} for details
+dfr <- data.frame ( 
+		"item" = c ( "BioKno01" , "CheKno02" , "PhyKno03" ) ,
+		"b"	   = c ( -3.14      , -2.24      , -3.42      ) ,
+		"b.se" = c ( 0.612      , 0.453      , 0.783      )
+)
+#
+# create a results object
+add <- make.link.dummy ( dfr , "additional" )
+#
+# add this object to Example 5
+ex5add <- c ( add , ex5 )
+#
+# start the linking procedure with the additional analysis
+ex5add_linked <- bi.linking ( ex5add , folder = "C:/temp/automateModels/Example5/Linking2" , file.name = "ex5add_linked" )
 }}
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the
