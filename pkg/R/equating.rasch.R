@@ -6,10 +6,12 @@
 # Quelle:  	 Kopie aus sirtr_0.7-04.R (09.11.2011)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+# MH 26.07.12
+# modified so that transformed parameters are calculated with linking constant that is determined by 'method'
 
 #***************************************************************************************************
 # Vertical Equating in the Rasch model
-equating.rasch <- function( x , y , theta = seq( -4 , 4 , len=100) ){
+equating.rasch <- function( x , y , theta = seq( -4 , 4 , len=100) , method ){
     # INPUT:
     # x ... data frame: 1st column Item labels group 1, 2nd column: item difficulties group 1
     # y ... data frame: 1st column Item labels group 2, 2nd column: item difficulties group 2
@@ -35,7 +37,7 @@ equating.rasch <- function( x , y , theta = seq( -4 , 4 , len=100) ){
     names(B.est) <- c("Mean-Mean" , "Haebara" , "Stocking-Lord")
     # Transformation of item parameters (according to Stocking-Lord)
     b.xy$TransfItempar.Gr1 <- b.xy[,2] + B.est[3]
-    x[,2] <- x[,2] + B.est[3]
+    x[,2] <- x[,2] + B.est[method]
     # transformed parameters
     transf.par <- merge( x , y , 1 , 1 , all=T )
     colnames(transf.par) <- c("item" , "TransfItempar.Gr1" , "Itempar.Gr2"  )

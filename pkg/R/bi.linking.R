@@ -33,7 +33,7 @@
 		if ( ! identical ( intsec , character(0) ) ) {
 				
 				# linken
-				out <- equating.rasch( x = b.df.1 , y = b.df.2 )			 
+				out <- equating.rasch( x = b.df.1 , y = b.df.2 , method = method )			 
 
 				# Fehlervermeidung
 				if ( ! identical ( colnames ( out$transf.par ) ,
