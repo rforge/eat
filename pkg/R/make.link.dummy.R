@@ -1,5 +1,5 @@
 
-make.link.dummy <- function ( dfr , analysis.name = "dummy.analysis" ) {
+make.link.dummy <- function ( dfr , analysis.name = "dummy.analysis" , scale.name = "dummy.scale", group.name = "dummy.group" ) {
 
 		data(ex5)
 
@@ -38,8 +38,10 @@ make.link.dummy <- function ( dfr , analysis.name = "dummy.analysis" ) {
 		eval ( parse ( text = do ) )
 		
 		names(dummy) <- analysis.name
-		names(dummy[[1]]) <- "dummy.dim"
-		names(dummy[[1]][[1]]) <- "dummy.group"
+		names(dummy[[1]]) <- scale.name
+		names(dummy[[1]][[1]]) <- group.name
+
+		dummy[[1]][[1]][[1]]$person <- NULL
 		
 		return ( dummy )
 

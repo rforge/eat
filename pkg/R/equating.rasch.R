@@ -35,8 +35,8 @@ equating.rasch <- function( x , y , theta = seq( -4 , 4 , len=100) , method ){
     # all parameter estimates    
     B.est <- c( B.mm , B.ha , B.sl )
     names(B.est) <- c("Mean-Mean" , "Haebara" , "Stocking-Lord")
-    # Transformation of item parameters (according to Stocking-Lord)
-    b.xy$TransfItempar.Gr1 <- b.xy[,2] + B.est[3]
+    # Transformation of item parameters (according to 'method')
+    b.xy$TransfItempar.Gr1 <- b.xy[,2] + B.est[method]
     x[,2] <- x[,2] + B.est[method]
     # transformed parameters
     transf.par <- merge( x , y , 1 , 1 , all=T )

@@ -8,7 +8,7 @@ make.link.dummy
 create a structure as input for \link{bi.linking}
 }
 \usage{
-make.link.dummy ( dfr , analysis.name = "dummy.analysis" ) 
+make.link.dummy ( dfr , analysis.name = "dummy.analysis" , scale.name = "dummy.scale", group.name = "dummy.group" ) 
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -18,6 +18,12 @@ colnames must be "item", "b", "b.se"
 }
   \item{analysis.name}{
 name of analysis
+}
+  \item{scale.name}{
+name of scale (dimension)
+}
+  \item{group.name}{
+name of (person) group
 }
 }
 \details{
