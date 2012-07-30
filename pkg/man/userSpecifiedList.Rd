@@ -4,7 +4,7 @@
 \title{userSpecifiedList}
 \description{When a function requires several arguments as a list, \code{userSpecifiedList} is designed to 'match' users arguments to default argument structure.}
 \usage{
-userSpecifiedList(l, l.default)}
+userSpecifiedList(l, l.default, el.default = NULL)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{l}{
@@ -15,6 +15,9 @@ A named or unnamed list or vector of elements.
 %%     ~~Describe \code{dif.term} here~~
 The default list of arguments needed by a function.
 }
+  \item{el.default}{
+if length of \code{l} is longer than 1, \code{el.default} can be set to an numeric value to select one default element
+}
 }
 \value{
 %%  ~Describe the value returned
@@ -23,6 +26,7 @@ The default list of arguments needed by a function.
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
 A list of arguments where the user specified arguments are matched into default arguments.
+If \code{el.default} is set, one element is returned.
 }
 \references{
 %% ~put references to the literature/web site here ~

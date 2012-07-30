@@ -49,6 +49,7 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 							 dif = NULL , weight = NULL , anchor = NULL , regression = NULL , 
 							 adjust.for.regression = FALSE , 
 							 q3 = FALSE ,
+							 q3.p.est = c ( "wle" , "pv" , "eap" ) ,
 							 icc = FALSE ,
 							 missing.rule = NULL , 
 							 cross = NULL , subfolder.order = NULL , subfolder.mode = NULL ,
@@ -81,7 +82,7 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 		
 		### Begrüßung
 		sunk ( paste ( f.n , "Starting automateModels\n" ) , new.file = TRUE ) 
-		sunk ( paste ( f.n , 'Version: 1.5.13-122 (2012-07-27)\n' ) )
+		sunk ( paste ( f.n , 'Version: 1.5.14-123 (2012-07-30)\n' ) )
 		sunk ( paste ( f.n , '         \n' ) )
 		sunk ( paste ( f.n , "This version is BETA. Use at your own risk.\n" ) )
 		### Definitionen
@@ -266,7 +267,7 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 		# Itembewertung durchführen
 		# results <- .automateModels.item.eval ( results )
 		# Q3 erzeugen
-		results <- make.q3 ( results , model.specs )
+		results <- make.q3 ( results , model.specs , q3.p.est )
 		# Excels erzeugen
 		if ( write.xls.results ) check <- .automateModels.writeResultsExcel ( results , model.specs$analyse.name , model.specs$folder , folder.aM , additional.item.props )
 		

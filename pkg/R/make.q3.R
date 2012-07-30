@@ -5,11 +5,10 @@
 # NEW: make.q3
 # 0000-00-00 AA
 #
-# Version: 0.2.0 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-make.q3 <- function ( results , model.specs ) { 
-    funVersion <- "make.q3_0.2.0"
+make.q3 <- function ( results , model.specs , q3.p.est ) { 
+    funVersion <- "make.q3_0.3.0"
 
 	.fun1 <- function ( results , analyse.name , model.specs ) {
 
@@ -40,8 +39,9 @@ make.q3 <- function ( results , model.specs ) {
 									b <- get.item.par(results2)[,"b"]
 									names (b) <- get.item.par(results2)[,"item"]
 									b <- unname ( b[item.vec] )   ### REIHENFOLGE!
-							
-									ppar <- "eap"
+									
+									# Personen-Kennwerte
+									ppar <- userSpecifiedList ( q3.p.est , c ( "wle" , "pv" , "eap" ) , el.default = 1 )							
 									theta <- as.numeric( get.person.par(results2)[,ppar] )
 									id.theta <- get.person.par(results2)[,"person"]
 									stopifnot(identical(sort(id.d),sort(id.theta)))

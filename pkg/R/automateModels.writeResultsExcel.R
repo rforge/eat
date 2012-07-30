@@ -42,10 +42,55 @@
 					names ( results ) <- name
 				
 					write.results.xlsx ( results = results , path = unname ( unlist ( folder[ name ] ) ) , additional_itemprops = additional.item.props )
+			
+					# 30.07.12 noch Latente Korrelationen / Varianzen nach Excel
+					if ( length ( results[[1]] ) > 1 ) nam <- "CorrCovVar" else nam <- "Var"
+					fin <- file.path ( unname ( unlist ( folder[ name ] ) ) , paste ( name , "_" , nam , sep = "" ) )
+					fin.xlsx <- paste ( fin , ".xlsx" , sep = "" )
+					temp <- get.latent.corr ( unname ( unlist ( folder[ name ] ) ) , xlsx = fin.xlsx )
+					fin.Rdata <- paste ( fin , ".Rdata" , sep = "" )
+					eval ( parse ( text = paste ( sub ( "-" , "" , name ) , "_" , nam , "<- temp" , sep = "" ) ) ) 
+					do <- paste ( "save (" , sub ( "-" , "" , name ) , "_" , nam , ",file='",fin.Rdata,"')", sep = "" ) 
+					eval ( parse ( text = do ) )
+					
+					# model Informationen
+					nam <- "model_info"
+					fin <- file.path ( unname ( unlist ( folder[ name ] ) ) , paste ( name , "_" , nam , sep = "" ) )
+					fin.xlsx <- paste ( fin , ".xlsx" , sep = "" )
+					temp <- compareModels ( unname ( unlist ( folder[ name ] ) ) , xlsx = fin.xlsx )
+					fin.Rdata <- paste ( fin , ".Rdata" , sep = "" )
+					eval ( parse ( text = paste ( sub ( "-" , "" , name ) , "_" , nam , "<- temp" , sep = "" ) ) ) 
+					do <- paste ( "save (" , sub ( "-" , "" , name ) , "_" , nam , ",file='",fin.Rdata,"')", sep = "" ) 
+					eval ( parse ( text = do ) )					
+					
+			
 			} , results , names ( results ) , MoreArgs = list ( folder , additional.item.props ) , SIMPLIFY = FALSE )
 		)
-		
 		#stopifnot ( all ( check ) )
+		
+		# 30.07.12: Gesamt latente Korr
+		if ( length ( results ) > 1 ) {
+				if ( any ( sapply ( results , function ( r ) { length ( r ) > 1 } ) ) ) nam <- "CorrCovVar" else nam <- "Var"
+				fin <- file.path ( folder.aM , ( name <- paste ( "All_" , length ( results ) , "_analyses_" , nam , sep = "" ) ) )
+				fin.xlsx <- paste ( fin , ".xlsx" , sep = "" )
+				temp <- get.latent.corr ( file.path ( folder.aM , ".." ) , xlsx = fin.xlsx )
+				fin.Rdata <- paste ( fin , ".Rdata" , sep = "" )
+				eval ( parse ( text = paste ( sub ( "-" , "" , name ) , "_" , nam , "<- temp" , sep = "" ) ) ) 
+				do <- paste ( "save (" , sub ( "-" , "" , name ) , "_" , nam , ",file='",fin.Rdata,"')", sep = "" ) 
+				eval ( parse ( text = do ) )				
+		}
+
+		# Gesamt Model Comparison
+		if ( length ( results ) > 1 ) {
+				nam <- "model_comparison"
+				fin <- file.path ( folder.aM , ( name <- paste ( "All_" , length ( results ) , "_analyses_" , nam , sep = "" ) ) )
+				fin.xlsx <- paste ( fin , ".xlsx" , sep = "" )
+				temp <- compareModels ( file.path ( folder.aM , ".." ) , xlsx = fin.xlsx )
+				fin.Rdata <- paste ( fin , ".Rdata" , sep = "" )
+				eval ( parse ( text = paste ( sub ( "-" , "" , name ) , "_" , nam , "<- temp" , sep = "" ) ) ) 
+				do <- paste ( "save (" , sub ( "-" , "" , name ) , "_" , nam , ",file='",fin.Rdata,"')", sep = "" ) 
+				eval ( parse ( text = do ) )				
+		}
 		
 		# Ausgabe
 		sunk ( " done\n" )
