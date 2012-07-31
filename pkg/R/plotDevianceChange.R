@@ -41,9 +41,13 @@ plotDevianceChange <- function ( path , plot = TRUE , pdf = FALSE , out.path = N
 								# names (dc) <- pdfn
 								
 								# Sammel-pdf
-								sammelpdf <- "deviance_change_plots.pdf"
-								if ( file.info(path)$isdir ) sammelpdf.dir <- path else sammelpdf.dir <- dirname ( path )
-								sammelpdf <- file.path ( sammelpdf.dir , sammelpdf )
+								if ( is.null ( out.path ) ) {
+										sammelpdf <- "deviance_change_plots.pdf"
+										if ( file.info(path)$isdir ) sammelpdf.dir <- path else sammelpdf.dir <- dirname ( path )
+										sammelpdf <- file.path ( sammelpdf.dir , sammelpdf )
+								} else {
+										sammelpdf <- out.path
+								}
 								
 								# sammelpdf öffnen
 								pdf ( file = sammelpdf ,

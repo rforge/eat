@@ -8,7 +8,7 @@ get latent correlations, covariance and variances
 retrieve latent correlations, covariance and variances from ConQuest shw files
 }
 \usage{
-get.latent.corr ( path , xlsx = NULL , covariance = TRUE , variance = TRUE )
+get.latent.corr ( path , xlsx = NULL , covariance = TRUE , variance = TRUE , sort = TRUE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -27,7 +27,11 @@ get.latent.corr ( path , xlsx = NULL , covariance = TRUE , variance = TRUE )
 	}
   \item{variance}{ 
 		logical: should variance(s) be extracted (default: TRUE)
-	}	
+	}
+  \item{sort}{ 
+		logical: if \code{TRUE} (default) the latent correlation matrix ist sorted as in the analysis with most dimensions;
+		if \code{FALSE} the latent correlation matrix ist not sorted, instead the order is determined by the order of dimensions in the analyses (first to last)
+	}		
 }
 \details{
 }

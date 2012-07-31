@@ -1,5 +1,5 @@
 		
-get.latent.corr <- function ( path , xlsx = NULL , covariance = TRUE , variance = TRUE ) {
+get.latent.corr <- function ( path , xlsx = NULL , covariance = TRUE , variance = TRUE , sort = TRUE ) {
 		
 		if ( !is.list ( path ) & length ( path ) > 1 ) shwf <- as.list ( path )
 		
@@ -150,21 +150,25 @@ get.latent.corr <- function ( path , xlsx = NULL , covariance = TRUE , variance 
 				### jetzt ein Gesamt-Datensatz machen
 				
 				# bestimmen der Gesamt-Variablen (Dimensionen) Menge
-				vars <- unique ( unlist ( unname ( sapply ( corrs , function ( corrs ) { colnames ( corrs ) } ) ) ) )
+				vars <- unique ( unlist ( unname ( sapply ( corrs , function ( corrs ) { unique ( c ( rownames ( corrs ) , colnames ( corrs ) ) ) } ) ) ) )
+				# Variance rausnehmen
+				vars <- vars [ !vars == "Variance" ]
 				
-				# Variance rausnehmen falls existiert
-				# vars <- vars [ !vars == "Variance" ]
+				if ( sort ) {
+						# Sortierung so wie in der Analyse wo am meisten der Variablen dabei
+						as <- mapply ( 
+								function ( corrs , cln ) { 
+										length ( which ( colnames ( corrs ) %in% cln ) )
+								}
+						, corrs , MoreArgs = list ( vars ) , SIMPLIFY = FALSE )
+						asn <- unname ( which ( as == max ( unname ( unlist ( as ) ) ) )[1] )
+						vars.sort <- colnames ( corrs [[asn]] )
+						vars.sort <- vars.sort [ !vars.sort == "Variance" ]
+						vars <- unique ( c ( vars.sort , setdiff ( vars , vars.sort ) , setdiff ( vars.sort , vars ) ) )
+				}
 				
-				# Sortierung so wie in der Analyse wo am meisten der Variablen dabei
-				as <- mapply ( 
-						function ( corrs , cln ) { 
-								length ( which ( colnames ( corrs ) %in% cln ) )
-						}
-				, corrs , MoreArgs = list ( vars ) , SIMPLIFY = FALSE )
-				asn <- unname ( which ( as == max ( unname ( unlist ( as ) ) ) )[1] )
-				vars.sort <- colnames ( corrs [[asn]] )
-				vars.sort <- vars.sort [ !vars.sort == "Variance" ]
-				vars <- unique ( c ( vars.sort , setdiff ( vars , vars.sort ) , setdiff ( vars.sort , vars ) , "Variance" ) )
+				# Variance dranhängen
+				vars <- c ( vars , "Variance" )
 				
 				# ein Gesamt-Datensatz erzeugen
 				fun <- function ( corrs , vars ) {
