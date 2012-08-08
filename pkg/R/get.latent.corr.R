@@ -3,7 +3,7 @@ get.latent.corr <- function ( path , xlsx = NULL , covariance = TRUE , variance 
 		
 		if ( !is.list ( path ) & length ( path ) > 1 ) shwf <- as.list ( path )
 		
-		if ( !is.list ( path ) ) {
+		if ( !is.list ( path ) & length ( path ) == 1 ) {
 				
 				# wenn Directory dann rekursiv alle shw files suchen
 				fi <- file.info ( path )$isdir
