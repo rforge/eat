@@ -72,3 +72,29 @@ commonItems <- function ( dat , group.var , na = NA , uncommon = FALSE , simplif
 		return ( cI )
 		
 }
+
+commonItems.percent <- function ( dat , group.var , na = NA , xlsx = NULL ) {
+
+		ci <- commonItems ( dat=dat , group.var=group.var , na=na , uncommon = TRUE , simplify = FALSE )		
+		fun <- function ( l ) {
+				tot <- sum ( sapply ( l , length ) )
+				if ( tot > 0 ) p <- 100 * length( l$common ) / tot else p <- NA
+				return ( p )
+		}
+		d <- mapply ( fun , ci , SIMPLIFY = TRUE )
+		dfr <- data.frame ( "groups" = names ( d ) , stringsAsFactors = FALSE )
+		dfr$group1 <- sapply ( sp <- strsplit ( dfr$groups , "|" , fixed = TRUE ) , "[" , 1 )
+		dfr$group2 <- sapply ( sp , "[" , 2 )
+		dfr$commonItems.percent <- d
+		
+		# Excel
+		if ( ! is.null ( xlsx ) ) {
+				try ( write.xlsx2 ( dfr , file = xlsx , sheetName="CommonItemsPercent", 
+						col.names=TRUE, row.names=TRUE, append=FALSE ) )		
+		}
+		
+		return ( dfr )
+
+}
+
+

@@ -21,8 +21,7 @@ commonItems ( dat , group.var , na = NA , uncommon = FALSE , simplify = TRUE )
   
 }
 \details{
-%% use \code{col.type="numeric.if.possible"} if conversion to numeric should be tested upfront, see \link{asNumericIfPossible} for details
-
+\code{dat} must only contain the group variable and the items, if further variables are in \code{dat} they are treated as items
 }
 \value{
 %%  ~Describe the value returned
@@ -56,7 +55,7 @@ Martin Hecht
 data(science1)
 d <- science1[,c("version",science1.items)]
 
-# common items ar listed for each combination of groups
+# common items are listed for each combination of groups
 str ( commonItems ( dat = d , group.var = "version" , na = "mbd" ) )
 
 # uncommon items are returned as well
