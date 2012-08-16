@@ -329,7 +329,7 @@ readConquestOutput <- function (jobFolder, subFolder = NULL, item.grouping, name
 	names(scales) <- dimensions [ , 2]
 	
 	for (ss in 1:nDimensions)	{
-        alles[[1]][[dimensions[ss, 2]]][[p.model.name]]$descriptives <- list(
+        alles[[name.analyse]][[dimensions[ss, 2]]][[p.model.name]]$descriptives <- list(
 			pv     = list(pv.mean = dsc.pv[[1]]$aggregates[grep("Average",dsc.pv[[1]]$aggregates$dimension), "mean"], 
 			pv.se  = dsc.pv[[1]]$aggregates[grep("Error", dsc.pv[[1]]$aggregates$dimension), "mean"]), 
 			wle    = list(wle.mean = dsc.wle[[1]]$single.values[1, "mean"], 
