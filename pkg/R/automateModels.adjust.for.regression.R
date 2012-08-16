@@ -5,6 +5,9 @@
 # Status: beta
 # Release Date: 	2011-09-08
 # Author:    Martin Hecht
+# 2012-08-16 KS
+# CHANGED: 
+# 0000-00-00 AA
 # Change Log:
 #		14.10.2011 MH: Ausgaben auf Englisch
 #		08.09.2011 MH: cat durch sunk ersetzt (für Logfile)
@@ -23,14 +26,14 @@
 		sunk ( paste ( f.n , "Item difficulty is being centered on person mean 0." ) ) 
 		
 		.fun3 <- function ( results ) {
-				results[[3]][[1]]$pv$pv.mean
+				results[[1]][[1]][[1]]$descriptives$pv$pv.mean
 		}
 		means <- mapply ( .fun3 , results , SIMPLIFY = FALSE , USE.NAMES = FALSE )  
 		
 		# Hilfsfunktionen
 		.fun2 <- function ( itemlist , means ) {
 		
-				itemlist$b <- itemlist$b - means
+				itemlist$b.adj <- itemlist$b - means
 				# absb <- abs ( itemlist$b )
 				# if ( absb > 4 ) bew <- "schlecht" else if ( absb > 3 ) bew <- "kritisch" else bew <- "gut"
 				# itemlist$b.eval <- bew

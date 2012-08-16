@@ -21,7 +21,7 @@ get.item.par <- function ( results ) {
 										item <- mapply ( fun5 , item , SIMPLIFY = FALSE )
 
 										# todo NA zu item$b.adj
-										c ( item$n.valid, item$p, item$a, item$b, NA, item$c, item$d,
+										c ( item$n.valid, item$p, item$a, item$b, item$b.adj, item$c, item$d,
 											item$b.se,  item$infit, item$infit.ci.lb, item$infit.ci.ub, item$infit.t, item$outfit,
 											item$outfit.ci.lb, item$outfit.ci.ub, item$outfit.t, item$pbc,
 											item$b.eval, item$infit.eval, item$pbc.eval, item$eval.num, item$eval )
