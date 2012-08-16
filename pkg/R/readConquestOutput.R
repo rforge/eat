@@ -158,7 +158,7 @@ readConquestOutput <- function (jobFolder, subFolder = NULL, item.grouping, name
         cat(paste(funVersion, ": Found no .dsc file for plausible values.\n", 
             sep = ""))
     }
-    
+
 	# read dsc file for wles
 	isDescWle <- file.exists(dscFile.wle)
     if (isDescWle == TRUE) {
@@ -323,13 +323,13 @@ readConquestOutput <- function (jobFolder, subFolder = NULL, item.grouping, name
 	names ( alles ) <- name.analyse
 	
 ####### Hier weiter optimieren 
-# (Sebastian)	
-	
+# (Sebastian) Karoline versucht's :-)	
+
 	scales <- vector( nDimensions, mode = "list")
 	names(scales) <- dimensions [ , 2]
 	
 	for (ss in 1:nDimensions)	{
-        scales[[dimensions[ss, 2]]] <- list(
+        alles[[1]][[dimensions[ss, 2]]][[p.model.name]]$descriptives <- list(
 			pv     = list(pv.mean = dsc.pv[[1]]$aggregates[grep("Average",dsc.pv[[1]]$aggregates$dimension), "mean"], 
 			pv.se  = dsc.pv[[1]]$aggregates[grep("Error", dsc.pv[[1]]$aggregates$dimension), "mean"]), 
 			wle    = list(wle.mean = dsc.wle[[1]]$single.values[1, "mean"], 
