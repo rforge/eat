@@ -207,6 +207,7 @@ readConquestOutput <- function (jobFolder, subFolder = NULL, item.grouping, name
 	  p            = itn.u$p[i], 
 			a            = mis, 
 			b            = shw$item$ESTIMATE[i], 
+			b.adj        = mis, 	
 	  c            = mis, 
 			d            = mis, 
 			b.se         = shw$item$ERROR[i], 

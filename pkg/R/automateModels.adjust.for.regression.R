@@ -25,7 +25,6 @@
 		.fun3 <- function ( results ) {
 				results[[3]][[1]]$pv$pv.mean
 		}
-				
 		means <- mapply ( .fun3 , results , SIMPLIFY = FALSE , USE.NAMES = FALSE )  
 		
 		# Hilfsfunktionen
