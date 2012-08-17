@@ -255,8 +255,8 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 		# Ergebnisse einsammeln
 		results <- .automateModels.collect.results ( model.specs , additionalSubFolder ) 	
 		
-		# Personenmittel auf 0 (wichtig falls/für regression), Funktion außer Betrieb gesetzt, da integriert in vorheriges
-		# results <- .automateModels.adjust.for.regression ( results )
+		# Personenmittel auf 0 (wichtig falls/für regression)
+		results <- .automateModels.adjust.for.regression ( results )
 		
 		# Convergence Summary schreiben
 		isConverged ( folder , txt = TRUE )

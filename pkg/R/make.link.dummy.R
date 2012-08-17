@@ -11,6 +11,7 @@ make.link.dummy <- function ( dfr , analysis.name = "dummy.analysis" , scale.nam
 				i.dummy[[1]]$p = 0
 				i.dummy[[1]]$a = 0
 				i.dummy[[1]]$b = b
+				i.dummy[[1]]$b.adj = 0
 				i.dummy[[1]]$c = 0
 				i.dummy[[1]]$d = 0
 				i.dummy[[1]]$b.se = b.se

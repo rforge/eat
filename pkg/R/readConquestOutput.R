@@ -200,14 +200,15 @@ readConquestOutput <- function (jobFolder, subFolder = NULL, item.grouping, name
 	nItems <- length(shw$item$item.name)
 	allItems <- vector(nItems, mode = "list")
 	names(allItems) <- shw$item$item.name
-	
+
 	for (i in seq(along = shw$item$item.name)) {
 		allItems[[shw$item$item.name[i]]] <- list(
 			n.valid      = itn.u$n.valid[i], 
 			p            = itn.u$p[i], 
 			a            = mis, 
 			b            = shw$item$ESTIMATE[i], 
-			b.adj        = shw$item$ESTIMATE[i] - dsc.pv[[1]]$aggregates[grep("Average",dsc.pv[[1]]$aggregates$dimension), "mean"][1], 	
+			b.adj        = mis,
+			#shw$item$ESTIMATE[i] - dsc.pv[[1]]$aggregates[grep(paste(dimensions$dimensionNames[1], " Average", sep=""),dsc.pv[[1]]$aggregates$dimension), "mean"], 	
 			c            = mis, 
 			d            = mis, 
 			b.se         = shw$item$ERROR[i], 
@@ -323,19 +324,22 @@ readConquestOutput <- function (jobFolder, subFolder = NULL, item.grouping, name
 	names ( alles ) <- name.analyse
 	
 ####### Hier weiter optimieren 
-# (Sebastian) Karoline versucht's :-)	
+# (Sebastian) 
+# Karoline tut descriptions dazu (17.8.2012):
 
 	scales <- vector( nDimensions, mode = "list")
 	names(scales) <- dimensions [ , 2]
 	
 	for (ss in 1:nDimensions)	{
         alles[[name.analyse]][[dimensions[ss, 2]]][[p.model.name]]$descriptives <- list(
-			pv     = list(pv.mean = dsc.pv[[1]]$aggregates[grep("Average",dsc.pv[[1]]$aggregates$dimension), "mean"], 
-			pv.se  = dsc.pv[[1]]$aggregates[grep("Error", dsc.pv[[1]]$aggregates$dimension), "mean"]), 
-			wle    = list(wle.mean = dsc.wle[[1]]$single.values[1, "mean"], 
-			wle.se = dsc.wle[[1]]$aggregates[1, "mean"]))
+			pv = list (
+				pv.mean = dsc.pv[[1]]$aggregates[grep(paste(dimensions[ss, 2], " Average", sep=""),dsc.pv[[1]]$aggregates$dimension), "mean"],
+				pv.se = dsc.pv[[1]]$aggregates[grep(paste(dimensions[ss, 2], " Error", sep=""), dsc.pv[[1]]$aggregates$dimension), "mean"]), 
+			wle = list (
+				wle.mean = dsc.wle[[1]]$single.values[1, "mean"],
+				wle.se = dsc.wle[[1]]$aggregates[1, "mean"])	
+		)
     }
-
 	
     # results <- list(item = item, person = allPerson, scales = scales)
     
