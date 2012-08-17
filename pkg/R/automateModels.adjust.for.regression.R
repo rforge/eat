@@ -4,7 +4,9 @@
 # Version: 	0.2.0
 # Status: beta
 # Release Date: 	2011-09-08
-# Author:    Martin Hecht
+# Author:    Martin Hecht, Karoline Sachse
+# 2012-08-17 KS
+# CHANGED: raise efficiency
 # 2012-08-16 KS
 # CHANGED: 
 # 0000-00-00 AA
@@ -24,7 +26,7 @@
 
 		# Ausgabe
 		sunk ( paste ( f.n , "Item difficulty is being centered on person mean 0." ) ) 
-		
+		res1 <- results
 		analyses <- names(results)
 		for(k in seq(along =analyses)) {
 			dimensions <- names(results[[k]])
@@ -32,11 +34,20 @@
 			for(i in seq(along =dimensions)) {
 				badj[[dimensions[i]]] <- unlist(lapply(results[[k]][[dimensions[i]]][[1]][[1]], function(ll) {ll$b})) - results[[k]][[dimensions[i]]][[1]]$descriptives$pv$pv.mean
 				itNam[[dimensions[i]]] <- names(results[[k]][[dimensions[i]]][[1]][[1]])
-				for(jj in itNam[[dimensions[i]]]) {
-					results[[k]][[dimensions[i]]][[1]][[1]][[jj]]$b.adj <- unname(badj[[dimensions[i]]][jj])
-				}
+					make.badj <- function ( item , bad ) {
+						i.dummy <- results[[k]][[dimensions[i]]][[1]][[1]][[item]]
+						i.dummy[["b.adj"]] <- bad
+						return(i.dummy)
+					}
+				i.dummies <- mapply ( make.badj , itNam[[dimensions[i]]], badj[[dimensions[i]]] , SIMPLIFY = FALSE )
+				do <- paste ( "results[[", k, "]][[dimensions[", i, "]]][[1]][[1]]<-list(" , paste ( itNam[[dimensions[i]]], " = i.dummies$" , itNam[[dimensions[i]]], collapse = "," , sep="") , ")" , sep = "" )
+				eval ( parse ( text = do ) )
 			}
 		}
+						# Schleife raus
+						# for(jj in itNam[[dimensions[i]]]) {
+					# results[[k]][[dimensions[i]]][[1]][[1]][[jj]]$b.adj <- unname(badj[[dimensions[i]]][jj])
+				# }
 		
 		# Ausgabe
 		sunk ( " done\n\n" )
