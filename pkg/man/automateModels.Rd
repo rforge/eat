@@ -14,7 +14,7 @@ person.grouping.vars.include.all = FALSE, person.grouping = NULL,
 select.person.group = NULL, checkLink = FALSE, additional.item.props = NULL, folder, 
 overwrite.folder = TRUE, analyse.name.prefix = NULL, analyse.name = NULL, 
 analyse.name.elements = NULL, data.name = NULL, m.model = NULL, software = NULL, 
-dif = NULL, weight = NULL, anchor = NULL, regression = NULL, 
+dif = NULL, weight = NULL, anchor = NULL, regression = NULL, adjust.for.regression = TRUE,
 q3 = FALSE, q3.p.est = c ( "wle" , "pv" , "eap" ), icc = FALSE, missing.rule = NULL, cross = NULL, 
 subfolder.order = NULL, subfolder.mode = NULL, allNAdelete = TRUE, additionalSubFolder = NULL, 
 run.mode = NULL, n.batches = NULL, run.timeout = 1440, run.status.refresh = 0.2, 
@@ -124,6 +124,10 @@ data.frame with anchor information
   \item{regression}{
 %%     ~~Describe \code{regression} here~~
 variable(s) that is/are used 
+}
+  \item{adjust.for.regression}{
+%%     ~~Describe \code{regression} here~~
+center plausible values and items on grand mean
 }
   \item{q3}{
 %%     ~~Describe \code{missing.rule} here~~

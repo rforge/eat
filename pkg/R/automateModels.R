@@ -47,7 +47,7 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 							 data.name = NULL ,
 							 m.model = NULL , software = NULL , 
 							 dif = NULL , weight = NULL , anchor = NULL , regression = NULL , 
-							 q3 = FALSE ,
+							 q3 = FALSE , adjust.for.regression =TRUE, 
 							 q3.p.est = c ( "wle" , "pv" , "eap" ) ,
 							 icc = FALSE ,
 							 missing.rule = NULL , 
@@ -256,8 +256,9 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 		results <- .automateModels.collect.results ( model.specs , additionalSubFolder ) 	
 		
 		# Personenmittel auf 0 (wichtig falls/für regression)
-		results <- .automateModels.adjust.for.regression ( results )
-		
+		if(adjust.for.regression) {
+			results <- .automateModels.adjust.for.regression ( results )
+		}
 		# Convergence Summary schreiben
 		isConverged ( folder , txt = TRUE )
 		
