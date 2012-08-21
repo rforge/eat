@@ -3,7 +3,7 @@ Type: Package
 Title: eat
 Version: 1.5.15-128
 Depends: R(>= 2.14.0)
-Suggests: car, date, foreign, gdata, reshape, sendmailR, xlsx, plyr, R.utils, parallel, psych
+Suggests: car, date, foreign, gdata, reshape, sendmailR, xlsx, plyr, R.utils, parallel, psych, ggplot2
 Date: 2012-08-14
 Author: eat authors <eat-commits@lists.r-forge.r-project.org>
 Maintainer: Martin Hecht <martin.hecht@iqb.hu-berlin.de>
