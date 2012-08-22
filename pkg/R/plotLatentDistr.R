@@ -11,14 +11,6 @@ plotLatentDistr <- function ( persons , items , pdf = NULL , title = NULL , scal
 		tit <- "Latent Distribution"
 		if ( !is.null ( title ) ) tit <- paste ( tit , title , sep = "\n" )
 		
-		# Data.frame machen
-		# irgendwie kommt ggplot nicht mit Vektoren direkt zurecht
-		dat.i <- data.frame("value"=items)
-		dat.i$group <- rep ( "items" , nrow ( dat.i ) )
-		dat.p <- data.frame("value"=persons)
-		dat.p$group <- rep ( "persons" , nrow ( dat.p ) )
-		dat <- rbind ( dat.p , dat.i )
-		
 		# Ns
 		n.i <- length(items)
 		n.p <- length(persons)
