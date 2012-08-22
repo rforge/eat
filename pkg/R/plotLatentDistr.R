@@ -13,38 +13,32 @@ plotLatentDistr <- function ( persons , items , pdf = NULL , title = NULL , scal
 		
 		# Data.frame machen
 		# irgendwie kommt ggplot nicht mit Vektoren direkt zurecht
-		dat.i <- data.frame(items)
-		dat.i$id <- rownames(dat.i)
-		dat.p <- data.frame(persons)
-		dat.p$id <- rownames(dat.p)
-		dat <- merge ( dat.p , dat.i , all = TRUE )
-		dat$id <- NULL
+		dat.i <- data.frame("value"=items)
+		dat.i$group <- rep ( "items" , nrow ( dat.i ) )
+		dat.p <- data.frame("value"=persons)
+		dat.p$group <- rep ( "persons" , nrow ( dat.p ) )
+		dat <- rbind ( dat.p , dat.i )
 		
-		# Warnlevel
-		oldwarn <- getOption ( "warn" )
-		options ( warn = -1 )	
+		# Ns
+		n.i <- length(items)
+		n.p <- length(persons)
 		
 		# Plot erstellen
-		pl <- ggplot(dat) +
-					scale_fill_manual(values=color) +
+		pl <- ggplot() +
+					xlab(scale.unit) + ylab("Distribution (Density)") + 
 					scale_colour_manual(values=color) +			
-					geom_density ( aes(x=items,y=..density..,fill="Items") , alpha = alpha ) +
-					geom_density ( aes(x=persons,y=-..density..,fill="Persons") , alpha = alpha ) +
+					geom_density ( aes ( x = items, y = ..density.., fill="Items" ) , alpha = alpha ) +
+					geom_density ( aes ( x = persons, y = -..density.., fill="Persons" ) , alpha = alpha ) +
 					geom_vline(data=means, aes(xintercept=mean,colour=group), size=0.5) +
 					coord_flip() +
-					opts(title=tit)
-		
-		pl$options$labels$x <- scale.unit
-		pl$options$labels$y <- "Distribution (Density)"
-		pl$options$labels$fill <- "Group"
+					opts(title=tit) +
+					guides(fill = guide_legend(reverse=TRUE)) + # reverse order of Group Levels
+					scale_fill_manual(values=color,name="Group",labels=c(paste("Items N=",n.i,sep=""), paste("Persons N=",n.p,sep="")))
 		
 		if ( !is.null ( pdf ) ) pdf ( pdf )
 		print ( pl )
 		if ( !is.null ( pdf ) ) dev.off()
 
-		# Warnlevel
-		options ( warn = oldwarn )
-		
 		invisible ( TRUE )
 		
 }

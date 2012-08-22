@@ -33,4 +33,10 @@ Martin Hecht
 \seealso{
 }
 \examples{
+\dontrun{
+persons <- rnorm ( 5000 )
+items <- rnorm ( 200 ) + 1
+
+plotLatentDistr ( persons , items )
+}
 }
