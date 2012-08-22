@@ -10,7 +10,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ###############################################################################
 
-cat.pbc <- function (datRaw, datRec, idRaw, idRec, values, subunits, xlsx = NULL) {
+cat.pbc <- function (datRaw, datRec, idRaw, idRec, context.vars, values, subunits, xlsx = NULL ) {
 
 ## datRaw:     unrecoded dataset, must contain only id and test items
 ## datRec:     the same datset as datRaw, in recoded form
@@ -18,7 +18,8 @@ cat.pbc <- function (datRaw, datRec, idRaw, idRec, values, subunits, xlsx = NULL
 ## idRec:      name or number of id in recoded dataset
 ## values:     input table values
 ## subunits:   input table subunits
-## xlsx:	   full path of excel to be written
+## xlsx:	     full path of excel to be written
+## context.vars: name or column numbers of context vars
 
 	# Prüfen, ob IDs in beiden Datensätzen übereinstimmen
 	idrec <- datRec [ , idRec ]
@@ -35,9 +36,15 @@ cat.pbc <- function (datRaw, datRec, idRaw, idRec, values, subunits, xlsx = NULL
     recodeinfo <- eat:::makeInputRecodeData (values = values, subunits = subunits)
     varinfo    <- eat:::.makeVarinfoRaw (values, subunits)
 
-#		# Testitems finden
-#		types <- lapply ( varinfo, "[[", "type" )
-#		vars <- names(types) [ which (types == "TI" ) ]
+#		Kontextvariablen ausschließen
+    if(is.numeric(context.vars)) {
+      context.vars <- colnames(datRaw)[context.vars]
+    }
+    keep.varsRaw <- setdiff(colnames(datRaw), context.vars)
+    keep.varsRec <- setdiff(colnames(datRec), context.vars)
+    
+    datRaw <- datRaw[ , match(keep.varsRaw, colnames(datRaw))]
+    datRec <- datRec[ , match(keep.varsRec, colnames(datRec))]
     
     if(is.numeric(idRaw)) {
       idRaw <- colnames(datRaw)[idRaw]

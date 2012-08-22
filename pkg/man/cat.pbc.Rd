@@ -8,12 +8,12 @@ cat.pbc
 discrimination of categories (point-biserial correlation of categories with total score)
 }
 \usage{
-cat.pbc (datRaw, datRec, idRaw, idRec, values, subunits, xlsx = NULL)
+cat.pbc (datRaw, datRec, idRaw, idRec, context.vars, values, subunits, xlsx = NULL)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datRaw}{
-  unrecoded dataset, must contain only id and test items
+  unrecoded dataset
 }
   \item{datRec}{
   the same datset as datRaw, in recoded form
@@ -24,6 +24,10 @@ cat.pbc (datRaw, datRec, idRaw, idRec, values, subunits, xlsx = NULL)
   \item{idRec}{
   name or number of id in recoded dataset
 }
+  \item{context.vars}{
+  vector of names or numbers of context variables. No pbc will be calculated for these variables.
+}
+
   \item{values}{
   input table values
 }
