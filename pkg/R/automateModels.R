@@ -47,7 +47,7 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 							 data.name = NULL ,
 							 m.model = NULL , software = NULL , 
 							 dif = NULL , weight = NULL , anchor = NULL , regression = NULL , 
-							 q3 = FALSE , adjust.for.regression =TRUE, 
+							 adjust.for.regression =TRUE, q3 = FALSE , 
 							 q3.p.est = c ( "wle" , "pv" , "eap" ) ,
 							 icc = FALSE ,
 							 missing.rule = NULL , 
