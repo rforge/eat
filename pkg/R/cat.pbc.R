@@ -1,13 +1,21 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# cat.pbc(formerly known as zkdDatasetPBC)
+# cat.pbc
 # Description: berechnet Kategorientrennschärfen 
 # Version: 	0.1.0
 # Status: alpha
 # Release Date: 2012-06-11, 2012-07-27 implemented in eat
 # Author:  Nicole Haag
-# Change Log:
 #
+# Change Log:
+# 2012-08-23 NA
+# ADDED: Argument 'context.vars' in cat.pbc
+# 0000-00-00 AA
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### TO DO: 
+## - auch Kategorien mit ausgeben, die keiner gewählt hat
+## - Itemprops mit ausgeben (?)
+## - Fehlerhandling optimieren
+
 ###############################################################################
 
 cat.pbc <- function (datRaw, datRec, idRaw, idRec, context.vars, values, subunits, xlsx = NULL ) {
@@ -19,13 +27,13 @@ cat.pbc <- function (datRaw, datRec, idRaw, idRec, context.vars, values, subunit
 ## values:     input table values
 ## subunits:   input table subunits
 ## xlsx:	     full path of excel to be written
-## context.vars: name or column numbers of context vars
+## context.vars: name or column numbers of context vars, must be identical in both datasets!
 
 	# Prüfen, ob IDs in beiden Datensätzen übereinstimmen
 	idrec <- datRec [ , idRec ]
 	idraw <- datRaw  [ , idRaw ]
 	if ( ! setequal(idrec, idraw) ) {
-		stop ( "subitem.pbc: IDs in datasets are not all identical." ) 
+		stop ( "cat.pbc: IDs in datasets are not all identical." ) 
 	} else {
 
 		# sort IDs 
@@ -33,8 +41,8 @@ cat.pbc <- function (datRaw, datRec, idRaw, idRec, context.vars, values, subunit
 		datRaw   <- datRaw  [ order(idraw) , ]   
 
     # make inputs
-    recodeinfo <- eat:::makeInputRecodeData (values = values, subunits = subunits)
-    varinfo    <- eat:::.makeVarinfoRaw (values, subunits)
+    recodeinfo <- makeInputRecodeData (values = values, subunits = subunits)
+    varinfo    <- .makeVarinfoRaw (values, subunits)
 
 #		Kontextvariablen ausschließen
     if(is.numeric(context.vars)) {
@@ -53,7 +61,7 @@ cat.pbc <- function (datRaw, datRec, idRaw, idRec, context.vars, values, subunit
 		
     # relative Punktzahl
 		options(warn=-1)
-		rel.score1 <- datRec[ , which( colnames(datRec) %in% paste ( vars, "R", sep = "") ) ]
+		rel.score1 <- datRec[ , which( colnames(datRec) %in% subunits$subunitRecoded ) ]
 		rel.score1 <- apply(rel.score1, 2, as.numeric ) 
 		rel.score <- rowMeans(  rel.score1, na.rm=T )
 
@@ -67,7 +75,7 @@ cat.pbc <- function (datRaw, datRec, idRaw, idRec, context.vars, values, subunit
 			valueTypes <- lapply ( varinfo[[vars[vv]]]$values, "[[", "type")
       valuesToNA <- c( "mbd", "mci", names(valueTypes) [ valueTypes %in% c("mbd", "mci") ] )
 			dat.vv [ dat.vv %in% valuesToNA] <- NA
-			# Häufigkeitsverteilung der Codes, ohne mbd
+			# Häufigkeitsverteilung der Codes, ohne mbd & mci
 			tvv <- table( dat.vv )
 			tvv1 <- tvv / sum(tvv)
 			kat.vv <- names(tvv1) 

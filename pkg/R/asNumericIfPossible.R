@@ -20,18 +20,19 @@
 
 
 asNumericIfPossible <- function(dat, set.numeric=TRUE, transform.factors=FALSE, maintain.factor.scores = TRUE, verbose=TRUE)   {
+            dat.name <- substitute(dat)
             funVersion  <- "asNumericIfPossible_0.5.0"
             originWarnLevel <- getOption("warn")
             wasInputVector  <- FALSE
             if(class(dat) != "data.frame" ) {
-              if(verbose == TRUE) {cat(paste(funVersion, ": Warning! Argument of 'asNumericIfPossible' has to be of class 'data.frame'. Object will be converted to data.frame.\n",sep=""))}
+              if(verbose == TRUE) {cat(paste(funVersion, ": Convert argument 'dat' to class 'data.frame'.\n",sep=""))}
               dat <- data.frame(dat, stringsAsFactors=FALSE)
               wasInputVector <- ifelse(ncol(dat) == 1, TRUE, FALSE)
             }
             currentClasses <- sapply(dat, FUN=function(ii) {class(ii)})
             summaryCurrentClasses <- names(table(currentClasses))
             if ( verbose == TRUE)   {
-               cat(paste(funVersion, ": Current data frame consists of following ",length(summaryCurrentClasses), " classe(s):\n    ",sep=""))
+               cat(paste(funVersion, ": Object ", dat.name , " contains objects of ",length(summaryCurrentClasses), " class(es):\n    ",sep=""))
                cat(paste(summaryCurrentClasses,collapse=", ")); cat("\n")
             }
             options(warn = -1)                                                  ### zuvor: schalte Warnungen aus!
@@ -68,7 +69,7 @@ asNumericIfPossible <- function(dat, set.numeric=TRUE, transform.factors=FALSE, 
             if(set.numeric==TRUE)  {
               if(verbose == TRUE)      {
                  if( sum ( numericable[1,] == FALSE ) > 0 )  {
-                     cat(paste("Following ",sum ( numericable[1,] == FALSE )," variable(s) won't be transformed:\n    ",sep=""))
+                     cat(paste("Returned object contains ", sum ( numericable[1,] == FALSE )," untransformed variable(s):\n    ",sep=""))
                      cat(paste(colnames(dat)[as.numeric(which(numericable[1,] == FALSE))],collapse= ", ")); cat("\n")
                  }
               }
