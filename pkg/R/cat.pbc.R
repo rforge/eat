@@ -7,27 +7,30 @@
 # Author:  Nicole Haag
 #
 # Change Log:
-# 2012-08-23 NA
+# 2012-08-28 NH
+# ADDED: cat.pbc provides information about all valid codes 
+# 2012-08-23 NH
 # ADDED: Argument 'context.vars' in cat.pbc
 # 0000-00-00 AA
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-### TO DO: 
-## - auch Kategorien mit ausgeben, die keiner gewählt hat
-## - Itemprops mit ausgeben (?)
-## - Fehlerhandling optimieren
+
+## TO DO: 
+## auch mit aggregiertem und bewertetem Datensatz nutzbar machen
+## vgl. recodeData(dat=dat, values=inputList$unitRecodings, subunits=inputList$units)
 
 ###############################################################################
 
-cat.pbc <- function (datRaw, datRec, idRaw, idRec, context.vars, values, subunits, xlsx = NULL ) {
+cat.pbc <- function(datRaw, datRec, idRaw, idRec, context.vars, values, subunits, xlsx = NULL) {
 
 ## datRaw:     unrecoded dataset, must contain only id and test items
 ## datRec:     the same datset as datRaw, in recoded form
 ## idRaw:      name or number of id in unrecoded dataset
 ## idRec:      name or number of id in recoded dataset
+## context.vars: name or column numbers of context vars, must be identical in both datasets!
 ## values:     input table values
 ## subunits:   input table subunits
 ## xlsx:	     full path of excel to be written
-## context.vars: name or column numbers of context vars, must be identical in both datasets!
+
 
 	# Prüfen, ob IDs in beiden Datensätzen übereinstimmen
 	idrec <- datRec [ , idRec ]
@@ -43,7 +46,7 @@ cat.pbc <- function (datRaw, datRec, idRaw, idRec, context.vars, values, subunit
     # make inputs
     recodeinfo <- makeInputRecodeData (values = values, subunits = subunits)
     varinfo    <- .makeVarinfoRaw (values, subunits)
-
+    
 #		Kontextvariablen ausschließen
     if(is.numeric(context.vars)) {
       context.vars <- colnames(datRaw)[context.vars]
@@ -73,14 +76,25 @@ cat.pbc <- function (datRaw, datRec, idRaw, idRec, context.vars, values, subunit
 			var.vv <- vars [vv]
 			dat.vv <- datRaw[ , which( colnames(datRaw) == var.vv  ) ]
 			valueTypes <- lapply ( varinfo[[vars[vv]]]$values, "[[", "type")
+			validCodes <- names(valueTypes)  [ valueTypes == "vc" ]
       valuesToNA <- c( "mbd", "mci", names(valueTypes) [ valueTypes %in% c("mbd", "mci") ] )
 			dat.vv [ dat.vv %in% valuesToNA] <- NA
+			
 			# Häufigkeitsverteilung der Codes, ohne mbd & mci
 			tvv <- table( dat.vv )
+			kat.vv <- names(tvv)
+			additionalCodes <- setdiff(validCodes, kat.vv)
+      if (length(additionalCodes) > 0){
+        addCodes <- rep(0, length(additionalCodes))
+        names(addCodes) <- additionalCodes
+        tvv <- c(tvv, addCodes)
+        tvv <- tvv[order(names(tvv))]
+        kat.vv <- sort(names(tvv))
+      } 
 			tvv1 <- tvv / sum(tvv)
-			kat.vv <- names(tvv1) 
+
 			for (bb in seq ( along = kat.vv) ){
-				#                bb <- 2
+				#                bb <- 3
 				l.bb <- c( var.vv  , kat.vv[bb] , sum(tvv) , tvv[bb] , tvv1[bb] , 
 				  cor( 1 * ( dat.vv == kat.vv[bb] ) , rel.score , use = "complete.obs" ) , 
 				  recodeinfo[[ var.vv ]]$values [[kat.vv[bb]]]
@@ -91,11 +105,13 @@ cat.pbc <- function (datRaw, datRec, idRaw, idRec, context.vars, values, subunit
 		dfr1 <- data.frame(dfr1, stringsAsFactors = FALSE)
 		colnames(dfr1) <- c( "variable" , "cat" , "n" , "freq" , "freq.rel" , "cat.pbc" , "recodevalue" )
 		dfr1 [ , 3:6 ] <- apply(dfr1 [ , 3:6 ], 2, as.numeric ) 
+		dfr2 <- merge(dfr1, subunits[ , c("subunit", "subunitType")], by.x = "variable", by.y = "subunit",  all.x = T)
+		
 	}
 	
-	if ( !is.null ( xlsx ) ) {
-			try ( write.xlsx(dfr1, file = xlsx, sheetName="cat.pbc", col.names=TRUE, row.names=TRUE, append=FALSE) )
+	if ( !is.null(xlsx)) {
+			try(write.xlsx(dfr2, file = xlsx, sheetName="cat.pbc", col.names=TRUE, row.names=TRUE, append=FALSE))
 	}	
 	
-	return ( dfr1 ) 
+	return(dfr2) 
 }

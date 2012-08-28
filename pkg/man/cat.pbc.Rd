@@ -5,12 +5,12 @@
 cat.pbc
 }
 \description{
-discrimination of categories (point-biserial correlation of categories with total score)
+Calculate Item Discrimination for Each Category of Categorical Variables
 }
 \usage{
-cat.pbc (datRaw, datRec, idRaw, idRec, context.vars, values, subunits, xlsx = NULL)
+cat.pbc(datRaw, datRec, idRaw, idRec, context.vars, values, subunits, xlsx = NULL)
 }
-%- maybe also 'usage' for other objects documented here.
+
 \arguments{
   \item{datRaw}{
   unrecoded dataset
@@ -19,13 +19,13 @@ cat.pbc (datRaw, datRec, idRaw, idRec, context.vars, values, subunits, xlsx = NU
   the same datset as datRaw, in recoded form
 }
   \item{idRaw}{
-  name or number of id in unrecoded dataset
+    Name or column number of the identifier (ID) variable in unrecoded dataset
 }
   \item{idRec}{
-  name or number of id in recoded dataset
+    Name or column number of the identifier (ID) variable in recoded dataset
 }
   \item{context.vars}{
-  vector of names or numbers of context variables. No pbc will be calculated for these variables.
+    Names or column numbers of one or more context variables (e.g., sex, school). \code{cat.pbc} will ignore these variables.
 }
 
   \item{values}{
@@ -42,13 +42,10 @@ cat.pbc (datRaw, datRec, idRaw, idRec, context.vars, values, subunits, xlsx = NU
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+
 returns a data.frame with category discrimination
 }
+
 \references{
 
 }
@@ -59,17 +56,23 @@ Nicole Haag
 %%  ~~further notes~~
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
 \seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 
-%%\examples{
-%%\dontrun{
-%%}}
+\examples{
+data(inputDat)
+data(inputList)
+
+datRaw <- mergeData(newID = "idstud", datList = inputDat, addMbd = T)
+datRec <- recodeData(datRaw, values = inputList$values, subunits=inputList$subunits)
+pbcs   <- cat.pbc(datRaw, datRec, idRaw = "idstud", idRec = "idstud", context.vars = "hisei",
+                  values = inputList$values, subunits = inputList$subunits)
+
+
+}
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+%\keyword{ ~kwd1 }
+%\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
