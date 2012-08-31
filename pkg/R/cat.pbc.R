@@ -15,15 +15,15 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ## TO DO: 
-## auch mit aggregiertem und bewertetem Datensatz nutzbar machen
+## auch mit aggregiertem und bewertetem Datensatz nutzbar machen (Wunsch Alex Roppelt)
 ## vgl. recodeData(dat=dat, values=inputList$unitRecodings, subunits=inputList$units)
 
 ###############################################################################
 
 cat.pbc <- function(datRaw, datRec, idRaw, idRec, context.vars, values, subunits, xlsx = NULL) {
 
-## datRaw:     unrecoded dataset, must contain only id and test items
-## datRec:     the same datset as datRaw, in recoded form
+## datRaw:     unrecoded dataset
+## datRec:     the same dataset as datRaw, in recoded form
 ## idRaw:      name or number of id in unrecoded dataset
 ## idRec:      name or number of id in recoded dataset
 ## context.vars: name or column numbers of context vars, must be identical in both datasets!
@@ -103,9 +103,9 @@ cat.pbc <- function(datRaw, datRec, idRaw, idRec, context.vars, values, subunits
 			}
 		}
 		dfr1 <- data.frame(dfr1, stringsAsFactors = FALSE)
-		colnames(dfr1) <- c( "variable" , "cat" , "n" , "freq" , "freq.rel" , "cat.pbc" , "recodevalue" )
+		colnames(dfr1) <- c( "item" , "cat" , "n" , "freq" , "freq.rel" , "cat.pbc" , "recodevalue" )
 		dfr1 [ , 3:6 ] <- apply(dfr1 [ , 3:6 ], 2, as.numeric ) 
-		dfr2 <- merge(dfr1, subunits[ , c("subunit", "subunitType")], by.x = "variable", by.y = "subunit",  all.x = T)
+		dfr2 <- merge(dfr1, subunits[ , c("subunit", "subunitType")], by.x = "item", by.y = "subunit",  all.x = T)
 		
 	}
 	

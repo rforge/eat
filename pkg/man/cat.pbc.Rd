@@ -1,49 +1,55 @@
 \name{cat.pbc}
 \alias{cat.pbc}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-cat.pbc
-}
-\description{
 Calculate Item Discrimination for Each Category of Categorical Variables
 }
+\description{
+\code{cat.pbc} calculates discrimination statistics for the categories of categorical variables. This information can be useful in determining which categories of an item are influencing the overall fit and discrimination and/or to find mistakes in recoding.
+}
+
 \usage{
 cat.pbc(datRaw, datRec, idRaw, idRec, context.vars, values, subunits, xlsx = NULL)
 }
 
 \arguments{
-  \item{datRaw}{
-  unrecoded dataset
-}
-  \item{datRec}{
-  the same datset as datRaw, in recoded form
-}
-  \item{idRaw}{
-    Name or column number of the identifier (ID) variable in unrecoded dataset
-}
-  \item{idRec}{
-    Name or column number of the identifier (ID) variable in recoded dataset
-}
-  \item{context.vars}{
-    Names or column numbers of one or more context variables (e.g., sex, school). \code{cat.pbc} will ignore these variables.
-}
-
-  \item{values}{
-  input table values
-}
-  \item{subunits}{
-  input table subunits
-}
-  \item{xlsx}{
-  full path of excel to be written
-}
+	\item{datRaw}{
+		A merged unrecoded dataset
+	}
+	\item{datRec}{
+		The same dataset as in \code{datRaw}, in recoded form 
+	}
+	\item{idRaw}{
+		Name or column number of the identifier (ID) variable in unrecoded dataset
+	}
+	\item{idRec}{
+		Name or column number of the identifier (ID) variable in recoded dataset
+	}
+	\item{context.vars}{
+		Names or column numbers of one or more context variables (e.g., sex, school). \code{cat.pbc} will ignore these variables.
+	}
+	\item{values}{
+		Data frame with information about values, see \code{\link{inputList}} for details.
+	}
+	\item{subunits}{
+		Data frame with information about subunits, see \code{\link{inputList}} for details.
+	}
+	\item{xlsx}{
+		full path of excel to be written
+	}
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+The column names of \code{datRaw} and \code{datRec} must be consistent with the names provided by the columns \code{subunit} and \code{subunitRecoded} in data.frame \code{subunits}. Otherwise, \code{cat.pbc} will fail. 
 }
 \value{
-
-returns a data.frame with category discrimination
+A data frame with the discrimination values for each category of categorical variables. The data frame contains the following columns:
+ \item{item}{Name of unrecoded item}
+ \item{cat}{Name of category}
+ \item{n}{Number of responses for this item}
+ \item{freq}{Absolute frequency of the category}
+ \item{freq.rel}{Relative frequency of the category}
+ \item{cat.pbc}{Discrimination value for the category (correlation with total score)}
+ \item{recodevalue}{Recode value for the category}
+ \item{subunitType}{Type of subunit, see \code{\link{inputList}} for details}
 }
 
 \references{
