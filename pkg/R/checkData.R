@@ -74,18 +74,18 @@
 	  # find ID - stop if ID cannot be found
 		#	sunk(paste(funVersion, "Checking IDs", sep =""))
 	  idvarname <- getID(varinfo)
-	  .checkData.checkID (dat, idvarname)
+	  checkID (dat, idvarname)
 
 	  
 		# Variables-Check <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	  #	sunk(paste(funVersion, "Checking variables", sep = ""))
-	  .checkData.checkVars(dat, varinfo)
+	  checkVars(dat, varinfo)
 		
 		# check missing values
-	  .checkData.checkMissings(dat, varinfo, idvarname)
+	  checkMissings(dat, varinfo, idvarname)
 
 	  # check for invalid codes
-	  .checkData.checkCodes(dat, varinfo, idvarname)
+	  checkCodes(dat, varinfo, idvarname)
 	  
 	}
 
@@ -121,8 +121,8 @@ getID <- function(varinfo) {
 #-----------------------------------------------------------------------------------------
 
 
-.checkData.checkID <- function(dat, idvarname) {
-  funVersion <- ".checkData.checkID: "	
+checkID <- function(dat, idvarname) {
+  funVersion <- "checkID: "	
   # check dat for specified id variable
 	if (is.na(match(idvarname, colnames(dat)))) {
 		stop(paste(funVersion, "ID variable ", idvarname, "not found in dataset.", sep = ""))
@@ -145,9 +145,9 @@ getID <- function(varinfo) {
 
 #-----------------------------------------------------------------------------------------
 
-.checkData.checkVars <- function(dat, varinfo) {
+checkVars <- function(dat, varinfo) {
 
-  funVersion <- ".checkData.checkVars: "	
+  funVersion <- "checkVars: "	
 
 	if (length(colnames(dat)) != length(unique(colnames(dat)))) {
 		duplicatedVarnames <- colnames(dat)
@@ -165,11 +165,11 @@ getID <- function(varinfo) {
 }
 #-----------------------------------------------------------------------------------------
 
-.checkData.checkMissings <- function (dat, varinfo, idvarname) {
+checkMissings <- function (dat, varinfo, idvarname) {
 	# check missing values
 #  sunk(paste(funVersion, "Checking missing values", sep = ""))	
  
-  funVersion <- ".checkData.checkMissings: "
+  funVersion <- "checkMissings: "
   
   vars <- intersect(colnames(dat), names(varinfo)[- which(names(varinfo) == idvarname)])
 	
@@ -217,8 +217,8 @@ getID <- function(varinfo) {
 
 #-----------------------------------------------------------------------------------------
 
-.checkData.checkCodes <- function(dat, varinfo, idvarname) {
-  funVersion <- ".checkData.checkCodes: "
+checkCodes <- function(dat, varinfo, idvarname) {
+  funVersion <- "checkCodes: "
   
   vars <- intersect(colnames(dat), names(varinfo)[- which(names(varinfo) == idvarname)])
   if (length(vars) == 0){
