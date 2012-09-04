@@ -11,3 +11,4 @@ Description: The package eat is designed to simplify data preparation and IRT mo
 License: GPL
 LazyLoad: yes
 LazyData: yes
+OS_type: windows
