@@ -6,8 +6,9 @@
 
 install.eat.dependencies <- function ( ) {
 
-		pkgs <- c("car","date","foreign","gdata","reshape","sendmailR","xlsx","R.utils","parallel","psych","ggplot2")
-
+		pkgs <- c("MASS","car","date","foreign","gdata","reshape","sendmailR","xlsx","R.utils","parallel","psych","ggplot2")
+		if ( grepl ( "OS" , Sys.getenv()["OS"] ) ) pkgs <- pkgs [ !pkgs=="xlsx" ]
+		
 		oldwarn <- getOption ( "warn" )
 		options ( warn = -1 )
 		ex <- sapply ( pkgs , require , character.only = TRUE , quietly = FALSE , warn.conflicts = FALSE )
@@ -24,7 +25,7 @@ install.eat.dependencies <- function ( ) {
 				if ( inherits ( tried , "try-error" ) ) {
 						stop ( tried )
 				} else {
-						ex <- sapply ( inst , require , character.only = TRUE , quietly = FALSE , warn.conflicts = TRUE )
+						ex <- sapply ( inst , function(pkg) { try ( require ( pkg , character.only = TRUE , quietly = FALSE , warn.conflicts = TRUE ) ) } )
 				}
 
 		}
