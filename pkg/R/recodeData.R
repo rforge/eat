@@ -16,14 +16,16 @@
 # Author: 	Martin Hecht , Christiane Penk
 # depends: package car
 #          Funktionen aus makeInput
-#          Funktion sunk aus Package automateModels
 #
 # Change Log:
+# 2012-09-04 NH
+# CHANGED: removed calls to 'sunk'
+# 0000-00-00 AA
+#
 # * 1.1.0  (2011-11-23, ZKD) stabilisiert
 # * 1.0.1 (2011-11-21, KS) auch positive Rückmeldung (welche Var rekodiert)
 # * 1.0.0 (2011-11-03, NH) überarbeitet und auf neue ZKD-Inputtabellen angepasst, 
 #               überflüssig gewordene Checks rausgenommen 
-#
 # 02.08.11 "mbd" aus Prüfung auf unvollständige Rekodierungsvorschrift rausgenommen
 # 12.07.11 kein Abbruch bei unvollständigen Rekodierungsvorschriften, nur Warnung
 # 01.07.11 Unvollständige Rekodierungsvorschrift:
@@ -73,13 +75,13 @@ recodeData <- function (dat, values, subunits) {
   
   if (is.null(recodeinfo[[variableName]]$values)) {
     variableRecoded <- variable
-    sunk(paste(funVersion, "Found no recode information for variables ", variableName, ". These variables will not be recoded.", sep =""))
+    cat(paste(funVersion, "Found no recode information for variable ", variableName, ". This variables will not be recoded.", sep =""))
   } else {
     dontcheck <- c("mbd")
     variable.unique <- na.omit(unique(variable[which(!variable %in% dontcheck)]))
     recodeinfoCheck <- (variable.unique %in% names(unlist(recodeinfo[[variableName]]$values)))
     if (!all(recodeinfoCheck == TRUE)) {
-      sunk(paste(funVersion, "Incomplete recode information for variable ", 
+      cat(paste(funVersion, "Incomplete recode information for variable ", 
       variableName, ". Value(s) ",  
       paste(sort(variable.unique[!recodeinfoCheck]), collapse = ", "), " will not be recoded.", sep = ""))
     }
@@ -89,7 +91,7 @@ recodeData <- function (dat, values, subunits) {
     sep = ""), collapse = "; ")
     variableRecoded <- recode(variable, recodeString, as.factor.result = FALSE, 
     as.numeric.result = FALSE)
-	sunk(paste(funVersion, variableName, " has been recoded.", sep =""))
+	cat(paste(funVersion, variableName, " has been recoded.", sep =""))
   }
   return(variableRecoded)
 }

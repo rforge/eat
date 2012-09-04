@@ -1,5 +1,5 @@
-\name{loadSav}
-\alias{loadSav}
+\name{readSpss}
+\alias{readSpss}
 
 \title{
 Read SPSS Data Files and Truncate Space in String Variables and Change Column Width
