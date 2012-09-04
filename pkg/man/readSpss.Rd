@@ -10,7 +10,7 @@ Read SPSS Data Files and Truncate Space in String Variables and Change Column Wi
 }
 
 \usage{
-loadSav(file, correctDigits = FALSE, truncateSpaceChar = TRUE)
+readSpss(file, correctDigits = FALSE, truncateSpaceChar = TRUE)
 }
 
 \arguments{
