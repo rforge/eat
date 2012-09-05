@@ -180,8 +180,6 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                         for (i in 1:ncol(dat[,namen.dif.var,drop=F]))
                             {dat[,namen.dif.var[i]] <- car:::recode(dat[,namen.dif.var[i]], rec.hg)}}
                      dif.info <- lapply(namen.dif.var, FUN = function(ii) {.checkContextVars(x = dat[,ii], varname=ii, type="DIF", itemdaten=daten)})
-                     dim(daten)
-
                      dat[,namen.dif.var] <- do.call("cbind", unlist(dif.info, recursive = FALSE)[3*(1:length(dif.info))-2])
                      weg.dif             <- unique(do.call("c", unlist(dif.info, recursive = FALSE)[3*(1:length(dif.info))]))
                      dif.char            <- do.call("c", unlist(dif.info, recursive = FALSE)[3*(1:length(dif.info))-1])
