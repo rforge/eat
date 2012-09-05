@@ -237,7 +237,7 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                      if(type == "DIF" | type == "group") {if(mis > 10)   {sunk(paste("Serious warning: ",type," Variable '",varname,"' with more than 10 categories. Recommend recoding. \n",sep=""))}}
                      char    <- max(nchar(as.character(na.omit(x))))
                      weg     <- which(is.na(x))
-                     if(length(weg) > 0 ) {sunk(paste("Warning: Found ",length(weg)," cases with missing on ",type," variable '",varname,"'. Conquest probably will collapse unless cases are not deleted.\n",sep=""))}
+                     if(length(weg) > 0 ) {sunk(paste("Warning: Found ",length(weg)," cases with missing on ",type," variable '",varname,"'. Conquest may collapse if those cases are not deleted.\n",sep=""))}
                      if(type == "DIF" ) {
                                    if(mis > 2 )   {sunk(paste(type, " Variable '",varname,"' does not seem to be dichotomous.\n",sep=""))}
                                    n.werte <- lapply(itemdaten, FUN=function(iii){by(iii, INDICES=list(x), FUN=table)})

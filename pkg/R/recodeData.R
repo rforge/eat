@@ -45,10 +45,10 @@
 #-----------------------------------------------------------------------------------------
 
 recodeData <- function (dat, values, subunits) {
-  funVersion <- "recodeData_1.0.1: "
+  funVersion <- "recodeData: "
 
   if (class(dat) != "data.frame") {
-  stop (paste(funVersion, "'dat' must be a data.frame.", sep = ""))
+  stop (paste(funVersion, "'dat' must be a data.frame.\n", sep = ""))
   }  
 
   recodeinfo <- makeInputRecodeData (values = values, subunits = subunits)
@@ -67,7 +67,7 @@ recodeData <- function (dat, values, subunits) {
 
 .recodeData.recode <- function (variable, variableName, recodeinfo) {
   variableRecoded <- NULL
-  funVersion <- "recodeData_1.0.1: "
+  funVersion <- "recodeData: "
   
   if (!(class(variable) == "character")) { 
     variable <- as.character(variable)
@@ -75,7 +75,7 @@ recodeData <- function (dat, values, subunits) {
   
   if (is.null(recodeinfo[[variableName]]$values)) {
     variableRecoded <- variable
-    cat(paste(funVersion, "Found no recode information for variable ", variableName, ". This variables will not be recoded.", sep =""))
+    cat(paste(funVersion, "Found no recode information for variable ", variableName, ". This variables will not be recoded.\n", sep =""))
   } else {
     dontcheck <- c("mbd")
     variable.unique <- na.omit(unique(variable[which(!variable %in% dontcheck)]))
@@ -83,7 +83,7 @@ recodeData <- function (dat, values, subunits) {
     if (!all(recodeinfoCheck == TRUE)) {
       cat(paste(funVersion, "Incomplete recode information for variable ", 
       variableName, ". Value(s) ",  
-      paste(sort(variable.unique[!recodeinfoCheck]), collapse = ", "), " will not be recoded.", sep = ""))
+      paste(sort(variable.unique[!recodeinfoCheck]), collapse = ", "), " will not be recoded.\n", sep = ""))
     }
     
     recodeString <- paste(paste("'", names(unlist(recodeinfo[[variableName]]$values)), 
@@ -91,7 +91,7 @@ recodeData <- function (dat, values, subunits) {
     sep = ""), collapse = "; ")
     variableRecoded <- recode(variable, recodeString, as.factor.result = FALSE, 
     as.numeric.result = FALSE)
-	cat(paste(funVersion, variableName, " has been recoded.", sep =""))
+	cat(paste(funVersion, variableName, " has been recoded.\n", sep =""))
   }
   return(variableRecoded)
 }

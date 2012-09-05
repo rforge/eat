@@ -101,17 +101,17 @@ getID <- function(varinfo) {
   funVersion <- "getID: "
   
   if (missing(varinfo)) {
-    stop(paste(funVersion, "Found no information about variables.", sep=""))
+    stop(paste(funVersion, "Found no information about variables.\n", sep=""))
   } 
   # Typen extrahieren
   type <- which ( sapply(varinfo, "[[", "type") == "ID")
   if (length(type) == 0) {
-    stop(paste(funVersion, "No ID variable specified. Please check input 'units' for variable with 'unitType' = 'ID'.", sep=""))
+    stop(paste(funVersion, "No ID variable specified. Please check input 'units' for variable with 'unitType' = 'ID'.\n", sep=""))
   } else { 
   # find name of id variable
     nameID <- names(varinfo)[type]
     if ( length(nameID) > 1) {
-      stop(paste(funVersion, "Found more than one ID variable.", sep=""))
+      stop(paste(funVersion, "Found more than one ID variable.\n", sep=""))
     }    
   }          
   
@@ -130,16 +130,16 @@ checkID <- function(dat, idvarname) {
 	} else {
 		emptyID <- which(nchar(dat[, idvarname]) == 0 | is.na(dat[, idvarname]))
 		if (length(emptyID > 0)) {
-		  stop(paste(funVersion, "ID variable has empty cells in line(s) ", paste(emptyID, collapse = ", "), sep = ""))
+		  stop(paste(funVersion, "ID variable has empty cells in line(s) ", paste(emptyID, collapse = ", "),"\n", sep = ""))
 		} else {
-		  cat(paste(funVersion, "Only valid codes in ID variable.", sep = ""))
+		  cat(paste(funVersion, "Only valid codes in ID variable.\n", sep = ""))
 		}
 		if (length(na.omit(dat[, idvarname])) != length(na.omit(unique(dat[, idvarname])))) {
 		  duplicatedID <- na.omit(unique(dat[, idvarname][duplicated(dat[, idvarname])]))
 		  stop(paste(funVersion, "ID variable has ", length(duplicatedID), 
-					  " duplicated entries for IDs: ", paste(duplicatedID, collapse = ", "), sep = ""))
+					  " duplicated entries for IDs: ", paste(duplicatedID, collapse = ", "), "\n", sep = ""))
 		} else {
-		  cat(paste(funVersion, "No duplicated entries in ID variable.", sep =""))
+		  cat(paste(funVersion, "No duplicated entries in ID variable.\n", sep =""))
 		}
 	}
 }
@@ -153,15 +153,15 @@ checkVars <- function(dat, varinfo) {
 	if (length(colnames(dat)) != length(unique(colnames(dat)))) {
 		duplicatedVarnames <- colnames(dat)
 		duplicatedVarnames <- unique(duplicatedVarnames[duplicated(duplicatedVarnames)])
-		stop(paste(funVersion, "Found duplicated variable names for ", length(duplicatedVarnames), " variables.", sep = ""))
+		stop(paste(funVersion, "Found duplicated variable names for ", length(duplicatedVarnames), " variables.\n", sep = ""))
 	} else {
-		cat(paste(funVersion, "No duplicated variable names.", sep=""))
+		cat(paste(funVersion, "No duplicated variable names.\n", sep=""))
 	}
 	
 	varsWithoutVarinfo <- setdiff(colnames(dat), names(varinfo))
 	if (length(varsWithoutVarinfo) > 0) {
 		cat(paste(funVersion, "Found no variable information about variable(s) ", paste(varsWithoutVarinfo, collapse = ", "), 
-			".\nThis/These variables will not be checked for missings and invalid codes.", sep = ""))
+			".\nThis/These variables will not be checked for missings and invalid codes.\n", sep = ""))
 	}
 }
 #-----------------------------------------------------------------------------------------
@@ -175,7 +175,7 @@ checkMissings <- function (dat, varinfo, idvarname) {
   vars <- intersect(colnames(dat), names(varinfo)[- which(names(varinfo) == idvarname)])
 	
   if (length(vars) == 0){
-    cat(paste(funVersion, "Found no variable informations for any of the variables in 'dat'. Check for missing values will be skipped.", sep = ""))
+    cat(paste(funVersion, "Found no variable informations for any of the variables in 'dat'. Check for missing values will be skipped.\n", sep = ""))
   } else {
     
   	# Indikatordatensatz für Missings initialisieren	
@@ -190,7 +190,7 @@ checkMissings <- function (dat, varinfo, idvarname) {
   		MissingCodes <- names(CodeTypes[substring(CodeTypes, 1, 1) == "m"])
   		if (is.null(MissingCodes) | length(MissingCodes) == 0) {
   			cat(paste(funVersion, "Found no missing values definitions for variable ", 
-  			  var, ". This variable will only be checked for NA values.", sep = ""))
+  			  var, ". This variable will only be checked for NA values.\n", sep = ""))
   		}
   		missingInd[, var ] <- 1 * (!dat[, match(var, colnames(dat))] %in% c(NA, "", MissingCodes))
   	}
@@ -223,7 +223,7 @@ checkCodes <- function(dat, varinfo, idvarname) {
   
   vars <- intersect(colnames(dat), names(varinfo)[- which(names(varinfo) == idvarname)])
   if (length(vars) == 0){
-    cat(paste(funVersion, "Found no variable informations for any of the variables in 'dat'. Check for invalid codes will be skipped.", sep = ""))
+    cat(paste(funVersion, "Found no variable informations for any of the variables in 'dat'. Check for invalid codes will be skipped.\n", sep = ""))
   } else {
     count <- 0
   	
@@ -236,20 +236,20 @@ checkCodes <- function(dat, varinfo, idvarname) {
   			  invalidCodes <- setdiff(givenCodes, validCodes)
   			  if (length(invalidCodes > 0)) {
   				invalidCodesFreq <- givenCodesFreq[names(givenCodesFreq) %in% invalidCodes]
-  				cat(paste(funVersion, "Found invalid codes in variable ", v, sep = ""))
+  				cat(paste(funVersion, "Found invalid codes in variable ", v, "\n",sep = ""))
   				cat( paste(paste(paste(invalidCodesFreq, "cases invalid", names(invalidCodesFreq)), collapse = ", "), 
-          paste("-- valid Codes: ", paste(validCodes, collapse = ", "), sep = "")) )
+          paste("-- valid Codes: ", paste(validCodes, collapse = ", "), "\n", sep = "")) )
   				count <- count + 1
   			  }
   			} else {
-  			  cat(paste(funVersion, "Found no informations about valid codes for variable ",	v, ".", sep = ""))
+  			  cat(paste(funVersion, "Found no informations about valid codes for variable ",	v, ".\n", sep = ""))
   			}
   		} 
   	}
   	if (count > 0) {
   	}
   	else {
-  		cat(paste(funVersion, "Found no invalid codes.", sep = ""))
+  		cat(paste(funVersion, "Found no invalid codes.\n", sep = ""))
   	}
   }
 }

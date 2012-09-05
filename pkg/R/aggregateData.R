@@ -19,6 +19,10 @@
 # Author:  Nicole Haag, Anna Lenski, Sebastian Weirich
 #
 # Change Log:
+# 2012-09-05 NH
+# CHANGED: removed calls to 'sunk'
+# 0000-00-00 AA
+#
 # * 1.2.0 (2011-11-22, NH): bugfix in aggregatemissings
 # * 1.0.0 (2011-11-04, NH): auf ZKD-Inputtabellen angepasst
 #              Scoring komplett rausgenommen  
@@ -35,10 +39,10 @@
 
 aggregateData <- function (dat, subunits, units, aggregatemissings = "use.default", rename = FALSE, recodedData = TRUE) {
   
-  funVersion <- "aggregateData_1.2.0: "
+  funVersion <- "aggregateData: "
 
   if (class(dat) != "data.frame") {
-  stop(paste(funVersion, "'dat' is not a data.frame.", sep = ""))
+  stop(paste(funVersion, "'dat' is not a data.frame.\n", sep = ""))
   }  
 
   # make aggregateinfo
@@ -49,7 +53,7 @@ aggregateData <- function (dat, subunits, units, aggregatemissings = "use.defaul
   aggregateinfo <- aggregateinfo[ which(nSubunitsInDat > 0) ] 
   
   if (length(aggregateinfo) == 0){
-	stop("Found none of the specified subitems to aggregate in dataset.")
+	stop("Found none of the specified subitems to aggregate in dataset.\n")
   }
   
   # define missing aggregation
@@ -92,8 +96,8 @@ aggregateData <- function (dat, subunits, units, aggregatemissings = "use.defaul
 		colnames(datAggregated)[ match(oneSubunitUnits$subunit, colnames(datAggregated) )] <- oneSubunitUnits$unit         
 	
 	}
-	sunk(paste(funVersion, "Found ", nrow(oneSubunitUnits), " unit(s) with only one subunit in 'dat'. This/these subunit(s) will be renamed to their respective unit name(s).\nUnits ",
-          paste(oneSubunitUnits$unit, collapse = ", "), sep = ""))          
+	cat(paste(funVersion, "Found ", nrow(oneSubunitUnits), " unit(s) with only one subunit in 'dat'. This/these subunit(s) will be renamed to their respective unit name(s).\nUnits ",
+          paste(oneSubunitUnits$unit, collapse = ", "), "\n", sep = ""))          
   }  
     
   # erstelle aggregierten Datensatz der Units, die aggregiert werden
@@ -138,16 +142,16 @@ aggregateData <- function (dat, subunits, units, aggregatemissings = "use.defaul
 
 aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, dat){
   
-  funVersion <- "aggregateData_1.2.0: "
+  funVersion <- "aggregateData: "
   
   unitVars <- aggregateinfo$subunits
   aggRule <- toupper(aggregateinfo$arule)
   
-  sunk(paste (funVersion, "Aggregate unit ", unitName, ".", sep = ""))
+  cat(paste (funVersion, "Aggregate unit ", unitName, ".\n", sep = ""))
   
   # check: sind alle Subunits vorhanden?	
   if (any((unitVars %in% colnames(dat)) == FALSE)) {
-  	stop(paste(funVersion, "Subunits", paste(setdiff(unitVars, colnames(dat)), collapse = ", "), "not in 'dat'."))
+  	stop(paste(funVersion, "Subunits", paste(setdiff(unitVars, colnames(dat)), collapse = ", "), "not in 'dat'.\n"))
   } 
   
   # gebe Teildatensatz für i-tes unit
@@ -156,7 +160,7 @@ aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, 
   # check: Datensatz darf keine NAs enthalten. -> werden in mbd umgewandelt
   na <- which(is.na(unitDat))
     if (length(na) > 0) {
-        sunk(paste(funVersion, "Data contains NA values. These values will be converted to \'mbd\'.", sep = ""))
+        cat(paste(funVersion, "Data contains NA values. These values will be converted to 'mbd'.\n", sep = ""))
 		unitDat[ is.na(unitDat) ] <- "mbd"
   } 
   
@@ -164,7 +168,7 @@ aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, 
   
   ### wenn agg an irgendeiner Stelle auf "err" gesetzt wird, muß die Funktion mit einer Fehlermeldung abbrechen!
   if(any(agg == "err"))  {
-  	stop(paste(funVersion, "Aggregation of missing values for unit ", unitName, " produced 'err'.",sep=""))
+  	stop(paste(funVersion, "Aggregation of missing values for unit ", unitName, " produced 'err'.\n",sep=""))
   }	
   	
   # initialisiere Rückgabe des aggregierten units

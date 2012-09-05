@@ -23,12 +23,15 @@
 
 
 # Version: 	0.2.0
-# Depends: car, foreign, collapseMissings und sunk aus automateModels, Funktionen aus makeInput
-# Status: development
+# Depends: car, foreign, collapseMissings  aus automateModels, Funktionen aus makeInput
+# Status: release
 # Release Date:
 # Author:  Nicole Haag
 #
 # Change Log:
+# 2012-09-04 NH
+# CHANGED: removed calls to 'sunk'
+# 0000-00-00 AA
 # * 0.2.0 (2011-11-04, NH): SPSS-Format-Statement für numerische Variablen mit Dezimalstellen angepasst
 #
 # * 0.1.0 (2011-10-27, NH): erstellt
@@ -72,8 +75,8 @@ writeSpss <- function (dat, values, subunits, units, filedat = "zkddata.txt", fi
            missing.rule = list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 ),
            varnames = colnames(dat), sep = sep, dec = dec)
   if (!silent) {
-    sunk(paste(funVersion, "Data values written to", filedat))
-    sunk(paste(funVersion, "Syntax file written to", filesps))
+    cat(paste(funVersion, "Data values written to", filedat, "\n"))
+    cat(paste(funVersion, "Syntax file written to", filesps, "\n"))
   }
 }
 
@@ -102,7 +105,7 @@ zkdWriteForeignSPSS <- function(dat, varinfo, datafile, codefile,
   missing.rule = list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 ),
   varnames = NULL, dec = ",", sep = "\t") {
   
-  funVersion <- "writeSpss_0.1.0: "
+  funVersion <- "writeSpss: "
   
   # make vars numeric (if possible)
   dat <- data.frame(lapply(dat, makeNumeric), stringsAsFactors = FALSE)
@@ -118,7 +121,7 @@ zkdWriteForeignSPSS <- function(dat, varinfo, datafile, codefile,
   varlabels <- varlabels [ match(varnames, names(varlabels)) ]
   if ( any( sapply(varlabels, is.null)) ) {
 		ind <- which ( sapply(varlabels, is.null ) )
-		sunk (paste(funVersion, "Found no variable labels for variable(s) ", paste( varnames[ind], collapse = ", "), ".", sep = ""))
+		cat (paste(funVersion, "Found no variable labels for variable(s) ", paste( varnames[ind], collapse = ", "), ".\n", sep = ""))
 		varlabels [ ind ] <- ""
 		names (varlabels)  [ ind ]  <- varnames [ ind ]
 	}
@@ -151,7 +154,7 @@ zkdWriteForeignSPSS <- function(dat, varinfo, datafile, codefile,
 
     
   if (any(lengths > 255L))
-    stop("Cannot handle character variables longer than 255")  
+    stop("Cannot handle character variables longer than 255\n")  
   
   if (any(chv)) {
     lengths <- paste("(", ifelse(chv, "A", "F"), lengths, ")", sep = "")
@@ -195,7 +198,7 @@ zkdWriteForeignSPSS <- function(dat, varinfo, datafile, codefile,
       valueLabels <- valueLabels[ which(! names(valueLabels) %in% names(missing.rule)) ]
       valueLabels <- gsub("\n", " ", valueLabels)
       if (any(nchar(valueLabels) > 120L)) {
-        sunk(paste(funVersion, "Value labels for variable", v , "longer than 120 characters. Only the first 120 characters will be used."))
+        cat(paste(funVersion, "Value labels for variable", v , "longer than 120 characters. Only the first 120 characters will be used.\n"))
         valueLabels <- substring(valueLabels, 1, 120)
         }   
       cat(paste("  ", names(valueLabels),
