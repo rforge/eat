@@ -149,7 +149,7 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                      if( remove.no.answers == FALSE) {weg.variablen <- NULL     ### WICHTIG: Wenn missings on all items beibehalten werden sollen, muß weg.variablen wieder zurückgesetzt werden!
                                                       sunk("Cases with missings on all items will be kept.\n")}}
                   hg.char <- NULL; DIF.char <- NULL; weight.char <- NULL; all.hg.char <- NULL        ### obere Zeile: wieviele Character haben die Variablen?
-                  weg.dif <- NULL; weg.hg <- NULL; weg.weight <- NULL; namen.all.hg <- NULL
+                  weg.dif <- NULL; weg.hg <- NULL; weg.weight <- NULL; namen.all.hg <- NULL; weg.group <- NULL
                               if(!is.null(HG.var))    {
                      if(!is.null(na$HG))                                        ### bevor irgendwas anderes geschieht, werden, sofern spezifiziert, die HG-Variablen recodiert
                        {rec.hg <- paste(na$HG,"=NA",collapse="; ")              ### definiere recodierungsvorschrift
@@ -180,6 +180,8 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                         for (i in 1:ncol(dat[,namen.dif.var,drop=F]))
                             {dat[,namen.dif.var[i]] <- car:::recode(dat[,namen.dif.var[i]], rec.hg)}}
                      dif.info <- lapply(namen.dif.var, FUN = function(ii) {.checkContextVars(x = dat[,ii], varname=ii, type="DIF", itemdaten=daten)})
+                     dim(daten)
+
                      dat[,namen.dif.var] <- do.call("cbind", unlist(dif.info, recursive = FALSE)[3*(1:length(dif.info))-2])
                      weg.dif             <- unique(do.call("c", unlist(dif.info, recursive = FALSE)[3*(1:length(dif.info))]))
                      dif.char            <- do.call("c", unlist(dif.info, recursive = FALSE)[3*(1:length(dif.info))-1])
@@ -241,7 +243,7 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                      if(type == "DIF" ) {
                                    if(mis > 2 )   {sunk(paste(type, " Variable '",varname,"' does not seem to be dichotomous.\n",sep=""))}
                                    n.werte <- lapply(itemdaten, FUN=function(iii){by(iii, INDICES=list(x), FUN=table)})
-                                   completeMissingGroupwise <- data.frame(t(sapply(n.werte, function(ll){lapply(ll, length)})), stringsAsFactors = FALSE)
+                                   completeMissingGroupwise <- data.frame(t(sapply(n.werte, function(ll){lapply(ll, FUN = function (uu) { length(uu[uu>0])}  )})), stringsAsFactors = FALSE)
                                    for (iii in seq(along=completeMissingGroupwise)) {
                                         missingCat.i <- which(completeMissingGroupwise[,iii] == 0)
                                         if(length(missingCat.i) > 0) {
