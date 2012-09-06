@@ -8,7 +8,7 @@ equating.rasch
 equate/link two sets of parameters
 }
 \usage{
-equating.rasch ( x , y , theta = seq( -4 , 4 , len=100) , method = c("Mean-Mean" , "Haebara" , "Stocking-Lord") )
+equating.rasch ( x , y , theta = seq( -4 , 4 , len=100) , method = c("Mean-Mean" , "Haebara" , "Stocking-Lord"), compute.dif = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -17,6 +17,7 @@ equating.rasch ( x , y , theta = seq( -4 , 4 , len=100) , method = c("Mean-Mean"
   \item{y}{  }
   \item{theta}{  }
   \item{method}{ either "Mean-Mean" , "Haebara" or "Stocking-Lord" }
+  \item{compute.dif}{}
 
 }
 \details{
