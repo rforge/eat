@@ -11,8 +11,12 @@
 
 #***************************************************************************************************
 # Vertical Equating in the Rasch model
-equating.rasch <- function( x , y , theta = seq( -4 , 4 , len=100) , method ){
-    # INPUT:
+equating.rasch <- function( x , y , theta = seq( -4 , 4 , len=100) , method = c("Mean-Mean" , "Haebara" , "Stocking-Lord") ) {
+    
+	# Methode setzen
+	method <- userSpecifiedList ( method , c("Mean-Mean" , "Haebara" , "Stocking-Lord") , 1 )
+	
+	# INPUT:
     # x ... data frame: 1st column Item labels group 1, 2nd column: item difficulties group 1
     # y ... data frame: 1st column Item labels group 2, 2nd column: item difficulties group 2
     # theta ... theta values where the test characteristic curves are evaluated
