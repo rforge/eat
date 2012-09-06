@@ -42,15 +42,17 @@
 					names ( results ) <- name
 				
 					write.results.xlsx ( results = results , path = unname ( unlist ( folder[ name ] ) ) , additional_itemprops = additional.item.props )
-			
+		
 					# 30.07.12 noch Latente Korrelationen / Varianzen nach Excel
 					if ( length ( results[[1]] ) > 1 ) nam <- "CorrCovVar" else nam <- "Var"
 					fin <- file.path ( unname ( unlist ( folder[ name ] ) ) , paste ( name , "_" , nam , sep = "" ) )
 					fin.xlsx <- paste ( fin , ".xlsx" , sep = "" )
 					temp <- get.latent.corr ( unname ( unlist ( folder[ name ] ) ) , xlsx = fin.xlsx )
 					fin.Rdata <- paste ( fin , ".Rdata" , sep = "" )
-					eval ( parse ( text = paste ( sub ( "-" , "" , name ) , "_" , nam , "<- temp" , sep = "" ) ) ) 
-					do <- paste ( "save (" , sub ( "-" , "" , name ) , "_" , nam , ",file='",fin.Rdata,"')", sep = "" ) 
+					name2 <- gsub ( "-" , "" , name )
+					do <- paste ( name2 , "_" , nam , " <- temp" , sep = "" )
+					eval ( parse ( text = do ) ) 
+					do <- paste ( "save (" , name2 , "_" , nam , ",file='",fin.Rdata,"')", sep = "" ) 
 					eval ( parse ( text = do ) )
 					
 					# model Informationen
@@ -59,8 +61,8 @@
 					fin.xlsx <- paste ( fin , ".xlsx" , sep = "" )
 					temp <- compareModels ( unname ( unlist ( folder[ name ] ) ) , xlsx = fin.xlsx )
 					fin.Rdata <- paste ( fin , ".Rdata" , sep = "" )
-					eval ( parse ( text = paste ( sub ( "-" , "" , name ) , "_" , nam , "<- temp" , sep = "" ) ) ) 
-					do <- paste ( "save (" , sub ( "-" , "" , name ) , "_" , nam , ",file='",fin.Rdata,"')", sep = "" ) 
+					eval ( parse ( text = paste ( name2 , "_" , nam , " <- temp" , sep = "" ) ) ) 
+					do <- paste ( "save (" , name2 , "_" , nam , ",file='",fin.Rdata,"')", sep = "" ) 
 					eval ( parse ( text = do ) )					
 					
 			
