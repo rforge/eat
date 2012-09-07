@@ -1,6 +1,6 @@
 
 
-designCheck <- function(dat, booklets, blocks, rotation, sysMis="NA", id="idstud") {
+checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="idstud") {
 	
 	funVersion <- "designCheck 0.0.1"
 	
