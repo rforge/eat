@@ -156,7 +156,7 @@
 											# "Bitte überprüfen, ob dies gewünscht ist.\n" ) )							
 						sunk ( paste ( f.n , "Warning:\n" , "Parameter items is not specified.\n" ,
 											"All variables" , ausser.str , "are treated as items!\n" ,
-											"Pleas check if this is desired.\n" ) )			
+											"Please check if this is desired.\n" ) )			
 									
 				}
 			

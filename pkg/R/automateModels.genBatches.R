@@ -70,7 +70,7 @@
 						if ( ! regexpr ( "Windows" , Sys.getenv()["OS"] ) == -1 ) folder.temp <- gsub ( "/", "\\", folder.temp , fixed=TRUE)
 						
 						paste ( substr ( folder.temp , 1 , 2 ) , "\n" ,
-								"cd " , folder.temp , "\n" ,
+								'cd "' , folder.temp , '"\n' ,
 								"CALL " , paste ( analyse.name.temp , ".bat" , sep = "" )	, sep = "" )
 						
 				} , folder.temp , analyse.name.temp , SIMPLIFY = FALSE )

@@ -9,8 +9,10 @@
 #			
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.del.or.create.folder.doit <- function ( folder , countdown ) {
+.del.or.create.folder <- function ( folder , countdown = 5 , timeout = 20 , crit = c("stop","warn","silent") ) {
 
+		crit <- userSpecifiedList ( crit , c("stop","warn","silent") , el.default = 1 )
+		
 		if ( ! is.numeric ( countdown ) ) countdown <- 0
 		if ( identical ( countdown , integer(0) ) | identical ( countdown , numeric ( 0 ) ) ) countdown <- 0
 	
@@ -38,11 +40,11 @@
 		flush.console()
 		durchgang <- 0
 		waitsek <- 0.5
-		while ( ! identical ( list.files(path = folder, pattern = NULL, all.files = TRUE,
+		timeout.durchgang <- timeout * 1/waitsek
+		while ( (! identical ( list.files(path = folder, pattern = NULL, all.files = TRUE,
            full.names = TRUE, recursive = TRUE ,
-           ignore.case = FALSE, include.dirs = TRUE) , character(0) ) ) {
+           ignore.case = FALSE, include.dirs = TRUE) , character(0) )) & durchgang < timeout.durchgang ) {
 				if ( durchgang == 0 ) {
-						# cat ( "Warten auf Server " )
 						cat ( "Waiting for file system / server " )
 						flush.console()
 				} else {
@@ -52,35 +54,45 @@
 				Sys.sleep ( waitsek )
 				durchgang <- durchgang + 1
 		}
-		# if ( durchgang>0 ) cat ( paste ( "\nUnd mal wieder" , durchgang*waitsek , "Sekunden verwartet\n" ) ); flush.console()
-		if ( durchgang>0 ) cat ( paste ( "\nAnd again" , durchgang*waitsek , "seconds verwaited\n" ) ); flush.console()
-		
-		
-		# Sys.sleep ( 3 ) # warten damit Server auch nachkommt
+		cat ( "\n" )
+		if ( durchgang==timeout.durchgang ) {
+				cat ( paste ( "Process has timed out.\n" , sep = "" ) ); flush.console()
+				ret <- FALSE
+		} else ret <- TRUE
+		if ( durchgang>0 ) cat ( paste ( "And again" , durchgang*waitsek , "seconds verwaited\n" ) ); flush.console()
+
 		if ( ! file.exists ( folder ) ) {
 				tried <- try ( 
 								dir.create ( folder , recursive = TRUE , showWarnings = FALSE )
 							  , silent = TRUE )
 				if ( inherits ( tried , "try-error" ) ) {
 						cat ( paste ( "Folder" , folder , "could not be created." ) )
-						stop()
+						ret <- FALSE
 				}
 		}
-		# Sys.sleep ( 3 ) # warten damit Server auch nachkommt
 
-		return ( TRUE )
-}
-.del.or.create.folder <- function ( folder , countdown = 5 ) {
-		
-		tried <- try ( .del.or.create.folder.doit ( folder , countdown ) )
-		if ( inherits ( tried , "try-error" ) ) {
-				cat ( paste ( "deletion and/or creation of" , folder , "failed" ) )
-				stop ( )
-				return ( FALSE )
-		} else return ( TRUE )
-
+		if ( !ret ) {
+				s <- paste ( "Deletion and/or creation of" , folder , "failed. Try again.\n You might wanna check if folder is used/locked by another program.\n" )
+				if ( crit == "stop" ) {
+						stop ( s , call. = FALSE)
+				}
+				if ( crit == "warn" ) {
+						warning ( s )
+				}
+		}
+		return ( ret )
 		
 }
+# .del.or.create.folder <- function ( folder , countdown = 5 , timeout = 20 ) {
+		
+		# tried <- try ( .del.or.create.folder.doit ( folder , countdown , timeout ) )
+		# if ( inherits ( tried , "try-error" ) ) {
+				
+				# stop ( )
+				# return ( FALSE )
+		# } else return ( TRUE )
+		
+# }
 
 .check.any.items.or.rows.left <- function ( dataset , dont.test.cols.name=NULL , dont.test.rows.name=NULL ) {
 

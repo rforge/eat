@@ -20,7 +20,7 @@
 ####################################################################################################################
 
 genConquestBatch <- function (pathConquest, jobName){
-    command <- paste(normalize.path(pathConquest), paste(jobName, ".cqc", sep = ""), sep = " ")
+    command <- paste('"', normalize.path(pathConquest), '" ', '"' , paste(jobName, ".cqc", sep = ""), '"' , sep = "")
     return(command)
 }
 

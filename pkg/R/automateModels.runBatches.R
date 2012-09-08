@@ -31,7 +31,7 @@
 				.fun <- function ( batch ) {
 						sunk ( paste ( f.n , " Try sending " , batch , "\n                            to console ... " , sep = "" ) )
 						
-						rtrn <- system ( batch ,
+						rtrn <- system ( paste ( '"', normalizePath( batch ), '"', sep = "" ) ,
 										 intern = FALSE ,
 										 ignore.stdout = FALSE ,
 										 ignore.stderr = FALSE ,
