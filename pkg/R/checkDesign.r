@@ -2,7 +2,7 @@
 
 checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="idstud") {
 	
-	funVersion <- "designCheck 0.0.1"
+	funVersion <- "checkDesign 0.0.1"
 	
 	if (is.na(match(id, colnames(dat)))) {
 		stop(paste(funVersion, " ID variable '", id, "' not found in dataset.", sep = "")) }
