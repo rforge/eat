@@ -32,8 +32,8 @@ plotDistributions <- function ( distr1 , distr2 , distr1.name = "Persons" , dist
 					geom_vline(data=means, aes(xintercept=mean,colour=group), size=0.5) +
 					coord_flip() +
 					opts(title=tit) +
-					guides(fill = guide_legend(reverse=TRUE)) + # reverse order of Group Levels
-					scale_fill_manual(values=color,name="Group",labels=c(paste(distr2.name," N=",n.distr2,sep=""), paste(distr1.name," N=",n.distr1,sep="")))
+					# guides(fill = guide_legend(reverse=TRUE)) + # reverse order of Group Levels
+					scale_fill_manual(values=color,name="Group",labels=c(paste(distr1.name," N=",n.distr1,sep=""), paste(distr2.name," N=",n.distr2,sep="")))
 		
 		if ( !is.null ( pdf ) ) pdf ( pdf )
 		print ( pl )

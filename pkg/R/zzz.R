@@ -1,6 +1,6 @@
 
 .onAttach <- function(lib, pkg){
-	packageStartupMessage ( paste ( "\n===========================================\neat version: 1.5.15-128 (2012-08-14)\n              \nThis version is BETA. Use at your own risk.\n===========================================\n" ) )
+	packageStartupMessage ( paste ( "\n===========================================\neat version: 1.5.16-168 (2012-09-10)\n              \nThis version is BETA. Use at your own risk.\n===========================================\n" ) )
 	install.eat.dependencies ()
 	}
 
@@ -20,7 +20,7 @@ install.eat.dependencies <- function ( ) {
 			
 				oldwarn <- getOption ( "warn" )
 				options ( warn = 2 )
-				tried <- try ( install.packages( inst , repos = c("http://ftp5.gwdg.de/pub/misc/cran") ) , silent = TRUE )
+				tried <- try ( install.packages( inst , repos = c("http://cran.us.r-project.org") ) , silent = TRUE )
 				options ( warn = oldwarn )
 				if ( inherits ( tried , "try-error" ) ) {
 						stop ( tried )
