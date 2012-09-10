@@ -20,7 +20,7 @@ install.eat.dependencies <- function ( ) {
 			
 				oldwarn <- getOption ( "warn" )
 				options ( warn = 2 )
-				tried <- try ( install.packages( inst , repos = c("http://ftp5.gwdg.de/pub/misc/cran","http://ftp.yalwa.org/cran") ) , silent = TRUE )
+				tried <- try ( install.packages( inst , repos = c("http://ftp5.gwdg.de/pub/misc/cran") ) , silent = TRUE )
 				options ( warn = oldwarn )
 				if ( inherits ( tried , "try-error" ) ) {
 						stop ( tried )
