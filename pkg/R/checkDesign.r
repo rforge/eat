@@ -2,7 +2,7 @@
 
 checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="idstud") {
 	
-	funVersion <- "checkDesign 0.0.1"
+	funVersion <- "checkDesign 0.0.2"
 	
 	if (is.na(match(id, colnames(dat)))) {
 		stop(paste(funVersion, " ID variable '", id, "' not found in dataset.", sep = "")) }
@@ -20,52 +20,72 @@ checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="idstud
 			return(subset(blocks, blocks$block == BL)$subunit)
 		}))))
 	}
-
-	# Für jede Person Sysmispattern checken
-	if(sysMis=="NA") {
-		.patternCheckM <- function(ID) {
-			subunits <- .subunitsInBooklet(rotation$booklet[rotation$id == ID])
-			cc <- subunits[which(is.na(dat[match(ID, dat[,id]),match(subunits, names(dat))]))]
+	
+	if(sysMis=="NA") {	
+		# sysMis instead of vc (M)
+		.patternCheckM <- function(subunit, TH, cases) {		
+			cc <- cases[which(is.na(dat[match(cases, dat[,id]),match(subunit, names(dat))]))]
 			if(length(cc) > 0) {return(cc)} else {return(FALSE)}
-		}
-		.patternCheckP <- function(ID) {
-			subunits <- .subunitsInBooklet(rotation$booklet[rotation$id == ID])
-			dd <- names(dat)[-match(c(subunits,id), names(dat))][which(!is.na(dat[match(ID, dat[,id]),-na.omit(match(c(subunits,id), names(dat)))]))]
+		}		
+		# vc instead of sysMis (P)
+		.patternCheckP <- function(subunitN, TH, cases) {
+			dd <- cases[which(!is.na(dat[match(cases, dat[,id]),match(subunitN, names(dat))]))]
 			if(length(dd) > 0) {return(dd)} else {return(FALSE)}
 		}
 	} else {
-		.patternCheckM <- function(ID) {
-			subunits <- .subunitsInBooklet(rotation$booklet[rotation$id == ID])
-			cc <- subunits[which(dat[match(ID, dat[,id]),match(subunits, names(dat))] == sysMis)]
+		# sysMis instead of vc (M)
+		.patternCheckM <- function(subunit, TH, cases) {		
+			cc <- cases[which(dat[match(cases, dat[,id]),match(subunit, names(dat))] == sysMis)]
 			if(length(cc) > 0) {return(cc)} else {return(FALSE)}
-		}
-		.patternCheckP <- function(ID) {
-			subunits <- .subunitsInBooklet(rotation$booklet[rotation$id == ID])
-			dd <- names(dat)[-match(c(subunits,id), names(dat))][c(which(dat[match(ID, dat[,id]),-match(c(subunits,id), names(dat))] != sysMis),which(is.na(dat[match(ID, dat[,id]),-match(c(subunits,id), names(dat))])))]
+		}	
+		# vc instead of sysMis (P)
+		.patternCheckP <- function(subunitN, TH, cases) {
+			dd <- cases[which(dat[match(cases, dat[,id]),match(subunitN, names(dat))] != sysMis)]
 			if(length(dd) > 0) {return(dd)} else {return(FALSE)}
 		}
 	}
-	
-	xx <- sapply(rotation$id, .patternCheckM)
-	yy <- sapply(rotation$id, .patternCheckP)
 
-	if(all(c(unlist(xx),unlist(yy)) == FALSE)) {
+	# Für jedes TH SysmisPattern checken
+	.bookletPatternCheck <- function(TH) {
+		subunits <- .subunitsInBooklet(TH)
+		subunitsN <- setdiff(names(dat), c(subunits, id))
+		cases <- rot$id[rot$booklet == TH]
+		resList <- list()
+		resList[["M"]] <- sapply(subunits, .patternCheckM, TH=TH, cases=cases)
+		resList[["P"]] <- sapply(subunitsN, .patternCheckP, TH=TH, cases=cases)
+		return(resList)
+	}
+	
+	resL <- lapply(booklets$booklet, .bookletPatternCheck)
+	names(resL) <- booklets$booklet
+
+	if(all(unlist(resL) == FALSE)) {
 		cat(paste(funVersion, "No deviations from design detected! \n"))
 	} else {
 		cat(paste(funVersion, "Deviations from design detected! \n"))
-		if(!all(unlist(xx) == FALSE)) {
-			for(ll in names(xx)) {
-				if (xx[[ll]][1] != FALSE) {
-					cat(paste(funVersion, "Found sysMis instead of valid codes for ID", ll, "in variables:\n",paste(xx[[ll]], collapse = ", "),"\n"))
+		if(!all(unlist(resM <- lapply(resL, function(iz) {iz[["M"]]})) == FALSE)) {
+			for(ll in names(resL)) {
+				if (!all(unlist(resM[[ll]]) == FALSE)) {
+					cat(paste(funVersion, "Found sysMis instead of valid codes for booklet", ll, "for variables:\n"))
+						for(pp in names(resM[[ll]])) {
+							if (resM[[ll]][[pp]][1] != FALSE) {
+								cat(paste(pp, " (cases: ", paste(resM[[ll]][[pp]], collapse = ", "), ") \n", sep=""))
+							}
+						}	
 				}
 			}
 		} 
-		if(!all(unlist(yy) == FALSE)) {
-			for(ll in names(yy)) {
-				if (yy[[ll]][1] != FALSE) {
-					cat(paste(funVersion, "Found valid codes instead of sysMis for ID", ll, "in variables:\n",paste(yy[[ll]], collapse = ", "),"\n"))
+		if(!all(unlist(resP <- lapply(resL, function(iz) {iz[["P"]]})) == FALSE)) {
+			for(ll in names(resL)) {
+				if (!all(unlist(resP[[ll]]) == FALSE)) {
+					cat(paste(funVersion, "Found valid codes instead of sysMis for booklet", ll, "for variables:\n"))
+						for(pp in names(resP[[ll]])) {
+							if (resP[[ll]][[pp]][1] != FALSE) {
+								cat(paste(pp, " (cases: ", paste(resP[[ll]][[pp]], collapse = ", "), ") \n", sep=""))
+							}
+						}	
 				}
 			}
-		}	
+		} 
 	}
 }

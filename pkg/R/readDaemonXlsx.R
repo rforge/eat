@@ -1,10 +1,13 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # readDaemonXlsx
 # Description: automates data preparation
-# Version: 	0.3.0
+# Version: 	0.4.0
 # Status: 
 # Release Date: 	2011-11-22 
 # Author:    Karoline Sachse
+# Change Log:
+# 2012-10-05 KS
+# CHANGED: adapt to Daemon
 # Change Log:
 # 2011-11-25 KS
 # CHANGED: sheets 1-3 are compulsory, 4-10 optional in readDaemonXlsx
@@ -13,7 +16,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # function:
-# 		readDaemonXlsx ( inputDat, inputList )
+# 		readDaemonXlsx ( inputDat, inL )
 #
 # description:
 #		read .xlsx from ZKDaemon
@@ -25,69 +28,56 @@
 
 
 readDaemonXlsx <- function(filename) {
-	inputList <- list() #inputList zukünftig als S4 Objekt
-	for(i in 1:3) {
-		inputList[[i]] <- read.xlsx2(filename, sheetIndex=i, as.data.frame=TRUE,
-			header=TRUE, colClasses="character")
-		inputList[[i]] <- data.frame(lapply(inputList[[i]], as.character), stringsAsFactors=FALSE)
-	}
-	names(inputList) <- c("units", "subunits", "values") #, "unitRecodings", "savFiles", "newID")
-	stopifnot(all(c("unit", "unitType", "unitAggregateRule", "unitScoreRule") %in% colnames(inputList$units)))
-	stopifnot(all(c("unit", "subunit", "subunitRecoded") %in% colnames(inputList$subunits)))
-	stopifnot(all(c("subunit", "value", "valueRecode", "valueType") %in% colnames(inputList$values)))
-	if(inherits(try (read.xlsx2(filename, 4)), "try-error")) {
-		sunk("No .xlsx sheet unitRecodings available at sheet position 4. InputList will be created without unitRecodings.\n")
+
+	inL <- list() 
+	
+	sheetNameVec <- c("units", "subunits", "values", "unitrecoding", "sav-files", "params", "aggregate-missings", "itemproperties", "propertylabels", "booklets", "blocks")
+	
+	for(pp in sheetNameVec) {
+		if(inherits(try( inL[[pp]] <- read.xlsx2(filename, sheetName=pp, as.data.frame=TRUE, header=TRUE, colClasses="character", stringsAsFactors=FALSE), silent=TRUE)	, "try-error")) {
+			cat(paste("No .xlsx sheet '", pp, "' available. InputList will be created without '", pp, "'.\n", sep = ""))
 		} else {
-		inputList$unitRecodings <- read.xlsx2(filename,sheetIndex=4, as.data.frame=TRUE,
-			header=TRUE, colClasses="character")
-		inputList$unitRecodings <- data.frame(lapply(inputList$unitRecodings, as.character), stringsAsFactors=FALSE)
-		stopifnot(all(c("unit", "value", "valueRecode", "valueType") %in% colnames(inputList$unitRecodings)))
+			cat(paste("Reading sheet '", pp, "'.\n", sep = ""))
+		}
 	}
-	if(inherits(try (read.xlsx2(filename, 5)), "try-error")) {
-		sunk("No .xlsx sheet savFiles available at sheet position 5. InputList will be created without this sheet.\n")
-		} else {
-		inputList$savFiles <- read.xlsx2(filename, sheetIndex=5, as.data.frame=TRUE,
-			header=TRUE, colClasses="character")
-		inputList$savFiles <- data.frame(lapply(inputList$savFiles, as.character), stringsAsFactors=FALSE)
-		stopifnot(all(c("filename", "case.id") %in% colnames(inputList$savFiles)))
+	fileS <- system.file("tests", "test_import.xlsx", package = "xlsx")
+	res <- read.xlsx(fileS, 1) 
+	
+	if(!is.null(inL$units) & !all(c("unit", "unitType", "unitAggregateRule") %in% colnames(inL$units))) {
+		cat("Something seems to be wrong with your 'units' sheet. Please check columns! \n")
 	}
-	if(inherits(try (read.xlsx2(filename, 6)), "try-error")) {
-		sunk("No .xlsx sheet newID available at sheet position 6. InputList will be created without this sheet.\n")
-		} else {
-		inputList$newID <- read.xlsx2(filename, sheetIndex=6, as.data.frame=TRUE,
-			header=TRUE, colClasses="character")
-		inputList$newID  <- data.frame(lapply(inputList$newID , as.character), stringsAsFactors=FALSE)
-		stopifnot(all(c("key", "value") %in% colnames(inputList$newID )))
+	if(!is.null(inL$subunits) & !all(c("unit", "subunit", "subunitRecoded") %in% colnames(inL$subunits))) {
+		cat("Something seems to be wrong with your 'subunits' sheet. Please check columns! \n")
+	}	
+	if(!is.null(inL$values) & !all(c("subunit", "value", "valueRecode", "valueType") %in% colnames(inL$values))) {
+		cat("Something seems to be wrong with your 'values' sheet. Please check columns! \n")
 	}
-	if(inherits(try (read.xlsx2(filename, 7)), "try-error")) {
-		sunk("No .xlsx sheet aggregateMissings available at sheet position 7. InputList will be created without this sheet.\n")
-		} else {
-		inputList$aggrMiss <- read.xlsx2(filename, sheetIndex=7, as.data.frame=TRUE,
-			header=TRUE, colClasses="character")
-		inputList$aggrMiss  <- data.frame(lapply(inputList$aggrMiss, as.character), stringsAsFactors=FALSE)
-		stopifnot(all(c("vc", "mbd") %in% colnames(inputList$aggrMiss)))
+	if(!is.null(inL$unitrecoding) & !all(c("unit", "value", "valueRecode") %in% colnames(inL$unitrecoding))) {
+		cat("Something seems to be wrong with your 'unitrecoding' sheet. Please check columns! \n")
 	}
-	if(inherits(try (read.xlsx2(filename, 8)), "try-error")) {
-		sunk("No .xlsx sheet itemProperties available at sheet position 8. InputList will be created without this sheet.\n")
-		} else {
-		inputList$itemProperties <- read.xlsx2(filename, sheetIndex=8, as.data.frame=TRUE,
-			header=TRUE, colClasses="character")
-		inputList$itemProperties  <- data.frame(lapply(inputList$itemProperties, as.character), stringsAsFactors=FALSE)
+	if(!is.null(inL[["sav-files"]]) & !all(c("filename", "case.id", "fullname") %in% colnames(inL[["sav-files"]]))) {
+		cat("Something seems to be wrong with your 'sav-files' sheet. Please check columns! \n")
 	}
-	if(inherits(try (read.xlsx2(filename, 9)), "try-error")) {
-		sunk("No .xlsx sheet itemPropertyLabels available at sheet position 9. InputList will be created without this sheet.\n")
-		} else {
-		inputList$itemPropertyLabels <- read.xlsx2(filename, sheetIndex=9, as.data.frame=TRUE,
-			header=TRUE, colClasses="character")
-		inputList$itemPropertyLabels  <- data.frame(lapply(inputList$itemPropertyLabels, as.character), stringsAsFactors=FALSE)
+	if(!is.null(inL$params) & !all(c("key", "value") %in% colnames(inL$params))) {
+		cat("Something seems to be wrong with your 'params' sheet. Please check columns! \n")
 	}
-	if(inherits(try (read.xlsx2(filename, 10)), "try-error")) {
-		sunk("No .xlsx sheet booklets available at sheet position 10. InputList will be created without this sheet.\n")
-		} else {
-		inputList$booklets <- read.xlsx2(filename, sheetIndex=10, as.data.frame=TRUE,
-			header=TRUE, colClasses="character")
-		inputList$booklets  <- data.frame(lapply(inputList$booklets, as.character), stringsAsFactors=FALSE)
-		stopifnot(all(c("id", "subunitsequence") %in% colnames(inputList$booklets)))
+	if(!is.null(inL[["aggregate-missings"]]) & !all(c("vc", "mbd") %in% colnames(inL[["aggregate-missings"]]))) {
+		cat("Something seems to be wrong with your 'aggregate-missings' sheet. Please check columns! \n")
 	}
-	return(inputList)
+	if(!is.null(inL[["booklets"]]) & !all(c("booklet", "block1") %in% colnames(inL[["booklets"]]))) {
+		cat("Something seems to be wrong with your 'booklets' sheet. Please check columns! \n")
+	}
+	if(!is.null(inL[["blocks"]]) & !all(c("subunit", "block") %in% colnames(inL[["blocks"]]))) {
+		cat("Something seems to be wrong with your 'blocks' sheet. Please check columns! \n")
+	}
+	
+	
+	# paar ueberfluessige Umbenennungen für Folgefunktionen
+	names(inL)[which(names(inL) == "sav-files")] <- "savFiles"
+	names(inL)[which(names(inL) == "params")] <- "newID"
+	names(inL)[which(names(inL) == "aggregate-missings")] <- "aggrMiss"
+	names(inL)[which(names(inL) == "unitrecoding")] <- "unitRecodings"
+	cat("(Sheets savFiles, newID, aggrMiss, unitRecodings eventually renamed due to naming standards). \n")
+
+	return(inL)
 }
