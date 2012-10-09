@@ -6,7 +6,7 @@
 
 install.eat.dependencies <- function ( ) {
 
-		pkgs <- c("MASS","car","date","foreign","gdata","reshape","sendmailR","xlsx","R.utils","parallel","psych","ggplot2")
+		pkgs <- c("MASS","car","date","foreign","gdata","reshape","sendmailR","xlsx","R.utils","parallel","psych","ggplot2","survey")
 		if ( grepl ( "OS" , Sys.getenv()["OS"] ) ) pkgs <- pkgs [ !pkgs=="xlsx" ]
 		
 		oldwarn <- getOption ( "warn" )
