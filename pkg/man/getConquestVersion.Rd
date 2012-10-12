@@ -8,12 +8,14 @@ get version (build) of ConQuest
 get version (build) of ConQuest
 }
 \usage{
-getConquestVersion ( path.conquest , asDate = TRUE )
+getConquestVersion ( path.conquest , path.temp, asDate = TRUE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
 
   \item{path.conquest}{ full path to ConQuest executable console }
+  \item{path.temp}{ optional: writeable folder used for temporary files. If not specified, R working directory will be used. 
+Without writing access, an error will result.  }
   \item{asDate}{ if \code{TRUE} an object of class 'date' is returned
 				 if \code{FALSE} a character string is returned	}
 
