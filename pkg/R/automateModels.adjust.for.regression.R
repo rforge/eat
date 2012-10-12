@@ -47,7 +47,7 @@
 				eval ( parse ( text = do ) )
 				# person side
 				pvadj <- pNam <- list()
-				for(j in seq(along=which(names(results[[k]][[dimensions[i]]][[1]][[2]][[1]]$pv) %in% c("pv.1", "pv.2", "pv.3", "pv.4", "pv.5")))) {
+				for(j in seq(along=names(results[[k]][[dimensions[i]]][[1]][[2]][[1]]$pv))) {
 					pvadj[[dimensions[i]]] <- unlist(lapply(results[[k]][[dimensions[i]]][[1]][[2]], function(ll) {ll$pv[[paste("pv.", j, sep="")]]})) - results[[k]][[dimensions[i]]][[1]]$descriptives$pv$pv.mean
 					pNam[[dimensions[i]]] <- names(results[[k]][[dimensions[i]]][[1]][[2]])
 						make.pvadj <- function ( pers , pvad ) {
@@ -64,7 +64,6 @@
 						# for(jj in itNam[[dimensions[i]]]) {
 					# results[[k]][[dimensions[i]]][[1]][[1]][[jj]]$b.adj <- unname(badj[[dimensions[i]]][jj])
 				# }
-		
 		# Ausgabe
 		sunk ( " done\n\n" )
 		

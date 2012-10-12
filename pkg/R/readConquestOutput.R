@@ -296,7 +296,7 @@ readConquestOutput <- function (jobFolder, subFolder = NULL, item.grouping, name
 					
 					pvl <- as.list ( unlist( pv[ pv$ID==id, -1 ] ) )
 				    names ( pvl ) <- paste ( "pv." , gsub ( "^.*(\\d+$)" , "\\1" , names ( pvl ) ) , sep = "" )
-					
+					names( pvl ) <- paste("pv.", seq(along=names(pvl)), sep="")
 					pvl <- list ( "pv" = pvl )
 					
 					do.call ( "c" , list ( wlel , eapl , pvl ) )
