@@ -15,7 +15,7 @@ getConquestVersion ( path.conquest , path.temp, asDate = TRUE )
 
   \item{path.conquest}{ full path to ConQuest executable console }
   \item{path.temp}{ optional: writeable folder used for temporary files. If not specified, R working directory will be used. 
-Without writing access, an error will result.  }
+Without writing access, NULL is returned. }
   \item{asDate}{ if \code{TRUE} an object of class 'date' is returned
 				 if \code{FALSE} a character string is returned	}
 

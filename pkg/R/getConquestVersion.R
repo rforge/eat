@@ -1,6 +1,6 @@
 
-getConquestVersion <- function ( path.conquest , path.temp, asDate = TRUE ) {
-    if(missing(path.temp)) {path.temp <- getwd()}
+getConquestVersion <- function ( path.conquest, path.temp = NULL, asDate = TRUE ) {
+    if( is.null (path.temp) ) {path.temp <- getwd()}
 		wd <- path.temp
 		f <- file.path ( wd , "delete.cqc" )
 		if ( file.create ( f, showWarnings = TRUE ) ) {
@@ -26,7 +26,10 @@ getConquestVersion <- function ( path.conquest , path.temp, asDate = TRUE ) {
 
 						r <- gsub ( "\\s+" , "-" , r )
 						
-						if ( asDate ) r <- as.date(r)
+						if ( asDate ) {
+								r <- as.date(r)
+								if ( is.na ( r ) ) r <- NULL
+						}
 						
 				}
 
