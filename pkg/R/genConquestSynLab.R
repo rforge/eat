@@ -356,7 +356,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
             }
             if(export["history"] == TRUE)  {
                cq.version <- getConquestVersion( pathConquest, path.temp = jobFolder )
-				       if( (cq.version < as.date("1Jan2007")) | is.null ( cq.version ) ) {
+				       if( (cq.version < as.date("1Jan2007")) || is.null ( cq.version ) ) {
 									ind.3 <- grep("^export history",syntax)   ### wenn Conquest aelter als 2007, soll history geloescht werden
                   syntax <- syntax[-ind.3]
                }
