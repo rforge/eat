@@ -355,7 +355,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                }
             }
             if(export["history"] == TRUE)  {
-               cq.version <- getConquestVersion( pathConquest )
+               cq.version <- getConquestVersion( pathConquest, pth.temp = jobFolder )
 				       if( (cq.version < as.date("1Jan2007")) | is.null ( cq.version ) ) {
 									ind.3 <- grep("^export history",syntax)   ### wenn Conquest aelter als 2007, soll history geloescht werden
                   syntax <- syntax[-ind.3]
@@ -385,37 +385,43 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
 ### columnItemNames         ... in welcher Spalte der q-Matrix stehen Itemnamen? 
 ### columnsDimension        ... in welchen Spalten der Q-Matrix stehen die Dimensionen?
 ###                             Default: in erster Spalte stehen Itemnamen, in allen übrigen Spalten stehen Indikatoren für Dimensionen
-.writeScoreStatementMultidim <- function(data, itemCols, qmatrix, columnItemNames = 1 ,columnsDimensions = -1, use.letters=use.letters, allowAllScoresEverywhere ) {
+.writeScoreStatementMultidim <- function(data, itemCols, qmatrix, columnItemNames = 1 ,columnsDimensions = -1, use.letters=use.letters , allowAllScoresEverywhere) {
             n.dim      <- (1:ncol(qmatrix) )[-columnItemNames]                  ### wieviele Dimensionen?
             deleteRows <- which( rowSums(qmatrix[,n.dim,drop=F]) == 0)          ### lösche Items aus Q-Matrix, die auf keiner Dimension laden
             if(length(deleteRows)>0)   {
               qmatrix <- qmatrix[-deleteRows,]
-      			  sunk(paste(length(deleteRows)," items in Q matrix does not depend to any dimension. Items were deleted from q matrix. \n",sep=""))
+      			  cat(paste(length(deleteRows)," items in Q matrix does not depend to any dimension. Items were deleted from q matrix. \n",sep=""))
       	    }
-            sunk(paste("Q matrix specifies ",length(n.dim)," dimensions.\n",sep=""))
+      	    if(length(setdiff(names(table.unlist(qmatrix[,-1, drop = FALSE])), c("0","1"))) > 0 )  {
+               cat("Found unequal factor loadings for at least one dimension. This will result in a 2PL model.\n")
+               for (u in 2:ncol(qmatrix)) {qmatrix[,u] <- as.character(round(qmatrix[,u], digits = 3))}
+            }                                                                   ### obere Zeile: Identifiziere Items mit Trennschärfe ungleich 1
+            cat(paste("Q matrix specifies ",length(n.dim)," dimensions.\n",sep=""))
             # columnItemNames <- grep("item",colnames(qmatrix))                  ### wo stehen Items in Q-Matrix?
 		        # if(length(columnItemNames)!=1) {stop("Kann Itemspalte in Q-Matrix nicht eindeutig zuordnen.\n")}
             misInQmatrix <- setdiff(colnames(data[,itemCols]),  qmatrix[,columnItemNames])                       ### Items im Datensatz, aber nicht in Q-Matrix?
             if(length(misInQmatrix)>0) {
-      		     sunk("Items in dataset without specification in Q matrix.\n")
-               sunk(paste(misInQmatrix,collapse=", ")); cat("\n"); stop()
+      		     cat("Items in dataset without specification in Q matrix.\n")
+               cat(paste(misInQmatrix,collapse=", ")); cat("\n"); stop()
       		  }
-            all.variables <- colnames(data)[itemCols]                           ### alle Items im datasatz
-            dim.need     <- lapply(n.dim,FUN=function(ii) {0:1})                ### Kompliziert: Hier werden, abhängig der Anzahl der Dimensionen, alle Möglichkeiten der Ladungsbelegungen durchpermutiert; bei N Dimensionen sind das 2^N Belegungen, wenn Mehrfachbelegungen (within Item dimensionality) erlaubt sind
-            score.matrix <- data.frame(score=1, expand.grid(dim.need), matrix(NA,nrow=nrow(expand.grid(dim.need)), ncol=length(all.variables)),stringsAsFactors=F)
-            score.matrix <- score.matrix[-1,]
+            all.variables <- colnames(data)[itemCols]                           ### alle Items im Datensatz
+            unique.patter <- qmatrix[which(!duplicated(do.call("paste", qmatrix[,-1, drop = FALSE] ))), -1, drop = FALSE]
+            colnames(unique.patter) <- paste("Var",1:ncol(unique.patter), sep="")## obere Zeile: Finde alle uniquen Pattern in qmatrix! Jedes unique Pattern muss in Conquest einzeln adressiert werden!
+            score.matrix <- data.frame(score=1, unique.patter, matrix(NA, nrow= nrow(unique.patter), ncol=length(all.variables)),stringsAsFactors=F)
             scoreColumns <- grep("Var",colnames(score.matrix))
             for (i in 1:length(all.variables))  {                               ### gebe alle Items auf den jeweiligen Dimensionen
-               qmatrix.i    <- qmatrix[qmatrix[,columnItemNames] == all.variables[i],]# auf welcher Dimension lädt Variable i? Untere zeile: in diese Zeile von score.matrix muß ich variable i eintragen
+               qmatrix.i    <- qmatrix[qmatrix[,columnItemNames] == all.variables[i],]# auf welcher Dimension lädt Variable i? Untere Zeile: in diese Zeile von score.matrix muß ich variable i eintragen
                matchRow     <- which(sapply ( 1:nrow(score.matrix) , function(ii) {all ( as.numeric(qmatrix.i[,n.dim]) == as.numeric(score.matrix[ii,scoreColumns])) }))
+               stopifnot(length(matchRow) == 1)
                matchColumn  <- min(which(is.na(score.matrix[matchRow,])))       ### in welche spalte von Score.matrix muß ich variable i eintragen?
+               stopifnot(length(matchColumn) == 1)
                score.matrix[matchRow,matchColumn] <- i
 		        }
             rowsToDelete <- which(is.na(score.matrix[, max(scoreColumns) + 1])) ### welche Zeilen in Score.matrix können gelöscht werden?
             if(length(rowsToDelete)>0) {score.matrix <- score.matrix[-rowsToDelete, ]}
             for (ii in 1:nrow(score.matrix)) {score.matrix[,ii] <- as.character(score.matrix[,ii])}
             itemdata <- data[,itemCols, drop = FALSE]
-			score.matrix <- fromMinToMax(dat = itemdata, score.matrix = score.matrix, qmatrix = qmatrix, allowAllScoresEverywhere = allowAllScoresEverywhere, use.letters = use.letters)
+            score.matrix <- fromMinToMax(dat = itemdata, score.matrix = score.matrix, qmatrix = qmatrix, allowAllScoresEverywhere = allowAllScoresEverywhere, use.letters = use.letters)
             kollapse <- lapply(1:nrow(score.matrix), FUN=function(ii) {na.omit(as.numeric(score.matrix[ii,-c(1,scoreColumns)]))})
             kollapse.diff   <- lapply(kollapse,FUN=function(ii) {c(diff(ii),1000)})
             kollapse.ascend <- lapply(kollapse.diff, FUN=function(ii) {unique(c(0, which(ii!=1)))})
@@ -425,7 +431,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                 for (i in 2:length(kollapse.ascend[[a]]))   {
                     string.i <- unique( c(kollapse[[a]][kollapse.ascend[[a]][i-1]+1], kollapse[[a]][kollapse.ascend[[a]][i]]))
                     string.i <- ifelse(length(string.i) == 2,paste(string.i[1],"-",string.i[2],sep=""),as.character(string.i))
-                    string[[i]] <- string.i 
+                    string[[i]] <- string.i
 				        }
                 string <- paste(unlist(string),collapse=", ")
                 kollapse.string[[a]] <- string
@@ -433,38 +439,35 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
             ### Prüfung, ob "tranformation" des score-statements ok ist
             control <- lapply(kollapse.string,FUN=function(ii) {eval(parse(text=paste("c(",gsub("-",":",ii),")",sep="")))})
             if (!all(unlist(lapply(1:length(control), FUN=function(ii) {all(kollapse[[ii]] == control[[ii]])})))) {
-                sunk("Error in creating score statement.\n")
+                cat("Error in creating score statement.\n")
 			      }
             score.matrix <- data.frame(prefix="score",score.matrix[,c(1,scoreColumns)],items="! items(",kollapse.string=unlist(kollapse.string),suffix=");",stringsAsFactors=F)
             score.statement <- sapply(1:nrow(score.matrix), FUN=function(ii) { paste(score.matrix[ii,],collapse=" ")})
             return(score.statement)
-		}	
+		}
 
 ### Hilfsfunktion für .writeScoreStatementMultidim()
 fromMinToMax <- function(dat, score.matrix, qmatrix, allowAllScoresEverywhere, use.letters)    {
-				
-				all.values <- alply(as.matrix(score.matrix), .margins = 1, .fun = function(ii) { names(table.unlist(dat[,na.omit(as.numeric(ii[grep("^X", names(ii))]))]))  })
-				if ( allowAllScoresEverywhere == TRUE ) {
-                    all.values <- lapply(all.values, FUN = function(ii) {sort(asNumericIfPossible(unique( unlist ( all.values ) ), verbose = FALSE ) ) } )
-                }     
+                # if(!exists("alply"))  {library(plyr)}
+                all.values <- alply(as.matrix(score.matrix), .margins = 1, .fun = function(ii) {names(table.unlist(dat[,na.omit(as.numeric(ii[grep("^X", names(ii))])), drop = FALSE]))  })
+                if ( allowAllScoresEverywhere == TRUE ) {                       ### obere Zeile: WICHTIG: "alply" ersetzt "apply"! http://stackoverflow.com/questions/6241236/force-apply-to-return-a-list
+                    all.values <- lapply(all.values, FUN = function(ii) {sort(as.numeric.if.possible(unique( unlist ( all.values ) ), verbose = FALSE ) ) } )
+                }
                 if(use.letters == TRUE )  {minMaxRawdata  <- unlist ( lapply( all.values, FUN = function (ii) {paste("(",paste(LETTERS[which(LETTERS == ii[1]) : which(LETTERS == ii[length(ii)])], collapse=" "),")") } ) ) }
-                if(use.letters == FALSE ) {
-						all.values <- sapply ( all.values , function ( v ) v[!v %in% c(letters,LETTERS)] , simplify = FALSE )
-						minMaxRawdata  <- unlist ( lapply( all.values, FUN = function (ii) {paste("(",paste(ii[1] : ii[length(ii)],collapse = " "),")")  } ) )
-				}
+                if(use.letters == FALSE ) {minMaxRawdata  <- unlist ( lapply( all.values, FUN = function (ii) {paste("(",paste(ii[1] : ii[length(ii)],collapse = " "),")")  } ) ) }
                 scoring <- unlist( lapply( minMaxRawdata , FUN = function(ii) { paste("(", paste( 0 : (length(unlist(strsplit(ii, " ")))-3), collapse = " "),")")}) )
                 stopifnot(length(scoring) == length( minMaxRawdata ) )
                 stopifnot(length(scoring) == nrow(score.matrix ) )
                 options(warn = -1)                                              ### warnungen aus
                 for (i in 1:nrow(score.matrix))    {
                     score.matrix$score[i] <- minMaxRawdata[i]
-                    targetColumns         <- intersect ( grep("Var",colnames(score.matrix)), which(as.numeric(score.matrix[i,]) == 1 ) ) 
+                    targetColumns         <- intersect ( grep("Var",colnames(score.matrix)), which(as.numeric(score.matrix[i,]) != 0 ) )
                     stopifnot(length(targetColumns) > 0 )
-                    score.matrix[i,targetColumns]  <- scoring[i] 
+                    score.matrix[i,targetColumns]  <- paste( "(", paste(as.numeric(score.matrix[i,targetColumns]) * na.omit(as.numeric(unlist(strsplit(scoring[i]," ")))), collapse = " "), ")")
                     nonTargetColumns      <- intersect ( grep("Var",colnames(score.matrix)), which(as.numeric(score.matrix[i,]) == 0 ) )
                     if ( length ( nonTargetColumns ) > 0 )    {
                        score.matrix[i,nonTargetColumns]  <- "()"
                     }
                 }
                 options(warn = 0)                                               ### warnungen wieder an
-                return(score.matrix)}    
+                return(score.matrix)}
