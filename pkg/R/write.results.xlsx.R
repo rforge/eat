@@ -58,7 +58,7 @@
 #####################################################################################################################
 
 
-write.results.xlsx.i <- function ( results , path , additional_itemprops=NULL ) {
+write.results.xlsx.i <- function ( results , path , additional_itemprops=NULL , write.xls.results ) {
 
 
 		itemkennwerte  <- get.item.par(results)
@@ -68,7 +68,7 @@ write.results.xlsx.i <- function ( results , path , additional_itemprops=NULL ) 
 		
 		### rausschreiben
 		# Excel
-		write.xlsx2 ( itemkennwerte , file.path ( path , paste( out.name , ".xlsx", sep="") ), sheetName = "items", row.names = TRUE )
+		if ( write.xls.results ) write.xlsx2 ( itemkennwerte , file.path ( path , paste( out.name , ".xlsx", sep="") ), sheetName = "items", row.names = TRUE )
 			
 		# Rdata Frame
 		save ( itemkennwerte , file = file.path ( path , paste( out.name , ".Rdata", sep="" ) ) )

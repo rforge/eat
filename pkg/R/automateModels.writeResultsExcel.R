@@ -13,7 +13,7 @@
 #			
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.automateModels.writeResultsExcel <- function ( results , analyse.name , folder , folder.aM , additional.item.props ) {
+.automateModels.writeResultsExcel <- function ( results , analyse.name , folder , folder.aM , additional.item.props , write.xls.results ) {
 
 		# Funktionsname für Meldungen
 		f. <- ".automateModels.writeResultsExcel"
@@ -26,11 +26,15 @@
 		# st <- paste ( "\n" , f.n , " Excels werden geschrieben " , sep = "" )
 		# st <- paste ( "\n" , f.n , " Excels are being written " , sep = "" )
 		# sunk ( "paste ( f.n , ' Excels are being written ' , sep = '' )" ) 
-		sunk ( "Excels are being written" ) 
-
+		if ( write.xls.results ) {
+				msg <- "Excels and Rdata Files are being written"
+		} else {
+				msg <- "Excels Files are being written"
+		}
+		sunk ( msg ) 
 		
 		# Gesamt-Excel
-		check <- write.results.xlsx ( results , folder.aM , additional.item.props )
+		check <- write.results.xlsx ( results , folder.aM , additional.item.props , write.xls.results )
 		#check <- TRUE
 
 		# Einzel-Excels
@@ -41,12 +45,16 @@
 					results <- list ( results )
 					names ( results ) <- name
 				
-					write.results.xlsx ( results = results , path = unname ( unlist ( folder[ name ] ) ) , additional_itemprops = additional.item.props )
+					write.results.xlsx ( results = results , path = unname ( unlist ( folder[ name ] ) ) , additional_itemprops = additional.item.props , write.xls.results )
 		
 					# 30.07.12 noch Latente Korrelationen / Varianzen nach Excel
 					if ( length ( results[[1]] ) > 1 ) nam <- "CorrCovVar" else nam <- "Var"
 					fin <- file.path ( unname ( unlist ( folder[ name ] ) ) , paste ( name , "_" , nam , sep = "" ) )
-					fin.xlsx <- paste ( fin , ".xlsx" , sep = "" )
+					if ( write.xls.results ) {
+							fin.xlsx <- paste ( fin , ".xlsx" , sep = "" )
+					} else {
+							fin.xlsx <- NULL
+					}
 					temp <- get.latent.corr ( unname ( unlist ( folder[ name ] ) ) , xlsx = fin.xlsx )
 					fin.Rdata <- paste ( fin , ".Rdata" , sep = "" )
 					name2 <- gsub ( "-" , "" , name )
@@ -58,7 +66,11 @@
 					# model Informationen
 					nam <- "model_info"
 					fin <- file.path ( unname ( unlist ( folder[ name ] ) ) , paste ( name , "_" , nam , sep = "" ) )
-					fin.xlsx <- paste ( fin , ".xlsx" , sep = "" )
+					if ( write.xls.results ) {
+							fin.xlsx <- paste ( fin , ".xlsx" , sep = "" )
+					} else {
+							fin.xlsx <- NULL
+					}
 					temp <- compareModels ( unname ( unlist ( folder[ name ] ) ) , xlsx = fin.xlsx )
 					fin.Rdata <- paste ( fin , ".Rdata" , sep = "" )
 					eval ( parse ( text = paste ( name2 , "_" , nam , " <- temp" , sep = "" ) ) ) 
@@ -74,7 +86,11 @@
 		if ( length ( results ) > 1 ) {
 				if ( any ( sapply ( results , function ( r ) { length ( r ) > 1 } ) ) ) nam <- "CorrCovVar" else nam <- "Var"
 				fin <- file.path ( folder.aM , ( name <- paste ( "All_" , length ( results ) , "_analyses_" , nam , sep = "" ) ) )
-				fin.xlsx <- paste ( fin , ".xlsx" , sep = "" )
+				if ( write.xls.results ) {
+						fin.xlsx <- paste ( fin , ".xlsx" , sep = "" )
+				} else {
+						fin.xlsx <- NULL
+				}
 				temp <- get.latent.corr ( file.path ( folder.aM , ".." ) , xlsx = fin.xlsx )
 				fin.Rdata <- paste ( fin , ".Rdata" , sep = "" )
 				eval ( parse ( text = paste ( sub ( "-" , "" , name ) , "_" , nam , "<- temp" , sep = "" ) ) ) 
@@ -86,7 +102,11 @@
 		if ( length ( results ) > 1 ) {
 				nam <- "model_comparison"
 				fin <- file.path ( folder.aM , ( name <- paste ( "All_" , length ( results ) , "_analyses_" , nam , sep = "" ) ) )
-				fin.xlsx <- paste ( fin , ".xlsx" , sep = "" )
+				if ( write.xls.results ) {
+						fin.xlsx <- paste ( fin , ".xlsx" , sep = "" )
+				} else {
+						fin.xlsx <- NULL
+				}
 				temp <- compareModels ( file.path ( folder.aM , ".." ) , xlsx = fin.xlsx )
 				fin.Rdata <- paste ( fin , ".Rdata" , sep = "" )
 				eval ( parse ( text = paste ( sub ( "-" , "" , name ) , "_" , nam , "<- temp" , sep = "" ) ) ) 
@@ -101,6 +121,4 @@
 		return ( check )
 		
 }
-
-
 

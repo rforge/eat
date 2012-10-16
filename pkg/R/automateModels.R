@@ -270,7 +270,7 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 		# Q3 erzeugen
 		results <- make.q3 ( results , model.specs , q3.p.est )
 		# Excels erzeugen
-		if ( write.xls.results ) check <- .automateModels.writeResultsExcel ( results , model.specs$analyse.name , model.specs$folder , folder.aM , additional.item.props )
+		check <- .automateModels.writeResultsExcel ( results , model.specs$analyse.name , model.specs$folder , folder.aM , additional.item.props , write.xls.results )
 		
 		# ICCs schreiben
 		if ( icc ) temp <- automateModels.plot.icc ( results , model.specs )
