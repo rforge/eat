@@ -80,7 +80,7 @@ write.results.xlsx.i <- function ( results , path , additional_itemprops=NULL , 
 
 ##Personenwerte als Extra-tabelle
 
-write.results.xlsx.p <- function ( results , path ) {
+write.results.xlsx.p <- function ( results , path , write.xls.results ) {
 
 		personenkennwerte <- get.person.par(results)
 
@@ -91,7 +91,7 @@ write.results.xlsx.p <- function ( results , path ) {
 
 		### rausschreiben
 		# Excel
-		write.xlsx2 ( personenkennwerte , file.path ( path , paste( out.name , ".xlsx", sep="") ), sheetName = "persons", row.names = TRUE )
+		if ( write.xls.results ) write.xlsx2 ( personenkennwerte , file.path ( path , paste( out.name , ".xlsx", sep="") ), sheetName = "persons", row.names = TRUE )
 			
 		# Rdata Frame
 		save ( personenkennwerte , file = file.path ( path , paste( out.name , ".Rdata", sep="" ) ) )
@@ -101,14 +101,14 @@ write.results.xlsx.p <- function ( results , path ) {
 		return ( TRUE )
 }
 
-write.results.xlsx.q3 <- function ( results , path ) {
+write.results.xlsx.q3 <- function ( results , path , write.xls.results ) {
 
 		results.q3 <-  get.q3(results)
 		
 		# Name des out-files setzen
 		if ( ! ( l <- length ( names ( results ) ) ) == 1 ) out.name <- paste ( "All_" , l , "_q3" , sep="" ) else out.name <- paste(names ( results ),"_q3",sep="")
 
-		.fun1 <- function ( el , el.name , results.q3 , out.name , path ) {
+		.fun1 <- function ( el , el.name , results.q3 , out.name , path , write.xls.results ) {
 				if ( !is.null ( el ) ) {
 						# Bestimmung von append
 						els.names <- names ( results.q3[ sapply ( results.q3 , function ( e ) { !is.null(e) } ) ] )
@@ -116,19 +116,19 @@ write.results.xlsx.q3 <- function ( results , path ) {
 
 						sheetNames <- make.unique ( substr ( els.names , 1 , 20 ) )
 						sheetName <- sheetNames[which ( els.names == el.name )]
-						write.xlsx2 ( el , file.path ( path , paste( out.name , ".xlsx", sep="") ), sheetName = sheetName , row.names = TRUE , append=append)				
+						if ( write.xls.results ) write.xlsx2 ( el , file.path ( path , paste( out.name , ".xlsx", sep="") ), sheetName = sheetName , row.names = TRUE , append=append)				
 						q3 <- el
 						save ( q3 , file = file.path ( path , paste( out.name , ".Rdata", sep="" ) ) )
 						
 						# q3 descriptives
 						q3.descriptives <- q3.descriptives(q3)
-						write.xlsx2 ( q3.descriptives , file.path ( path , paste( out.name , "_descriptives.xlsx", sep="") ), sheetName = "q3_descriptives" , row.names = FALSE , append=FALSE)
+						if ( write.xls.results ) write.xlsx2 ( q3.descriptives , file.path ( path , paste( out.name , "_descriptives.xlsx", sep="") ), sheetName = "q3_descriptives" , row.names = FALSE , append=FALSE)
 						save ( q3.descriptives , file = file.path ( path , paste( out.name , "_descriptives.Rdata", sep="" ) ) )
 						
 				}
 				return(TRUE)
 		}
-		temp <- mapply (.fun1, results.q3 , names ( results.q3 ) , MoreArgs = list ( results.q3 , out.name , path ) )
+		temp <- mapply (.fun1, results.q3 , names ( results.q3 ) , MoreArgs = list ( results.q3 , out.name , path , write.xls.results ) )
 	
 		rm ( list = ls() )
 		gc ( )
@@ -136,11 +136,11 @@ write.results.xlsx.q3 <- function ( results , path ) {
 		
 }
 
-write.results.xlsx <- function ( results , path , additional_itemprops=NULL ) {
+write.results.xlsx <- function ( results , path , additional_itemprops=NULL , write.xls.results ) {
 
-		write.results.xlsx.i ( results , path , additional_itemprops=NULL )
-		write.results.xlsx.p ( results , path)
-		write.results.xlsx.q3 ( results , path )
+		write.results.xlsx.i ( results , path , additional_itemprops=NULL , write.xls.results )
+		write.results.xlsx.p ( results , path , write.xls.results )
+		write.results.xlsx.q3 ( results , path , write.xls.results )
 }
 
 

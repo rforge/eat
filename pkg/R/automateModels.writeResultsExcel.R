@@ -29,7 +29,7 @@
 		if ( write.xls.results ) {
 				msg <- "Excels and Rdata Files are being written"
 		} else {
-				msg <- "Excels Files are being written"
+				msg <- "Rdata Files are being written"
 		}
 		sunk ( msg ) 
 		
@@ -45,7 +45,7 @@
 					results <- list ( results )
 					names ( results ) <- name
 				
-					write.results.xlsx ( results = results , path = unname ( unlist ( folder[ name ] ) ) , additional_itemprops = additional.item.props , write.xls.results )
+					write.results.xlsx ( results = results , path = unname ( unlist ( folder[ name ] ) ) , additional_itemprops = additional.item.props , write.xls.results = write.xls.results )
 		
 					# 30.07.12 noch Latente Korrelationen / Varianzen nach Excel
 					if ( length ( results[[1]] ) > 1 ) nam <- "CorrCovVar" else nam <- "Var"
