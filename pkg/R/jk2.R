@@ -40,6 +40,18 @@ jk2.mean <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), group.d
                                   design         <- svrepdesign(data = dat.i[,c(as.character(imp[-length(imp)]), dep) ], weights = dat.i[,wgt], type="JKn", scale = 1, rscales = 1, repweights = replicates[,-1], combined.weights = TRUE, mse = TRUE)
                                   formel         <- as.formula(paste("~ ",imp[["dep"]], sep = "") )
                                   means          <- svyby(formula = formel, by = as.formula(paste("~", paste(as.character(imp[-length(imp)]), collapse = " + "))), design = design, FUN = svymean, deff = FALSE, return.replicates = TRUE)
+                                  colnames(means) <- gsub("^se$", "se.mean", colnames(means) )
+                                  vars           <- svyby(formula = formel, by = as.formula(paste("~", paste(as.character(imp[-length(imp)]), collapse = " + "))), design = design, FUN = svyvar, deff = FALSE, return.replicates = TRUE)
+                                  colnames(vars) <- gsub("^V1$", "variance", colnames(vars))
+                                  colnames(vars) <- gsub("^se$", "se.variance", colnames(vars))
+                                  ### Standardabweichungen muessen separat bestimmt werden (Lumley, Mail 17. Oktober 2012). Delta method
+                                  ### da die delta method "von hand" programmiert werden muss, kann sie nicht mittels svyby() uebergeben werden, muss also aehnlich wie svyglm() von hand mittels lapply() auf die verschiedenen abhaengigen variablen verteilt werden
+                                  sds            <- do.call("rbind", by(data = dat.i, INDICES =  dat.i[,as.character(imp[-length(imp)])], FUN = function (uu) {
+                                                    namen          <- sapply(uu[,as.character(imp[-length(imp)]), drop = FALSE], FUN = function ( yy ) {names(table(yy))})
+                                                    sub.replicates <- replicates[ match(uu[,"idstud"], replicates[,"ID"] ) ,  ]
+                                                    design.uu      <- svrepdesign(data = uu[ ,c(as.character(imp[-length(imp)]), dep)], weights = uu$wgtSTUD, type="JKn", scale = 1, rscales = 1, repweights = sub.replicates[,-1], combined.weights = TRUE, mse = TRUE)
+                                                    var.uu         <- svyvar(x = as.formula(paste("~",imp[["dep"]],sep="")), design = design.uu, deff = FALSE, return.replicates = TRUE)
+                                                    ret            <- data.frame(t(namen), SD = as.numeric(sqrt(coef(var.uu))), se.SD =  as.numeric(sqrt(vcov(var.uu)/(4*coef(var.uu)))), stringsAsFactors = FALSE ) }) )
                                   difs           <- NULL
                                   if(!is.null(group.differences.by))   {
                                      m            <- means
@@ -59,28 +71,36 @@ jk2.mean <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), group.d
                                      })
                                      difs           <- do.call("rbind", difs)
                                   }
-                                  SD             <- svyby(formula = formel, by = as.formula(paste("~", paste(as.character(imp[-length(imp)]), collapse = " + "))), design = design, FUN = svyvar, deff = FALSE, return.replicates = TRUE)
-                                  means          <- data.frame(means, SD = sqrt(SD[,"V1"]), stringsAsFactors = FALSE )
-                                  attr(means, "difs") <- difs
-                                  return(means)
+                                  common            <- as.character(imp[-length(imp)])
+                                  ret               <- merge(means, vars, by = common, all = TRUE)
+                                  ret               <- merge(ret, sds , by = common, all = TRUE )
+                                  attr(ret, "difs") <- difs
+                                  return(ret)
                            })
                            cat("\nPooling Standard errors.\n")
                            ana.frame           <- do.call("cbind", ana)
                            mean.cols           <- unlist(lapply(dep, FUN = function ( uu ) {grep(paste(uu,"$",sep=""), colnames(ana.frame))}))
-                           se.cols             <- grep("se$",colnames(ana.frame))
-                           sd.cols             <- grep("SD$",colnames(ana.frame))
-                           stopifnot(length(mean.cols ) == length(se.cols) )
-                           stopifnot(length(se.cols ) == length(sd.cols) )
-                           if(length(se.cols)>1) {                              ## Es wird nur gepoolt, wenn es mehr als einen Standardfehler gibt
+                           se.mean.cols        <- grep("^se.mean",colnames(ana.frame))
+                           sd.cols             <- grep("^SD",colnames(ana.frame))
+                           se.sd.cols          <- grep("^se.SD", colnames(ana.frame))
+                           var.cols            <- grep("^variance", colnames(ana.frame))
+                           se.var.cols         <- grep("^se.variance", colnames(ana.frame))
+                           stopifnot(length(mean.cols ) == length(se.mean.cols) )
+                           stopifnot(length(se.mean.cols ) == length(sd.cols) )
+                           stopifnot(length(sd.cols ) == length(se.sd.cols) )
+                           stopifnot(length(var.cols ) == length(se.var.cols) )
+                           if(length(se.mean.cols)>1) {                         ### Es wird nur gepoolt, wenn es mehr als einen Standardfehler gibt
                               pooled              <- t(apply(ana.frame, MARGIN = 1, FUN = function (iii) {
-                                                     unlist(c(pool.means(m = as.numeric(iii[mean.cols]), se = as.numeric(iii[se.cols]))$summary[c("m.pooled","se.pooled")],
-                                                     pool.means(m = as.numeric(iii[sd.cols]), se = as.numeric(iii[se.cols]))$summary["m.pooled"]))
+                                                     unlist(c(pool.means(m = as.numeric(iii[mean.cols]), se = as.numeric(iii[se.mean.cols]))$summary[c("m.pooled","se.pooled")],
+                                                     pool.means(m = as.numeric(iii[sd.cols]), se = as.numeric(iii[se.sd.cols]))$summary[c("m.pooled","se.pooled")],
+                                                     pool.means(m = as.numeric(iii[var.cols]), se = as.numeric(iii[se.var.cols]))$summary[c("m.pooled","se.pooled")]))
                               }))
+                              colnames(pooled)    <- paste(rep(c("", "se."), 3)  , rep(c("mean", "SD", "variance"), each = 2), sep = "")
+                              pooled              <- data.frame(ana.frame[,1:ncol(group),drop = FALSE], pooled, stringsAsFactors = FALSE )
                            }
-                           if(length(se.cols)==1) {
-                              pooled              <- data.frame(ana.frame[,1:ncol(group),drop = FALSE], m = ana.frame[,mean.cols], se = ana.frame[,se.cols], SD = ana.frame[,sd.cols], stringsAsFactors = FALSE )
+                           if(length(se.mean.cols)==1) {
+                              pooled              <- data.frame(ana.frame[,1:ncol(group),drop = FALSE], mean = ana.frame[,mean.cols], se.mean = ana.frame[,se.mean.cols], SD = ana.frame[,sd.cols], se.SD = ana.frame[,se.sd.cols], variance = ana.frame[,var.cols], se.variance = ana.frame[,se.var.cols], stringsAsFactors = FALSE )
                            }
-                           pooled              <- data.frame(ana.frame[,1:ncol(group),drop = FALSE], pooled, stringsAsFactors = FALSE )
                            colnames(pooled)[1:ncol(group)] <- colnames(group)
                            pooled.dif <- NULL
                            if(!is.null(attr(ana[[1]], "difs")))   {

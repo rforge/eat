@@ -73,6 +73,7 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                   if(!sum(nicht.erlaubt %in% all.codes ) == 0) {sunk(paste("genConquestDataset_",ver,": Found uncollapsed missings in dataset: ",paste(nicht.erlaubt[which(nicht.erlaubt %in% all.codes)],collapse=", "),"\n",sep=""))
                                                                 stop("Please run 'collapseMissings' for a start.\n")}
                   daten <- data.frame( dat[,variablen,drop=F], stringsAsFactors=FALSE)# Hier stehen erstmal NUR die Testitems. Diese werden nun, sofern spezifiziert, recodiert
+                  for (u in 1:ncol(daten)) {daten[which(is.nan(daten[,u])),u] <-  NA }
                   if(!is.null(na$items)) 
                     {rec.items <- paste(na$items,"=NA",collapse="; ")           ### definiere recodierungsvorschrift
                      for (i in 1:ncol(daten))
