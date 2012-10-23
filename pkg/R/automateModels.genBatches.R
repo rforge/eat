@@ -11,17 +11,21 @@
 #			
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.automateModels.genBatches <- function ( model.specs , folder.aM , run.mode , n.batches , all.local.cores ) {
+.automateModels.genBatches <- function ( model.specs , folder.aM , run.mode , n.batches , cores ) {
 		
 		# Plausichecks
 		stopifnot ( run.mode %in% c ( "serial" , "parallel" ) )
 		if ( is.null ( n.batches ) ) n.batches <- 1
 		stopifnot ( is.numeric ( n.batches ) )
-		if ( run.mode == "serial" & !n.batches == 1 ) {
-				# sunk ( paste ( ".automateModels.genBatches: Parameter n.batches = " , n.batches , " in Kombination mit run.mode == 'serial' ist nicht sinnvoll und wird ignoriert.\n" , sep = "" ) )
-				sunk ( paste ( ".automateModels.genBatches: Parameter n.batches = " , n.batches , " in combination with run.mode == 'serial' is not meaningfull and ignored.\n" , sep = "" ) )
-				n.batches <- 1
-		}
+		
+		# 23.10.2012 kann aukommentiert werden
+		# da bei run.mode "serial" n.batches komplett an Anzahl cores hängt
+		# if ( run.mode == "serial" & !n.batches == 1 ) {
+				### sunk ( paste ( ".automateModels.genBatches: Parameter n.batches = " , n.batches , " in Kombination mit run.mode == 'serial' ist nicht sinnvoll und wird ignoriert.\n" , sep = "" ) )
+				# sunk ( paste ( ".automateModels.genBatches: Parameter n.batches = " , n.batches , " in combination with run.mode == 'serial' is not meaningfull and ignored.\n" , sep = "" ) )
+				# n.batches <- 1
+		# }
+		
 		stopifnot ( file.access ( folder.aM , mode = 4 ) == 0 )
 		
 		# batch folder erstellen
@@ -30,12 +34,22 @@
 	
 		### Parameter zur batch-Gruppenerzeugung setzen
 		n.models <- length ( model.specs$folder )
+		
+		# wenn run.mode="serial"
 		# ggf. auf mehrere lokale Cores verteilen, d.h. so viele batches wie cores
-		if ( all.local.cores ) {
-				n.batches <- detectCores ( logical = FALSE )
-				if ( n.batches > n.models ) n.batches <- n.models
-		}		
-		n.per.group <- n.models %/% n.batches
+		if ( run.mode == "serial" ) {
+				co <- detectCores ( logical = FALSE )
+				if ( is.null ( cores ) ) {
+						n.batches <- co
+				} else {
+						stopifnot ( is.numeric ( cores ) )
+						if ( cores > co ) cores <- co
+						n.batches <- cores
+				}
+		}
+		
+		if ( n.batches > n.models ) n.batches <- n.models		
+		n.per.group <- ceiling ( n.models / n.batches )
 		if ( n.per.group == 0 ) n.per.group <- 1
 		indices.vector <- rep ( 1 : n.models )
 		

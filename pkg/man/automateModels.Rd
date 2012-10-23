@@ -18,7 +18,7 @@ dif = NULL, weight = NULL, anchor = NULL, regression = NULL, adjust.for.regressi
 q3 = FALSE, q3.p.est = c ( "wle" , "pv" , "eap" ), icc = FALSE, missing.rule = NULL, cross = NULL, 
 subfolder.order = NULL, subfolder.mode = NULL, allNAdelete = TRUE, additionalSubFolder = NULL, 
 run.mode = NULL, n.batches = NULL, run.timeout = 1440, run.status.refresh = 0.2, 
-all.local.cores = TRUE, email = NULL, smtpServer = NULL, write.txt.dataset = FALSE,
+cores = NULL, email = NULL, smtpServer = NULL, write.txt.dataset = FALSE,
 write.xls.results = TRUE,
 delete.folder.countdown = 5, conquestParameters = NULL )
 }
@@ -174,12 +174,12 @@ specification for 'data' and 'out' subfolder (constant over all analyses)
 }
   \item{run.mode}{
 %%     ~~Describe \code{run.mode} here~~
-"serial": serial runs on local machine
-"parallel": batch files must be started manually (e.g. on several machines)
+"serial": serial runs on local machine. see option 'cores' to specify number of parallel runs
+"parallel": batch files must be started manually (e.g. on several machines). see option 'n.batches' to specify number batch files
 }
   \item{n.batches}{
 %%     ~~Describe \code{n.batches} here~~
-number of batch files that are created, batch files contain one or more analyses
+if \code{run.mode}="parallel", number of batch files that are created, batch files contain one or more analyses
 }
   \item{run.timeout}{
 %%     ~~Describe \code{run.timeout} here~~
@@ -189,8 +189,10 @@ minutes to wait for analyses to finish, default: 1440 (24h)
 %%     ~~Describe \code{run.status.refresh} here~~
 time for console refresh of model run status, default: 0.2 (12sec)
 }
-  \item{all.local.cores}{
-if \code{TRUE} and \code{run.mode}="serial" all cores of local machine are used for analysis
+  \item{cores}{
+if \code{run.mode}="serial" and multiple analyses are run, number of cores to use.
+if \code{cores=NULL} (default) all cores are used
+if number of cores specified is greater than number of actual cores, number of actual cores is used
 }
   \item{email}{
 %%     ~~Describe \code{email} here~~

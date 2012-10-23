@@ -11,7 +11,7 @@
 #			
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.automateModels.runBatches <- function ( batches , run.mode , all.local.cores ) {
+.automateModels.runBatches <- function ( batches , run.mode ) {
 		
 		# Funktionsname für Meldungen
 		f. <- ".automateModels.runBatches"
@@ -19,11 +19,16 @@
 		
 		# Plausichecks
 		stopifnot ( run.mode %in% c ( "serial" , "parallel" ) )
-		if ( !length ( batches ) == 1 & run.mode == "serial" & !all.local.cores ) {
-				# sunk ( paste ( f.n , " run.mode ist 'serial', aber es existiert mehr als eine Batch-Datei. d.h. somethin' wrong.\n" , sep = "" ) )
-				sunk ( paste ( f.n , " run.mode is 'serial' und 'all.local.cores' is FALSE, but more than one batch file exists, that means somethin' wrong.\n" , sep = "" ) )
-				stop ( )
-		}
+		
+		# 23.10.2012
+		# MH angepasst auf numerisches core Argument
+		# (jetzt) versteh ich das hier auch nicht mehr
+		# deshalb auskommentiert und aus Funktionsaufruf rausgenommen, da sonst nicht gebraucht
+		# if ( !length ( batches ) == 1 & run.mode == "serial" & !is.null(cores) ) {
+				#### sunk ( paste ( f.n , " run.mode ist 'serial', aber es existiert mehr als eine Batch-Datei. d.h. somethin' wrong.\n" , sep = "" ) )
+				# sunk ( paste ( f.n , " run.mode is 'serial' und 'cores' is NULL (meaning use all local cores), but more than one batch file exists, that means somethin' wrong.\n" , sep = "" ) )
+				# stop ( )
+		# }
 		
 		# Batch starten wenn run.mode == "serial" , bei "parallel" Prompt an User
 		if ( run.mode == "serial" ) {

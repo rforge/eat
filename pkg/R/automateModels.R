@@ -55,7 +55,7 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 							 allNAdelete = TRUE ,
 							 additionalSubFolder = NULL ,
 							 run.mode = NULL , n.batches = NULL , run.timeout = 1440 , run.status.refresh = 0.2 ,
-							 all.local.cores = TRUE ,
+							 cores = NULL ,
 							 email = NULL , smtpServer = NULL , 
 							 write.txt.dataset = FALSE , 
 							 write.xls.results = TRUE ,
@@ -241,10 +241,10 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 		.automateModels.createModel ( model.specs , additionalSubFolder )
 	
 		# Batches erzeugen 
-		batches <- .automateModels.genBatches ( model.specs , folder.aM , run.mode , n.batches , all.local.cores )
+		batches <- .automateModels.genBatches ( model.specs , folder.aM , run.mode , n.batches , cores )
 	
 		# Batches starten
-		check <- .automateModels.runBatches ( batches , run.mode , all.local.cores )
+		check <- .automateModels.runBatches ( batches , run.mode )
 		stopifnot ( check )
 		
 		# in Monitor-Modus gehen
