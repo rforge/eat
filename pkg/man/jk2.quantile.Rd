@@ -4,7 +4,7 @@
 \title{JK2 for quantiles.}
 \description{Compute Standard errors for quantiles based on Jackknife (JK2) procedure.}
 \usage{
-jk2.quantile(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(), probs = seq(0, 1, 0.25), complete.permutation = FALSE) }
+jk2.quantile(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(), probs = seq(0, 1, 0.25), complete.permutation = c("nothing", "groups", "all")) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -45,7 +45,7 @@ Numeric vector with probabilities for which to compute quantiles.
 }
   \item{complete.permutation}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Logical. Becomes relevant if the numbers of imputations used for group variable differs from the number of
+Becomes relevant if the numbers of imputations used for group variable(s) differs from the number of
 imputation used for dependent variable(s).
 }
 }

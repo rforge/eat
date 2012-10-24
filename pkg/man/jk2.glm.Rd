@@ -5,7 +5,7 @@
 \description{Compute Standard errors for linear regression models based on Jackknife (JK2) procedure.}
 \usage{
 jk2.glm(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independent = list(), dependent = list(),
-        complete.permutation = FALSE , glm.family) }
+        complete.permutation = c("nothing", "groups", "independent", "all") , glm.family) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -47,8 +47,8 @@ as its imputations. See details for more information.
 }
   \item{complete.permutation}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Logical. Becomes relevant if the numbers of imputations used for group variable differs from the number of
-imputation used for dependent variable(s).
+Becomes relevant if the numbers of imputations used for group variable(s) differs from the number of
+imputation used for independent and/or dependent variable(s).
 }
   \item{glm.family}{
 %%     ~~Describe \code{sig.dif.bound} here~~

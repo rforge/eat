@@ -1,4 +1,5 @@
-jk2.mean <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), group.differences.by = NULL, dependent = list(), complete.permutation = FALSE )    {
+jk2.mean <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), group.differences.by = NULL, dependent = list(), complete.permutation = c("nothing", "groups", "all") )    {
+            complete.permutation <- match.arg ( complete.permutation )
             if(!is.null(group.differences.by)) {
                if(!group.differences.by %in% names(group)) {stop()} }
             if(is.null(wgt))   {
@@ -6,7 +7,7 @@ jk2.mean <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), group.d
                dat$weight_one <- 1
                wgt <- "weight_one"
             }
-            # if(!exists("svrepdesign"))      {library(survey)}
+            ## if(!exists("svrepdesign"))      {library(survey)}
             replicates  <- generate.replicates(dat = dat, ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep )
             if(length(group) == 0) {
                cat("No group(s) specified. Analyses will be computed only for the whole sample.\n")
@@ -15,25 +16,21 @@ jk2.mean <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), group.d
             }
             allVars     <- list(ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep, group = unlist(group), dependent = unlist(dependent) )
             all.Names   <- lapply(allVars, FUN=function(ii) {.existsBackgroundVariables(dat = dat, variable=ii)})
-            dat.i       <- dat[,unlist(all.Names)]
+            dat.i       <- dat[,unlist(all.Names), drop = FALSE]
+            missings    <- sapply(dat.i, FUN = function (uu) {length(which(is.na(uu)))})
+            if(!all(missings == 0)) {stop(paste("Found NAs in variable(s) ",paste(names(missings[missings!=0]), collapse = ", "), "\n",sep = "") )}
             cat(paste("Found ",length(group)," grouping variable(s).\n",sep=""))
-            groupsize   <- sapply(group, FUN = function (iii ) {length(iii)})
-            stopifnot( length(table(setdiff( groupsize, 1))) < 2)
-            cat(paste("Use ",max(groupsize)," imputation(s) of each group variable.\n",sep=""))
-            cat(paste("Run ",length(dependent)," analyse(s) overall.\n", sep = ""))
-            group       <- as.data.frame(group, stringsAsFactors = FALSE)
-            dep.size    <- sapply(dependent, FUN = function (iii ) {length(iii)})
-            stopifnot( length(table(setdiff( dep.size, 1))) < 2)
+            if ( complete.permutation == "groups" ) {group <- as.list(expand.grid(group, stringsAsFactors = FALSE))}
             analysis    <- lapply(dependent, FUN = function ( dep ) {
-                           if(max(groupsize) == max(dep.size)) {workbook  <- data.frame(group, dep, stringsAsFactors = FALSE )}
-                           if(max(groupsize) != max(dep.size)) {
-                              if(complete.permutation == FALSE ) {workbook  <- data.frame(group, dep, stringsAsFactors = FALSE )}
-                              if(complete.permutation == TRUE  ) {
-                                 workbook  <- sapply(group, FUN = function(iii) {expand.grid(iii, dep, stringsAsFactors = FALSE )[,1]})
-                                 workbook  <- data.frame(workbook, dep = expand.grid(group[,1], dep, stringsAsFactors = FALSE )[,2], stringsAsFactors = FALSE )
-                              }
+                           if(complete.permutation == "all" ) {
+                              group$dep <- dep
+                              workbook  <- expand.grid(group, stringsAsFactors = FALSE)
+                           }  else  {
+                              max.elements <- max ( c( unlist(lapply(group, length)) , length(dep) ) )
+                              group$dep    <- dep
+                              group        <- lapply(group, FUN = function (uu) {rep(uu, times = max.elements)[1:max.elements]})
+                              workbook     <- data.frame(group, stringsAsFactors = FALSE)
                            }
-                           for (g in 1:ncol(workbook))   {workbook[,g] <- as.character(workbook[,g])}
                            cat(paste("Use ",nrow(workbook)," replication(s) overall.\n",sep=""))
                            ana <- apply(workbook, MARGIN = 1, FUN = function (imp) {
                                   cat("."); flush.console()
@@ -121,14 +118,15 @@ jk2.mean <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), group.d
             return(analysis)}
 
 
-### separate.missing.indikator ... Soll eine separate Kategorie fuer missings definiert werden?
-### expected.values            ... optional (und empfohlen): Vorgabe fuer erwartete Werte, vgl. "table.muster"
-###                                kann entweder eine benannte Liste sein, mit Namen wie in "dependent", oder ein einfacher character Vektor, dann werden diese Vorgaben fuer alle abhaengigen Variablen uebernommen
+### separate.missing.indikator ... Soll eine separate Kategorie für missings definiert werden?
+### expected.values            ... optional (und empfohlen): Vorgabe für erwartete Werte, vgl. "table.muster"
+###                                kann entweder eine benannte Liste sein, mit Namen wie in "dependent", oder ein einfacher character Vektor, dann werden diese Vorgaben für alle abhängigen Variablen übernommen
 ###                                bleibt "expected.values" leer, dann wird es automatisch mit den Werten der Variablen in ihrer Gesamtheit belegt!
 ### separate.missing.indikator ... list of logical elemente or logical scalar
-jk2.table <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(), separate.missing.indikator = FALSE, expected.values = list(), complete.permutation = FALSE )    {
-            # if(!exists("svrepdesign"))      {library(survey)}
-            if(!exists("melt.data.frame"))  {library(reshape)}
+jk2.table <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(), separate.missing.indikator = FALSE, expected.values = list(), complete.permutation = c("nothing", "groups", "all") )    {
+            complete.permutation <- match.arg ( complete.permutation )
+          ##  if(!exists("svrepdesign"))      {library(survey)}
+          ##  if(!exists("melt.data.frame"))  {library(reshape)}
             if(is.null(wgt))   {
                cat("No weights specified. Use weight of 1 for each case.\n",sep = "")
                dat$weight_one <- 1
@@ -143,15 +141,11 @@ jk2.table <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), depend
             allVars     <- list(ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep, group = unlist(group), dependent = unlist(dependent) )
             all.Names   <- lapply(allVars, FUN=function(ii) {.existsBackgroundVariables(dat = dat, variable=ii)})
             dat.i       <- dat[,unlist(all.Names)]
+            missings    <- sapply(dat.i, FUN = function (uu) {length(which(is.na(uu)))})
+            if(!all(missings == 0)) {stop(paste("Found NAs in variable(s) ",paste(names(missings[missings!=0]), collapse = ", "), "\n",sep = "") )}
             cat(paste("Found ",length(group)," grouping variable(s).\n",sep=""))
-            groupsize   <- sapply(group, FUN = function (iii ) {length(iii)})
-            stopifnot( length(table(setdiff( groupsize, 1))) < 2)
-            cat(paste("Use ",max(groupsize)," imputation(s) of each group variable.\n",sep=""))
             cat(paste("Run ",length(dependent)," analyses overall.\n", sep = ""))
             flush.console()
-            group       <- as.data.frame(group, stringsAsFactors = FALSE)
-            dep.size    <- sapply(dependent, FUN = function (iii ) {length(iii)})
-            stopifnot( length(table(setdiff( dep.size, 1))) < 2)
             if(length(expected.values)>0) {
                if(class(expected.values) == "character")  {
                   expected.values <- lapply(dependent, FUN = function (uu) {expected.values})
@@ -171,17 +165,18 @@ jk2.table <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), depend
                            return(ret)
             })
             names(dependent) <- names.dependent
+            if ( complete.permutation == "groups" ) {group <- as.list(expand.grid(group, stringsAsFactors = FALSE))}
             analysis    <- lapply(dependent, FUN = function ( dep ) {
-                           if(max(groupsize) == max(dep.size)) {workbook  <- data.frame(group, dep = as.character(dep), stringsAsFactors = FALSE )}
-                           if(max(groupsize) != max(dep.size)) {
-                              if(complete.permutation == FALSE ) {workbook  <- data.frame(group, dep = as.character(dep), stringsAsFactors = FALSE )}
-                              if(complete.permutation == TRUE  ) {
-                                 workbook  <- sapply(group, FUN = function(iii) {expand.grid(iii, dep, stringsAsFactors = FALSE )[,1]})
-                                 workbook  <- data.frame(workbook, dep = expand.grid(group[,1], dep, stringsAsFactors = FALSE )[,2], stringsAsFactors = FALSE )
-                              }
+                           if(complete.permutation == "all" ) {
+                              group$dep <- dep
+                              workbook  <- expand.grid(group, stringsAsFactors = FALSE)
+                           }  else  {
+                              max.elements <- max ( c( unlist(lapply(group, length)) , length(dep) ) )
+                              group$dep    <- dep
+                              group        <- lapply(group, FUN = function (uu) {rep(uu, times = max.elements)[1:max.elements]})
+                              workbook     <- data.frame(group, stringsAsFactors = FALSE)
                            }
-                           for (g in 1:ncol(workbook))   {workbook[,g] <- as.character(workbook[,g])}
-                           cat(paste("Use ",nrow(workbook)," replications overall.\n",sep=""))
+                           cat(paste("Use ",nrow(workbook)," replication(s) overall.\n",sep=""))
                            ana <- apply(workbook, MARGIN = 1, FUN = function (imp) {
                                   cat("."); flush.console()
                                   stopifnot(length(imp[["dep"]]) == 1 )
@@ -242,9 +237,10 @@ jk2.table <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), depend
             return(analysis)}
 
 
-jk2.quantile <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(), probs = seq(0, 1, 0.25), complete.permutation = FALSE )    {
-        #    if(!exists("svrepdesign"))      {library(survey)}
-            if(!exists("melt.data.frame"))  {library(reshape)}
+jk2.quantile <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(), probs = seq(0, 1, 0.25),  complete.permutation = c("nothing", "groups", "all") )    {
+            complete.permutation <- match.arg ( complete.permutation )
+            ## if(!exists("svrepdesign"))      {library(survey)}
+            ## if(!exists("melt.data.frame"))  {library(reshape)}
             if(is.null(wgt))   {
                cat("No weights specified. Use weight of 1 for each case.\n",sep = "")
                dat$weight_one <- 1
@@ -259,24 +255,22 @@ jk2.quantile <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dep
             allVars     <- list(ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep, group = unlist(group), dependent = unlist(dependent) )
             all.Names   <- lapply(allVars, FUN=function(ii) {.existsBackgroundVariables(dat = dat, variable=ii)})
             dat.i       <- dat[,unlist(all.Names)]
+            missings    <- sapply(dat.i, FUN = function (uu) {length(which(is.na(uu)))})
+            if(!all(missings == 0)) {stop(paste("Found NAs in variable(s) ",paste(names(missings[missings!=0]), collapse = ", "), "\n",sep = "") )}
             cat(paste("Found ",length(group)," grouping variable(s).\n",sep=""))
             groupsize   <- sapply(group, FUN = function (iii ) {length(iii)})
-            stopifnot( length(table(setdiff( groupsize, 1))) < 2)
-            cat(paste("Use ",max(groupsize)," imputation(s) of each group variable.\n",sep=""))
             cat(paste("Run ",length(dependent)," analyses overall.\n", sep = ""))
-            group       <- as.data.frame(group, stringsAsFactors = FALSE)
-            dep.size    <- sapply(dependent, FUN = function (iii ) {length(iii)})
-            stopifnot( length(table(setdiff( dep.size, 1))) < 2)
+            if ( complete.permutation == "groups" ) {group <- as.list(expand.grid(group, stringsAsFactors = FALSE))}
             analysis    <- lapply(dependent, FUN = function ( dep ) {
-                           if(max(groupsize) == max(dep.size)) {workbook  <- data.frame(group, dep, stringsAsFactors = FALSE )}
-                           if(max(groupsize) != max(dep.size)) {
-                              if(complete.permutation == FALSE ) {workbook  <- data.frame(group, dep, stringsAsFactors = FALSE )}
-                              if(complete.permutation == TRUE  ) {
-                                 workbook  <- sapply(group, FUN = function(iii) {expand.grid(iii, dep, stringsAsFactors = FALSE )[,1]})
-                                 workbook  <- data.frame(workbook, dep = expand.grid(group[,1], dep, stringsAsFactors = FALSE )[,2], stringsAsFactors = FALSE )
-                              }
+                           if(complete.permutation == "all" ) {
+                              group$dep <- dep
+                              workbook  <- expand.grid(group, stringsAsFactors = FALSE)
+                           }  else  {
+                              max.elements <- max ( c( unlist(lapply(group, length)) , length(dep) ) )
+                              group$dep    <- dep
+                              group        <- lapply(group, FUN = function (uu) {rep(uu, times = max.elements)[1:max.elements]})
+                              workbook    <- data.frame(group, stringsAsFactors = FALSE)
                            }
-                           for (g in 1:ncol(workbook))   {workbook[,g] <- as.character(workbook[,g])}
                            cat(paste("Use ",nrow(workbook)," replications overall.\n",sep=""))
                            ana <- apply(workbook, MARGIN = 1, FUN = function (imp) {
                                   cat("."); flush.console()
@@ -309,11 +303,12 @@ jk2.quantile <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dep
             return(analysis)}
 
 
-jk2.glm <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independent = list(), dependent = list(), complete.permutation = FALSE , glm.family)    {
+jk2.glm <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independent = list(), dependent = list(), complete.permutation = c("nothing", "groups", "independent", "all") , glm.family)    {
+            complete.permutation <- match.arg ( complete.permutation )
             .GlobalEnv$glm.family <- glm.family                                 ### Hotfix!
-         #   if(!exists("NagelkerkeR2"))     {library(fmsb)}
-         #   if(!exists("svrepdesign"))      {library(survey)}
-         #   if(!exists("melt.data.frame"))  {library(reshape)}
+            ## if(!exists("NagelkerkeR2"))     {library(fmsb)}
+            ## if(!exists("svrepdesign"))      {library(survey)}
+            ## if(!exists("melt.data.frame"))  {library(reshape)}
             if(is.null(wgt))   {
                cat("No weights specified. Use weight of 1 for each case.\n",sep = "")
                dat$weight_one <- 1
@@ -328,24 +323,26 @@ jk2.glm <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independ
             allVars     <- list(ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep, group = unlist(group), independent = unlist(independent), dependent = unlist(dependent) )
             all.Names   <- lapply(allVars, FUN=function(ii) {.existsBackgroundVariables(dat = dat, variable=ii)})
             dat.i       <- dat[,unlist(all.Names)]
+            missings    <- sapply(dat.i, FUN = function (uu) {length(which(is.na(uu)))})
+            if(!all(missings == 0)) {stop(paste("Found NAs in variable(s) ",paste(names(missings[missings!=0]), collapse = ", "), "\n",sep = "") )}
             cat(paste("Found ",length(group)," grouping variable(s).\n",sep=""))
-            groupsize   <- sapply(group, FUN = function (iii ) {length(iii)})
-            stopifnot( length(table(setdiff( groupsize, 1))) < 2)
-            cat(paste("Use ",max(groupsize)," imputation(s) of each group variable.\n",sep=""))
             cat(paste("Run ",length(dependent)," analyses overall.\n", sep = ""))
-            group       <- as.data.frame(group, stringsAsFactors = FALSE)
-            dep.size    <- sapply(dependent, FUN = function (iii ) {length(iii)})
-            indep.size  <- sapply(independent, FUN = function (iii ) {length(iii)})
-            indep.frame <- do.call("data.frame", independent)
-            stopifnot( length(table(setdiff( dep.size, 1))) < 2)
+            if ( complete.permutation == "groups" )      {group       <- as.list(expand.grid(group, stringsAsFactors = FALSE))}
+            if ( complete.permutation == "independent" ) {independent <- as.list(expand.grid(independent, stringsAsFactors = FALSE))}
+            pre.workbook   <- c(group, independent)
             analysis    <- lapply(dependent, FUN = function ( dep ) {
-                           #if(max(groupsize) == max(dep.size) & max(dep.size) == max(indep.size)) {
-                              workbook  <- data.frame(group, indep.frame, dep = as.character(dep), stringsAsFactors = FALSE )
-                           #}
-                           for (g in 1:ncol(workbook))   {workbook[,g] <- as.character(workbook[,g])}
+                           if(complete.permutation == "all" ) {
+                              pre.workbook$dep <- dep
+                              workbook  <- expand.grid(pre.workbook, stringsAsFactors = FALSE)
+                           }  else  {
+                              max.elements        <- max ( c( unlist(lapply(group, length)) , length(dep) ) )
+                              pre.workbook$dep    <- dep
+                              pre.workbook        <- lapply(pre.workbook, FUN = function (uu) {rep(uu, times = max.elements)[1:max.elements]})
+                              workbook            <- data.frame(pre.workbook, stringsAsFactors = FALSE)
+                           }
                            cat(paste("Use ",nrow(workbook)," replications overall.\n",sep=""))
                            ana <- apply(workbook, MARGIN = 1, FUN = function (imp) {
-                                  group.names       <- as.character(imp[colnames(group)])
+                                  group.names       <- as.character(imp[names(group)])
                                   independent.names <- setdiff(as.character(imp), group.names)
                                   independent.names <- setdiff(independent.names, as.character(imp[["dep"]]) )
                                   cat("."); flush.console()

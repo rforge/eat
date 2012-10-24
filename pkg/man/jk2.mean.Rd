@@ -5,7 +5,7 @@
 \description{Compute Standard errors for mean estimates based on Jackknife (JK2) procedure.}
 \usage{
 jk2.mean(dat, ID, wgt = NULL, JKZone, JKrep,
-         group = list(), group.differences.by = NULL, dependent = list(), complete.permutation = FALSE)}
+         group = list(), group.differences.by = NULL, dependent = list(), complete.permutation = c("nothing", "groups", "all"))}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -46,7 +46,7 @@ as its imputations. See details for more information.
 }
   \item{complete.permutation}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Logical. Becomes relevant if the numbers of imputations used for group variable differs from the number of
+Becomes relevant if the numbers of imputations used for group variable(s) differs from the number of
 imputation used for dependent variable(s).
 }
 }

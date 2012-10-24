@@ -5,7 +5,7 @@
 \description{Compute Standard errors for frequency tables based on Jackknife (JK2) procedure.}
 \usage{
 jk2.table(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(),
-          separate.missing.indikator = FALSE, expected.values = list(), complete.permutation = FALSE) }
+          separate.missing.indikator = FALSE, expected.values = list(), complete.permutation = c("nothing", "groups", "all")) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -50,7 +50,7 @@ Optional. A vector auf values expected in dependent variable. Recommend to left 
 }
   \item{complete.permutation}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Logical. Becomes relevant if the numbers of imputations used for group variable differs from the number of
+Becomes relevant if the numbers of imputations used for group variable(s) differs from the number of
 imputation used for dependent variable(s).
 }
 }
