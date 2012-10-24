@@ -76,7 +76,7 @@
 ### Fuer die Statements "group", "regression" und "model" werden aber die bedeutungsspezifischen Hintergrundvariablendefinitionen
 ### "namen.dif.var", "namen.hg.var" und "namen.group.var" benutzt. Bitte die Konsistenz unbedingt pruefen!
 
-genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, namen.dif.var , DIF.char, namen.weight.var, weight.char, namen.all.hg,all.hg.char, namen.group.var=NULL, model = NULL, ANKER = NULL,std.err=c("quick","full","none"),name.unidim="dimension_1",
+genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, namen.dif.var , DIF.char, namen.weight.var, weight.char, namen.all.hg,all.hg.char, namen.group.var=NULL, model = NULL, ANKER = NULL,std.err=c("quick","full","none"),name.unidim="dimension_1", compute.fit,
                               model.statement="item", distribution=c("normal","discrete"), jobFolder, subFolder=NULL, name.dataset=NULL, Title=NULL,constraints =c("cases","none","items"), method=c("gauss", "quadrature", "montecarlo"), n.plausible=5,n.iterations=1000,nodes=NULL, p.nodes=2000,f.nodes=2000,converge=0.0001,deviancechange=0.0001,
                               equivalence.table=c("wle","mle","NULL"),var.char,use.letters = use.letters, allowAllScoresEverywhere, pathConquest,
                               export )       {
@@ -98,7 +98,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                                       "set warnings=no,update=yes,n_plausible=####hier.anzahl.pv.einfuegen####,p_nodes=####hier.anzahl.p.nodes.einfuegen####,f_nodes=####hier.anzahl.f.nodes.einfuegen####;",
                                       "regression",
                                       "model ####hier.model.statement.einfuegen####;",
-                                      "estimate ! method=####hier.method.einfuegen####,iter=####hier.anzahl.iterations.einfuegen####,nodes=####hier.anzahl.nodes.einfuegen####,converge=####hier.converge.einfuegen####,deviancechange=####hier.deviancechange.einfuegen####,stderr=####hier.std.err.einfuegen####,distribution=####hier.distribution.einfuegen####;",
+                                      "estimate ! fit=####hier.fitberechnen.einfuegen####,method=####hier.method.einfuegen####,iter=####hier.anzahl.iterations.einfuegen####,nodes=####hier.anzahl.nodes.einfuegen####,converge=####hier.converge.einfuegen####,deviancechange=####hier.deviancechange.einfuegen####,stderr=####hier.std.err.einfuegen####,distribution=####hier.distribution.einfuegen####;",
                                       "Itanal >> ####hier.outfolder.einfuegen####\\####hier.name.einfuegen####.itn;",
                                       "show cases! estimates=latent >> ####hier.outfolder.einfuegen####\\####hier.name.einfuegen####.pvl;",
                                       "show cases! estimate=wle >> ####hier.outfolder.einfuegen####\\####hier.name.einfuegen####.wle;",
@@ -138,6 +138,8 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    syntax    <- gsub("####hier.converge.einfuegen####",converge,syntax)
                    syntax    <- gsub("####hier.deviancechange.einfuegen####",deviancechange,syntax)
                    syntax    <- gsub("####hier.constraints.einfuegen####",match.arg(constraints),syntax)
+                   compute.fit  <- if(compute.fit == TRUE ) compute.fit <- "yes" else compute.fit <- "no"
+                   syntax    <- gsub("####hier.fitberechnen.einfuegen####",compute.fit,syntax)
                    method    <- match.arg(method)
 				   if(method == "montecarlo")   {
 				     if (is.null(nodes) )   {

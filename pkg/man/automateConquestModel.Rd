@@ -11,7 +11,7 @@ several models in a row, see \code{automateModels}.
 \usage{
 automateConquestModel(dat, ID, regression=NULL, DIF=NULL, group.var=NULL, 
 weight=NULL, items, na=list(items=NULL, DIF=NULL, HG=NULL, group=NULL, 
-weight=NULL), person.grouping=NULL, item.grouping=NULL, model.statement="item", 
+weight=NULL), person.grouping=NULL, item.grouping=NULL, compute.fit = TRUE, model.statement="item",
 m.model="1pl", Title = NULL, jobName, jobFolder, subFolder=list(), dataName=NULL, 
 anchor=NULL, pathConquest, method=NULL, std.err=NULL ,distribution=NULL, 
 n.plausible=NULL, set.constraints=NULL, nodes=NULL, p.nodes=NULL, f.nodes=NULL, 
@@ -52,6 +52,9 @@ export = list(logfile = TRUE, systemfile = TRUE, history = TRUE, covariance = TR
 }
   \item{person.grouping}{
 	A named data frame indicating which persons should be grouped. The first column contains the identifier variable and must have the same name as the respective column in \code{dat}. The other columns contain grouping definitions and must be named with the respective group names. A value of 1 indicates that a person belongs to this group, a value of 0 indicates that the respective person does not belong to this group.
+}
+  \item{compute.fit}{
+	Logical: Should fit statistics computed in ConQuest analysis?
 }
   \item{model.statement}{
 	A character string with the model statement to use in the ConQuest syntax. If \code{model.statement == NULL}, the model statement in the ConQuest syntax is set to \code{item} by default. When a DIF variable is specified, the model statement is set to \code{item - [name of DIF variable] + item*[name of DIF variable]} by default. 

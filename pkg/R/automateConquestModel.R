@@ -65,7 +65,7 @@
 ###                  z.B. na=list(items=c(6,7,8,9,96,97,98,99), DIF=9)
 ### verbose      ... logical: should messages printed on console?
 
-automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.var=NULL, weight=NULL, items, na=list(items=NULL, DIF=NULL, HG=NULL, group=NULL, weight=NULL), person.grouping=NULL, item.grouping=NULL,
+automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.var=NULL, weight=NULL, items, na=list(items=NULL, DIF=NULL, HG=NULL, group=NULL, weight=NULL), person.grouping=NULL, item.grouping=NULL, compute.fit = TRUE,
                                     model.statement="item", m.model="1pl", Title = NULL, jobName, jobFolder, subFolder=list(), dataName=NULL, anchor=NULL, pathConquest="C:/ConQuest/console_Feb2007.exe", method=NULL,std.err=NULL,distribution=NULL,
                                     n.plausible=NULL, set.constraints=NULL, nodes=NULL, p.nodes=NULL, f.nodes=NULL, n.iterations=NULL, converge=NULL, deviancechange=NULL, name.unidim=NULL,
                                     equivalence.table="wle",use.letters=FALSE, checkLink = FALSE, verbose = TRUE, export = list(logfile = TRUE, systemfile = TRUE, history = TRUE, covariance = TRUE, reg_coefficients = TRUE, designmatrix = TRUE) )	 {
@@ -159,7 +159,7 @@ automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.va
 
 		# Syntax und Labels für Conquest erzeugen
 		sunk(paste("automateConquestModel_",ver,": Generate syntax and label list.\n",sep=""))
-    if(inherits(try(     conquestSynLabList <-  genConquestSynLab(jobName=jobName, datConquest=conquestDataset$daten.dat, namen.items=conquestDataset$namen.items, 
+    if(inherits(try(     conquestSynLabList <-  genConquestSynLab(jobName=jobName, datConquest=conquestDataset$daten.dat, namen.items=conquestDataset$namen.items, compute.fit = compute.fit,
                                         namen.hg.var = conquestDataset$namen.hg.var, namen.dif.var = conquestDataset$namen.dif.var, DIF.char=conquestDataset$DIF.char,
                                         namen.all.hg=conquestDataset$namen.all.hg, all.hg.char=conquestDataset$all.hg.char, namen.group.var=conquestDataset$namen.group.var,
                                         namen.weight.var=conquestDataset$namen.weight.var, weight.char=conquestDataset$weight.char,method=method,std.err=std.err,model.statement=model.statement,
