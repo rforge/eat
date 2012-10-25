@@ -35,13 +35,15 @@ make.dummies <- function ( dat , cols , colname.as.prefix = TRUE , delimiter = "
 						
 						# dummies bilden
 						x <- psych::dummy.code ( dat[,col] )
+						newcolnames <- colnames ( x )
 						x <- data.frame ( x )
 						
 						
 						### Variablen-Namen
 			
 						# falls numerisch war, noch die hässlichen "X" aus Var-Name raus
-						if ( isNum ) newcolnames <- sub ( "(.*)(\\w)(\\d+$)" , "\\1\\3" , colnames(x) ) else newcolnames <- colnames(x)
+						# if ( isNum ) newcolnames <- sub ( "(.*)(\\w)(\\d+$)" , "\\1\\3" , colnames(x) ) else newcolnames <- colnames(x)
+						# if ( isNum ) newcolnames <- sub ( "(.*)(\\w)(\\d+$)" , "\\1\\3" , colnames(x) ) else newcolnames <- colnames(x)
 						
 						# mit Großbuchstaben anfangen
 						if ( capitalize ) newcolnames <- capitalize ( newcolnames )
@@ -62,7 +64,6 @@ make.dummies <- function ( dat , cols , colname.as.prefix = TRUE , delimiter = "
 						
 						# setzen
 						colnames ( x ) <- newcolnames
-						
 						
 						# returnen
 						return ( x )
