@@ -72,9 +72,18 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                   all.codes     <- unique(unlist(lapply(dat, FUN=function(ii) {names(table(ii))})))
                   if(!sum(nicht.erlaubt %in% all.codes ) == 0) {sunk(paste("genConquestDataset_",ver,": Found uncollapsed missings in dataset: ",paste(nicht.erlaubt[which(nicht.erlaubt %in% all.codes)],collapse=", "),"\n",sep=""))
                                                                 stop("Please run 'collapseMissings' for a start.\n")}
-                  daten <- data.frame( dat[,variablen,drop=F], stringsAsFactors=FALSE)# Hier stehen erstmal NUR die Testitems. Diese werden nun, sofern spezifiziert, recodiert
-                  for (u in 1:ncol(daten)) {daten[which(is.nan(daten[,u])),u] <-  NA }
-                  if(!is.null(na$items)) 
+                  if(class(variablen) == "factor" )   {
+                     sunk("Class of variable argument was 'factor'. Expect class 'numeric' or 'character'. \nVariables will be treated as 'character' anywhere. Please intervene if this is not intended!\n")
+                     variablen <- as.character(variablen)
+                  }
+                  if(class(variablen) == "character") {
+                     nicht.im.datensatz <- setdiff(variablen, colnames(dat))
+                     if(length(nicht.im.datensatz) > 0 ) { stop(paste("Following variables not in dataset: ", paste(nicht.im.datensatz, collapse = ", "),".\n", sep=""))}
+                  }                                                             ### untere Zeile: Hier stehen erstmal NUR die Testitems. Diese werden nun, sofern spezifiziert, recodiert
+                  daten  <- data.frame( dat[,variablen,drop = FALSE], stringsAsFactors = FALSE)
+                  is.NaN <- do.call("cbind", lapply(daten, FUN = function (uu) { is.nan(uu) } ) )
+                  if(sum(is.NaN) > 0 ) {daten[is.NaN] <- NA}                    ### Wandle NaN in NA, falls es welche gibt
+                  if(!is.null(na$items))
                     {rec.items <- paste(na$items,"=NA",collapse="; ")           ### definiere recodierungsvorschrift
                      for (i in 1:ncol(daten))
                          {daten[,i] <- car:::recode(daten[,i], rec.items)}}
