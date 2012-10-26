@@ -115,9 +115,25 @@
 		}
 		list4$conquestParameters <- mapply ( .fun , list4$conquestParameters , SIMPLIFY = FALSE)
 		# Check ob keine falschen Bezeichner
-		allowedNames <- c ( "pathConquest","method","std.err","distribution","n.plausible","set.constraints",
-							"nodes","p.nodes","f.nodes","n.iterations","converge","deviancechange",
-							"equivalence.table","use.letters","model.statement","na","export" )
+		allowedNames <- c(  "na",
+							"compute.fit",
+							"model.statement",
+							"pathConquest",
+							"method",
+							"std.err",
+							"distribution",
+							"n.plausible",
+							"set.constraints",
+							"nodes",
+							"p.nodes",
+							"f.nodes",
+							"n.iterations",
+							"converge",
+							"deviancechange",
+							"equivalence.table",
+							"use.letters",
+							"checkLink",
+							"export" )
 		
 		# check <- unique ( names ( unlist ( list4$conquestParameters ) ) )
 		check <- names ( sapply ( list4$conquestParameters , names ) )

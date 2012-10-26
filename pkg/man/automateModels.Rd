@@ -218,9 +218,10 @@ countdown for deletion of 'folder', default: 5 (seconds)
 
 							Available option are:
 
-							"pathConquest","method","std.err","distribution","n.plausible","set.constraints",
-							"nodes","p.nodes","f.nodes","n.iterations","converge","deviancechange",
-							"equivalence.table","use.letters","na","model.statement","export"
+							"na", "compute.fit", "model.statement", "pathConquest", "method", "std.err",
+							"distribution", "n.plausible", "set.constraints", "nodes", "p.nodes", "f.nodes",
+							"n.iterations", "converge", "deviancechange", "equivalence.table", "use.letters",
+							"checkLink", "export"
 
 							See \link{automateConquestModel} documentation for details.
 }
