@@ -15,7 +15,7 @@ weight=NULL), person.grouping=NULL, item.grouping=NULL, compute.fit = TRUE, mode
 m.model="1pl", Title = NULL, jobName, jobFolder, subFolder=list(), dataName=NULL, 
 anchor=NULL, pathConquest, method=NULL, std.err=NULL ,distribution=NULL, 
 n.plausible=NULL, set.constraints=NULL, nodes=NULL, p.nodes=NULL, f.nodes=NULL, 
-n.iterations=NULL, converge=NULL, deviancechange=NULL, name.unidim=NULL, 
+n.iterations=NULL, converge=NULL, deviancechange=NULL, name.unidim=NULL, 	allowAllScoresEverywhere = TRUE,
 equivalence.table="wle", use.letters=FALSE, checkLink=FALSE, verbose=TRUE,
 export = list(logfile = TRUE, systemfile = TRUE, history = TRUE, covariance = TRUE, reg_coefficients = TRUE, designmatrix = TRUE))
 }
@@ -126,7 +126,10 @@ An integer value specifiying the convergence criterion for parameter estimates. 
 An integer value specifiying the convergence criterion for the deviance. The estimation will terminate when  the change in the deviance between successive iterations of the EM algorithm is less than \code{deviancechange}. The default value is 0.0001.
 }
   \item{name.unidim}{
-A character string with the name of one latent dimension. Alternatively, the dimension name can be specified using the argument  \code{item.grouping}. 
+A character string with the name of one latent dimension. Alternatively, the dimension name can be specified using the argument \code{item.grouping}.
+}
+\item{allowAllScoresEverywhere}{
+Logical: Relevant only in multidimensional models for polytomous data. If \code{FALSE}, different codes are allowed to occur in both dimensions, for example one dimension is measured with dichotomous items, i.e. 0/1, and the other dimension is measured with polytomous items, i.e. 1, 2, 3, 4. If \code{TRUE}, common codes for both dimension are used, i.e. 0, 1, 2, 3, 4 for both dimensions. In unidimensional models this argument has no effect.
 }
   \item{equivalence.table}{
 A character string specifying the type of equivalence table to print. Possible options are \code{"wle"} (default), \code{"mle"} and \code{NULL}. 
