@@ -130,6 +130,7 @@
 							"n.iterations",
 							"converge",
 							"deviancechange",
+							"allowAllScoresEverywhere",
 							"equivalence.table",
 							"use.letters",
 							"checkLink",

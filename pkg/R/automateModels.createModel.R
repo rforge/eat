@@ -98,6 +98,7 @@
 				sunk ( paste ( "cat('" ,  einr , "n.iterations = " , conquestParameters$n.iterations , sep = "" , "\n')" ) )				
 				sunk ( paste ( "cat('" ,  einr , "converge = " , conquestParameters$converge , sep = "" , "\n')" ) )				
 				sunk ( paste ( "cat('" ,  einr , "deviancechange = " , conquestParameters$deviancechange , sep = "" , "\n')" ) )				
+				sunk ( paste ( "cat('" ,  einr , "allowAllScoresEverywhere = " , conquestParameters$allowAllScoresEverywhere , sep = "" , "\n')" ) )				
 				sunk ( paste ( "cat('" ,  einr , "equivalence.table = " , conquestParameters$equivalence.table , sep = "" , "\n')" ) )				
 				sunk ( paste ( "cat('" ,  einr , "use.letters = " , conquestParameters$use.letters , sep = "" , "\n')" ) )				
 				sunk ( paste ( "cat('" ,  einr , "checkLink = " , conquestParameters$checkLink , sep = "" , "\n')" ) )				
@@ -137,6 +138,7 @@
 						n.iterations = conquestParameters$n.iterations ;			
 						converge = conquestParameters$converge ;			
 						deviancechange = conquestParameters$deviancechange ;			
+						allowAllScoresEverywhere = conquestParameters$allowAllScoresEverywhere ;			
 						equivalence.table = conquestParameters$equivalence.table ;			
 						use.letters = conquestParameters$use.letters ;
 						checkLink = conquestParameters$checkLink ;
@@ -174,6 +176,7 @@
 						"n.iterations" ,
 						"converge" ,
 						"deviancechange" ,
+						"allowAllScoresEverywhere" ,
 						"equivalence.table" ,
 						"use.letters" ,
 						"checkLink" ,
@@ -213,6 +216,7 @@
 										n.iterations = conquestParameters$n.iterations ,			
 										converge = conquestParameters$converge ,			
 										deviancechange = conquestParameters$deviancechange ,			
+										allowAllScoresEverywhere = conquestParameters$allowAllScoresEverywhere ,			
 										equivalence.table = conquestParameters$equivalence.table ,			
 										use.letters = conquestParameters$use.letters ,
 										checkLink = conquestParameters$checkLink ,
