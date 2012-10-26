@@ -1,7 +1,7 @@
 Package: eat
 Type: Package
 Title: eat
-Version: 1.5.18-191
+Version: 1.5.19-194
 Depends: R (>= 2.14.0)
 Suggests: MASS, car, date, foreign, gdata, reshape, sendmailR, xlsx, plyr, R.utils, parallel, psych, ggplot2, survey, fmsb
 Date: 2012-10-26

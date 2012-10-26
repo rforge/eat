@@ -67,7 +67,7 @@
 
 automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.var=NULL, weight=NULL, items, na=list(items=NULL, DIF=NULL, HG=NULL, group=NULL, weight=NULL), person.grouping=NULL, item.grouping=NULL, compute.fit = TRUE,
                                     model.statement="item", m.model="1pl", Title = NULL, jobName, jobFolder, subFolder=list(), dataName=NULL, anchor=NULL, pathConquest="C:/ConQuest/console_Feb2007.exe", method=NULL,std.err=NULL,distribution=NULL,
-                                    n.plausible=NULL, set.constraints=NULL, nodes=NULL, p.nodes=NULL, f.nodes=NULL, n.iterations=NULL, converge=NULL, deviancechange=NULL, name.unidim=NULL, 	allowAllScoresEverywhere = TRUE,
+                                    n.plausible=NULL, set.constraints=NULL, nodes=NULL, p.nodes=NULL, f.nodes=NULL, n.iterations=NULL, converge=NULL, deviancechange=NULL, name.unidim=NULL, 	allowAllScoresEverywhere = FALSE,
                                     equivalence.table="wle",use.letters=FALSE, checkLink = FALSE, verbose = TRUE, export = list(logfile = TRUE, systemfile = TRUE, history = TRUE, covariance = TRUE, reg_coefficients = TRUE, designmatrix = TRUE) )	 {
 
 	original.options <- options("scipen")                         ### lese Option für Anzahl der Nachkommastellen 
@@ -119,7 +119,7 @@ automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.va
     if(is.null(pathConquest))     {pathConquest <- get.file.from.dir(dr=file.path(.Library,"eat/winexe/conquest"), ext="exe", vers="newest", crit.level="stop" )}
     if(is.null(checkLink))     {checkLink <- FALSE }
     if(is.null(compute.fit))     {compute.fit <- TRUE}
-	  if(is.null(allowAllScoresEverywhere))   {allowAllScoresEverywhere <- TRUE}
+	  if(is.null(allowAllScoresEverywhere))   {allowAllScoresEverywhere <- FALSE}
 	
 	# Check ob pathConquest in Ordnung
 	if ( ! file.exists ( pathConquest ) ) {
