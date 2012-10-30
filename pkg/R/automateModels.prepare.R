@@ -115,8 +115,7 @@
 		}
 		list4$conquestParameters <- mapply ( .fun , list4$conquestParameters , SIMPLIFY = FALSE)
 		# Check ob keine falschen Bezeichner
-		allowedNames <- c(  "na",
-							"compute.fit",
+		allowedNames <- c(  "compute.fit",
 							"model.statement",
 							"pathConquest",
 							"method",

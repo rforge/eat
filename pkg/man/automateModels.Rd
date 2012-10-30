@@ -8,19 +8,21 @@ automateModels
 specify and run several ConQuest models
 }
 \usage{
-automateModels(dat, id = NULL, context.vars = NULL, items = NULL, 
+automateModels( dat, id = NULL, context.vars = NULL, items = NULL, 
 item.grouping = NULL, select.item.group = NULL, person.grouping.vars = NULL, 
 person.grouping.vars.include.all = FALSE, person.grouping = NULL, 
-select.person.group = NULL, checkLink = FALSE, additional.item.props = NULL, folder, 
-overwrite.folder = TRUE, analyse.name.prefix = NULL, analyse.name = NULL, 
-analyse.name.elements = NULL, data.name = NULL, m.model = NULL, software = NULL, 
-dif = NULL, weight = NULL, anchor = NULL, regression = NULL, adjust.for.regression = TRUE,
-q3 = FALSE, q3.p.est = c ( "wle" , "pv" , "eap" ), icc = FALSE, missing.rule = NULL, cross = NULL, 
-subfolder.order = NULL, subfolder.mode = NULL, allNAdelete = TRUE, additionalSubFolder = NULL, 
-run.mode = NULL, n.batches = NULL, run.timeout = 1440, run.status.refresh = 0.2, 
+select.person.group = NULL, checkLink = FALSE, additional.item.props = NULL,
+folder, overwrite.folder = TRUE, analyse.name.prefix = NULL,
+analyse.name = NULL, analyse.name.elements = NULL, data.name = NULL,
+m.model = NULL, software = NULL, dif = NULL, weight = NULL, anchor = NULL,
+regression = NULL, adjust.for.regression = TRUE, q3 = FALSE,
+q3.p.est = c ( "wle" , "pv" , "eap" ), icc = FALSE, missing.rule = NULL,
+cross = NULL, subfolder.order = NULL, subfolder.mode = NULL,
+allNAdelete = TRUE, additionalSubFolder = NULL, run.mode = NULL,
+n.batches = NULL, run.timeout = 1440, run.status.refresh = 0.2,
 cores = NULL, email = NULL, smtpServer = NULL, write.txt.dataset = FALSE,
-write.xls.results = TRUE,
-delete.folder.countdown = 5, conquestParameters = NULL )
+write.xls.results = TRUE, delete.folder.countdown = 5,
+conquestParameters = NULL )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -218,7 +220,7 @@ countdown for deletion of 'folder', default: 5 (seconds)
 
 							Available option are:
 
-							"na", "compute.fit", "model.statement", "pathConquest", "method", "std.err",
+							"compute.fit", "model.statement", "pathConquest", "method", "std.err",
 							"distribution", "n.plausible", "set.constraints", "nodes", "p.nodes", "f.nodes",
 							"n.iterations", "converge", "deviancechange", "equivalence.table", "use.letters",
 							"checkLink", "export"

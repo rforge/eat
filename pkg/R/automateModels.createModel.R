@@ -83,7 +83,6 @@
 				if ( is.null ( anchor ) ) anch_str <- "" else anch_str <- paste ( "'data.frame': " , nrow ( anchor ) , " obs. of " , ncol ( anchor ) , " variables" , sep = "" )
 				sunk ( paste ( einr , "anchor = " , anch_str , sep = "" ) )				
 				stopifnot ( is.null ( conquestParameters$pathConquest ) | is.character ( conquestParameters$pathConquest ) )
-				sunk ( paste ( "cat('" ,  einr , "na = " , conquestParameters$na , sep = "" , "\n')" ) )
 				sunk ( paste ( "cat('" ,  einr , "compute.fit = " , conquestParameters$compute.fit , sep = "" , "\n')" ) )
 				sunk ( paste ( "cat('" ,  einr , "model.statement = " , conquestParameters$model.statement , sep = "" , "\n')" ) )								
 				sunk ( paste ( "cat('" , einr , "pathConquest = " , conquestParameters$pathConquest , sep = "" , "\n')" ) )				
@@ -123,7 +122,6 @@
 						subFolder = additionalSubFolder ;
 						dataName = data.name ; 
 						anchor = anchor ;
-						na = conquestParameters$na ;
 						compute.fit = conquestParameters$compute.fit ;
 						model.statement = conquestParameters$model.statement ;
 						pathConquest = conquestParameters$pathConquest ;			
@@ -161,7 +159,6 @@
 						"subFolder",
 						"dataName",
 						"anchor",
-						"na" , 
 						"compute.fit" ,
 						"model.statement" ,
 						"pathConquest" ,
@@ -201,7 +198,6 @@
 										subFolder = additionalSubFolder ,
 										dataName = data.name , 
 										anchor = anchor ,
-										na = conquestParameters$na , 
 										compute.fit = conquestParameters$compute.fit , 
 										model.statement = conquestParameters$model.statement ,
 										pathConquest = conquestParameters$pathConquest ,			
