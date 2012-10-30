@@ -8,7 +8,8 @@ sunk
 writes output to file
 }
 \usage{
-sunk ( cmd = NULL , path = NULL , write = TRUE , console.output = TRUE , new.file = FALSE , text.on.error = TRUE , text.out.method = NULL )
+sunk ( cmd = NULL , path = NULL , write = TRUE , console.output = TRUE ,
+new.file = FALSE , text.on.error = TRUE , text.out.method = NULL )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -17,8 +18,13 @@ character string of element to write, may be either text (e.g. "write me to file
 }
   \item{path}{
 path (folder and name) to output file
-if NULL path is defaulted to getwd()+"sunk.txt"
-all environments are searched for sunk.path, if sunk.path is found (exists), it is used
+
+if \code{path=NULL} (default) all environments are searched for an character object named \code{sunk.path},
+
+if \code{sunk.path} is found, it is used as \code{path}
+
+if \code{sunk.path} is not found, \code{path} is set to getwd()+"sunk.txt"
+
 }
   \item{write}{
 logical, if TRUE (default) output is written to file
