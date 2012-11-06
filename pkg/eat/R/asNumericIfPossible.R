@@ -24,7 +24,7 @@ asNumericIfPossible <- function(dat, set.numeric=TRUE, transform.factors=FALSE, 
             funVersion  <- "asNumericIfPossible_0.5.0"
             originWarnLevel <- getOption("warn")
             wasInputVector  <- FALSE
-            if(class(dat) != "data.frame" ) {
+            if(!"data.frame" %in% class(dat) ) {
               if(verbose == TRUE) {cat(paste(funVersion, ": Convert argument 'dat' to class 'data.frame'.\n",sep=""))}
               dat <- data.frame(dat, stringsAsFactors=FALSE)
               wasInputVector <- ifelse(ncol(dat) == 1, TRUE, FALSE)
