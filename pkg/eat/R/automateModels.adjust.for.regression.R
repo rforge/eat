@@ -4,12 +4,14 @@
 # Version: 	0.2.0
 # Status: beta
 # Release Date: 	2011-09-08
-# Author:    Martin Hecht, Karoline Sachse
-# 2012-08-21 KS
+# Author:    Martin Hecht & Karoline Sachse
+# 2012-11-06 KS: PV/WLE/EAP adjustieren wird parametrisiert, sobald Erzeugung parametrisiert ist und ein entsprechendes Argument übergeben kann, das wär toll
+# ADDED: eap/wle/pv adjustiert
+# 2012-08-21 KS:
 # CHANGED: für Personenseite (PVs) implementiert
-# 2012-08-17 KS
+# 2012-08-17 KS:
 # CHANGED: improved efficiency
-# 2012-08-16 KS
+# 2012-08-16 KS:
 # CHANGED: für alle dimensionen und analysen implementiert
 # 0000-00-00 AA
 # Change Log:
@@ -27,7 +29,7 @@
 		f.n <- paste ( f. , ":" , sep = "" )
 
 		# Ausgabe
-		sunk ( paste ( f.n , "Item parameter estimates and plausible values will be centered on person mean." ) ) 
+		sunk ( paste ( f.n , "Item and person parameter estimates will be centered on person mean." ) ) 
 		res1 <- results
 		analyses <- names(results)
 		for(k in seq(along =analyses)) {
@@ -46,18 +48,23 @@
 				do <- paste ( "results[[", k, "]][[dimensions[", i, "]]][[1]][[1]]<-list(" , paste ( itNam[[dimensions[i]]], " = i.dummies$" , itNam[[dimensions[i]]], collapse = "," , sep="") , ")" , sep = "" )
 				eval ( parse ( text = do ) )
 				# person side
+				wleadj <- eapadj <- list()
+				wleadj[[dimensions[i]]] <- unlist(lapply(results[[k]][[dimensions[i]]][[1]][[2]], function(ll) {ll$wle})) - results[[k]][[dimensions[i]]][[1]]$descriptives$wle$wle.mean
+				eapadj[[dimensions[i]]] <- unlist(lapply(results[[k]][[dimensions[i]]][[1]][[2]], function(ll) {ll$eap})) - results[[k]][[dimensions[i]]][[1]]$descriptives$pv$pv.mean
 				pvadj <- pNam <- list()
 				for(j in seq(along=names(results[[k]][[dimensions[i]]][[1]][[2]][[1]]$pv))) {
 					pvadj[[dimensions[i]]] <- unlist(lapply(results[[k]][[dimensions[i]]][[1]][[2]], function(ll) {ll$pv[[paste("pv.", j, sep="")]]})) - results[[k]][[dimensions[i]]][[1]]$descriptives$pv$pv.mean
 					pNam[[dimensions[i]]] <- names(results[[k]][[dimensions[i]]][[1]][[2]])
-						make.pvadj <- function ( pers , pvad ) {
+						make.pvadj <- function ( pers , pvad, wladj, eaadj ) {
 							p.dummy <- results[[k]][[dimensions[i]]][[1]][[2]][[pers]]
-							p.dummy$pv[[paste("pv.",j,".adj", sep="")]] <- pvad
+							p.dummy$wle.adj <- wladj[[pers]]
+							p.dummy$eap.adj <- eaadj[[pers]]
+							p.dummy$pv[[paste("pv.",j,".adj", sep="")]] <- pvad[[pers]]
 							return(p.dummy)
 						}
-					p.dummies <- mapply ( make.pvadj , pNam[[dimensions[i]]], pvadj[[dimensions[i]]] , SIMPLIFY = FALSE )
+					p.dummies <- mapply ( make.pvadj , pers = pNam[[dimensions[i]]], MoreArgs = list(pvad=pvadj[[dimensions[i]]] , wladj= wleadj[[dimensions[i]]], eaadj=eapadj[[dimensions[i]]]), SIMPLIFY = FALSE )
 					results[[k]][[dimensions[i]]][[1]][[2]]<-p.dummies
-				}
+				}				
 			}
 		}
 						# Schleife raus
@@ -66,7 +73,6 @@
 				# }
 		# Ausgabe
 		sunk ( " done\n\n" )
-		
 		# returnen 
 		return ( results )
 		

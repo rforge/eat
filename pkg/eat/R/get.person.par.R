@@ -26,7 +26,6 @@ get.person.par <- function ( results ) {
 										do.call ( "c" , person )
 										
 								}
-
 								kennwerte <- t ( mapply ( fun4 , gruppe$person ) )
 								kennwerte <- cbind ( matrix ( c ( analyse.name.vec , dimension.name.vec , gruppe.name.vec , person.names ) , ncol = 4 ) , kennwerte )
 								kennwerte <- data.frame ( kennwerte , stringsAsFactors = FALSE )
