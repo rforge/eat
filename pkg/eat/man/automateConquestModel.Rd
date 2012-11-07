@@ -48,7 +48,7 @@ export = list(logfile = TRUE, systemfile = TRUE, history = TRUE, covariance = TR
 }
 
   \item{item.grouping}{
-	A named data frame indicating how items should be grouped to dimensions. The first column contains the names of all items and must be named \code{item}. The other columns contain dimension definitions and must be named with the respective dimension names. A value of 1 indicates that an item loads on this dimension, a value of 0 indicates that the respective item does not load on this dimension.
+	A named data frame indicating how items should be grouped to dimensions. The first column contains the names of all items and must be named \code{item}. The other columns contain dimension definitions and must be named with the respective dimension names. A value of 0 indicates that the respective item does not load on this dimension. A non-negative value indicates that the respective loads on this dimension with the specified weight. For examlpe, a value of 1.89 indicates that an item loads on this dimension with the weight 1.89.
 }
   \item{person.grouping}{
 	A named data frame indicating which persons should be grouped. The first column contains the identifier variable and must have the same name as the respective column in \code{dat}. The other columns contain grouping definitions and must be named with the respective group names. A value of 1 indicates that a person belongs to this group, a value of 0 indicates that the respective person does not belong to this group.
@@ -57,7 +57,7 @@ export = list(logfile = TRUE, systemfile = TRUE, history = TRUE, covariance = TR
 	Logical: Should fit statistics computed in ConQuest analysis?
 }
   \item{model.statement}{
-	A character string with the model statement to use in the ConQuest syntax. If \code{model.statement == NULL}, the model statement in the ConQuest syntax is set to \code{item} by default. When a DIF variable is specified, the model statement is set to \code{item - [name of DIF variable] + item*[name of DIF variable]} by default. 
+	A character string with the model statement to use in the ConQuest syntax. If \code{model.statement == NULL}, the model statement in the ConQuest syntax is set to \code{item} by default. When a DIF variable is specified, the model statement is set to \code{item - [name of DIF variable] + item*[name of DIF variable]} by default. When the data format is polytomous (instead auf dichotomous), the model statement has to be formulated explicitly, for example \code{item + step} when a rating scale model is to be applied, or \code{item + item*step} when a partial credit model is to be applied. See ConQuest manual for details.
 }
   \item{m.model}{
 	A character string specifying the IRT model used for analysis. At the time, only \code{"1PL"} is available.
@@ -238,6 +238,22 @@ system ( "rasch_multidim.bat" ,	 wait = TRUE , show.output.on.console = FALSE , 
 prm <-  get.shw("rasch_multidim.shw")[[1]][,2:3]
 ex3 <- automateConquestModel ( item.grouping = science1.scales, dat = science1.collapsed, ID = "id", items = science1.items,
 				 anchor = prm, group = "track", regression = "grade", jobFolder = "C:/temp", jobName = "rasch_multidim_regression_group" )
+#
+### Example 4: create input files for a multidimensional partial credit model with latent regression and unequal factor loadings
+# Warning: This example does not really make sense with regard to contents. It's only to illustrate generation of ConQuest input.
+science1.collapsed <- collapseMissings(science1, items = science1.items)
+# generate unequal factor loadings
+science1.scales[c(10,14,20,22,1),2] <- 0.8
+science1.scales[c(8,12,17), 2]      <- 1.27
+science1.scales[c(25,29,33), 3]      <- 0.71
+science1.scales[c(87,91,92), 5]      <- 0.97
+
+# generate a polytomous structure
+for (i in science1.scales[,"item"]) {science1.collapsed[!is.na(science1.collapsed[,i]),i] <- sample(c(0:3), size = sum(!is.na(science1.collapsed[,i])), replace = TRUE)}
+
+dir.create("C:/temp")
+ex4 <- automateConquestModel ( item.grouping = science1.scales, dat = science1.collapsed, ID = "id", items = science1.items,
+			 model.statement = "item + item*step", method = "quadrature", regression = "sex", jobFolder = "C:/temp", jobName = "pcm_multidim" )
 }
 }
 

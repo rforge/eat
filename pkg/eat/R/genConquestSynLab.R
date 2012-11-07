@@ -205,7 +205,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
 
                    ### identifiziere Itemspalten ("TI" = test items)
                    itemspalten <- sort ( match(namen.items, colnames(daten)) )  ### in welchen spalten stehen Items? 
-                   erlaubte.codes <- paste(gsub("_","",sort(gsub(" ","_",formatC(names(table.unlist(daten[,itemspalten])),width=var.char)),decreasing=TRUE)),collapse=",")
+                   erlaubte.codes <- paste(gsub("_","",sort(gsub(" ","_",formatC(names(table.unlist(daten[,itemspalten])),width=var.char)),decreasing=FALSE)),collapse=",")
                    syntax    <- gsub("####hier.erlaubte.codes.einfuegen####",erlaubte.codes, syntax )
                    namen.items <- colnames(daten)[itemspalten]                  ### folgendes wenn Reihenfolge geaendert wurde (sollte nicht sein)
                    sunk(paste("genConquestSynLab_",ver,": ",length(itemspalten), " test items identified.\n",sep=""))
