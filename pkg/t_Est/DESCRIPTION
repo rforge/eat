@@ -1,0 +1,13 @@
+Package: t_Est
+Type: Package
+Title: t_Est
+Version: 0.0.1
+Depends: R (>= 2.14.0)
+Date: 2012-11-11
+Author: eat authors <eat-commits@lists.r-forge.r-project.org>
+Maintainer: Martin Hecht <martin.hecht@iqb.hu-berlin.de>
+Description: This is a bogus test package. Ignore!
+License: GPL (>= 2)
+LazyLoad: yes
+LazyData: yes
+OS_type: windows
