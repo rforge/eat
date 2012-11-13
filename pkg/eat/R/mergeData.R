@@ -91,8 +91,6 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, writeL
 							partialData.part <- partialData[ which ( partialData[colID] == multipleCases[k] ),]             
 							targetData [ k , ] <- partialData.part [ 1 , ]
 							# in welchen Spalten treten (mindestens) zwei unterschiedliche Werte auf, inkl. Missings?
-### FUNKTIONIERT NICHT MIT FAKTOREN, DIE WERDEN IMMER ALS UNTERSCHIEDLICH GEFUNDEN! DA MUSS ES WOHL IRGENDEIN PROBLEM MIT DEN LEVELS GEBEN, NOCH PRÜFEN!
-# konnte ich nicht replizieren... was ist gemeint?
 							differentCol <- which ( sapply ( partialData.part , function (ll) { length (table(ll, useNA = "ifany")) > 1 }) )
              
 							for ( j in differentCol ){
