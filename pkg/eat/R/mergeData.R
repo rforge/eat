@@ -36,6 +36,13 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, writeL
   for ( i in seq(along = datList)) {stopifnot( oldIDs[i] %in% colnames(datList[[i]]) )} 
   if(writeLog) {writeL <- TRUE; consoleO <- TRUE} else {writeL <- FALSE; consoleO <- FALSE}
   if ( length(datList) > 0 ) {
+	fkNam <- list()
+	for ( i in seq(along = datList)) {
+		if(any(unlist(lapply(datList[[i]], class)) == "factor")) {
+			fkNam[[i]] <- names(which(unlist(lapply(datList[[i]], class)) == "factor"))
+			datList[[i]] <- set.col.type(datList[[i]], col.type = list ( "character" = fkNam[[i]] ))
+		}
+	}
     stopifnot(length(datList) == length(oldIDs))
     stopifnot(is.numeric(oldIDs) | is.character(oldIDs))
 		for ( i in seq(along = datList)) {
@@ -128,6 +135,11 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, writeL
 	} else {    
 		sunk(paste("mergeData_", versNr, ": Found no datasets."), "\n", write = writeL , console.output = TRUE)
 		mReturn <- FALSE
+	}
+	if(is.data.frame(mReturn)) {
+		if(!is.null(unlist(fkNam))) {
+			mReturn <- set.col.type(mReturn, col.type = list ( "factor" = unlist(fkNam)))
+		}
 	}
 	return (mReturn)
 }
