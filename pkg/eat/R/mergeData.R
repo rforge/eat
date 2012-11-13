@@ -138,7 +138,7 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, writeL
 	}
 	if(is.data.frame(mReturn)) {
 		if(!is.null(unlist(fkNam))) {
-			mReturn <- set.col.type(mReturn, col.type = list ( "factor" = unlist(fkNam)))
+			mReturn <- set.col.type(mReturn, col.type = list ( "factor" = unique(unlist(fkNam))))
 		}
 	}
 	return (mReturn)
