@@ -2,9 +2,11 @@
 \alias{jk2.quantile}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{JK2 for quantiles.}
-\description{Compute Standard errors for quantiles based on Jackknife (JK2) procedure.}
+\description{Compute Standard errors for quantiles based on Jackknife (JK2) procedure.
+This is a wrapper for the svyquantile() function of the survey package.}
 \usage{
-jk2.quantile(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(), probs = seq(0, 1, 0.25), complete.permutation = c("nothing", "groups", "all")) }
+jk2.quantile(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(),
+probs = seq(0, 1, 0.25), complete.permutation = c("nothing", "groups", "all")) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -79,7 +81,15 @@ Sebastian Weirich
 \seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
-
+\examples{
+data(science2)
+### Computes percentile for reading and writing scores conditionally on country
+perzent   <- jk2.quantile(dat = science2, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
+             group = list(country = "country"),
+             dependent = list(reading = paste("reading_score", 1:3, sep = ""), writing = paste("writing_score", 1:3, sep = "")  ) ,
+             probs = seq(0.1,0.9,0.2),
+             complete.permutation = "no" )
+}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{ ~kwd1 }

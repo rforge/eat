@@ -19,6 +19,7 @@ jk2.mean <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), group.d
             missings    <- sapply(dat.i, FUN = function (uu) {length(which(is.na(uu)))})
             if(!all(missings == 0)) {stop(paste("Found NAs in variable(s) ",paste(names(missings[missings!=0]), collapse = ", "), "\n",sep = "") )}
             cat(paste("Found ",length(group)," grouping variable(s).\n",sep=""))
+            .checkGroupConsistency(dat = dat, group = group)
             cat(paste("Run ",length(dependent)," analyses overall.\n", sep = ""))
             if ( complete.permutation == "groups" ) {group <- as.list(expand.grid(group, stringsAsFactors = FALSE))}
             analysis    <- lapply(dependent, FUN = function ( dep ) {
@@ -45,7 +46,9 @@ jk2.mean <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), group.d
                                   ### Standardabweichungen muessen separat bestimmt werden (Lumley, Mail 17. Oktober 2012). Delta method
                                   ### da die delta method "von hand" programmiert werden muss, kann sie nicht mittels svyby() uebergeben werden, muss also aehnlich wie svyglm() von hand mittels lapply() auf die verschiedenen abhaengigen variablen verteilt werden
                                   sds            <- do.call("rbind", by(data = dat.i, INDICES =  dat.i[,as.character(imp[-length(imp)])], FUN = function (uu) {
-                                                    namen          <- sapply(uu[,as.character(imp[-length(imp)]), drop = FALSE], FUN = function ( yy ) {names(table(yy))})
+                                                    namen          <- sapply(uu[,as.character(imp[-length(imp)]), drop = FALSE], FUN = function ( yy ) {
+                                                                      retu <- table(yy)
+                                                                      return(names(retu)[retu>0]) })
                                                     sub.replicates <- replicates[ match(uu[,"idstud"], replicates[,"ID"] ) ,  ]
                                                     design.uu      <- svrepdesign(data = uu[ ,c(as.character(imp[-length(imp)]), dep)], weights = uu$wgtSTUD, type="JKn", scale = 1, rscales = 1, repweights = sub.replicates[,-1], combined.weights = TRUE, mse = TRUE)
                                                     var.uu         <- svyvar(x = as.formula(paste("~",imp[["dep"]],sep="")), design = design.uu, deff = FALSE, return.replicates = TRUE)
@@ -143,6 +146,7 @@ jk2.table <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), depend
             missings    <- sapply(dat.i, FUN = function (uu) {length(which(is.na(uu)))})
             if(!all(missings == 0)) {stop(paste("Found NAs in variable(s) ",paste(names(missings[missings!=0]), collapse = ", "), "\n",sep = "") )}
             cat(paste("Found ",length(group)," grouping variable(s).\n",sep=""))
+            .checkGroupConsistency(dat = dat, group = group)
             cat(paste("Run ",length(dependent)," analyses overall.\n", sep = ""))
             flush.console()
             if(length(expected.values)>0) {
@@ -221,7 +225,7 @@ jk2.table <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), depend
                            mean.cols           <- grep("mittelmean$", colnames(ana.frame))
                            se.cols             <- grep("se$",colnames(ana.frame))
                            stopifnot(length(mean.cols) == length(se.cols))
-                           group.cols          <- unlist(lapply(group.origin, FUN = function(u) {grep(u, colnames(ana.frame))[1]}))
+                           group.cols          <- unlist(lapply(group.origin, FUN = function(u) {grep(u[1], colnames(ana.frame))[1]}))
                            if(length(se.cols)>1) {                              ## Es wird nur gepoolt, wenn es mehr als einen Standardfehler gibt
                               pooled              <- t(apply(ana.frame, MARGIN = 1, FUN = function (iii) {
                                                      unlist(c(pool.means(m = as.numeric(iii[mean.cols]), se = as.numeric(iii[se.cols]))$summary[c("m.pooled","se.pooled")]))}))
@@ -256,6 +260,7 @@ jk2.quantile <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dep
             missings    <- sapply(dat.i, FUN = function (uu) {length(which(is.na(uu)))})
             if(!all(missings == 0)) {stop(paste("Found NAs in variable(s) ",paste(names(missings[missings!=0]), collapse = ", "), "\n",sep = "") )}
             cat(paste("Found ",length(group)," grouping variable(s).\n",sep=""))
+            .checkGroupConsistency(dat = dat, group = group)
             groupsize   <- sapply(group, FUN = function (iii ) {length(iii)})
             cat(paste("Run ",length(dependent)," analyses overall.\n", sep = ""))
             if ( complete.permutation == "groups" ) {group <- as.list(expand.grid(group, stringsAsFactors = FALSE))}
@@ -323,6 +328,7 @@ jk2.glm <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independ
             missings    <- sapply(dat.i, FUN = function (uu) {length(which(is.na(uu)))})
             if(!all(missings == 0)) {stop(paste("Found NAs in variable(s) ",paste(names(missings[missings!=0]), collapse = ", "), "\n",sep = "") )}
             cat(paste("Found ",length(group)," grouping variable(s).\n",sep=""))
+            .checkGroupConsistency(dat = dat, group = group)
             cat(paste("Run ",length(dependent)," analyses overall.\n", sep = ""))
             if ( complete.permutation == "groups" )      {group       <- as.list(expand.grid(group, stringsAsFactors = FALSE))}
             if ( complete.permutation == "independent" ) {independent <- as.list(expand.grid(independent, stringsAsFactors = FALSE))}
@@ -416,3 +422,14 @@ generate.replicates <- function ( dat, ID, wgt = NULL, JKZone, JKrep )      {
                        ret            <- data.frame(ID = dat.i$ID, reps, stringsAsFactors = FALSE)
                        attr(ret, "n.replicates") <- length(zonen)
                        return(ret) }
+
+
+.checkGroupConsistency <- function (dat, group)   {
+       consistent <- lapply(group, FUN = function (ii) {
+                     if(length(ii) > 1) {
+                        first <- names(table(as.character(dat[,ii[1]])))
+                        cons  <- lapply(dat[,ii], FUN = function (iii) {
+                                 actual <- names(table(as.character(iii)))
+                                 stopifnot(all ( actual == first ) )
+                        })
+                        }})}

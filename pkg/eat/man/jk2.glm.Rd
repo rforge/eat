@@ -2,10 +2,12 @@
 \alias{jk2.glm}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{JK2 for linear regression models.}
-\description{Compute Standard errors for linear regression models based on Jackknife (JK2) procedure.}
+\description{Compute linear regression models for complex cluster designs based on Jackknife (JK2) procedure.
+This is a wrapper for the svyglm() function of the survey package.}
 \usage{
-jk2.glm(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independent = list(), dependent = list(),
-        complete.permutation = c("nothing", "groups", "independent", "all") , glm.family) }
+jk2.glm(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independent = list(),
+        dependent = list(), complete.permutation = c("nothing", "groups", "independent", "all") ,
+        glm.family) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -85,7 +87,21 @@ Sebastian Weirich
 \seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
-
+\examples{
+data(science2)
+### Computes linear regression from reading score on hisei and gender separately for each country
+mod1      <- jk2.glm(dat = science2, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
+             group = list(country = "country"),
+             dependent = list(reading = paste("reading_score", 1:3, sep = ""), writing = paste("writing_score", 1:3, sep = "")),
+             independent = list(hisei = paste("zehisei", 1:5, sep = "")),
+             complete.permutation = "no", glm.family = gaussian(link="identity") )
+### Computes log linear regression from pass/fail on hisei and gender separately for each country
+mod1      <- jk2.glm(dat = science2, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
+             group = list(country = "country"),
+             dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""), writing = paste("passed_writing", 1:3, sep = "")),
+             independent = list(hisei = paste("zehisei", 1:5, sep = "")),
+             complete.permutation = "no", glm.family = binomial(link="logit") )
+}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{ ~kwd1 }

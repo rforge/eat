@@ -2,10 +2,12 @@
 \alias{jk2.table}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{JK2 for frequency tables.}
-\description{Compute Standard errors for frequency tables based on Jackknife (JK2) procedure.}
+\description{Compute Standard errors for frequency tables based on Jackknife (JK2) procedure.
+This is a wrapper for the svytable() function of the survey package.}
 \usage{
 jk2.table(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(),
-          separate.missing.indikator = FALSE, expected.values = list(), complete.permutation = c("nothing", "groups", "all")) }
+          separate.missing.indikator = FALSE, expected.values = list(),
+          complete.permutation = c("nothing", "groups", "all")) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -84,7 +86,14 @@ Sebastian Weirich
 \seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
-
+\examples{
+data(science2)
+### Computes frequencies of the hisei group conditionally on the groups of passed and failed with respect to reading score
+freq.tab  <- jk2.table(dat = science2, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
+             group = list(country = "country", passed.reading = paste("passed_reading",1:3,sep="" )),
+             dependent = list(hisei = paste("zehisei", 1:5, sep = "") ) ,
+             complete.permutation = "no" )
+}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{ ~kwd1 }
