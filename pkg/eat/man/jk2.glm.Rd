@@ -2,8 +2,10 @@
 \alias{jk2.glm}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{JK2 for linear regression models.}
-\description{Compute linear regression models for complex cluster designs based on Jackknife (JK2) procedure.
-This is a wrapper for the svyglm() function of the survey package.}
+\description{Compute linear regression models for complex cluster designs with multiple imputed variables based on Jackknife (JK2) procedure.
+Conceptually, the function combines replication methods and methods for multiple imputed data. Technically, this is a wrapper for the svyglm() function
+of the survey package.
+}
 \usage{
 jk2.glm(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independent = list(),
         dependent = list(), complete.permutation = c("nothing", "groups", "independent", "all") ,
@@ -49,8 +51,13 @@ as its imputations. See details for more information.
 }
   \item{complete.permutation}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Becomes relevant if the numbers of imputations used for group variable(s) differs from the number of
-imputation used for independent and/or dependent variable(s).
+Argument defines the number of multiple imputed data sets. In general, the number is defined by the number of imputations
+of a variable. Therefore, this argument only becomes relevant, if the number of imputation of one variable
+(e.g. the number of plausible values of the dependent variable) differs from the number of imputations used for independent variable(s).
+If \code{"all"}, number of datasets are determined through permutation, e.g. 5 plausible values and 3 imputations of the independent variable
+results in 3x5=15 imputed data sets. If \code{"nothing"}, only 5 imputed data sets will be used, no matter whether the larger number of imputations
+is a whole multiple of the smaller number of imputations. If \code{"groups"}, only the number of imputations of more than one grouping variable will be permutated.
+If \code{"independent"}, only the number of imputations of more than one independent variable will be permutated.
 }
   \item{glm.family}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -59,9 +66,10 @@ Argument of class "family", specifying the link function. See help file of 'glm'
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
-Funktion first creates replicate weights based on JKZone and JKrep variables according to JK2 procedure
-implemented in WesVar. Afterwards, function serves as a wrapper for several functions implemented in the
-'survey' package.
+Function first creates replicate weights based on JKZone and JKrep variables according to JK2 procedure
+implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
+The function afterwards serves as a wrapper for svyglm() implemented in the 'survey' package.
+The results of the several analyses are then pooled according to Rubin's rule.
 }
 \value{
 %%  ~Describe the value returned
@@ -69,8 +77,10 @@ implemented in WesVar. Afterwards, function serves as a wrapper for several func
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-A list of data frames, one for each dependent variable. Each data frame contains means, standard deviations and
-standard errors for means.
+A list of data frames, one for each dependent variable. Each data frame contains columns for group variables (if specified),
+regression weights, standard errors and r squared. Each row in the data frame corresponds to one parameter (specified in column \code{"reg"})
+in one group (specified in the column which name refers to the group name) for one dependent variable (specified in the name of the
+corresponding list element).
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -98,7 +108,7 @@ mod1      <- jk2.glm(dat = science2, ID = "idstud", wgt = "wgtSTUD", JKZone = "J
 ### Computes log linear regression from pass/fail on hisei and gender separately for each country
 mod1      <- jk2.glm(dat = science2, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
              group = list(country = "country"),
-             dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""), writing = paste("passed_writing", 1:3, sep = "")),
+             dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""), writing.pass = paste("passed_writing", 1:3, sep = "")),
              independent = list(hisei = paste("zehisei", 1:5, sep = "")),
              complete.permutation = "no", glm.family = binomial(link="logit") )
 }

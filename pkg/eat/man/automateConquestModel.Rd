@@ -11,13 +11,15 @@ several models in a row, see \code{automateModels}.
 \usage{
 automateConquestModel(dat, ID, regression=NULL, DIF=NULL, group.var=NULL, 
 weight=NULL, items, na=list(items=NULL, DIF=NULL, HG=NULL, group=NULL, 
-weight=NULL), person.grouping=NULL, item.grouping=NULL, compute.fit = TRUE, model.statement="item",
-m.model="1pl", Title = NULL, jobName, jobFolder, subFolder=list(), dataName=NULL, 
-anchor=NULL, pathConquest, method=NULL, std.err=NULL ,distribution=NULL, 
-n.plausible=NULL, set.constraints=NULL, nodes=NULL, p.nodes=NULL, f.nodes=NULL, 
-n.iterations=NULL, converge=NULL, deviancechange=NULL, name.unidim=NULL, 	allowAllScoresEverywhere = FALSE,
+weight=NULL), person.grouping=NULL, item.grouping=NULL, compute.fit = TRUE,
+model.statement="item", m.model="1pl", Title = NULL, jobName, jobFolder,
+subFolder=list(), dataName=NULL, anchor=NULL, pathConquest, method=NULL,
+std.err=NULL ,distribution=NULL, n.plausible=NULL, set.constraints=NULL,
+nodes=NULL, p.nodes=NULL, f.nodes=NULL, n.iterations=NULL, converge=NULL,
+deviancechange=NULL, name.unidim=NULL, 	allowAllScoresEverywhere = FALSE,
 equivalence.table="wle", use.letters=FALSE, checkLink=FALSE, verbose=TRUE,
-export = list(logfile = TRUE, systemfile = TRUE, history = TRUE, covariance = TRUE, reg_coefficients = TRUE, designmatrix = TRUE))
+export = list(logfile = TRUE, systemfile = TRUE, history = TRUE, covariance = TRUE,
+reg_coefficients = TRUE, designmatrix = TRUE))
 }
 
 \arguments{

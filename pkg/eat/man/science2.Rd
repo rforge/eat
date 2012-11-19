@@ -15,7 +15,7 @@ of variables.
 
 \usage{data(science2)}
 
-\format{'data.frame':   4619 obs. of  24 variables}
+\format{'data.frame':   4619 obs. of  24 variables
   \describe{
     \item{idstud}{Unique identifier}
     \item{wgtSTUD}{variable of individual student weights}
@@ -37,6 +37,8 @@ of variables.
 	\item{passed_writing3}{Third indicator whether examinee passed the writing minimal requirement}
 	\item{zehisei}{Overall five indicators of highest socio-economic status. Think of it as imputed values. }
 	\item{income}{Overall two indicators of mean month income.}
+ }
+}
 
 \source{Simulated data}
 
@@ -44,9 +46,5 @@ of variables.
 %}
 
 \keyword{datasets}
-
-
-
-
 
 

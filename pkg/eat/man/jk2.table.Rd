@@ -2,8 +2,11 @@
 \alias{jk2.table}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{JK2 for frequency tables.}
-\description{Compute Standard errors for frequency tables based on Jackknife (JK2) procedure.
-This is a wrapper for the svytable() function of the survey package.}
+\description{Compute frequency tables with standard errors for complex cluster designs with multiple imputed variables
+based on Jackknife (JK2) procedure. Conceptually, the function combines replication methods and methods for
+multiple imputed data. Technically, this is a wrapper for the svymean() function of the survey package called to dichotomous indicators
+of the dependent variable.
+}
 \usage{
 jk2.table(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(),
           separate.missing.indikator = FALSE, expected.values = list(),
@@ -52,15 +55,21 @@ Optional. A vector auf values expected in dependent variable. Recommend to left 
 }
   \item{complete.permutation}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Becomes relevant if the numbers of imputations used for group variable(s) differs from the number of
-imputation used for dependent variable(s).
+Argument defines the number of multiple imputed data sets. In general, the number is defined by the number of imputations
+of a variable. Therefore, this argument only becomes relevant, if the number of imputation of one variable (e.g. dependent variable)
+differs from the number of imputations used for group variable(s). If \code{"all"}, number of datasets are determined through
+permutation, e.g. 5 plausible values and 3 imputations of one group variable results in 3x5=15 imputed data sets. If \code{"nothing"}, only 5 imputed
+data sets will be used, no matter whether the larger number of imputations is a whole multiple of the smaller number of imputations. If \code{"groups"},
+only the number of imputations of more than one grouping variable will be permutated.
 }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
-Funktion first creates replicate weights based on JKZone and JKrep variables according to JK2 procedure
-implemented in WesVar. Afterwards, function serves as a wrapper for several functions implemented in the
-'survey' package.
+Function first creates replicate weights based on JKZone and JKrep variables according to JK2 procedure
+implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
+The function afterwards serves as a wrapper for svymean() called by svyby() implemented in the 'survey' package.
+Relative frequencies of the categories of the dependent variable are computed by the means of the indicators of
+each category. The results of the several analyses are then pooled according to Rubin's rule.
 }
 \value{
 %%  ~Describe the value returned
@@ -68,8 +77,9 @@ implemented in WesVar. Afterwards, function serves as a wrapper for several func
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-A list of data frames, one for each dependent variable. Each data frame contains means, standard deviations and
-standard errors for means.
+A list of data frames, one for each dependent variable. Each data frame contains columns for group variables (if specified),
+a columns called \code{"suffix"} which indicates the value of the corresponding categorie, the frequency of this categorie and
+it's standard error.
 }
 \references{
 %% ~put references to the literature/web site here ~

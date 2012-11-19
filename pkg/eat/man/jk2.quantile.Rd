@@ -1,9 +1,12 @@
-\name{jk2.quantile}
+en\name{jk2.quantile}
 \alias{jk2.quantile}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{JK2 for quantiles.}
-\description{Compute Standard errors for quantiles based on Jackknife (JK2) procedure.
-This is a wrapper for the svyquantile() function of the survey package.}
+\title{JK2 method for quantiles.}
+\description{Compute quantiles with standard errors for complex cluster designs with multiple imputed variables
+(e.g. plausible values) based on Jackknife (JK2) procedure. Conceptually, the function combines
+replication methods and methods for multiple imputed data. Technically, this is a wrapper for
+the svyquantile() function of the survey package.
+}
 \usage{
 jk2.quantile(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(),
 probs = seq(0, 1, 0.25), complete.permutation = c("nothing", "groups", "all")) }
@@ -47,15 +50,20 @@ Numeric vector with probabilities for which to compute quantiles.
 }
   \item{complete.permutation}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Becomes relevant if the numbers of imputations used for group variable(s) differs from the number of
-imputation used for dependent variable(s).
+Argument defines the number of multiple imputed data sets. In general, the number is defined by the number of imputations
+of a variable. Therefore, this argument only becomes relevant, if the number of imputation of one variable (e.g. number of plausible values of the dependent variable)
+differs from the number of imputations used for group variable(s). If \code{"all"}, number of datasets are determined through
+permutation, e.g. 5 plausible values and 3 imputations of one group variable results in 3x5=15 imputed data sets. If \code{"nothing"}, only 5 imputed
+data sets will be used, no matter whether the larger number of imputations is a whole multiple of the smaller number of imputations. If \code{"groups"},
+only the number of imputations of more than one grouping variable will be permutated.
 }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
-Funktion first creates replicate weights based on JKZone and JKrep variables according to JK2 procedure
-implemented in WesVar. Afterwards, function serves as a wrapper for several functions implemented in the
-'survey' package.
+Function first creates replicate weights based on JKZone and JKrep variables according to JK2 procedure
+implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
+The function afterwards serves as a wrapper for svyquantile() called by svyby() implemented in the 'survey' package.
+The results of the several analyses are then pooled according to Rubin's rule.
 }
 \value{
 %%  ~Describe the value returned
@@ -63,8 +71,7 @@ implemented in WesVar. Afterwards, function serves as a wrapper for several func
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-A list of data frames, one for each dependent variable. Each data frame contains means, standard deviations and
-standard errors for means.
+A list of data frames, one for each dependent variable. Each data frame contains percentile values and their standard errors.
 }
 \references{
 %% ~put references to the literature/web site here ~
