@@ -64,7 +64,4 @@ export(recodeMbiToMnr)
 export(readSpss)
 export(equating.rasch)
 export(checkDesign)
-export(jk2.mean)
-export(jk2.table)
-export(jk2.quantile)
-export(jk2.glm)
+
