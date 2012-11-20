@@ -1,13 +1,13 @@
-Package: eatDesign
+Package: eatRep
 Type: Package
-Title: eatDesign
+Title: eatRep
 Version: 0.0.1
-Depends: R (>= 2.14.0), methods, igraph
-Imports: Matrix
-Date: 2012-11-12
-Author: Martin Hecht, Nicole Haag, Karoline Sachse, Thilo Siegle and Sebastian Weirich
-Maintainer: Martin Hecht <martin.hecht@iqb.hu-berlin.de>
-Description: compute descriptives of data structures ("designs")
+Depends: R (>= 2.14.0), survey
+Imports: fmsb, reshape, eatTools
+Date: 2012-11-20
+Author: Sebastian Weirich, Martin Hecht, Nicole Haag, Karoline Sachse and Thilo Siegle
+Maintainer: Sebastian Weirich <sebastian.weirich@iqb.hu-berlin.de>
+Description: compute descriptives for complex survey designs with multiple imputed data 
 License: GPL (>= 2)
 LazyLoad: yes
 LazyData: yes

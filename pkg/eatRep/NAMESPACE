@@ -1,4 +1,8 @@
-export(defineDesign)
-export(updateDesign)
-# importFrom(igraph,graph.formula,V,E,get.adjacency,average.path.length,degree)
-importFrom(Matrix,tril)
+export(jk2.mean)
+export(jk2.table)
+export(jk2.quantile)
+export(jk2.glm)
+importFrom(fmsb, NagelkerkeR2)
+importFrom(reshape, cast, melt.data.frame)
+importFrom(eatTools, table.unlist)
+
