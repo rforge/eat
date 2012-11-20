@@ -2,7 +2,7 @@ Package: eatDesign
 Type: Package
 Title: eatDesign
 Version: 0.0.1
-Depends: R (>= 2.15.0), methods, igraph
+Depends: R (>= 2.14.0), methods, igraph
 Imports: Matrix
 Date: 2012-11-12
 Author: Martin Hecht, Nicole Haag, Karoline Sachse, Thilo Siegle and Sebastian Weirich
