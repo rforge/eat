@@ -13,7 +13,7 @@
 #
 ####################################################################################################################
 
-checkLink <- function(dat, na = NA, verbose = TRUE)   {
+checkLink <- function(dat, remove.non.responser = FALSE, na = NA, verbose = TRUE)   {
              if(!is.na(na))  {
                na <- which(is.na(dat))
                if(length(na)>0)  {
@@ -21,6 +21,13 @@ checkLink <- function(dat, na = NA, verbose = TRUE)   {
                }
                # if(!exists("recode")) {library(car)}
                dat <- as.data.frame(lapply(dat, FUN=function(ii) {recode(ii, paste(na,"= NA",collapse="; ") ) } ) )
+             }
+             if ( remove.non.responser == TRUE ) {
+                na <- which( rowSums(is.na(dat)) == ncol ( dat ) )
+                if(length(na)>0) {
+                   dat <- dat[-na,]
+                   cat(paste("Remove ",length(na)," cases with missing on all items.\n", sep = ""))
+                }
              }
              non.missing.cases <- lapply(dat, FUN=function(ii) {which(!is.na(ii))})
              all.cases <- non.missing.cases[[1]]
