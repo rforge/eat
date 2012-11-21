@@ -98,15 +98,15 @@ Sebastian Weirich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-data(science2)
+data(reading_writing)
 ### Computes linear regression from reading score on hisei and gender separately for each country
-mod1      <- jk2.glm(dat = science2, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
+mod1      <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
              group = list(country = "country"),
              dependent = list(reading = paste("reading_score", 1:3, sep = ""), writing = paste("writing_score", 1:3, sep = "")),
              independent = list(hisei = paste("zehisei", 1:5, sep = "")),
              complete.permutation = "no", glm.family = gaussian(link="identity") )
 ### Computes log linear regression from pass/fail on hisei and gender separately for each country
-mod1      <- jk2.glm(dat = science2, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
+mod1      <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
              group = list(country = "country"),
              dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""), writing.pass = paste("passed_writing", 1:3, sep = "")),
              independent = list(hisei = paste("zehisei", 1:5, sep = "")),

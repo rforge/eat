@@ -90,14 +90,14 @@ Sebastian Weirich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-data(science2)
+data(reading_writing)
 ### First example: only means, SD and variances for each country
-means  <- jk2.mean(dat = science2, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
+means  <- jk2.mean(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
           group = list(country = "country"),
           dependent = list(reading = paste("reading_score",1:3,sep=""), writing = paste("writing_score",1:3,sep="") ),
           complete.permutation = "all" )
 ### Second example: Sex differences by country
-means  <- jk2.mean(dat = science2, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
+means  <- jk2.mean(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
           group = list(country = "country", GENDER = "sex"), group.differences.by = "GENDER",
           dependent = list(reading = paste("reading_score",1:3,sep=""), writing = paste("writing_score",1:3,sep="") ),
           complete.permutation = "all" )

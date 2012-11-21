@@ -97,9 +97,9 @@ Sebastian Weirich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-data(science2)
+data(reading_writing)
 ### Computes frequencies of the hisei group conditionally on the groups of passed and failed with respect to reading score
-freq.tab  <- jk2.table(dat = science2, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
+freq.tab  <- jk2.table(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
              group = list(country = "country", passed.reading = paste("passed_reading",1:3,sep="" )),
              dependent = list(hisei = paste("zehisei", 1:5, sep = "") ) ,
              complete.permutation = "no" )

@@ -1,10 +1,10 @@
 
 
-\name{science2}
+\name{reading_writing}
 
 \docType{data}
 
-\alias{science2}
+\alias{reading_writing}
 
 \title{Reading and writing achievement test data}
 
@@ -13,7 +13,7 @@ This data set contains fictional achievemetn scores of 4619 students of 3 countr
 of variables.
 }
 
-\usage{data(science2)}
+\usage{data(reading_writing)}
 
 \format{'data.frame':   4619 obs. of  24 variables
   \describe{

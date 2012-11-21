@@ -1,4 +1,4 @@
-en\name{jk2.quantile}
+\name{jk2.quantile}
 \alias{jk2.quantile}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{JK2 method for quantiles.}
@@ -89,9 +89,9 @@ Sebastian Weirich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-data(science2)
+data(reading_writing)
 ### Computes percentile for reading and writing scores conditionally on country
-perzent   <- jk2.quantile(dat = science2, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
+perzent   <- jk2.quantile(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
              group = list(country = "country"),
              dependent = list(reading = paste("reading_score", 1:3, sep = ""), writing = paste("writing_score", 1:3, sep = "")  ) ,
              probs = seq(0.1,0.9,0.2),
