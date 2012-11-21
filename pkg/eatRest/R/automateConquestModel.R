@@ -27,7 +27,7 @@
 # 10.11.2011 (SW): Funktion sollte jetzt auch partial credit beherrschen
 # 14.11.2011 (MH): pathConquest defaulted
 # 15.11.2011 (MH): auf stable gesetzt
-# 25.11.2011 (SW): 'cat' durch 'sunk' ersetzt
+# 25.11.2011 (SW): 'cat' durch 'eatTools:::sunk' ersetzt
 # 05.12.2011 (SW): Method default montecarlo, wenn mehr als 3500 nodes
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -99,7 +99,7 @@ automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.va
            used.nodes <- nodes
         }
      if( used.nodes > 3500)  {
-          sunk(paste("automateConquestModel_",ver,": Specified model will use ",used.nodes," nodes. Chosen default method '",method,"' probably is not appropriate. \nChange method to 'montecarlo' with 1000 nodes. Otherwise, please specify your settings explicitly.\n",sep=""))
+          eatTools:::sunk(paste("automateConquestModel_",ver,": Specified model will use ",used.nodes," nodes. Chosen default method '",method,"' probably is not appropriate. \nChange method to 'montecarlo' with 1000 nodes. Otherwise, please specify your settings explicitly.\n",sep=""))
           nodes <- 1000
 		  method <- "montecarlo"
        }
@@ -123,13 +123,13 @@ automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.va
 	
 	# Check ob pathConquest in Ordnung
 	if ( ! file.exists ( pathConquest ) ) {
-			sunk ( paste ( "Error:" , pathConquest , "not found / readable / executable.\n" ) )
+			eatTools:::sunk ( paste ( "Error:" , pathConquest , "not found / readable / executable.\n" ) )
 			stop ( )
 	}		
 	
-    sunk(paste("automateConquestModel_",ver,": Use following settings:\n",sep=""))
-    sunk(paste("    constraints: ",set.constraints,"; method: ",method,"; standard error: ",std.err,"; assumed population distribution: ",distribution,"\n",sep=""))
-    sunk(paste("    max. iterations: ",n.iterations,"; converge: ",paste("0",substring(as.character(converge+1),2),sep=""),"; deviancechange: ",paste("0",substring(as.character(deviancechange+1),2),sep=""),"; f.nodes: ",f.nodes,"; p.nodes: ",p.nodes,"\n",sep=""))
+    eatTools:::sunk(paste("automateConquestModel_",ver,": Use following settings:\n",sep=""))
+    eatTools:::sunk(paste("    constraints: ",set.constraints,"; method: ",method,"; standard error: ",std.err,"; assumed population distribution: ",distribution,"\n",sep=""))
+    eatTools:::sunk(paste("    max. iterations: ",n.iterations,"; converge: ",paste("0",substring(as.character(converge+1),2),sep=""),"; deviancechange: ",paste("0",substring(as.character(deviancechange+1),2),sep=""),"; f.nodes: ",f.nodes,"; p.nodes: ",p.nodes,"\n",sep=""))
         	  
     ### Verzeichnisangaben dürfen weder mit einem Schrägstrich beginnen noch damit enden!
     if(!missing(jobFolder))
@@ -145,21 +145,21 @@ automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.va
       {subFolder$data <- crop(subFolder$data,char = "/")}
     
 		# Datensatz für Conquest erzeugen
-		sunk(paste("automateConquestModel_",ver,": Prepare dataset for use in Conquest.\n",sep=""))
+		eatTools:::sunk(paste("automateConquestModel_",ver,": Prepare dataset for use in Conquest.\n",sep=""))
     
 	# library(debug)
 	# mtrace(genConquestDataset)
 
 		if(inherits(try( conquestDataset <- genConquestDataset ( dat=dat, variablen = items, ID=ID, DIF.var=DIF, HG.var=regression, group.var=group.var, weight.var=weight, na=na,
                                                                   model.statement = model.statement, use.letters=use.letters, checkLink = checkLink)  ),"try-error"))
-      { ret <- FALSE; sunk(paste("automateConquestModel_",ver,": Fehler beim Aufbereiten des Datensatzes fuer Conquest.\n",sep="")); stop()}
+      { ret <- FALSE; eatTools:::sunk(paste("automateConquestModel_",ver,": Fehler beim Aufbereiten des Datensatzes fuer Conquest.\n",sep="")); stop()}
     
     flush.console()
     # Rückgabe:
     # Liste mit (mindestens) zwei Einträgen: ein dataframe (datensatz), ein numerischer Vektor mit Angaben über spaltnbreiten 
 
 		# Syntax und Labels für Conquest erzeugen
-		sunk(paste("automateConquestModel_",ver,": Generate syntax and label list.\n",sep=""))
+		eatTools:::sunk(paste("automateConquestModel_",ver,": Generate syntax and label list.\n",sep=""))
     if(inherits(try(     conquestSynLabList <-  genConquestSynLab(jobName=jobName, datConquest=conquestDataset$daten.dat, namen.items=conquestDataset$namen.items, compute.fit = compute.fit,
                                         namen.hg.var = conquestDataset$namen.hg.var, namen.dif.var = conquestDataset$namen.dif.var, DIF.char=conquestDataset$DIF.char,
                                         namen.all.hg=conquestDataset$namen.all.hg, all.hg.char=conquestDataset$all.hg.char, namen.group.var=conquestDataset$namen.group.var,
@@ -167,7 +167,7 @@ automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.va
 										distribution=distribution,model=item.grouping, ANKER=anchor, jobFolder=jobFolder, name.dataset=dataName, subFolder=subFolder, Title=Title, n.plausible=n.plausible,
                                         constraints=set.constraints, n.iterations=n.iterations, nodes=nodes, p.nodes=p.nodes, f.nodes=f.nodes, converge=converge, deviancechange=deviancechange, 
                                         name.unidim=name.unidim, equivalence.table=equivalence.table,use.letters=use.letters,var.char=conquestDataset$var.char,  pathConquest = pathConquest, allowAllScoresEverywhere = allowAllScoresEverywhere, export = export)  ),"try-error"))
-      { ret <- FALSE; sunk(paste("automateConquestModel_",ver,": Error in generating syntax and label list.\n",sep="")); stop()}
+      { ret <- FALSE; eatTools:::sunk(paste("automateConquestModel_",ver,": Error in generating syntax and label list.\n",sep="")); stop()}
 
 		flush.console()
     # Rückgabe:
@@ -176,22 +176,22 @@ automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.va
     # R-dataframe mit Ankerparametern (optional)
     conquestAnker <- NULL
     if(!is.null(anchor))
-      {sunk(paste("automateConquestModel_",ver,": Create list with anchor parameter.\n",sep=""))
+      {eatTools:::sunk(paste("automateConquestModel_",ver,": Create list with anchor parameter.\n",sep=""))
        if(inherits(try( conquestAnker <- genConquestAnker(daten= dat ,itemspalten= items , prm.file=anchor , verbose = verbose)    ),"try-error"))
-		 { ret <- FALSE; sunk(paste("automateConquestModel_",ver,": Error in creating list with anchor parameter.\n",sep="")); stop()}
+		 { ret <- FALSE; eatTools:::sunk(paste("automateConquestModel_",ver,": Error in creating list with anchor parameter.\n",sep="")); stop()}
        flush.console()}
     
-    sunk(paste("automateConquestModel_",ver,": Create batch string to call Conquest.\n",sep=""))
+    eatTools:::sunk(paste("automateConquestModel_",ver,": Create batch string to call Conquest.\n",sep=""))
     if(inherits(try(     conquestBatch <- genConquestBatch ( pathConquest=pathConquest, jobName =jobName)   ),"try-error"))
-      { ret <- FALSE; sunk(paste("automateConquestModel_",ver,": Error in creating batch string to call Conquest.\n",sep="")); stop()}
+      { ret <- FALSE; eatTools:::sunk(paste("automateConquestModel_",ver,": Error in creating batch string to call Conquest.\n",sep="")); stop()}
     flush.console()
     
 		### Datensatz, Syntax und Labels für Conquest in Ordner schreiben  --> writeConquest To Disk soll TRUE oder FALSE zurückgeben
-		sunk(paste("automateConquestModel_",ver,": Write all input files.\n",sep=""))
+		eatTools:::sunk(paste("automateConquestModel_",ver,": Write all input files.\n",sep=""))
     if(inherits(try(     jobBatch <- writeConquestToDisk ( conquestDataset=conquestDataset$daten.dat, conquestDatasetWidth= conquestDataset$daten.width, nameConquestDataset=dataName,
 		                                  conquestSyntax = conquestSynLabList$syntax, conquestLabels= conquestSynLabList$lab, conquestBatchString=conquestBatch,
 		                                  conquestAnker=conquestAnker, jobFolder=jobFolder, subFolder=subFolder, name.analyse=jobName)  ),"try-error"))
-      { ret <- FALSE; sunk(paste("automateConquestModel_",ver,": Error in writing all input files.\n",sep="")); stop()}
+      { ret <- FALSE; eatTools:::sunk(paste("automateConquestModel_",ver,": Error in writing all input files.\n",sep="")); stop()}
 
     flush.console()
     

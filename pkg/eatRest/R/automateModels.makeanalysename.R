@@ -7,7 +7,7 @@
 # Author:    Martin Hecht
 # Change Log:
 #		14.10.2011 MH: Ausgabe auf Englisch
-#		08.09.2011 MH: cat durch sunk ersetzt (für Logfile)
+#		08.09.2011 MH: cat durch eatTools:::sunk ersetzt (für Logfile)
 #			
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -19,10 +19,10 @@
 
 		# Plausicheck
 		if ( ! all ( welche <- ( analyse.name.elements %in% ( default <- c ( "scale" , "group" , "dif" , "regression" , "anchor" ) ) ) ) ) {
-				# sunk ( paste ( f.n , "Folgende Elemente nicht in 'analyse.name.elements' unbekannt:" , paste ( analyse.name.elements[!welche] , collapse = ", " ) , "\n") )
-				# sunk ( paste ( f.n , "Gültige Werte sind:" , paste ( default , collapse = ", " ) , "\n") )
-				sunk ( paste ( f.n , "Unknown elements in 'analyse.name.elements':" , paste ( analyse.name.elements[!welche] , collapse = ", " ) , "\n") )
-				sunk ( paste ( f.n , "Valid values are:" , paste ( default , collapse = ", " ) , "\n") )
+				# eatTools:::sunk ( paste ( f.n , "Folgende Elemente nicht in 'analyse.name.elements' unbekannt:" , paste ( analyse.name.elements[!welche] , collapse = ", " ) , "\n") )
+				# eatTools:::sunk ( paste ( f.n , "Gültige Werte sind:" , paste ( default , collapse = ", " ) , "\n") )
+				eatTools:::sunk ( paste ( f.n , "Unknown elements in 'analyse.name.elements':" , paste ( analyse.name.elements[!welche] , collapse = ", " ) , "\n") )
+				eatTools:::sunk ( paste ( f.n , "Valid values are:" , paste ( default , collapse = ", " ) , "\n") )
 				stop ( )
 		}
 		

@@ -21,12 +21,12 @@ default is a vector containing replicates of the value of \code{newID}.
 logical; string "mbd" (missing by desgin) will be added instead of NA
 }
   \item{writeLog}{
-logical; if Logfile shall be written via \link{sunk}.
+logical; if Logfile shall be written via \code{eatTools:::sunk}.
 }
 }
 %\details{
 %Errors and warnings of \code{mergeData} will be written to a protocol file with
-%\code{\link[eatTools]{sunk}}.
+%\code{eatTools:::sunk}.
 %}
 \value{
 A data frame containing unique cases and unique variables. All cases and all variables that could be identified the original data frames will be kept and matched.

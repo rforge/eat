@@ -7,7 +7,7 @@
 # CHANGED: added option 'all.local.cores' in .automateModels.genBatches
 # 0000-00-00 AA
 #		14.10.2011 MH: Ausgaben auf Englisch
-#		08.09.2011 MH: cat durch sunk ersetzt (für Logfile)
+#		08.09.2011 MH: cat durch eatTools:::sunk ersetzt (für Logfile)
 #			
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -21,8 +21,8 @@
 		# 23.10.2012 kann aukommentiert werden
 		# da bei run.mode "serial" n.batches komplett an Anzahl cores hängt
 		# if ( run.mode == "serial" & !n.batches == 1 ) {
-				### sunk ( paste ( ".automateModels.genBatches: Parameter n.batches = " , n.batches , " in Kombination mit run.mode == 'serial' ist nicht sinnvoll und wird ignoriert.\n" , sep = "" ) )
-				# sunk ( paste ( ".automateModels.genBatches: Parameter n.batches = " , n.batches , " in combination with run.mode == 'serial' is not meaningfull and ignored.\n" , sep = "" ) )
+				### eatTools:::sunk ( paste ( ".automateModels.genBatches: Parameter n.batches = " , n.batches , " in Kombination mit run.mode == 'serial' ist nicht sinnvoll und wird ignoriert.\n" , sep = "" ) )
+				# eatTools:::sunk ( paste ( ".automateModels.genBatches: Parameter n.batches = " , n.batches , " in combination with run.mode == 'serial' is not meaningfull and ignored.\n" , sep = "" ) )
 				# n.batches <- 1
 		# }
 		
@@ -97,8 +97,8 @@
 				options ( warn = -1 )
 				if ( inherits ( try (  write ( paste ( batch.elements , collapse = "\n" ) , file = batch.file )  
 					, silent = TRUE ) , "try-error" ) ) {
-						# sunk ( paste ( ".automateModels.genBatches: Fehler beim Speichern von " , batch.file , "\n" , sep = "" ) )
-						sunk ( paste ( ".automateModels.genBatches: Error while writing " , batch.file , "\n" , sep = "" ) )
+						# eatTools:::sunk ( paste ( ".automateModels.genBatches: Fehler beim Speichern von " , batch.file , "\n" , sep = "" ) )
+						eatTools:::sunk ( paste ( ".automateModels.genBatches: Error while writing " , batch.file , "\n" , sep = "" ) )
 						stop ( )
 						ret <- NULL 
 				} else ret <- batch.file

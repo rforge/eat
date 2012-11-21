@@ -7,7 +7,7 @@
 # Author:    Martin Hecht
 # Change Log:
 #		14.10.2011 MH: Ausgaben auf Englisch
-#		08.09.2011 MH: cat durch sunk ersetzt (für Logfile)
+#		08.09.2011 MH: cat durch eatTools:::sunk ersetzt (für Logfile)
 #		17.08.2011 MH: auf stable gesetzt wegen besserer Sourcebarkeit
 # 		08.08.2011 MH: auf stable gesetzt wegen besserer sourcebarkeit
 #			
@@ -25,13 +25,13 @@
 		# Ausgabe
 		# st <- paste ( "\n" , f.n , " Excels werden geschrieben " , sep = "" )
 		# st <- paste ( "\n" , f.n , " Excels are being written " , sep = "" )
-		# sunk ( "paste ( f.n , ' Excels are being written ' , sep = '' )" ) 
+		# eatTools:::sunk ( "paste ( f.n , ' Excels are being written ' , sep = '' )" ) 
 		if ( write.xls.results ) {
 				msg <- "Excels and Rdata Files are being written"
 		} else {
 				msg <- "Rdata Files are being written"
 		}
-		sunk ( msg ) 
+		eatTools:::sunk ( msg ) 
 		
 		# Gesamt-Excel
 		check <- write.results.xlsx ( results , folder.aM , additional.item.props , write.xls.results )
@@ -40,7 +40,7 @@
 		# Einzel-Excels
 		check <- c ( check ,
 			mapply ( function ( results , name , folder , additional.item.props ) {
-					sunk ( "cat('.')" )
+					eatTools:::sunk ( "cat('.')" )
 					flush.console()
 					results <- list ( results )
 					names ( results ) <- name
@@ -115,7 +115,7 @@
 		}
 		
 		# Ausgabe
-		sunk ( " done\n" )
+		eatTools:::sunk ( " done\n" )
 		
 		# returnen 
 		return ( check )

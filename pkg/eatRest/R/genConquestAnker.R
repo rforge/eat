@@ -11,7 +11,7 @@
 # Maintainer:
 #
 # Change Log:
-# 25.11.2011 SW: 'cat' durch 'sunk' ersetzt
+# 25.11.2011 SW: 'cat' durch 'eatTools:::sunk' ersetzt
 # 16.11.2011 SW: Konvention geaendert: Funktion erwartet als prm.file nun IMMER einen data.frame
 #                mit genau zwei Spalten; 1. Itemnamen, 2. Parameter
 # 14.10.2011 MH: gestabled
@@ -37,8 +37,8 @@ genConquestAnker <- function(daten ,itemspalten, prm.file, verbose = TRUE) {
                     error.2       <- !all(ind.character == 1)
                     error.3       <- !all(ind.numeric == 2)
                     if(error.1 | error.2 | error.3) {
-                       sunk(paste("genConquestAnker_",ver,": Unexpected column format in anchor parameter file.\n",sep=""))
-                       sunk("    Treat first column as item names, second as anchor parameters. If not intended, please correct anchor parameter file.\n")
+                       eatTools:::sunk(paste("genConquestAnker_",ver,": Unexpected column format in anchor parameter file.\n",sep=""))
+                       eatTools:::sunk("    Treat first column as item names, second as anchor parameters. If not intended, please correct anchor parameter file.\n")
                        prm[,1] <- as.character(prm[,1])
                        if (is.character(prm[1,2])) {
                            prm[,2] <- as.numeric(prm[,2])
@@ -50,20 +50,20 @@ genConquestAnker <- function(daten ,itemspalten, prm.file, verbose = TRUE) {
                     colnames(prm) <- c("item","parameter")
 					ind <- intersect(lab$item,prm$item)
 					if ( verbose == TRUE )  {
-					   sunk(paste("genConquestAnker_",ver,": Found ",nrow(lab), " items in data set.\n",sep=""))
-					   sunk(paste("    Found ",nrow(prm), " items in anchor set.\n",sep=""))
-  					   if(length(ind) == 0) {sunk("Error: No common items found in 'lab.file' and 'prm.file'.\n"); stop()}
+					   eatTools:::sunk(paste("genConquestAnker_",ver,": Found ",nrow(lab), " items in data set.\n",sep=""))
+					   eatTools:::sunk(paste("    Found ",nrow(prm), " items in anchor set.\n",sep=""))
+  					   if(length(ind) == 0) {eatTools:::sunk("Error: No common items found in 'lab.file' and 'prm.file'.\n"); stop()}
 					   if(length(ind) >  0) 
-					     {sunk(paste("genConquestAnker_",ver,": Found ",length(ind), " common anchor items.\n",sep=""))
+					     {eatTools:::sunk(paste("genConquestAnker_",ver,": Found ",length(ind), " common anchor items.\n",sep=""))
 						  if (length(ind) < nrow(lab) )  {
 						     missingInAnchors <- setdiff(lab$item, prm$item)
-						     sunk(paste("Following ",length(missingInAnchors)," items in data set without anchor parameters:\n",sep=""))
-							 sunk(paste(paste(missingInAnchors,collapse=", "),"\n",sep=""))
+						     eatTools:::sunk(paste("Following ",length(missingInAnchors)," items in data set without anchor parameters:\n",sep=""))
+							 eatTools:::sunk(paste(paste(missingInAnchors,collapse=", "),"\n",sep=""))
 						  }	
 						  if (length(ind) < nrow(prm) )    {
 						     missingInData <- setdiff(prm$item, lab$item)
-						     sunk(paste("Following ",length(missingInData)," items in anchor set were not found in data set:\n",sep=""))
-							 sunk(paste(paste(missingInData,collapse=", "),"\n",sep=""))
+						     eatTools:::sunk(paste("Following ",length(missingInData)," items in anchor set were not found in data set:\n",sep=""))
+							 eatTools:::sunk(paste(paste(missingInData,collapse=", "),"\n",sep=""))
 						  }
 					    }
 					}		

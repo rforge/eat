@@ -19,7 +19,7 @@
 # 0000-00-00 AA
 # 30.11.2011, SW: problem with multidimensional WLEs and first cases without answers re-repaired
 #                 (conventions in Version, 1.1.0, Archiv)
-# 25.11.2011, SW: 'cat' durch 'sunk' ersetzt
+# 25.11.2011, SW: 'cat' durch 'eatTools:::sunk' ersetzt
 # 03.10.2011, NH:  zu 1.0.0 (Benennungen Input und Output geändert, entsprechen jetzt ZKD-Konvention
 # 08.08.2011 MH: auf stable gesetzt wegen besserer sourcebarkeit
 # 30.12.2010, SW: korrekte Benennung der Spalten auch bei WLE-Dateien 

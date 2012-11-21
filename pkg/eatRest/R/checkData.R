@@ -22,7 +22,7 @@
 #
 # Change Log
 # 2012-09-04 NH
-# CHANGED: removed calls to 'sunk'
+# CHANGED: removed calls to 'eatTools:::sunk'
 # 2011-12-08 NH
 # FIXED: error message in getID corresponds with colnames in 'units'
 # 0000-00-00 AA
@@ -33,7 +33,7 @@
 # * 1.1.0 (2011-11-03, NH): modularisiert
 #
 # * 1.0.0 (2011-11-02, NH): komplett überarbeitet und auf neue ZKD-Struktur angepasst. 
-#   + Meldungen werden jetzt per 'sunk' übergeben
+#   + Meldungen werden jetzt per 'eatTools:::sunk' übergeben
 #   + Input sind ZKD-Inputtabellen: values, subunits und units   
 #
 # * zu 0.6.4 (AL & MH)
@@ -73,13 +73,13 @@
 	 
 		# ID-Check <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	  # find ID - stop if ID cannot be found
-		#	sunk(paste(funVersion, "Checking IDs", sep =""))
+		#	eatTools:::sunk(paste(funVersion, "Checking IDs", sep =""))
 	  idvarname <- getID(varinfo)
 	  checkID (dat, idvarname)
 
 	  
 		# Variables-Check <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-	  #	sunk(paste(funVersion, "Checking variables", sep = ""))
+	  #	eatTools:::sunk(paste(funVersion, "Checking variables", sep = ""))
 	  checkVars(dat, varinfo)
 		
 		# check missing values
@@ -168,7 +168,7 @@ checkVars <- function(dat, varinfo) {
 
 checkMissings <- function (dat, varinfo, idvarname) {
 	# check missing values
-#  sunk(paste(funVersion, "Checking missing values", sep = ""))	
+#  eatTools:::sunk(paste(funVersion, "Checking missing values", sep = ""))	
  
   funVersion <- "checkMissings: "
   

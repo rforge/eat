@@ -7,7 +7,7 @@
 # Author:    Martin Hecht
 # Change Log:
 #		14.10.2011 MH: Ausgabe auf Englisch
-#		08.09.2011 MH: cat durch sunk ersetzt (für Logfile)
+#		08.09.2011 MH: cat durch eatTools:::sunk ersetzt (für Logfile)
 #		17.08.2011 MH: auf stable gesetzt wegen besserer Sourcebarkeit
 # 		08.08.2011 MH: auf stable gesetzt wegen besserer sourcebarkeit
 #			
@@ -22,16 +22,16 @@
 		# Ausgabe
 		# st <- paste ( "\n" , f.n , "Items werden bewertet " , sep = "" )
 		st <- paste ( "\n" , f.n , " Items are being evaluated " , sep = "" )
-		sunk ( "cat(st)" ) 
+		eatTools:::sunk ( "cat(st)" ) 
 		
 		ret <- mapply ( function ( results ) {
-				 sunk ( "cat('.')" )
+				 eatTools:::sunk ( "cat('.')" )
 				 flush.console()
 				 unlist ( item.eval ( list ( results ) ) , recursive = FALSE )
 		} , results , SIMPLIFY = FALSE )
 
 		# Ausgabe
-		sunk ( " done\n" )
+		eatTools:::sunk ( " done\n" )
 		
 		# returnen 
 		return ( ret )

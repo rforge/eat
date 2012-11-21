@@ -30,7 +30,7 @@
 #
 # Change Log:
 # 2012-09-04 NH
-# CHANGED: removed calls to 'sunk'
+# CHANGED: removed calls to 'eatTools:::sunk'
 # 0000-00-00 AA
 # * 0.2.0 (2011-11-04, NH): SPSS-Format-Statement für numerische Variablen mit Dezimalstellen angepasst
 #

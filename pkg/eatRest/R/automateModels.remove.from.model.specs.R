@@ -7,7 +7,7 @@
 # Author:    Martin Hecht
 # Change Log:
 #		14.10.2011 MH: Ausgaben aus Englisch
-#		08.09.2011 MH: cat durch sunk ersetzt (für Logfile)
+#		08.09.2011 MH: cat durch eatTools:::sunk ersetzt (für Logfile)
 #		17.08.2011 MH: auf stable gesetzt wegen besserer Sourcebarkeit
 #			
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -27,14 +27,14 @@
 		} , model.specs , MoreArgs = list ( delete ) , SIMPLIFY = FALSE )
 		
 		if ( identical ( ret , list() ) ) {
-				# sunk ( paste ( "Alle Modelle sind misspezifiziert und wurden gelöscht.\n" ) )
-				sunk ( paste ( "All models are misspecified and deleted.\n" ) )
-				# sunk ( paste ( "Skript beendet.\n" ) )
-				sunk ( paste ( "Script terminated.\n" ) )
+				# eatTools:::sunk ( paste ( "Alle Modelle sind misspezifiziert und wurden gelöscht.\n" ) )
+				eatTools:::sunk ( paste ( "All models are misspecified and deleted.\n" ) )
+				# eatTools:::sunk ( paste ( "Skript beendet.\n" ) )
+				eatTools:::sunk ( paste ( "Script terminated.\n" ) )
 				stop()
 		} else {
-				# sunk ( paste ( "Modell(e)", paste ( delete , collapse = ", " ) , "ist/sind misspezifiziert und wurde(n) aus Automatisierungsliste gelöscht.\n" ) )
-				sunk ( paste ( "Model(s)", paste ( delete , collapse = ", " ) , "is/are misspecified and are removed from automate list.\n" ) )
+				# eatTools:::sunk ( paste ( "Modell(e)", paste ( delete , collapse = ", " ) , "ist/sind misspezifiziert und wurde(n) aus Automatisierungsliste gelöscht.\n" ) )
+				eatTools:::sunk ( paste ( "Model(s)", paste ( delete , collapse = ", " ) , "is/are misspecified and are removed from automate list.\n" ) )
 				names ( ret ) <- names ( model.specs )
 		}
 					

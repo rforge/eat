@@ -16,7 +16,7 @@
 # 0000-00-00 AA
 # Change Log:
 #		14.10.2011 MH: Ausgaben auf Englisch
-#		08.09.2011 MH: cat durch sunk ersetzt (für Logfile)
+#		08.09.2011 MH: cat durch eatTools:::sunk ersetzt (für Logfile)
 #		17.08.2011 MH: auf stable gesetzt wegen besserer Sourcebarkeit
 # 		08.08.2011 MH: auf stable gesetzt wegen besserer sourcebarkeit
 #			
@@ -29,7 +29,7 @@
 		f.n <- paste ( f. , ":" , sep = "" )
 
 		# Ausgabe
-		sunk ( paste ( f.n , "Item and person parameter estimates will be centered on person mean." ) ) 
+		eatTools:::sunk ( paste ( f.n , "Item and person parameter estimates will be centered on person mean." ) ) 
 		res1 <- results
 		analyses <- names(results)
 		for(k in seq(along =analyses)) {
@@ -72,7 +72,7 @@
 					# results[[k]][[dimensions[i]]][[1]][[1]][[jj]]$b.adj <- unname(badj[[dimensions[i]]][jj])
 				# }
 		# Ausgabe
-		sunk ( " done\n\n" )
+		eatTools:::sunk ( " done\n\n" )
 		# returnen 
 		return ( results )
 		

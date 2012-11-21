@@ -7,7 +7,7 @@
 # Author:    Martin Hecht
 # Change Log:
 #		14.10.2011 MH: Ausgaben auf Englisch
-#		08.09.2011 MH: cat durch sunk ersetzt (für Logfile)
+#		08.09.2011 MH: cat durch eatTools:::sunk ersetzt (für Logfile)
 #		17.08.2011 MH: write.txt.dataset geaddet
 #					   wenn TRUE wird ascii und Excel geschrieben
 #		17.08.2011 MH: auf stable gesetzt wegen besserer Sourcebarkeit
@@ -22,8 +22,8 @@
 
 	# Ausgabe
 	flush.console()
-	# sunk ( paste ( f.n , "missing-rule-spezifische Datensätze werden erzeugt\n" ) ); flush.console()
-	sunk ( paste ( f.n , "missing-rule-specific datasets are being generated\n" ) ); flush.console()
+	# eatTools:::sunk ( paste ( f.n , "missing-rule-spezifische Datensätze werden erzeugt\n" ) ); flush.console()
+	eatTools:::sunk ( paste ( f.n , "missing-rule-specific datasets are being generated\n" ) ); flush.console()
 	
 	# unique missing.rules
 	mis.rule.unique <- unique ( mis.rule )
@@ -74,7 +74,7 @@
 			if ( file.exists ( rdata ) ) file.remove ( rdata )
 			save ( ds , file = rdata )
 
-			sunk ( paste ( "\t" , n1 , "\n" ) ); flush.console()
+			eatTools:::sunk ( paste ( "\t" , n1 , "\n" ) ); flush.console()
 
 			if ( write.txt.dataset ) {
 					# ascii
@@ -83,7 +83,7 @@
 					write.table( ds , file = ascii , append = FALSE , quote = FALSE, sep = "\t",
 					eol = "\n" , na = "", dec = ".", row.names = FALSE ,
 					col.names = TRUE )
-					sunk ( paste ( "\t" , n2 , "\n" ) ); flush.console()
+					eatTools:::sunk ( paste ( "\t" , n2 , "\n" ) ); flush.console()
 					
 					# da write.xlsx2 bei größeren Datensätzen crasht, Excel nur bis 5000 raus 
 					if ( nrow ( ds ) < 5000 ) {
@@ -95,11 +95,11 @@
 														col.names=TRUE, row.names=FALSE, append=FALSE )
 										, silent = TRUE )
 							if ( inherits ( tried , "try-error" ) ) {
-									# sunk ( paste ( "\t" , n3 , " konnte nicht geschrieben werden.\n" ) ); flush.console()
-									sunk ( paste ( "\t" , n3 , " could not be written.\n" ) ); flush.console()
+									# eatTools:::sunk ( paste ( "\t" , n3 , " konnte nicht geschrieben werden.\n" ) ); flush.console()
+									eatTools:::sunk ( paste ( "\t" , n3 , " could not be written.\n" ) ); flush.console()
 							
 							} else {
-									sunk ( paste ( "\t" , n3 , "\n" ) ); flush.console()
+									eatTools:::sunk ( paste ( "\t" , n3 , "\n" ) ); flush.console()
 									}
 					}
 			}

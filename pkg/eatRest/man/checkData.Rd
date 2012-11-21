@@ -10,7 +10,7 @@
   \item{units}{A data frame with unit information. See 'Details'.}
 }
 \details{
-The results of \code{checkData} will be written to a protocol file with \code{sunk}. 
+The results of \code{checkData} will be written to a protocol file with \code{eatTools:::sunk}. 
 
 Examples of data frames \code{values}, \code{subunits} and \code{units} can be found via \code{data(inputList)}.
 }
@@ -28,7 +28,7 @@ For missing types see http://code.google.com/p/zkdlib/wiki/MissingHandling
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link[eatTools]{sunk}}
+\code{eatTools:::sunk}
 }
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the

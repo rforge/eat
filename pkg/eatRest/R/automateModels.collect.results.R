@@ -10,8 +10,8 @@
 # CHANGED: modified results structure in .automateModels.collect.results
 # 0000-00-00 AA
 #		14.10.2011 MH: Ausgabe auf Englisch
-#		14.09.2011 MH: "\n" in sunk-Aufrüfen gelöscht (für optisch schöner)
-#		08.09.2011 MH: cat durch sunk ersetzt (für Logfile)
+#		14.09.2011 MH: "\n" in eatTools:::sunk-Aufrüfen gelöscht (für optisch schöner)
+#		08.09.2011 MH: cat durch eatTools:::sunk ersetzt (für Logfile)
 #			
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -21,8 +21,8 @@
 		f. <- ".automateModels.collect.results"
 		f.n <- paste ( f. , ":" , sep = "" )
 
-		sunk ( "\n" )
-		sunk ( paste ( f.n , "Results are being read ..." ) )		
+		eatTools:::sunk ( "\n" )
+		eatTools:::sunk ( paste ( f.n , "Results are being read ..." ) )		
 		
 		ret <- mapply ( function (  folder ,
 									item.grouping ,
@@ -50,19 +50,19 @@
 								einr <- "           "
 								
 								# Ausgaben / Checks
-								sunk ( paste ( f.n , "Sending" , model.nr.str , "to readConquestOutput ..." ) )
-								sunk ( paste ( einr , "jobFolder = " , folder , sep = "" ) )
+								eatTools:::sunk ( paste ( f.n , "Sending" , model.nr.str , "to readConquestOutput ..." ) )
+								eatTools:::sunk ( paste ( einr , "jobFolder = " , folder , sep = "" ) )
 								if ( is.null ( additionalSubfolder )) aSF_str <- "" else aSF_str <- paste ( additionalSubfolder , collapse = ", " )
-								sunk ( paste ( einr , "subFolder = " , aSF_str , sep = "" ) )
-								sunk ( paste ( einr , "item.grouping = " , "'data.frame': " , nrow ( item.grouping ) , " obs. of " , ncol ( item.grouping ) , " variables" , sep = "" ) )
-								sunk ( paste ( einr , "name.analyse = " , analyse.name , sep = "" ) )
-								sunk ( paste ( einr , "p.model.name = " , p.model.name , sep = "" ) )
-								sunk ( paste ( einr , "DIF.var = " , dif , sep = "" ) )
-								sunk ( paste ( einr , "group.names = " , paste ( group.names , collapse = ", " ) , sep = "" ) )				
+								eatTools:::sunk ( paste ( einr , "subFolder = " , aSF_str , sep = "" ) )
+								eatTools:::sunk ( paste ( einr , "item.grouping = " , "'data.frame': " , nrow ( item.grouping ) , " obs. of " , ncol ( item.grouping ) , " variables" , sep = "" ) )
+								eatTools:::sunk ( paste ( einr , "name.analyse = " , analyse.name , sep = "" ) )
+								eatTools:::sunk ( paste ( einr , "p.model.name = " , p.model.name , sep = "" ) )
+								eatTools:::sunk ( paste ( einr , "DIF.var = " , dif , sep = "" ) )
+								eatTools:::sunk ( paste ( einr , "group.names = " , paste ( group.names , collapse = ", " ) , sep = "" ) )				
 								stopifnot ( is.character ( group.names ) | is.null ( group.names ) )																
-								sunk ( paste ( einr , "dataName = " , data.name , sep = "" ) )
+								eatTools:::sunk ( paste ( einr , "dataName = " , data.name , sep = "" ) )
 								
-								#sunk ( paste ( einr , "group = " , paste ( group , collapse = ", " ) , sep = "" ) )				
+								#eatTools:::sunk ( paste ( einr , "group = " , paste ( group , collapse = ", " ) , sep = "" ) )				
 								#stopifnot ( is.character ( group ) | is.null ( group ) )
 
 								# readConquestOutput starten
@@ -81,7 +81,7 @@
 			
 				} else { 
 							# wenn done=FALSE ist Modell getimeouted, wird nicht eingelesen
-							sunk ( paste ( f.n , model.nr.str , "will not be read because it's timeouted." ) )
+							eatTools:::sunk ( paste ( f.n , model.nr.str , "will not be read because it's timeouted." ) )
 						}
 		
 				# Rückgabe

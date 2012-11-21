@@ -14,7 +14,7 @@
 # Change Log:
 #
 # 2011-12-12 SW
-# CHANGED: remove assign() from genConquestSynLab. table(unlist (...) ) replaced by table.unlist( ... )
+# CHANGED: remove assign() from genConquestSynLab. table(unlist (...) ) replaced by eatTools:::table.unlist( ... )
 # 0000-00-00 AA
 #
 # 22.06.2011: unerlaubte Variablennamen fuer explizite Variablen werden geaendert
@@ -30,7 +30,7 @@
 # 14.10.2011: MH gestabled
 # 20.10.2011: MH library statements auskommentiert
 # 15.11.2011: MH gestabled
-# 25.11.2011: SW 'cat' durch 'sunk' ersetzt
+# 25.11.2011: SW 'cat' durch 'eatTools:::sunk' ersetzt
 # 12.12.2011: SW assign-befehl entfernt 
 # 10.05.2012: SW more than one DIF variable
 #
@@ -70,10 +70,10 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                   ### folgendes geht schneller als das bedeutungsgleiche      
                   ### all.codes     <- names(table(unlist(dat)))
                   all.codes     <- unique(unlist(lapply(dat, FUN=function(ii) {names(table(ii))})))
-                  if(!sum(nicht.erlaubt %in% all.codes ) == 0) {sunk(paste("genConquestDataset_",ver,": Found uncollapsed missings in dataset: ",paste(nicht.erlaubt[which(nicht.erlaubt %in% all.codes)],collapse=", "),"\n",sep=""))
+                  if(!sum(nicht.erlaubt %in% all.codes ) == 0) {eatTools:::sunk(paste("genConquestDataset_",ver,": Found uncollapsed missings in dataset: ",paste(nicht.erlaubt[which(nicht.erlaubt %in% all.codes)],collapse=", "),"\n",sep=""))
                                                                 stop("Please run 'collapseMissings' for a start.\n")}
                   if(class(variablen) == "factor" )   {
-                     sunk("Class of variable argument was 'factor'. Expect class 'numeric' or 'character'. \nVariables will be treated as 'character' anywhere. Please intervene if this is not intended!\n")
+                     eatTools:::sunk("Class of variable argument was 'factor'. Expect class 'numeric' or 'character'. \nVariables will be treated as 'character' anywhere. Please intervene if this is not intended!\n")
                      variablen <- as.character(variablen)
                   }
                   if(class(variablen) == "character") {
@@ -90,7 +90,7 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
 				  if(checkLink == TRUE) {foo <- checkLink(daten)}
                   namen.items <- colnames(daten)
                   allVars     <- list(namen.hg.var=HG.var, namen.dif.var=DIF.var, namen.weight.var=weight.var, namen.group.var=group.var)
-                  all.Names   <- lapply(allVars, FUN=function(ii) {.existsBackgroundVariables(dat=dat,variable=ii)})
+                  all.Names   <- lapply(allVars, FUN=function(ii) {eatTools:::.existsBackgroundVariables(dat=dat,variable=ii)})
                   namen.hg.var <- all.Names$namen.hg.var
                   namen.dif.var <- all.Names$namen.dif.var
                   namen.weight.var <- all.Names$namen.weight.var
@@ -102,7 +102,7 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                        substituteNames <- .substituteSigns(dat=dat, variable= namen.all.hg.vars[[i]])
                        if(!all(substituteNames$old == substituteNames$new)) {
                           namen.all.hg.vars[[i]] <- substituteNames$new
-                          sunk(paste("genConquestDataset_",ver,": Conquest does not allow '.', '-' and '_' in explicit variable names. Delete signs from variables names for explicit variables.\n",sep=""))
+                          eatTools:::sunk(paste("genConquestDataset_",ver,": Conquest does not allow '.', '-' and '_' in explicit variable names. Delete signs from variables names for explicit variables.\n",sep=""))
                           colnames(dat)[substituteNames$cols] <- substituteNames$new
                        }   
                   }
@@ -127,37 +127,37 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                   n.werte <- sapply(n.werte, FUN=function(ii) {length(ii)})
                   n.mis   <- which(n.werte == 0)
 				          namen.items.weg <- NULL
-                  if(length(n.mis) >0) {sunk(paste("genConquestDataset_",ver,": Serious warning: ",length(n.mis)," testitems(s) without any values.\n",sep=""))
-                                        if(verbose == TRUE) {sunk(paste(colnames(daten)[which(n.werte == 0)], collapse=", ")); sunk("\n") }
+                  if(length(n.mis) >0) {eatTools:::sunk(paste("genConquestDataset_",ver,": Serious warning: ",length(n.mis)," testitems(s) without any values.\n",sep=""))
+                                        if(verbose == TRUE) {eatTools:::sunk(paste(colnames(daten)[which(n.werte == 0)], collapse=", ")); eatTools:::sunk("\n") }
                                         stop()										
                                        }
                   n.constant <- which(n.werte == 1)
-                  if(length(n.constant) >0) {sunk(paste("genConquestDataset_",ver,": Warning: ",length(n.constant)," testitems(s) are constants.\n",sep=""))
-                                             if(verbose == TRUE) {foo <- lapply(n.constant,FUN=function(ii) {sunk(paste(colnames(daten)[ii],": ",names(table(daten[,ii])),sep="")); sunk("\n")})}
+                  if(length(n.constant) >0) {eatTools:::sunk(paste("genConquestDataset_",ver,": Warning: ",length(n.constant)," testitems(s) are constants.\n",sep=""))
+                                             if(verbose == TRUE) {foo <- lapply(n.constant,FUN=function(ii) {eatTools:::sunk(paste(colnames(daten)[ii],": ",names(table(daten[,ii])),sep="")); eatTools:::sunk("\n")})}
 											stop()
 											}
                   n.rasch   <- which( !only.null.eins )
-                  if(length(n.rasch) >0 )   {sunk(paste("genConquestDataset_",ver,": Warning: ",length(n.rasch)," variable(s) are not strictly dichotomous with 0/1.\n",sep=""))
+                  if(length(n.rasch) >0 )   {eatTools:::sunk(paste("genConquestDataset_",ver,": Warning: ",length(n.rasch)," variable(s) are not strictly dichotomous with 0/1.\n",sep=""))
                                              for (ii in n.rasch)
                                                  {max.nchar <-  max(nchar(names(table(daten[,ii]))))
                                                   max.nchar.stacked <- c(max.nchar)
-                                                  if(max.nchar>1) {sunk(paste("genConquestDataset_",ver,": Arity of variable ",colnames(daten)[ii]," exceeds 1.\n"))}
-                                                  if(verbose == TRUE) {sunk(paste(colnames(daten)[ii],": ", paste( names(table(daten[,ii])),collapse=", "),"\n",sep=""))}}
-                                             sunk("By default, all values except for 0 and 1 are treated as sysmis.\n")
+                                                  if(max.nchar>1) {eatTools:::sunk(paste("genConquestDataset_",ver,": Arity of variable ",colnames(daten)[ii]," exceeds 1.\n"))}
+                                                  if(verbose == TRUE) {eatTools:::sunk(paste(colnames(daten)[ii],": ", paste( names(table(daten[,ii])),collapse=", "),"\n",sep=""))}}
+                                             eatTools:::sunk("By default, all values except for 0 and 1 are treated as sysmis.\n")
                                              if(model.statement == "item")
-                                               {sunk("WARNING: Sure you want to use 'model statement = item' even when items are not dichotomous?\n")} }
+                                               {eatTools:::sunk("WARNING: Sure you want to use 'model statement = item' even when items are not dichotomous?\n")} }
                   
                   ### identifiziere Faelle mit ausschliesslich missings
                  all.values   <- table(unique(unlist(lapply(daten, FUN=function(ii) {names(table(ii))}))))
-                  if(length(all.values)!=2) {sunk(paste("genConquestDataset_",ver,": Warning: Found more than two non missing codes in overall testitems. Data does not seem to fit to the Rasch model.\n",sep=""))}
-                  if(length(all.values)==2) {if(!all(names(all.values) == c("0","1"))) {sunk("Warning: Found codes departing from 0 and 1 in testitems. Data does not seem to fit to the Rasch model.\n")}}
+                  if(length(all.values)!=2) {eatTools:::sunk(paste("genConquestDataset_",ver,": Warning: Found more than two non missing codes in overall testitems. Data does not seem to fit to the Rasch model.\n",sep=""))}
+                  if(length(all.values)==2) {if(!all(names(all.values) == c("0","1"))) {eatTools:::sunk("Warning: Found codes departing from 0 and 1 in testitems. Data does not seem to fit to the Rasch model.\n")}}
                   weg.variablen <- rowSums(is.na(daten))                        ### identifiziere Fälle mit ausschließlich missings
                   weg.variablen <- which(weg.variablen == ncol(daten))
                   if(length(weg.variablen)>0) 
-                    {sunk(paste("genConquestDataset_",ver,": Found ",length(weg.variablen)," cases with missings on all items.\n",sep=""))
-                     if( remove.no.answers == TRUE)  {sunk("    Cases with missings on all items will be deleted.\n")}
+                    {eatTools:::sunk(paste("genConquestDataset_",ver,": Found ",length(weg.variablen)," cases with missings on all items.\n",sep=""))
+                     if( remove.no.answers == TRUE)  {eatTools:::sunk("    Cases with missings on all items will be deleted.\n")}
                      if( remove.no.answers == FALSE) {weg.variablen <- NULL     ### WICHTIG: Wenn missings on all items beibehalten werden sollen, muß weg.variablen wieder zurückgesetzt werden!
-                                                      sunk("Cases with missings on all items will be kept.\n")}}
+                                                      eatTools:::sunk("Cases with missings on all items will be kept.\n")}}
                   hg.char <- NULL; DIF.char <- NULL; weight.char <- NULL; all.hg.char <- NULL        ### obere Zeile: wieviele Character haben die Variablen?
                   weg.dif <- NULL; weg.hg <- NULL; weg.weight <- NULL; namen.all.hg <- NULL; weg.group <- NULL
                               if(!is.null(HG.var))    {
@@ -170,7 +170,7 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                      weg.hg             <- unique(do.call("c", unlist(hg.info, recursive = FALSE)[3*(1:length(hg.info))]))
                      hg.char            <- do.call("c", unlist(hg.info, recursive = FALSE)[3*(1:length(hg.info))-1])
                      if(length(weg.hg)>0)                                       ### untere Zeile: dies geschieht erst etwas später, wenn datensatz zusammengebaut ist
-                       {sunk(paste("genConquestDataset_",ver,": Found ",length(weg.hg)," cases with missings on at least one HG variable.\n",sep=""))}
+                       {eatTools:::sunk(paste("genConquestDataset_",ver,": Found ",length(weg.hg)," cases with missings on at least one HG variable.\n",sep=""))}
                   }
                   if(!is.null(group.var))  {
                      if(!is.null(na$group))                                     ### bevor irgendwas anderes geschieht, werden, sofern spezifiziert, die HG-Variablen recodiert
@@ -182,7 +182,7 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                      weg.group             <- unique(do.call("c", unlist(group.info, recursive = FALSE)[3*(1:length(group.info))]))
                      group.char            <- do.call("c", unlist(group.info, recursive = FALSE)[3*(1:length(group.info))-1])
                      if(length(weg.group)>0)                                       ### untere Zeile: dies geschieht erst etwas später, wenn datensatz zusammengebaut ist
-                       {sunk(paste("genConquestDataset_",ver,": Found ",length(weg.group)," cases with missings on group variable.\n",sep=""))}
+                       {eatTools:::sunk(paste("genConquestDataset_",ver,": Found ",length(weg.group)," cases with missings on group variable.\n",sep=""))}
                    }
                   if(!is.null(DIF.var))  {
                      if(!is.null(na$DIF))                                       ### bevor irgendwas anderes geschieht, werden, sofern spezifiziert, die DIF-Variablen recodiert
@@ -194,7 +194,7 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                      weg.dif             <- unique(do.call("c", unlist(dif.info, recursive = FALSE)[3*(1:length(dif.info))]))
                      dif.char            <- do.call("c", unlist(dif.info, recursive = FALSE)[3*(1:length(dif.info))-1])
                      if(length(weg.dif)>0)                                      ### untere Zeile: dies geschieht erst etwas später, wenn datensatz zusammengebaut ist
-                       {sunk(paste("genConquestDataset_",ver,": Found ",length(weg.dif)," cases with missings on DIF variable.\n",sep=""))}
+                       {eatTools:::sunk(paste("genConquestDataset_",ver,": Found ",length(weg.dif)," cases with missings on DIF variable.\n",sep=""))}
                   }
                   if(!is.null(weight.var))
                     {if(length(weight.var)!=1) {stop("Use only one weight variable.")}
@@ -206,7 +206,7 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                      weg.weight             <- unique(do.call("c", unlist(weight.info, recursive = FALSE)[3*(1:length(weight.info))]))
                      weight.char            <- do.call("c", unlist(weight.info, recursive = FALSE)[3*(1:length(weight.info))-1])
                      if(length(weg.weight)>0)                                   ### untere Zeile: dies geschieht erst etwas später, wenn datensatz zusammengebaut ist
-                       {sunk(paste("genConquestDataset_",ver,": Found ",length(weg.weight)," cases with missings on weight variable.\n",sep=""))}}
+                       {eatTools:::sunk(paste("genConquestDataset_",ver,": Found ",length(weg.weight)," cases with missings on weight variable.\n",sep=""))}}
                   namen.all.hg <- unique(c(namen.dif.var,namen.hg.var,namen.group.var,namen.weight.var))## Achtung: group- und DIF- bzw. group- und HG-Variablen duerfen sich ueberschneiden!
                   if(!is.null(namen.all.hg)) {all.hg.char <- sapply(namen.all.hg, FUN=function(ii) {max(nchar(as.character(na.omit(dat[,ii]))))})}
                   var.char <- sapply(daten, FUN=function(ii) {max(nchar(as.character(na.omit(ii))))})
@@ -234,55 +234,41 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                      if(missing(varname))  {varname <- "ohne Namen"}
                      if(class(x) != "numeric")  {                               ### ist Variable numerisch?
                         if (type == "weight") {stop(paste(type, " variable has to be 'numeric' necessarily. Automatic transformation is not recommended. Please transform by yourself.\n",sep=""))}
-                        sunk(paste(type, " variable has to be 'numeric'. Variable '",varname,"' of class '",class(x),"' will be transformed to 'numeric'.\n",sep=""))
+                        eatTools:::sunk(paste(type, " variable has to be 'numeric'. Variable '",varname,"' of class '",class(x),"' will be transformed to 'numeric'.\n",sep=""))
                         x <- unlist(asNumericIfPossible(dat = data.frame(x, stringsAsFactors = FALSE), transform.factors = TRUE, maintain.factor.scores = FALSE, verbose=FALSE))
                         if(class(x) != "numeric")  {                            ### erst wenn asNumericIfPossible fehlschlägt, wird mit Gewalt numerisch gemacht, denn für Conquest MUSS es numerisch sein
                            x <- as.numeric(as.factor(x))
                         }
-                        sunk(paste("    '", varname, "' was converted into numeric variable of ",length(table(x))," categories. Please check whether this was intended.\n",sep=""))
+                        eatTools:::sunk(paste("    '", varname, "' was converted into numeric variable of ",length(table(x))," categories. Please check whether this was intended.\n",sep=""))
                      }
                      mis     <- length(table(x))
                      if(mis == 0 )  {stop(paste("Error: ",type," Variable '",varname,"' without any values.",sep=""))}
                      if(mis == 1 )  {stop(paste("Error: ",type," Variable '",varname,"' is a constant.",sep=""))}
-                     if(type == "DIF" | type == "group") {if(mis > 10)   {sunk(paste("Serious warning: ",type," Variable '",varname,"' with more than 10 categories. Recommend recoding. \n",sep=""))}}
+                     if(type == "DIF" | type == "group") {if(mis > 10)   {eatTools:::sunk(paste("Serious warning: ",type," Variable '",varname,"' with more than 10 categories. Recommend recoding. \n",sep=""))}}
                      char    <- max(nchar(as.character(na.omit(x))))
                      weg     <- which(is.na(x))
-                     if(length(weg) > 0 ) {sunk(paste("Warning: Found ",length(weg)," cases with missing on ",type," variable '",varname,"'. Conquest may collapse if those cases are not deleted.\n",sep=""))}
+                     if(length(weg) > 0 ) {eatTools:::sunk(paste("Warning: Found ",length(weg)," cases with missing on ",type," variable '",varname,"'. Conquest may collapse if those cases are not deleted.\n",sep=""))}
                      if(type == "DIF" ) {
-                                   if(mis > 2 )   {sunk(paste(type, " Variable '",varname,"' does not seem to be dichotomous.\n",sep=""))}
+                                   if(mis > 2 )   {eatTools:::sunk(paste(type, " Variable '",varname,"' does not seem to be dichotomous.\n",sep=""))}
                                    n.werte <- lapply(itemdaten, FUN=function(iii){by(iii, INDICES=list(x), FUN=table)})
                                    completeMissingGroupwise <- data.frame(t(sapply(n.werte, function(ll){lapply(ll, FUN = function (uu) { length(uu[uu>0])}  )})), stringsAsFactors = FALSE)
                                    for (iii in seq(along=completeMissingGroupwise)) {
                                         missingCat.i <- which(completeMissingGroupwise[,iii] == 0)
                                         if(length(missingCat.i) > 0) {
-                                           sunk(paste("Warning: Following items with no values in ",type," variable '",varname,"', group ",iii,": \n",sep=""))
-                                           sunk(paste(rownames(completeMissingGroupwise)[missingCat.i],collapse=", ")); cat("\n")
+                                           eatTools:::sunk(paste("Warning: Following items with no values in ",type," variable '",varname,"', group ",iii,": \n",sep=""))
+                                           eatTools:::sunk(paste(rownames(completeMissingGroupwise)[missingCat.i],collapse=", ")); cat("\n")
                                         }
                                         constantCat.i <- which(completeMissingGroupwise[,iii] == 1)
                                         if(length(constantCat.i) > 0) {
-                                           sunk(paste("Warning: Following items are constants in ",type," variable '",varname,"', group ",iii,":\n",sep=""))
-                                           sunk(paste(rownames(completeMissingGroupwise)[constantCat.i],collapse=", ")); cat("\n")
+                                           eatTools:::sunk(paste("Warning: Following items are constants in ",type," variable '",varname,"', group ",iii,":\n",sep=""))
+                                           eatTools:::sunk(paste(rownames(completeMissingGroupwise)[constantCat.i],collapse=", ")); cat("\n")
                                         }
                                    }
                      }
                      return(list(x = x, char = char, weg = weg))}
 				  
-				  
-.existsBackgroundVariables <- function(dat, variable )  {
-                             if(!is.null(variable))  {
-            								 if(is.character(variable))  {
-            									 misVariable <- setdiff(variable, colnames(dat))
-            									 if(length(misVariable)>0) {sunk(paste("Can't find ",length(misVariable)," variables in dataset.\n",sep=""))
-            									 sunk(paste(misVariable,collapse=", ")); sunk("\n"); stop()}
-            									 varColumn <- match(variable, colnames(dat))
-            								 }
-            								 if(is.numeric(variable))   {varColumn <- variable}
-                                             return(colnames(dat)[varColumn])
-            							 }
-                             if(is.null(variable)) {return(NULL)}
-                            }  
-                             							 
-							 
+  
+                   							
 .substituteSigns <- function(dat, variable ) {
                     if(!is.null(variable)) {
            					   variableNew <- gsub("_|\\.|-", "", variable)

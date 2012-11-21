@@ -7,7 +7,7 @@
 # Author:    Martin Hecht
 # Change Log:
 #		14.10.2011 MH: Ausgabe auf Englisch
-#		08.09.2011 MH: cat durch sunk ersetzt (für Logfile)
+#		08.09.2011 MH: cat durch eatTools:::sunk ersetzt (für Logfile)
 #			
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -135,8 +135,8 @@
 
 .automateModels.writeModelInfo <- function ( model.specs ) {
 
-		# sunk ( paste ( ".automateModels.writeModelInfo: Modell-Informationen werden geschrieben ... " , "\n" , sep = "" ) )
-		sunk ( paste ( ".automateModels.writeModelInfo: Model informationen are being written ... " , "\n" , sep = "" ) )
+		# eatTools:::sunk ( paste ( ".automateModels.writeModelInfo: Modell-Informationen werden geschrieben ... " , "\n" , sep = "" ) )
+		eatTools:::sunk ( paste ( ".automateModels.writeModelInfo: Model informationen are being written ... " , "\n" , sep = "" ) )
 		
 		check <- mapply ( .automateModels.writeModelInfo.write , 
 								software = model.specs$software ,
@@ -162,8 +162,8 @@
 				stop ( paste ( "Could not write model information for model(s) " , paste ( model.specs$analyse.name[ which ( !check ) ] , collapse = ", " ) , " ." , sep="" ) )
 				ret <- FALSE
 		} else { 
-				# sunk ( paste ( ".automateModels.writeModelInfo: Modell-Informationen wurden erfolgreich geschrieben." , "\n" , sep = "" ) )
-				sunk ( paste ( ".automateModels.writeModelInfo: model information successfully written." , "\n" , sep = "" ) )
+				# eatTools:::sunk ( paste ( ".automateModels.writeModelInfo: Modell-Informationen wurden erfolgreich geschrieben." , "\n" , sep = "" ) )
+				eatTools:::sunk ( paste ( ".automateModels.writeModelInfo: model information successfully written." , "\n" , sep = "" ) )
 				ret <- TRUE
 		}
 

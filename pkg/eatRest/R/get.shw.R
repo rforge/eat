@@ -20,7 +20,7 @@
 # 08.08.2011 MH: auf stable gesetzt wegen besserer sourcebarkeit
 # 05.01.2011 NH: Kriterien für signifikanten DIF angepasst: 0.43 und 0.64 statt 0.3 und 0.6
 # 14.10.2011 SW: "trim" durch "crop" ersetzt, depends no longer on "gdata"
-# 25.11.2011 SW: "cat" durch "sunk" ersetzt
+# 25.11.2011 SW: "cat" durch "eatTools:::sunk" ersetzt
 # 28.11.2011 SW: Fehler wenn alle Items verankert sind also also kein einziger Standardfehler bestimmt wird,
 #                fuehrte zu falscher Benennung der Spalten: gefixed ... 
 # 28.02.2012 SW: liest nun auch Kovarianz- und Korrelationstabelle ein 
@@ -55,7 +55,7 @@ get.shw <- function (file, dif.term = NULL, split.dif = TRUE, abs.dif.bound = 0.
 	termNameLines <- grep("TERM", allInput)
     nTerms <- length(termNameLines)
     if (nTerms == 0) {
-        sunk(paste(funVersion, ": No TERM-statement found in file ", file, ".\n", sep = ""))
+        eatTools:::sunk(paste(funVersion, ": No TERM-statement found in file ", file, ".\n", sep = ""))
         stop()
     }
 	termNames <- strsplit(allInput[termNameLines], ":")
@@ -65,7 +65,7 @@ get.shw <- function (file, dif.term = NULL, split.dif = TRUE, abs.dif.bound = 0.
 	termStart <- termNameLines + 6
     termEnd <- grep("An asterisk", allInput)[1:nTerms]
     termEnd <- termEnd - 2
-    sunk(paste(funVersion, ": Found ", nTerms, " term(s): ", paste(termNames, collapse = ", "), "\n", sep = ""))
+    eatTools:::sunk(paste(funVersion, ": Found ", nTerms, " term(s): ", paste(termNames, collapse = ", "), "\n", sep = ""))
     
 	# initialize output list
 	outputList <- vector(nTerms, mode = "list")
@@ -120,14 +120,14 @@ get.shw <- function (file, dif.term = NULL, split.dif = TRUE, abs.dif.bound = 0.
 		
 		# check number of output colnames and number of input columns
         if (maxNInputCols < length(outputColNames)) {
-            sunk(paste(funVersion, ": Several columns empty for term '", termNames[i], "' in file: '", file, "'. Outputfile may be corrupted. Please check!\n", sep = ""))
+            eatTools:::sunk(paste(funVersion, ": Several columns empty for term '", termNames[i], "' in file: '", file, "'. Outputfile may be corrupted. Please check!\n", sep = ""))
             maxNInputCols <- length(outputColNames)
         }
 		if (maxNInputCols > length(outputColNames)) {
             if (maxNInputCols == length(outputColNames) + 1) {
 				if ( !is.null(dif.term) )  {
 				   if( termNames [i] != dif.term ) {
-					   sunk(paste(funVersion, ": Found one more column than column names. Expect missing column name before 'ESTIMATE'. Check outputfile for term '",
+					   eatTools:::sunk(paste(funVersion, ": Found one more column than column names. Expect missing column name before 'ESTIMATE'. Check outputfile for term '",
 						termNames[i], "' in file: '", file, "'. \n", sep = ""))
 					}	
                 }
@@ -135,7 +135,7 @@ get.shw <- function (file, dif.term = NULL, split.dif = TRUE, abs.dif.bound = 0.
                 outputColNames <- c(outputColNames[1:ind.name - 1], "add.column", outputColNames[ind.name:length(outputColNames)])
             }
             if (maxNInputCols > length(outputColNames) + 1) {
-                sunk(paste(funVersion, ": Found more columns than column names. Check outputfile for term '", termNames[i], "' in file: '", file, "'. \n", sep = ""))
+                eatTools:::sunk(paste(funVersion, ": Found more columns than column names. Check outputfile for term '", termNames[i], "' in file: '", file, "'. \n", sep = ""))
                 outputColNames <- c(outputColNames, rep("add.column", maxNInputCols - length(outputColNames)))
             }
         }
@@ -150,18 +150,18 @@ get.shw <- function (file, dif.term = NULL, split.dif = TRUE, abs.dif.bound = 0.
         colnames(termOutput) <- outputColNames
         options(warn = 0)
         if ("ESTIMATE" %in% colnames(termOutput)[characterCols]) {
-            sunk(paste(funVersion, ": 'ESTIMATE' column for term '",  termNames[length(termNames)], "' in file: '", file, "' does not seem to be a numeric value. \n",  sep = ""))
+            eatTools:::sunk(paste(funVersion, ": 'ESTIMATE' column for term '",  termNames[length(termNames)], "' in file: '", file, "' does not seem to be a numeric value. \n",  sep = ""))
         }
 		
 		# read DIF term (if DIF term is specified)
         if (!is.null(dif.term)) {
             if (sum(termNames == dif.term) == 0) {
-                sunk(paste(funVersion, ": Term declared as DIF: '", dif.term, "' was not found in file: '", file, "'. \n", sep = ""))
+                eatTools:::sunk(paste(funVersion, ": Term declared as DIF: '", dif.term, "' was not found in file: '", file, "'. \n", sep = ""))
             }
 			
 			# compute absolute DIF and DIF significance
             if (termNames[i] == dif.term) {
-                sunk(paste(funVersion, ": Treat '", termNames[i], "' as DIF term.\n", sep = ""))
+                eatTools:::sunk(paste(funVersion, ": Treat '", termNames[i], "' as DIF term.\n", sep = ""))
                 abs.dif = 2 * termOutput$ESTIMATE
                 ci.90 <- confidence ( abs.dif, termOutput$ERROR, alpha = .10 ) 
 				ci.95 <- confidence ( abs.dif, termOutput$ERROR, alpha = .05 ) 
@@ -201,7 +201,7 @@ get.shw <- function (file, dif.term = NULL, split.dif = TRUE, abs.dif.bound = 0.
 			nameDimensions <- "Dimension1"
 			nDimensions <- length (nameDimensions) 
 		}
-		sunk(paste(funVersion, ": Found ",nDimensions," dimension(s): ",paste(nameDimensions, collapse=", "),"\n",sep=""))
+		eatTools:::sunk(paste(funVersion, ": Found ",nDimensions," dimension(s): ",paste(nameDimensions, collapse=", "),"\n",sep=""))
         
 		regrStart <- grep("CONSTANT",allInput)
 		regrStart <- regrStart[regrStart <= regrEnd][1]

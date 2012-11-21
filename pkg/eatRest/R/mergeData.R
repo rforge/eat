@@ -17,7 +17,7 @@
 # ADDED: writeLog parameter; stop if IDs are missing
 # CHANGED: set oldIDs default to 
 # 0000-00-00 AA
-# * 0.4.0 (KS): sunk & Namensgebung
+# * 0.4.0 (KS): eatTools:::sunk & Namensgebung
 # * 0.3.0 (KS): Check auf doppelte ID-Fälle in zu mergenden Datensätzen, Check auf Dataframes in Liste
 # * 0.2.0 (KS): VersNr eingefügt, mbd rauskommentiert, Name ID defaultet, mehr ID-Col
 #           Eingabeformate zugelassen & abgecheckt
@@ -46,20 +46,20 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, writeL
     stopifnot(length(datList) == length(oldIDs))
     stopifnot(is.numeric(oldIDs) | is.character(oldIDs))
 		for ( i in seq(along = datList)) {
-		  sunk(paste ( "mergeData_", versNr, ": Start merging of dataset ", i, ".\n", sep=""), write = writeL , console.output = consoleO)
+		  eatTools:::sunk(paste ( "mergeData_", versNr, ": Start merging of dataset ", i, ".\n", sep=""), write = writeL , console.output = consoleO)
 			if ( i == 1 ) {
 				if ( is.character( oldIDs )) {	IDname1 <- oldIDs[i] }
 				if ( is.numeric( oldIDs )) { IDname1 <- colnames(datList[[i]])[oldIDs[i]]   }
 		
 				if ( length( na.omit( datList[[i]][ , IDname1])) != length( na.omit ( unique( datList[[i]][ , IDname1] ) ) ) ) {
 							doppelt <- na.omit( unique( datList[[i]][ , IDname1][ duplicated(datList[[i]][ , IDname1] ) ] ) )
-							sunk(paste ( "mergeData_", versNr, ": Multiple IDs in dataset ", i, " in " , length(doppelt)," cases. \n",sep=""), write = writeL , console.output = TRUE)
-							stop( sunk(paste ( "Multiple IDs: ", paste( doppelt, collapse = ", "), "\n" ), write = writeL , console.output = TRUE))}
+							eatTools:::sunk(paste ( "mergeData_", versNr, ": Multiple IDs in dataset ", i, " in " , length(doppelt)," cases. \n",sep=""), write = writeL , console.output = TRUE)
+							stop( eatTools:::sunk(paste ( "Multiple IDs: ", paste( doppelt, collapse = ", "), "\n" ), write = writeL , console.output = TRUE))}
 				if ( is.character(IDname1)) {
 					names(datList[[i]])[names(datList[[i]]) == IDname1] <- newID  
 					mergedData <- datList[[i]]
 				} else {
-					sunk(paste ( "mergeData_", versNr, ": Found no ID variable in dataset", i, "\n") , write = writeL , console.output = TRUE)
+					eatTools:::sunk(paste ( "mergeData_", versNr, ": Found no ID variable in dataset", i, "\n") , write = writeL , console.output = TRUE)
 					mReturn <- FALSE
 				}
 			} else {
@@ -101,7 +101,7 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, writeL
                     targetData[ k, j] <- partialData.part [ which( !is.na (partialData.part[ , j] ) )[1], j ] 
                   } else {
   									# nimm den ersten davon und gib eine Warnung aus, wenn nicht alle gleich sind
-                    sunk(paste("mergeData_", versNr, ": Multiple different valid codes in ", colnames(targetData)[j],
+                    eatTools:::sunk(paste("mergeData_", versNr, ": Multiple different valid codes in ", colnames(targetData)[j],
   										  ", ID ", multipleCases [k], ", Codes: ", paste(na.omit ( partialData.part[ 1,j] ), " & ", na.omit ( partialData.part[ 2,j] ),".", sep=""),
   										  " The first value will be kept.\n", sep = ""), write = writeL , console.output = TRUE)
   									targetData[ k, j] <- partialData.part [ which( !is.na (partialData.part[ , j] ) )[1], j ]
@@ -123,7 +123,7 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, writeL
 					}
 					mergedData <- targetData
 				} else {
-					sunk (paste ( "mergeData_", versNr, ": Found no ID variable in dataset", i, "\n") , write = writeL , console.output = TRUE)
+					eatTools:::sunk (paste ( "mergeData_", versNr, ": Found no ID variable in dataset", i, "\n") , write = writeL , console.output = TRUE)
 					mReturn <- FALSE
 				}			
 			}
@@ -131,7 +131,7 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, writeL
 		if(addMbd == TRUE) {mReturn[is.na(mReturn)] <- "mbd"}
 		}
 	} else {    
-		sunk(paste("mergeData_", versNr, ": Found no datasets."), "\n", write = writeL , console.output = TRUE)
+		eatTools:::sunk(paste("mergeData_", versNr, ": Found no datasets."), "\n", write = writeL , console.output = TRUE)
 		mReturn <- FALSE
 	}
 	if(is.data.frame(mReturn)) {

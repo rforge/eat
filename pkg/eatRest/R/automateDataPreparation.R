@@ -86,8 +86,8 @@ automateDataPreparation <- function ( datList = NULL, inputList, path = NULL,
 		sunk.path <- file.path ( folder.aDP , "automateDataPreparation.Log.txt" )
 		
 		### Begrüßung
-		sunk ( "\n" )
-		sunk ( paste (f.n , "Starting automateDataPreparation", Sys.time(), "\n" ) ) 
+		eatTools:::sunk ( "\n" )
+		eatTools:::sunk ( paste (f.n , "Starting automateDataPreparation", Sys.time(), "\n" ) ) 
 		
 		### Checks
 		if(!is.null(newID)) {
@@ -111,10 +111,10 @@ automateDataPreparation <- function ( datList = NULL, inputList, path = NULL,
 		
 		### ggf. sav-files einlesen
 		if( loadSav== TRUE ) {
-			sunk ( "\n" )
-			sunk ( paste ( f.n , "Load .sav Files\n" ) )
+			eatTools:::sunk ( "\n" )
+			eatTools:::sunk ( paste ( f.n , "Load .sav Files\n" ) )
 			if(!is.null(datList)) {
-				sunk(paste ( f.n , "If loadSav == TRUE, datList will be ignored." ) )
+				eatTools:::sunk(paste ( f.n , "If loadSav == TRUE, datList will be ignored." ) )
 			}
 			savFiles <- inputList$savFiles$filename
 			if( is.null (oldIDs) ) {oldIDs <- inputList$savFiles$case.id}
@@ -133,28 +133,28 @@ automateDataPreparation <- function ( datList = NULL, inputList, path = NULL,
 		stopifnot ( !is.null (oldIDs) )
 		
 		if( checkData == TRUE ) {
-			sunk ( "\n" )
-			sunk ( paste ( f.n , "Check data...\n" ) )
+			eatTools:::sunk ( "\n" )
+			eatTools:::sunk ( paste ( f.n , "Check data...\n" ) )
 			mapply(checkData, datList, MoreArgs = list(inputList$values, inputList$subunits, inputList$units))
-		} else {sunk ( paste ( f.n , "Check was skipped\n" ) )}
+		} else {eatTools:::sunk ( paste ( f.n , "Check was skipped\n" ) )}
 		
 		if( mergeData == TRUE ) {
-			sunk ( "\n" )
-			sunk ( paste ( f.n , "Start merging\n" ) )
+			eatTools:::sunk ( "\n" )
+			eatTools:::sunk ( paste ( f.n , "Start merging\n" ) )
 			if( loadSav== TRUE ) {oldIDs <- rep(newID, length(datList))}
 			if(is.null(newID)) {newID <- "ID"}
 			dat <- mergeData(newID = newID, datList = datList, oldIDs = oldIDs, addMbd=TRUE, writeLog=TRUE)
-		} else {sunk ( paste ( f.n , "Merge was skipped\n" ) )}
+		} else {eatTools:::sunk ( paste ( f.n , "Merge was skipped\n" ) )}
 		
 		if( recodeData == TRUE ) {
-			sunk ( "\n" )
-			sunk ( paste ( f.n , "Start recoding\n" ) )
+			eatTools:::sunk ( "\n" )
+			eatTools:::sunk ( paste ( f.n , "Start recoding\n" ) )
 			dat <- recodeData (dat= dat, values=inputList$values, subunits=inputList$subunits)
-		} else {sunk ( paste ( f.n , "Recode was skipped\n" ) )}
+		} else {eatTools:::sunk ( paste ( f.n , "Recode was skipped\n" ) )}
 			
 		if( aggregateData == TRUE ) {
-			sunk ( "\n" )
-			sunk ( paste ( f.n , "Start aggregating\n" ) )
+			eatTools:::sunk ( "\n" )
+			eatTools:::sunk ( paste ( f.n , "Start aggregating\n" ) )
 			if ( aggregatemissings == "seeInputList" ) {
 				stopifnot(!is.null(inputList$aggrMiss))
 				aMiss <- unname(inputList$aggrMiss)
@@ -164,31 +164,31 @@ automateDataPreparation <- function ( datList = NULL, inputList, path = NULL,
 			}		
 			dat <- aggregateData (dat=dat, subunits=inputList$subunits, units=inputList$units,
             aggregatemissings = aggregatemissings, rename = rename, recodedData = recodedData)
-		} else {sunk ( paste ( f.n , "Aggregate was skipped\n" ) )}
+		} else {eatTools:::sunk ( paste ( f.n , "Aggregate was skipped\n" ) )}
 		
 		if( scoreData == TRUE ) {
-			sunk ( "\n" )
-			sunk ( paste ( f.n , "Start scoring\n" ) )
+			eatTools:::sunk ( "\n" )
+			eatTools:::sunk ( paste ( f.n , "Start scoring\n" ) )
 			dat <- recodeData (dat= dat, values=inputList$unitRecodings, subunits=inputList$units)
-		} else {sunk ( paste ( f.n , "Score was skipped\n" ) )}
+		} else {eatTools:::sunk ( paste ( f.n , "Score was skipped\n" ) )}
 	
 		if( writeSpss == TRUE ) {
-			sunk ( "\n" )
-			sunk ( paste ( f.n , "Writing dataset in last transformation status to disk\n" ) )
+			eatTools:::sunk ( "\n" )
+			eatTools:::sunk ( paste ( f.n , "Writing dataset in last transformation status to disk\n" ) )
 			if (class(dat) != "data.frame") {
-				sunk ( paste ( f.n , "Data is no data frame (data frames probably need to be merged).\n" ) )
+				eatTools:::sunk ( paste ( f.n , "Data is no data frame (data frames probably need to be merged).\n" ) )
 			}
 			if(inherits(try( writeSpss (dat=dat , values=inputList$values, subunits=inputList$subunits, units=inputList$units,
 					filedat = filedat, filesps = filesps, missing.rule = missing.rule,
 					path = folder.aDP, sep = "\t", dec = ",", silent = FALSE)  ),"try-error")) {
-				sunk ( "\n" )	
-				sunk ( paste ( f.n , "No SPSS-File could be written.\n" ) )
+				eatTools:::sunk ( "\n" )	
+				eatTools:::sunk ( paste ( f.n , "No SPSS-File could be written.\n" ) )
 			}
-		} else {sunk ( paste ( f.n , "No SPSS-File has been written.\n" ) )}
+		} else {eatTools:::sunk ( paste ( f.n , "No SPSS-File has been written.\n" ) )}
 		
 		# finale Ausgabe 
-		sunk ( "\n" )
-		sunk ( paste ( f.n , "terminated successfully!", Sys.time(), "\n\n" ) )
+		eatTools:::sunk ( "\n" )
+		eatTools:::sunk ( paste ( f.n , "terminated successfully!", Sys.time(), "\n\n" ) )
 	
 		# Ergebnisse returnen
 		return ( dat )

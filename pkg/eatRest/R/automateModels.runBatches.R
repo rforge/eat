@@ -7,7 +7,7 @@
 # CHANGED: added option 'all.local.cores' in .automateModels.runBatches 
 # 0000-00-00 AA
 #		14.10.2011 MH: Ausgaben auf Englisch
-#		08.09.2011 MH: cat durch sunk ersetzt (für Logfile)
+#		08.09.2011 MH: cat durch eatTools:::sunk ersetzt (für Logfile)
 #			
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -25,8 +25,8 @@
 		# (jetzt) versteh ich das hier auch nicht mehr
 		# deshalb auskommentiert und aus Funktionsaufruf rausgenommen, da sonst nicht gebraucht
 		# if ( !length ( batches ) == 1 & run.mode == "serial" & !is.null(cores) ) {
-				#### sunk ( paste ( f.n , " run.mode ist 'serial', aber es existiert mehr als eine Batch-Datei. d.h. somethin' wrong.\n" , sep = "" ) )
-				# sunk ( paste ( f.n , " run.mode is 'serial' und 'cores' is NULL (meaning use all local cores), but more than one batch file exists, that means somethin' wrong.\n" , sep = "" ) )
+				#### eatTools:::sunk ( paste ( f.n , " run.mode ist 'serial', aber es existiert mehr als eine Batch-Datei. d.h. somethin' wrong.\n" , sep = "" ) )
+				# eatTools:::sunk ( paste ( f.n , " run.mode is 'serial' und 'cores' is NULL (meaning use all local cores), but more than one batch file exists, that means somethin' wrong.\n" , sep = "" ) )
 				# stop ( )
 		# }
 		
@@ -34,7 +34,7 @@
 		if ( run.mode == "serial" ) {
 								
 				.fun <- function ( batch ) {
-						sunk ( paste ( f.n , " Try sending " , batch , "\n                            to console ... " , sep = "" ) )
+						eatTools:::sunk ( paste ( f.n , " Try sending " , batch , "\n                            to console ... " , sep = "" ) )
 						
 						rtrn <- system ( paste ( '"', normalizePath( batch ), '"', sep = "" ) ,
 										 intern = FALSE ,
@@ -47,11 +47,11 @@
 										 invisible = FALSE )
 						
 						if ( rtrn == 0 ) {
-										sunk ( paste ( "done.\n\n" , sep = "" ) )
+										eatTools:::sunk ( paste ( "done.\n\n" , sep = "" ) )
 										ret <- TRUE
 								} else {
-										sunk ( paste ( "Error.\n" , sep = "" ) )
-										sunk ( paste ( f.n , " " , batch , " could NOT be started.\n" , sep = "" ) )
+										eatTools:::sunk ( paste ( "Error.\n" , sep = "" ) )
+										eatTools:::sunk ( paste ( f.n , " " , batch , " could NOT be started.\n" , sep = "" ) )
 										stop ( )
 										ret <- FALSE
 								}
@@ -61,10 +61,10 @@
 	
 		} else if ( run.mode == "parallel" ) {
 				
-				# sunk ( paste ( f.n , " Bitte folgende Batch-Dateien MANUELL STARTEN:\n" , sep = "" ) )
-				sunk ( paste ( f.n , " Please MANUALLY START these batch file(s):\n" , sep = "" ) )
+				# eatTools:::sunk ( paste ( f.n , " Bitte folgende Batch-Dateien MANUELL STARTEN:\n" , sep = "" ) )
+				eatTools:::sunk ( paste ( f.n , " Please MANUALLY START these batch file(s):\n" , sep = "" ) )
 				muell <- mapply ( function ( batches ) {
-						sunk ( paste ( "                            " , batches , "\n" , sep = "" ) )
+						eatTools:::sunk ( paste ( "                            " , batches , "\n" , sep = "" ) )
 				} , batches )
 				
 				ret <- TRUE

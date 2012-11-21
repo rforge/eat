@@ -11,7 +11,7 @@
 # Maintainer:
 #
 # Change log:
-# 25.11.2011: 'cat' duch 'sunk' ersetzt
+# 25.11.2011: 'cat' duch 'eatTools:::sunk' ersetzt
 # 14.10.2011 MH: gestabled
 # * zu 1.0.1 (2011-10-05, NH): bugfix: Funktion stürzt nicht mehr ab, wenn ein Item nur eine Antwortkategorie hat
 # * zu 1.0.2 (2011-10-14, SW): "trim" durch "crop" ersetzt
@@ -45,7 +45,7 @@ get.itn <- function (file) {
 	# read data for each item
 	for (i in seq(along = itemNameLines)) {
         if (itemStart[i] == itemEnd[i]) {
-            sunk(paste(funVersion, ": Found only one category for item ", i, ".\n"))
+            eatTools:::sunk(paste(funVersion, ": Found only one category for item ", i, ".\n"))
         }
         itemInput <- allInput[itemStart[i]:itemEnd[i]]
         itemInput <- gsub("_BIG_ ", "NA", itemInput)

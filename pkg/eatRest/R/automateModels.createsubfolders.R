@@ -17,7 +17,7 @@
 #
 # Change Log:
 #		14.10.2011 MH: Ausgabe auf Englisch
-#		08.09.2011 MH: cat durch sunk ersetzt (für Logfile)
+#		08.09.2011 MH: cat durch eatTools:::sunk ersetzt (für Logfile)
 #		17.08.2011 MH: auf stable gesetzt wegen besserer Sourcebarkeit
 # 		22.06.2011 (KS):  Abbruch wenn Verzeichnis schon existiert und nicht leer
 #
@@ -39,8 +39,8 @@
 			# Welche Folder enthalten schon Dateien?
 			for(i in seq(along =FolderList)) {
 			   if(!identical(dir(FolderList[[i]]), character(0))) {
-			   # ret <- FALSE; sunk(paste("Es liegen bereits Dateien in: ", FolderList[[i]], "\n", sep =""))
-			   ret <- FALSE; sunk(paste("Data already exists in: ", FolderList[[i]], "\n", sep =""))
+			   # ret <- FALSE; eatTools:::sunk(paste("Es liegen bereits Dateien in: ", FolderList[[i]], "\n", sep =""))
+			   ret <- FALSE; eatTools:::sunk(paste("Data already exists in: ", FolderList[[i]], "\n", sep =""))
 			   
 			   }
 			}
@@ -52,8 +52,8 @@
 			# Unterverzeichnisse anlegen
 			for(i in seq(along =FolderList)) {
 				if(inherits(ret <- try(dir.create(FolderList[[i]], showWarnings = FALSE, recursive=TRUE)),"try-error")) {
-				# ret <- FALSE; sunk("Fehler beim Anlegen der Verzeichnisse. ")
-				ret <- FALSE; sunk("Error while creating folder.")
+				# ret <- FALSE; eatTools:::sunk("Fehler beim Anlegen der Verzeichnisse. ")
+				ret <- FALSE; eatTools:::sunk("Error while creating folder.")
 				}
 			}
 			
@@ -63,8 +63,8 @@
 				   ret <- TRUE
 				   } else {
 					ret <- FALSE
-					# sunk(paste("Keine Schreibrechte in ", FolderList[[i]], sep=""))
-					sunk(paste("no writing access", FolderList[[i]], sep=""))
+					# eatTools:::sunk(paste("Keine Schreibrechte in ", FolderList[[i]], sep=""))
+					eatTools:::sunk(paste("no writing access", FolderList[[i]], sep=""))
 					}
 			}
     } else ret <-TRUE

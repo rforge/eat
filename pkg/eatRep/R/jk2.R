@@ -14,7 +14,7 @@ jk2.mean <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), group.d
                group           <- list(whole_group = "whole_group")
             }
             allVars     <- list(ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep, group = unlist(group), dependent = unlist(dependent) )
-            all.Names   <- lapply(allVars, FUN=function(ii) {.existsBackgroundVariables(dat = dat, variable=ii)})
+            all.Names   <- lapply(allVars, FUN=function(ii) {eatTools:::.existsBackgroundVariables(dat = dat, variable=ii)})
             dat.i       <- dat[,unlist(all.Names), drop = FALSE]
             missings    <- sapply(dat.i, FUN = function (uu) {length(which(is.na(uu)))})
             if(!all(missings == 0)) {stop(paste("Found NAs in variable(s) ",paste(names(missings[missings!=0]), collapse = ", "), "\n",sep = "") )}
@@ -141,7 +141,7 @@ jk2.table <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), depend
                group           <- list(whole_group = "whole_group")
             }
             allVars     <- list(ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep, group = unlist(group), dependent = unlist(dependent) )
-            all.Names   <- lapply(allVars, FUN=function(ii) {.existsBackgroundVariables(dat = dat, variable=ii)})
+            all.Names   <- lapply(allVars, FUN=function(ii) {eatTools:::.existsBackgroundVariables(dat = dat, variable=ii)})
             dat.i       <- dat[,unlist(all.Names)]
             missings    <- sapply(dat.i, FUN = function (uu) {length(which(is.na(uu)))})
             if(!all(missings == 0)) {stop(paste("Found NAs in variable(s) ",paste(names(missings[missings!=0]), collapse = ", "), "\n",sep = "") )}
@@ -155,7 +155,7 @@ jk2.table <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), depend
                }
             }
             if(length(expected.values) == 0) {
-                expected.values <- lapply(dependent, FUN = function (ii ) {names(table.unlist(dat[,ii, drop = FALSE]))})
+                expected.values <- lapply(dependent, FUN = function (ii ) {names(eatTools:::table.unlist(dat[,ii, drop = FALSE]))})
             }
             if(class(separate.missing.indikator) == "logical")   {
                separate.missing.indikator <- lapply(dependent, FUN = function (uu) {separate.missing.indikator})
@@ -255,7 +255,7 @@ jk2.quantile <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dep
                group           <- list(whole_group = "whole_group")
             }
             allVars     <- list(ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep, group = unlist(group), dependent = unlist(dependent) )
-            all.Names   <- lapply(allVars, FUN=function(ii) {.existsBackgroundVariables(dat = dat, variable=ii)})
+            all.Names   <- lapply(allVars, FUN=function(ii) {eatTools:::.existsBackgroundVariables(dat = dat, variable=ii)})
             dat.i       <- dat[,unlist(all.Names)]
             missings    <- sapply(dat.i, FUN = function (uu) {length(which(is.na(uu)))})
             if(!all(missings == 0)) {stop(paste("Found NAs in variable(s) ",paste(names(missings[missings!=0]), collapse = ", "), "\n",sep = "") )}
@@ -323,7 +323,7 @@ jk2.glm <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independ
                group           <- list(whole_group = "whole_group")
             }
             allVars     <- list(ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep, group = unlist(group), independent = unlist(independent), dependent = unlist(dependent) )
-            all.Names   <- lapply(allVars, FUN=function(ii) {.existsBackgroundVariables(dat = dat, variable=ii)})
+            all.Names   <- lapply(allVars, FUN=function(ii) {eatTools:::.existsBackgroundVariables(dat = dat, variable=ii)})
             dat.i       <- dat[,unlist(all.Names)]
             missings    <- sapply(dat.i, FUN = function (uu) {length(which(is.na(uu)))})
             if(!all(missings == 0)) {stop(paste("Found NAs in variable(s) ",paste(names(missings[missings!=0]), collapse = ", "), "\n",sep = "") )}
@@ -403,7 +403,7 @@ jk2.glm <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independ
 generate.replicates <- function ( dat, ID, wgt = NULL, JKZone, JKrep )      {
                        stopifnot(length(JKZone) == 1 & length(JKrep) == 1 )
                        allVars     <- list(ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep)
-                       all.Names   <- lapply(allVars, FUN=function(ii) {.existsBackgroundVariables(dat = dat, variable=ii)})
+                       all.Names   <- lapply(allVars, FUN=function(ii) {eatTools:::.existsBackgroundVariables(dat = dat, variable=ii)})
                        dat.i       <- dat[,unlist(all.Names)]
                        colnames(dat.i) <- names(all.Names)
                        if( !all( names(table(dat.i$JKrep)) == c(0,1)) ) {stop("Only 0 and 1 are allowed for JKrep variable.\n")}

@@ -152,7 +152,7 @@ readConquestOutput <- function (jobFolder, subFolder = NULL, item.grouping, name
 	# read dsc file for plausible values
 	isDescPv <- file.exists(dscFile.pv)
     if (isDescPv == TRUE) {
-	    sunk(paste(funVersion,": Read descriptives of plausible values.\n",sep=""))
+	    eatTools:::sunk(paste(funVersion,": Read descriptives of plausible values.\n",sep=""))
         dsc.pv <- get.dsc(dscFile.pv)
     } else {
         cat(paste(funVersion, ": Found no .dsc file for plausible values.\n", 
@@ -162,7 +162,7 @@ readConquestOutput <- function (jobFolder, subFolder = NULL, item.grouping, name
 	# read dsc file for wles
 	isDescWle <- file.exists(dscFile.wle)
     if (isDescWle == TRUE) {
-        sunk(paste(funVersion,": Read descriptives of WLEs.\n",sep=""))
+        eatTools:::sunk(paste(funVersion,": Read descriptives of WLEs.\n",sep=""))
         dsc.wle <- get.dsc(dscFile.wle)
     } else {
         cat(paste(funVersion, ": Found no .dsc file for WLEs.\n", 

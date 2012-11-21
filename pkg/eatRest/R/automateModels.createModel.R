@@ -8,8 +8,8 @@
 # Change Log:
 #		11.11.2011 MH: umgearbeitet mit conquestParameters
 #		14.10.2011 MH: Ausgaben auf Englisch
-#		14.09.2011 MH: "\n" in sunk-Aufrüfen gelöscht (für optisch schöner)
-#		08.09.2011 MH: cat durch sunk ersetzt (für Logfile)
+#		14.09.2011 MH: "\n" in eatTools:::sunk-Aufrüfen gelöscht (für optisch schöner)
+#		08.09.2011 MH: cat durch eatTools:::sunk ersetzt (für Logfile)
 #		17.08.2011 MH: auf stable gesetzt wegen besserer Sourcebarkeit
 # 		08.08.2011 MH: auf stable gesetzt wegen besserer sourcebarkeit
 #			
@@ -53,57 +53,57 @@
 				model.nr.str <- paste ( "Model" , which ( all.analyse.name %in% analyse.name ) , "of" , length ( all.analyse.name ) )
 				
 				# Ausgaben / Checks
-				sunk ( paste ( ".automateModels.createModel.create: Sending" , 
+				eatTools:::sunk ( paste ( ".automateModels.createModel.create: Sending" , 
 								model.nr.str , "to automateConquestModel ..." ) )
 				stopifnot ( is.data.frame ( dataset ) )
 				
-				sunk ( paste ( einr , "dat = " , "'data.frame': " , nrow ( dataset ) , " obs. of " , ncol ( dataset ) , " variables" , sep = "" ) )
+				eatTools:::sunk ( paste ( einr , "dat = " , "'data.frame': " , nrow ( dataset ) , " obs. of " , ncol ( dataset ) , " variables" , sep = "" ) )
 				stopifnot ( is.character ( id.name ) )
-				sunk ( paste ( "cat('" , einr , "ID = " , id.name , "\\n')" , sep = "" ) )
-				sunk ( paste ( einr , "regression = " , paste(regression, collapse=", ") , sep = "" ) )				
-				sunk ( paste ( einr , "DIF = " , dif , sep = "" ) )								
-				sunk ( paste ( einr , "group.var = " , paste ( group , collapse = ", " ) , sep = "" ) )				
-				sunk ( paste ( einr , "weight = " , paste ( weight , collapse = ", " ) , sep = "" ) )				
+				eatTools:::sunk ( paste ( "cat('" , einr , "ID = " , id.name , "\\n')" , sep = "" ) )
+				eatTools:::sunk ( paste ( einr , "regression = " , paste(regression, collapse=", ") , sep = "" ) )				
+				eatTools:::sunk ( paste ( einr , "DIF = " , dif , sep = "" ) )								
+				eatTools:::sunk ( paste ( einr , "group.var = " , paste ( group , collapse = ", " ) , sep = "" ) )				
+				eatTools:::sunk ( paste ( einr , "weight = " , paste ( weight , collapse = ", " ) , sep = "" ) )				
 				stopifnot ( is.character ( group ) | is.null ( group ) )
 				stopifnot ( is.character ( item.names ) )
-				sunk ( paste ( einr , "items = " , "chr [1:" , length ( item.names ) , "] " , sep = "" ) )	
+				eatTools:::sunk ( paste ( einr , "items = " , "chr [1:" , length ( item.names ) , "] " , sep = "" ) )	
 				stopifnot ( is.data.frame ( person.grouping ) )			
-				sunk ( paste ( einr , "person.grouping = " , "'data.frame': " , nrow ( person.grouping ) , " obs. of " , ncol ( person.grouping ) , " variables" , sep = "" ) )
+				eatTools:::sunk ( paste ( einr , "person.grouping = " , "'data.frame': " , nrow ( person.grouping ) , " obs. of " , ncol ( person.grouping ) , " variables" , sep = "" ) )
 				stopifnot ( is.data.frame ( item.grouping )	)			
-				sunk ( paste ( einr , "item.grouping = " , "'data.frame': " , nrow ( item.grouping ) , " obs. of " , ncol ( item.grouping ) , " variables" , sep = "" ) )
+				eatTools:::sunk ( paste ( einr , "item.grouping = " , "'data.frame': " , nrow ( item.grouping ) , " obs. of " , ncol ( item.grouping ) , " variables" , sep = "" ) )
 				stopifnot ( is.character ( m.model ) )
-				sunk ( paste ( einr , "m.model = " , m.model , sep = "" ) )
+				eatTools:::sunk ( paste ( einr , "m.model = " , m.model , sep = "" ) )
 				stopifnot ( is.character ( analyse.name ) )
-				sunk ( paste ( einr , "jobName = " , analyse.name , sep = "" ) )
+				eatTools:::sunk ( paste ( einr , "jobName = " , analyse.name , sep = "" ) )
 				stopifnot ( is.character ( folder ) )
-				sunk ( paste ( einr , "jobFolder = " , folder , sep = "" ) )
+				eatTools:::sunk ( paste ( einr , "jobFolder = " , folder , sep = "" ) )
 				if ( is.null ( additionalSubFolder )) aSF_str <- "" else aSF_str <- paste ( additionalSubFolder , collapse = ", " )
-				sunk ( paste ( einr , "subFolder = " , aSF_str , sep = "" ) )
-				sunk ( paste ( einr , "dataName = " , data.name , sep = "" ) )
+				eatTools:::sunk ( paste ( einr , "subFolder = " , aSF_str , sep = "" ) )
+				eatTools:::sunk ( paste ( einr , "dataName = " , data.name , sep = "" ) )
 				if ( is.null ( anchor ) ) anch_str <- "" else anch_str <- paste ( "'data.frame': " , nrow ( anchor ) , " obs. of " , ncol ( anchor ) , " variables" , sep = "" )
-				sunk ( paste ( einr , "anchor = " , anch_str , sep = "" ) )				
+				eatTools:::sunk ( paste ( einr , "anchor = " , anch_str , sep = "" ) )				
 				stopifnot ( is.null ( conquestParameters$pathConquest ) | is.character ( conquestParameters$pathConquest ) )
-				sunk ( paste ( "cat('" ,  einr , "compute.fit = " , conquestParameters$compute.fit , sep = "" , "\n')" ) )
-				sunk ( paste ( "cat('" ,  einr , "model.statement = " , conquestParameters$model.statement , sep = "" , "\n')" ) )								
-				sunk ( paste ( "cat('" , einr , "pathConquest = " , conquestParameters$pathConquest , sep = "" , "\n')" ) )				
-				sunk ( paste ( "cat('" ,  einr , "method = " , conquestParameters$method , sep = "" , "\n')" ) )				
-				sunk ( paste ( "cat('" ,  einr , "std.err = " , conquestParameters$std.err , sep = "" , "\n')" ) )				
-				sunk ( paste ( "cat('" ,  einr , "distribution = " , conquestParameters$distribution , sep = "" , "\n')" ) )				
-				sunk ( paste ( "cat('" ,  einr , "n.plausible = " , conquestParameters$n.plausible , sep = "" , "\n')" ) )
-				sunk ( paste ( "cat('" ,  einr , "set.constraints = " , conquestParameters$set.constraints , sep = "" , "\n')" ) )				
-				sunk ( paste ( "cat('" ,  einr , "nodes = " , conquestParameters$nodes , sep = "" , "\n')" ) )				
-				sunk ( paste ( "cat('" ,  einr , "p.nodes = " , conquestParameters$p.nodes , sep = "" , "\n')" ) )				
-				sunk ( paste ( "cat('" ,  einr , "f.nodes = " , conquestParameters$f.nodes , sep = "" , "\n')" ) )				
-				sunk ( paste ( "cat('" ,  einr , "n.iterations = " , conquestParameters$n.iterations , sep = "" , "\n')" ) )				
-				sunk ( paste ( "cat('" ,  einr , "converge = " , conquestParameters$converge , sep = "" , "\n')" ) )				
-				sunk ( paste ( "cat('" ,  einr , "deviancechange = " , conquestParameters$deviancechange , sep = "" , "\n')" ) )				
-				sunk ( paste ( "cat('" ,  einr , "allowAllScoresEverywhere = " , conquestParameters$allowAllScoresEverywhere , sep = "" , "\n')" ) )				
-				sunk ( paste ( "cat('" ,  einr , "equivalence.table = " , conquestParameters$equivalence.table , sep = "" , "\n')" ) )				
-				sunk ( paste ( "cat('" ,  einr , "use.letters = " , conquestParameters$use.letters , sep = "" , "\n')" ) )				
-				sunk ( paste ( "cat('" ,  einr , "checkLink = " , conquestParameters$checkLink , sep = "" , "\n')" ) )				
+				eatTools:::sunk ( paste ( "cat('" ,  einr , "compute.fit = " , conquestParameters$compute.fit , sep = "" , "\n')" ) )
+				eatTools:::sunk ( paste ( "cat('" ,  einr , "model.statement = " , conquestParameters$model.statement , sep = "" , "\n')" ) )								
+				eatTools:::sunk ( paste ( "cat('" , einr , "pathConquest = " , conquestParameters$pathConquest , sep = "" , "\n')" ) )				
+				eatTools:::sunk ( paste ( "cat('" ,  einr , "method = " , conquestParameters$method , sep = "" , "\n')" ) )				
+				eatTools:::sunk ( paste ( "cat('" ,  einr , "std.err = " , conquestParameters$std.err , sep = "" , "\n')" ) )				
+				eatTools:::sunk ( paste ( "cat('" ,  einr , "distribution = " , conquestParameters$distribution , sep = "" , "\n')" ) )				
+				eatTools:::sunk ( paste ( "cat('" ,  einr , "n.plausible = " , conquestParameters$n.plausible , sep = "" , "\n')" ) )
+				eatTools:::sunk ( paste ( "cat('" ,  einr , "set.constraints = " , conquestParameters$set.constraints , sep = "" , "\n')" ) )				
+				eatTools:::sunk ( paste ( "cat('" ,  einr , "nodes = " , conquestParameters$nodes , sep = "" , "\n')" ) )				
+				eatTools:::sunk ( paste ( "cat('" ,  einr , "p.nodes = " , conquestParameters$p.nodes , sep = "" , "\n')" ) )				
+				eatTools:::sunk ( paste ( "cat('" ,  einr , "f.nodes = " , conquestParameters$f.nodes , sep = "" , "\n')" ) )				
+				eatTools:::sunk ( paste ( "cat('" ,  einr , "n.iterations = " , conquestParameters$n.iterations , sep = "" , "\n')" ) )				
+				eatTools:::sunk ( paste ( "cat('" ,  einr , "converge = " , conquestParameters$converge , sep = "" , "\n')" ) )				
+				eatTools:::sunk ( paste ( "cat('" ,  einr , "deviancechange = " , conquestParameters$deviancechange , sep = "" , "\n')" ) )				
+				eatTools:::sunk ( paste ( "cat('" ,  einr , "allowAllScoresEverywhere = " , conquestParameters$allowAllScoresEverywhere , sep = "" , "\n')" ) )				
+				eatTools:::sunk ( paste ( "cat('" ,  einr , "equivalence.table = " , conquestParameters$equivalence.table , sep = "" , "\n')" ) )				
+				eatTools:::sunk ( paste ( "cat('" ,  einr , "use.letters = " , conquestParameters$use.letters , sep = "" , "\n')" ) )				
+				eatTools:::sunk ( paste ( "cat('" ,  einr , "checkLink = " , conquestParameters$checkLink , sep = "" , "\n')" ) )				
 				if(!is.null(names(conquestParameters$export)))   { string.s <- paste(names(conquestParameters$export), "=", conquestParameters$export) } else { string.s <- conquestParameters$export }
-				sunk ( paste ( "cat('" ,  einr , "export = " , paste(string.s , collapse = ", " ), "\n')" ) )
-				sunk ( "cat('\n\n')" )
+				eatTools:::sunk ( paste ( "cat('" ,  einr , "export = " , paste(string.s , collapse = ", " ), "\n')" ) )
+				eatTools:::sunk ( "cat('\n\n')" )
 				
 				# Übergabe an automateConquestModel speichern fürs debuggen
 				eval ( parse ( text = 
@@ -219,10 +219,10 @@
 										export = conquestParameters$export , 									
 										)				
 
-				if ( ret ) sunk ( paste ( ".automateModels.createModel.create:" , model.nr.str ,
+				if ( ret ) eatTools:::sunk ( paste ( ".automateModels.createModel.create:" , model.nr.str ,
 										"successfully generated.", "\n\n" ) )
 				else { 
-						sunk ( paste ( ".automateModels.createModel.create:" , model.nr.str ,
+						eatTools:::sunk ( paste ( ".automateModels.createModel.create:" , model.nr.str ,
 										"NOT generated.", "\n" , "Skript stoppt." , "\n\n" ) )
 						stop()
 					 }
@@ -235,7 +235,7 @@
 		
 .automateModels.createModel <- function ( model.specs , additionalSubFolder ) {
 		
-		sunk ( paste ( ".automateModels.createModel: Generating model files ... " , "\n\n" , sep = "" ) )
+		eatTools:::sunk ( paste ( ".automateModels.createModel: Generating model files ... " , "\n\n" , sep = "" ) )
 		
 		check <- mapply ( .automateModels.createModel.create , 
 								software = model.specs$software ,
@@ -265,7 +265,7 @@
 				stop ( paste ( "Model files could not be created for model(s) " , paste ( model.specs$analyse.name[ which ( !check ) ] , collapse = ", " ) , " ." , sep="" ) )
 				ret <- FALSE
 		} else { 
-				sunk ( paste ( ".automateModels.createModel: All model files successfully created." , "\n\n" , sep ="" ) )
+				eatTools:::sunk ( paste ( ".automateModels.createModel: All model files successfully created." , "\n\n" , sep ="" ) )
 				ret <- TRUE
 		}
 

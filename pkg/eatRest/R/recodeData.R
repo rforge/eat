@@ -19,7 +19,7 @@
 #
 # Change Log:
 # 2012-09-04 NH
-# CHANGED: removed calls to 'sunk'
+# CHANGED: removed calls to 'eatTools:::sunk'
 # 0000-00-00 AA
 #
 # * 1.1.0  (2011-11-23, ZKD) stabilisiert

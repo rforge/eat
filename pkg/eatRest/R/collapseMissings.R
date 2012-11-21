@@ -87,7 +87,7 @@ collapseMissings <- function( dat , missing.rule = NULL , items = NULL){
 				else dat
 			} , dat , colnames ( dat ) , MoreArgs = list ( item.names.chr ) , SIMPLIFY = FALSE ) , stringsAsFactors=FALSE )	
 		} else {
-		sunk("collapseMissings found no character column in items - no missings collapsed !!! \n")
+		eatTools:::sunk("collapseMissings found no character column in items - no missings collapsed !!! \n")
 		}
 		
 	return ( dat )

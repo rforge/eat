@@ -12,7 +12,7 @@
 # Change Log:
 #
 # 2011-12-12 SW
-# CHANGED: table(unlist (...) ) replaced by table.unlist( ... ) in genConquestSynLab()
+# CHANGED: table(unlist (...) ) replaced by eatTools:::table.unlist( ... ) in genConquestSynLab()
 # 2011-12-05 SW
 # CHANGED: 'id' replaced by 'pid'. logfile export in genConquestSynLab()
 # 2011-11-29 SW
@@ -43,10 +43,10 @@
 #								   "Fehler beim Uebertragen des Score-Statements!\n"
 # 15.11.2011 (MH): auf stable gesetzt
 # 23.11.2011 (TS): "gaussian quadrature is only available for models without regressors" nur für method=="gauss"
-# 25.11.2011 (SW): 'cat' durch 'sunk' ersetzt
+# 25.11.2011 (SW): 'cat' durch 'eatTools:::sunk' ersetzt
 # 28.11.2011 (SW): Namen der Dimensionen werden nun ins Labfile uebertragen
 # 05.12.2011 (SW): 'id' durch 'pid' ersetzt; log-file exported
-# 12.12.2011 (SW): table(unlist (...) ) replaced by table.unlist( ... )
+# 12.12.2011 (SW): table(unlist (...) ) replaced by eatTools:::table.unlist( ... )
 # 23.02.2012 (SW/MH): Conquest History eingefuegt 
 # 07.03.2012 (MH) INIT Parameter eingefügt
 #
@@ -115,13 +115,13 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                     "quit;")
                    ### Conquest akzeptiert explizite Variablennamen nur in Kleinschreibung!
                    if(!all(namen.hg.var == tolower(namen.hg.var)))
-                     {sunk(paste("genConquestSynLab_",ver,": Warning: Conquest allows only lower case letters for explicit variables. Print HG variables in lower cases.\n",sep=""))}
+                     {eatTools:::sunk(paste("genConquestSynLab_",ver,": Warning: Conquest allows only lower case letters for explicit variables. Print HG variables in lower cases.\n",sep=""))}
                    if(!all(namen.dif.var == tolower(namen.dif.var)))
-                     {sunk(paste("genConquestSynLab_",ver,": Warning: Conquest allows only lower case letters for explicit variables. Print DIF variables in lower cases.\n",sep=""))}
+                     {eatTools:::sunk(paste("genConquestSynLab_",ver,": Warning: Conquest allows only lower case letters for explicit variables. Print DIF variables in lower cases.\n",sep=""))}
                    if(!all(namen.weight.var == tolower(namen.weight.var)))
-                     {sunk(paste("genConquestSynLab_",ver,": Warning: Conquest allows only lower case letters for explicit variables. Print weighting variables in lower cases.\n",sep=""))}
+                     {eatTools:::sunk(paste("genConquestSynLab_",ver,": Warning: Conquest allows only lower case letters for explicit variables. Print weighting variables in lower cases.\n",sep=""))}
                    if(!all(namen.group.var == tolower(namen.group.var)))
-                     {sunk(paste("genConquestSynLab_",ver,": Warning: Conquest allows only lower case letters for explicit variables. Print grouping variables in lower cases.\n",sep=""))}
+                     {eatTools:::sunk(paste("genConquestSynLab_",ver,": Warning: Conquest allows only lower case letters for explicit variables. Print grouping variables in lower cases.\n",sep=""))}
                    ### wenn kein Title gesetzt, erstelle ihn aus Sys.getenv
                    converge <- as.character(converge+1)
                    converge <- paste("0",substring(converge,2),sep="")
@@ -143,15 +143,15 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    method    <- match.arg(method)
 				   if(method == "montecarlo")   {
 				     if (is.null(nodes) )   {
-					    sunk(paste("genConquestSynLab_",ver,": '",method,"' has been chosen for estimation method. Number of nodes was not explicitly specified. Set nodes to 1000.\n",sep=""))
+					    eatTools:::sunk(paste("genConquestSynLab_",ver,": '",method,"' has been chosen for estimation method. Number of nodes was not explicitly specified. Set nodes to 1000.\n",sep=""))
 					    nodes <- 1000
 				     }
 					 if(nodes < 100 ) {
-					    sunk(paste("genConquestSynLab_",ver,": Warning: Due to user specification, only ",nodes," nodes are used for '",method,"' estimation. Please note or re-specify your analysis.\n",sep=""))
+					    eatTools:::sunk(paste("genConquestSynLab_",ver,": Warning: Due to user specification, only ",nodes," nodes are used for '",method,"' estimation. Please note or re-specify your analysis.\n",sep=""))
 					 }
 					} 
 				   if(method != "montecarlo" & is.null(nodes) )   {
-					  sunk(paste("genConquestSynLab_",ver,": Number of nodes was not explicitly specified. Set nodes to 15 for method '",method,"'.\n",sep=""))
+					  eatTools:::sunk(paste("genConquestSynLab_",ver,": Number of nodes was not explicitly specified. Set nodes to 15 for method '",method,"'.\n",sep=""))
 					  nodes <- 15
 				    }
 				   syntax    <- gsub("####hier.anzahl.nodes.einfuegen####",nodes,syntax)
@@ -205,23 +205,23 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
 
                    ### identifiziere Itemspalten ("TI" = test items)
                    itemspalten <- sort ( match(namen.items, colnames(daten)) )  ### in welchen spalten stehen Items? 
-                   erlaubte.codes <- paste(gsub("_","",sort(gsub(" ","_",formatC(names(table.unlist(daten[,itemspalten])),width=var.char)),decreasing=FALSE)),collapse=",")
+                   erlaubte.codes <- paste(gsub("_","",sort(gsub(" ","_",formatC(names(eatTools:::table.unlist(daten[,itemspalten])),width=var.char)),decreasing=FALSE)),collapse=",")
                    syntax    <- gsub("####hier.erlaubte.codes.einfuegen####",erlaubte.codes, syntax )
                    namen.items <- colnames(daten)[itemspalten]                  ### folgendes wenn Reihenfolge geaendert wurde (sollte nicht sein)
-                   sunk(paste("genConquestSynLab_",ver,": ",length(itemspalten), " test items identified.\n",sep=""))
+                   eatTools:::sunk(paste("genConquestSynLab_",ver,": ",length(itemspalten), " test items identified.\n",sep=""))
                    lab <- data.frame(1:length(itemspalten), namen.items , stringsAsFactors=F)
                    colnames(lab) <- c("===>","item")
                    for (i in 1:ncol(lab)) {lab[,i] <- as.character(lab[,i])}
 
                    ### sind Leistungsdaten dichotom? (Geht schneller als alte Variante: auskommentiert) 
                    testdaten <- daten[,itemspalten,drop=FALSE]
-                   poo <- table.unlist(testdaten)
-                   if(length(poo) !=2 ) {sunk(paste("genConquestSynLab_",ver,": Warning: data does not seem to be dichotomous.\n",sep=""))}
+                   poo <- eatTools:::table.unlist(testdaten)
+                   if(length(poo) !=2 ) {eatTools:::sunk(paste("genConquestSynLab_",ver,": Warning: data does not seem to be dichotomous.\n",sep=""))}
                    # if(length(table(unlist(daten[,itemspalten]))) !=2 ) {cat("genConquestSynLab_",ver,": Warning: data does not seem to be dichotomous.\n")}
                    
                    ### wie werden HG-Variablen spezifiziert? ("CV" = context variables)
                    HG.var <- match(namen.hg.var, colnames(daten))
-                   sunk(paste("genConquestSynLab_",ver,": ",length(HG.var), " context variables identified.\n",sep=""))
+                   eatTools:::sunk(paste("genConquestSynLab_",ver,": ",length(HG.var), " context variables identified.\n",sep=""))
                    
                    DIF.var <- match(namen.dif.var, colnames(daten))                   
                    ### wenn es DIF-variablen gibt, werden die aus dem regression-Statement herausgenommen, bleiben aber fuer das 
@@ -267,8 +267,8 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    syntax    <- gsub("####hier.Pfad.und.Dateiname.einfuegen####", conq.data.pfad ,syntax,fixed=T)
 				   if(length(DIF.var)>0)  {                                        
                      if(model.statement != "item") {
-                        sunk(paste("genConquestSynLab_",ver," Caution! DIF variable was specified. Expect model statement to be: 'item - ",paste("model item - ",paste(tolower(namen.dif.var),collapse=" - ") ," + ", paste("item*",tolower(namen.dif.var),collapse=" + "), ";",sep=""),"'.\n",sep=""))
-                        sunk(paste("    However, '",model.statement,"' will uses as 'model statement'.\n",sep=""))
+                        eatTools:::sunk(paste("genConquestSynLab_",ver," Caution! DIF variable was specified. Expect model statement to be: 'item - ",paste("model item - ",paste(tolower(namen.dif.var),collapse=" - ") ," + ", paste("item*",tolower(namen.dif.var),collapse=" + "), ";",sep=""),"'.\n",sep=""))
+                        eatTools:::sunk(paste("    However, '",model.statement,"' will uses as 'model statement'.\n",sep=""))
                       }
                      if(model.statement == "item") {
                         ind.model <- grep("model item", syntax)                   ### Ändere model statement
@@ -278,7 +278,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
 					}  
                    if(length(HG.var)>0) {ind.2   <- grep("^regression$",syntax)
                                          syntax[ind.2] <- paste(crop(paste( c(syntax[ind.2], tolower(namen.hg.var)), collapse=" ")),";",sep="")
-                                         if(method=="gauss") {sunk(paste("genConquestSynLab_",ver," Gaussian quadrature is only available for models without latent regressors. Use 'Bock-Aitken' instead.\n",sep=""))
+                                         if(method=="gauss") {eatTools:::sunk(paste("genConquestSynLab_",ver," Gaussian quadrature is only available for models without latent regressors. Use 'Bock-Aitken' instead.\n",sep=""))
                                                                    method <- "quadrature"}
                                          ### method muss "quadrature" sein
                                          }
@@ -305,14 +305,14 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    ### Method wird erst hier gesetzt, weil sie davon abhaengt, ob es ein HG-Modell gibt 
                    syntax    <- gsub("####hier.method.einfuegen####",method,syntax)
                    if(is.null(model)) {
-                      sunk("No Q matrix indicated. Specify one-dimensional model.\n")
+                      eatTools:::sunk("No Q matrix indicated. Specify one-dimensional model.\n")
                       model <- data.frame(item=colnames(daten[,itemspalten]), dim.1=1,stringsAsFactors=F) 
                    }
                    if(is.null(dim(model)))  {                                ### Wenn Dimensionalität nicht als Q-Matrix, sondern als Liste spezifiziert ist, wird die benötigte Q-Matrix erzeugt
                      model <- .genQMatrix(dimSpecification=model, data=daten,itemCols=itemspalten) 
                    }
 				   if(method != "montecarlo" & nodes^(ncol(model)-1) > 10000 )  {
-				      sunk(paste("genConquestSynLab_",ver," Caution! Specified model will use '",method,"' estimation with ",nodes^(ncol(model)-1)," nodes.\n",sep=""))
+				      eatTools:::sunk(paste("genConquestSynLab_",ver," Caution! Specified model will use '",method,"' estimation with ",nodes^(ncol(model)-1)," nodes.\n",sep=""))
 				   }
                    namen.dim <- colnames(model)[-1]
                    score.statement <- .writeScoreStatementMultidim (data=daten, itemCols=itemspalten, qmatrix=model, columnItemNames = 1 ,use.letters=use.letters, allowAllScoresEverywhere = allowAllScoresEverywhere  )
@@ -339,7 +339,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    if(is.null(ANKER))  {ind.2 <- grep("anchor_parameter",syntax)### wenn keine Anker gesetzt, loesche entsprechende Syntaxzeile
                                         syntax <- syntax[-ind.2]}
                    if(!is.null(ANKER)) {ind.2 <- grep("^set constraints",syntax) ### wenn Anker gesetzt, setze constraints auf "none"
-                                        if(match.arg(constraints) != "none") { sunk(paste("genConquestSynLab_",ver,": Anchorparameter were defined. Set constraints to 'none'.\n",sep=""))}
+                                        if(match.arg(constraints) != "none") { eatTools:::sunk(paste("genConquestSynLab_",ver,": Anchorparameter were defined. Set constraints to 'none'.\n",sep=""))}
                                         syntax[ind.2]  <- "set constraints=none;"}
                    if(!is.null(namen.dim))
                                        {lab.dim   <- data.frame(lab.dim.1=c("===>",1:length(namen.dim)), lab.dim.2=c("dimensions",namen.dim), stringsAsFactors=F)
@@ -372,7 +372,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
 				   
 ### Hilfsfunktionen für gen.syntax
 .genQMatrix <- function(dimSpecification, data, itemCols) {
-               sunk("Dimensionen als Liste spezifiziert. Wandle in Q-Matrix um!\n")
+               eatTools:::sunk("Dimensionen als Liste spezifiziert. Wandle in Q-Matrix um!\n")
                allVariables <- colnames(data.frame(data[,itemCols],stringsAsFactors=F))
                if(length(allVariables) != length(unique(unlist(dimSpecification))) )  {
                   stop("Numbers of specified variables does not match numbers of variables in data set.")
@@ -397,7 +397,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
               qmatrix <- qmatrix[-deleteRows,]
       			  cat(paste(length(deleteRows)," items in Q matrix does not depend to any dimension. Items were deleted from q matrix. \n",sep=""))
       	    }
-      	    if(length(setdiff(names(table.unlist(qmatrix[,-1, drop = FALSE])), c("0","1"))) > 0 )  {
+      	    if(length(setdiff(names(eatTools:::table.unlist(qmatrix[,-1, drop = FALSE])), c("0","1"))) > 0 )  {
                cat("Found unequal factor loadings for at least one dimension. This will result in a 2PL model.\n")
                for (u in 2:ncol(qmatrix)) {qmatrix[,u] <- as.character(round(qmatrix[,u], digits = 3))}
             }                                                                   ### obere Zeile: Identifiziere Items mit Trennschärfe ungleich 1
@@ -454,7 +454,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
 ### Hilfsfunktion für .writeScoreStatementMultidim()
 fromMinToMax <- function(dat, score.matrix, qmatrix, allowAllScoresEverywhere, use.letters)    {
                 # if(!exists("alply"))  {library(plyr)}
-                all.values <- alply(as.matrix(score.matrix), .margins = 1, .fun = function(ii) {names(table.unlist(dat[,na.omit(as.numeric(ii[grep("^X", names(ii))])), drop = FALSE]))  })
+                all.values <- alply(as.matrix(score.matrix), .margins = 1, .fun = function(ii) {names(eatTools:::table.unlist(dat[,na.omit(as.numeric(ii[grep("^X", names(ii))])), drop = FALSE]))  })
                 if ( allowAllScoresEverywhere == TRUE ) {                       ### obere Zeile: WICHTIG: "alply" ersetzt "apply"! http://stackoverflow.com/questions/6241236/force-apply-to-return-a-list
                     all.values <- lapply(all.values, FUN = function(ii) {sort(asNumericIfPossible(unique( unlist ( all.values ) ), verbose = FALSE ) ) } )
                 }

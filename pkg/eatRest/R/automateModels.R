@@ -26,7 +26,7 @@
 #							      ab jetzt selber .automateModels.init (aus automateModels.init.R)
 #							      bemühen
 #							   -- Ausgaben auf Englisch	
-#				08.09.2011 MH: cat durch sunk ersetzt (für Logfile)
+#				08.09.2011 MH: cat durch eatTools:::sunk ersetzt (für Logfile)
 #				26.08.2011 MH: adjust.for.regression eingefügt
 #				19.08.2011 MH: analyse.name.elements eingefügt
 #				18.08.2011 MH: write.txt.dataset und delete.folder.countdown implementiert
@@ -80,10 +80,10 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 		sunk.path <- file.path ( folder.aM , "automateModels.Log.txt" )
 		
 		### Begrüßung
-		sunk ( paste ( f.n , "Starting automateModels\n" ) , new.file = TRUE ) 
-		sunk ( paste ( f.n , 'Version: 1.9.9-215 (2012-11-20)\n' ) )
-		sunk ( paste ( f.n , '         Last Man Standing\n' ) )
-		sunk ( paste ( f.n , "This version is BETA. Use at your own risk.\n" ) )
+		eatTools:::sunk ( paste ( f.n , "Starting automateModels\n" ) , new.file = TRUE ) 
+		eatTools:::sunk ( paste ( f.n , 'Version: 1.9.9-215 (2012-11-20)\n' ) )
+		eatTools:::sunk ( paste ( f.n , '         Last Man Standing\n' ) )
+		eatTools:::sunk ( paste ( f.n , "This version is BETA. Use at your own risk.\n" ) )
 		### Definitionen
 		m.model.available <- c ( "1pl", "2pl", "3pl" , "4pl" ) 
 		software.available <- c ( "conquest" )
@@ -99,7 +99,7 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 		### wenn person.grouping.vars spezifiziert, dann hieraus person.grouping bauen
 		if ( !is.null ( person.grouping.vars ) ) {				
 				person.grouping <- .automateModels.grouping.vars.to.grouping ( dat , person.grouping.vars , person.grouping.vars.include.all , id.name )
-				sunk ( paste ( f.n , "Info:" , "person.grouping is" , paste ( colnames ( person.grouping )[-1] , collapse = ", " ) , ".\n" ) ) 
+				eatTools:::sunk ( paste ( f.n , "Info:" , "person.grouping is" , paste ( colnames ( person.grouping )[-1] , collapse = ", " ) , ".\n" ) ) 
 		}
 	
 		### Handling der Item- bzw. Person-Grouping
@@ -284,8 +284,8 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 		save ( item.names , file = file.path ( folder.aM , "item.names.Rdata" )  )
 	
 		# finale Ausgabe 
-		sunk ( "\n" )
-		sunk ( paste ( f.n , "terminated successfully!\n\n" ) )
+		eatTools:::sunk ( "\n" )
+		eatTools:::sunk ( paste ( f.n , "terminated successfully!\n\n" ) )
 	
 		# Ergebnisse returnen
 		return ( results )

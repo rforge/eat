@@ -2,7 +2,7 @@
 
 automateModels.plot.icc <- function ( results , model.specs ) {
 		
-		sunk ( "ICC are being generated" )
+		eatTools:::sunk ( "ICC are being generated" )
 		flush.console()
 		
 		fun <- function ( i , results , model.specs ) {

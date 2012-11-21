@@ -8,7 +8,7 @@
 # Author:    Martin Hecht
 # Change Log:
 #		14.10.2011 MH: Ausgaben auf Englisch
-#		08.09.2011 MH: cat durch sunk ersetzt (für Logfile)
+#		08.09.2011 MH: cat durch eatTools:::sunk ersetzt (für Logfile)
 #		17.08.2011 MH: auf stable gesetzt wegen besserer Sourcebarkeit
 #			
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -26,17 +26,17 @@
 		
 		include.all <- rep ( include.all , out.length = length ( vars ) )
 		if ( ! length ( vars ) == length ( include.all ) ) {
-				sunk ( paste ( f.n , "Error:" , "! length ( vars ) == length ( include.all )" ) )
+				eatTools:::sunk ( paste ( f.n , "Error:" , "! length ( vars ) == length ( include.all )" ) )
 				stop ( )
 		}
 
 		# Checks
 		if ( ! length ( prikey.name ) == 1 ) {
-				sunk ( paste ( f.n , "Error:" , "! length ( prikey.name ) == 1" ) )
+				eatTools:::sunk ( paste ( f.n , "Error:" , "! length ( prikey.name ) == 1" ) )
 				stop ( )
 		}		
 		if ( ! all ( c ( prikey.name , vars ) %in% colnames ( dataframe ) ) ) {
-				sunk ( paste ( f.n , "Error:" , "! all ( c ( prikey.name , vars ) %in% colnames ( dataframe ) )" ) )
+				eatTools:::sunk ( paste ( f.n , "Error:" , "! all ( c ( prikey.name , vars ) %in% colnames ( dataframe ) )" ) )
 				stop ( )
 		}			
 

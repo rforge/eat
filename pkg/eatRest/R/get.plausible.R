@@ -18,7 +18,7 @@
 # 0000-00-00 AA
 #
 #
-# 25.11.2011, SW: "cat" durch "sunk" ersetzt
+# 25.11.2011, SW: "cat" durch "eatTools:::sunk" ersetzt
 # * zu 1.0.2 (2011-10-04, NH): bugfix: kann jetzt wieder ein- und mehrdimensionale Skalierungen lesen
 # * zu 1.0.1 (2011-10-03, NH): liest Dimensionsnamen aus lab file, wenn lab file im Arbeitsordner liegt.
 #
@@ -68,7 +68,7 @@ get.plausible <- function (file) {
 	# set default
 	dimNames <- NULL
   if(!file.exists(lab.file)) {
-    sunk(paste(funVersion, ": Expected label file '",lab.file,"' was not found. Dimension(s) will be labeled by default as 'dim'.\n",sep=""))
+    eatTools:::sunk(paste(funVersion, ": Expected label file '",lab.file,"' was not found. Dimension(s) will be labeled by default as 'dim'.\n",sep=""))
   }  
   # if label file exists, default will be replaced
 
@@ -89,8 +89,8 @@ get.plausible <- function (file) {
 		nDimensions <- ncol(output) - 1
 		dimensionNames <- paste (rep("dim", nDimensions), 1:nDimensions , sep = ".")
 	}
-    sunk(paste(funVersion, ": Found ", nPerson, " person(s) and ", nDimensions, " dimension(s).\n",sep=""))
-    sunk(paste(funVersion, ": Found ", nPersonPVs, " plausible values for each person and each dimension.\n",sep=""))
+    eatTools:::sunk(paste(funVersion, ": Found ", nPerson, " person(s) and ", nDimensions, " dimension(s).\n",sep=""))
+    eatTools:::sunk(paste(funVersion, ": Found ", nPersonPVs, " plausible values for each person and each dimension.\n",sep=""))
 	
 
 	# name output cols

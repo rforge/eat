@@ -17,7 +17,7 @@ get.equ <- function(file)
            {funVersion     <- "get.equ_1.1.0"
             input          <- scan(file, what="character", sep="\n", quiet=TRUE)
             dimensionLines <- grep("Equivalence Table for", input)
-            sunk(paste(funVersion, ": Find ", length(dimensionLines), " dimension(s).\n", sep=""))
+            eatTools:::sunk(paste(funVersion, ": Find ", length(dimensionLines), " dimension(s).\n", sep=""))
             endTab         <- grep("================", input)
             endTab         <- sapply(dimensionLines, FUN=function(ii) {endTab[endTab>ii][1]})
             equTabsList <- lapply(1 : length(dimensionLines), FUN=function(ii) {

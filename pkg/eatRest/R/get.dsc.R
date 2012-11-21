@@ -16,7 +16,7 @@
 #	MH 26.08.2011: auf stable wegen besserer sourcebarkeit
 # SW 23.09.2011: erste "wirkliche" Stable-Version
 # SW 14.10.2011: "trim" durch "crop" ersetzt
-# SW 25.11.2011: 'cat' durch "sunk" ersetzt
+# SW 25.11.2011: 'cat' durch "eatTools:::sunk" ersetzt
 #
 ####################################################################################################################
 
@@ -29,7 +29,7 @@ get.dsc <- function (file) {
     groupNames <- strsplit(input[groupNameLines], " ")
     groupNames <- sapply(groupNames, function(ll) { paste(ll[-1], collapse = " ")})
     nGroups <- length(groupNameLines)
-    sunk(paste(funVersion, ": Found ", nGroups, " group(s) in ", file, ".\n", sep = ""))
+    eatTools:::sunk(paste(funVersion, ": Found ", nGroups, " group(s) in ", file, ".\n", sep = ""))
     
 	# find first and last lines for group inputs
 	datStart <- grep("------------------", input)
@@ -78,7 +78,7 @@ get.dsc <- function (file) {
     # find number of dimensions
 	nDimensions <- names(table(sapply(outputList, function(ii) { length(grep("Error", ii$aggregates$dimension)) })))
     stopifnot(length(nDimensions) == 1)
-    sunk(paste(funVersion, ": Found ", nDimensions, " dimension(s) in ", file, ".\n", sep = ""))
+    eatTools:::sunk(paste(funVersion, ": Found ", nDimensions, " dimension(s) in ", file, ".\n", sep = ""))
     
 	return(outputList)
 }
