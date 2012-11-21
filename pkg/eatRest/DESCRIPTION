@@ -2,8 +2,7 @@ Package: eatRest
 Type: Package
 Title: eatRest
 Version: 0.0.1
-Depends: R (>= 2.14.0)
-Imports: eatTools
+Depends: R (>= 2.14.0), eatTools
 Suggests: MASS, car, date, foreign, gdata, reshape, sendmailR, xlsx, plyr, R.utils, parallel, psych, ggplot2
 Date: 2012-11-20
 Author: eat authors <eat-commits@lists.r-forge.r-project.org>

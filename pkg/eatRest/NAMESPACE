@@ -1,4 +1,4 @@
-importFrom(eatTools,sunk)
+# importFrom(eatTools,sunk)
 # exportPattern("^[[:alpha:]]+")
 export(automateModels)
 export(automateConquestModel)
