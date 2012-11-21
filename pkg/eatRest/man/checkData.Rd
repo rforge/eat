@@ -28,7 +28,7 @@ For missing types see http://code.google.com/p/zkdlib/wiki/MissingHandling
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{sunk}}
+\code{\link[eatTools]{sunk}}
 }
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the

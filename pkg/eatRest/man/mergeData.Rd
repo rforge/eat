@@ -26,7 +26,7 @@ logical; if Logfile shall be written via \link{sunk}.
 }
 %\details{
 %Errors and warnings of \code{mergeData} will be written to a protocol file with
-%\code{\link{sunk}}.
+%\code{\link[eatTools]{sunk}}.
 %}
 \value{
 A data frame containing unique cases and unique variables. All cases and all variables that could be identified the original data frames will be kept and matched.

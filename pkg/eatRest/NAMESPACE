@@ -1,3 +1,4 @@
+importsFrom(eatTools,sunk)
 # exportPattern("^[[:alpha:]]+")
 export(automateModels)
 export(automateConquestModel)
