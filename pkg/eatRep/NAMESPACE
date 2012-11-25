@@ -1,5 +1,5 @@
+importFrom(fmsb, NagelkerkeR2)
 export(jk2.mean)
 export(jk2.table)
 export(jk2.quantile)
 export(jk2.glm)
-importFrom(fmsb, NagelkerkeR2)

@@ -11,3 +11,4 @@ Description: compute descriptives for complex survey designs with multiple imput
 License: GPL (>= 2)
 LazyLoad: yes
 LazyData: yes
+OS_type: windows
