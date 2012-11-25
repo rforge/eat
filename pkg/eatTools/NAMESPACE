@@ -1,1 +1,6 @@
 export(crop)
+export(commonItems)
+export(fill.na)
+export(modus)
+export(make.dummies)
+export(multiseq)
