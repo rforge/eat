@@ -4,7 +4,7 @@ isPseudoNumeric <- function ( x ) {
 		unname ( asNumericIfPossible ( data.frame ( x , stringsAsFactors=FALSE ), set.numeric=FALSE, transform.factors=FALSE, maintain.factor.scores = FALSE, verbose=FALSE ) )
 }
 						
-make.dummies <- function ( dat , cols , colname.as.prefix = TRUE , delimiter = "." , capitalize = FALSE , nchar = NULL , add = TRUE , sort.into.dat = TRUE ) {
+make.dummies <- function ( dat , cols , colname.as.prefix = TRUE , delimiter = "." , capitalize = FALSE , nchar = NULL , add = TRUE , sort.into.dat = TRUE , oneToColname = FALSE , zeroToNA = FALSE ) {
 		
 		# cols nicht in colnames
 		w <- !cols %in% colnames(dat)
@@ -64,6 +64,22 @@ make.dummies <- function ( dat , cols , colname.as.prefix = TRUE , delimiter = "
 						
 						# setzen
 						colnames ( x ) <- newcolnames
+
+						# oneToColname
+						if ( oneToColname ) {
+								do <- sapply ( colnames ( x ) , function ( sp ) paste ( "if (!is.character(x[,\"" , sp , "\"]) ) x[,\"" , sp , "\"] <- as.character ( x[,\"" , sp , "\"] )" , sep = "" ) )
+								eval ( parse ( text = do ) )
+								do <- sapply ( colnames ( x ) , function ( sp ) paste ( "x[,\"" , sp , "\"]<-car::recode(x[,\"" , sp , "\"],\"'1'='" , sp , "'\")" , sep = "" ) )
+								eval ( parse ( text = do ) )								
+						}
+						
+						# zeroToNA
+						if ( zeroToNA ) {
+								do <- sapply ( colnames ( x ) , function ( sp ) paste ( "if (!is.character(x[,\"" , sp , "\"]) ) x[,\"" , sp , "\"] <- as.character ( x[,\"" , sp , "\"] )" , sep = "" ) )
+								eval ( parse ( text = do ) )
+								do <- sapply ( colnames ( x ) , function ( sp ) paste ( "x[,\"" , sp , "\"]<-car::recode(x[,\"" , sp , "\"],\"'0'=NA\")" , sep = "" ) )
+								eval ( parse ( text = do ) )								
+						}						
 						
 						# returnen
 						return ( x )

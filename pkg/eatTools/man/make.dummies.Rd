@@ -10,7 +10,7 @@ names of dummy coded variables can be customized
 and added to the input data.frame
 }
 \usage{
-make.dummies ( dat , cols , colname.as.prefix = TRUE , delimiter = "." , capitalize = FALSE , nchar = NULL , add = TRUE , sort.into.dat = TRUE )
+make.dummies ( dat , cols , colname.as.prefix = TRUE , delimiter = "." , capitalize = FALSE , nchar = NULL , add = TRUE , sort.into.dat = TRUE , oneToColname = FALSE , zeroToNA = FALSE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -22,6 +22,8 @@ make.dummies ( dat , cols , colname.as.prefix = TRUE , delimiter = "." , capital
   \item{nchar}{ numeric, if \code{TRUE} "levels" are truncated to length \code{nchar} }
   \item{add}{ logical, if \code{TRUE} dummy coded variables are added to \code{dat} }
   \item{sort.into.dat}{ logical, if \code{TRUE} (and add = TRUE) dummy coded variables are added and sorted into \code{dat} }
+  \item{oneToColname}{ logical, if \code{TRUE} 1-values are set to colname of respective column, be aware that this changes the column class from numeric to character }
+  \item{zeroToNA}{ logical, if \code{TRUE} 0-values are set to NA, be aware that this changes the column class from numeric to character }
 }
 \details{
 }
@@ -67,6 +69,9 @@ science1.dum <- make.dummies ( science1 , c("sex","booklet") , sort.into.dat = F
 str ( science1.dum[,(ncol(science1.dum)-5):ncol(science1.dum)] )
 
 science1.dum <- make.dummies ( science1 , c("sex","booklet") , add = FALSE )
+str ( science1.dum )
+
+science1.dum <- make.dummies ( science1 , c("sex","booklet") , oneToColname = TRUE , zeroToNA = TRUE  )
 str ( science1.dum )
 
 }
