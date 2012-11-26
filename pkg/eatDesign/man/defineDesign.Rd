@@ -13,9 +13,9 @@ verbose = FALSE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{dsgn}{Object of class \code{"design"}}
-  \item{def}{a data frame containing design elements in columns and units of these elements in rows, see example}
-  \item{append}{logical, append \code{def} to \code{dsgn} or overwrite}
+  \item{dsgn}{an object of class \code{"design"}, if ommited a new object is automatically created}
+  \item{def}{a data frame containing design elements in columns and units of these elements in rows, in other words this data frame is in "long" format, with one row defining the relation of units, see example}
+  \item{append}{logical, append definition \code{def} to \code{dsgn@definition} or overwrite}
   \item{descriptives}{logical, compute descriptives (can be time consuming)}
   \item{verbose}{logical, print information while processing}
 }
@@ -37,6 +37,7 @@ This version is alpha. Use with care.
 
 \seealso{
 \code{\link{updateDesign}}
+\code{\link{design-class}}
 }
 
 \examples{

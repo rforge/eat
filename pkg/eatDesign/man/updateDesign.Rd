@@ -34,6 +34,7 @@ This version is alpha. Use with care.
 
 \seealso{
 \code{\link{defineDesign}}
+\code{\link{design-class}}
 }
 
 \examples{

@@ -48,15 +48,15 @@ Objects can be created by calls of the form \code{new("design")}.
 	
 	contains link descriptives:
 	
-			average path length, see \link[igraph]{average.path.length}
+	        average path length, see \link[igraph]{average.path.length}
 			
-			relative frequency of realized (unique) pairwise links in reference to all pairwise links
+	        relative frequency of realized (unique) pairwise links in reference to all pairwise links
 			
-			relative frequency of realized pairwise links in reference to all theoretically possible pairwise links if elements were completely crossed
+	        relative frequency of realized pairwise links in reference to all theoretically possible pairwise links if elements were completely crossed
 			
-			mean degree of units, see \link[igraph]{degree}
+	        mean degree of units, see \link[igraph]{degree}
 			
-			standard deviation of degree of units, see \link[igraph]{degree}
+	        standard deviation of degree of units, see \link[igraph]{degree}
 			
 	}
     \item{\code{varCovMatrix}:}{Object of class \code{"matrix"}, contains the Variance-Covariance Matrix of the design, see Frey (2009) for details}
