@@ -107,7 +107,7 @@ compareModels <- function ( path , xlsx = NULL ) {
 				model.comparison <- NULL
 		} else if ( nrow ( models ) > 1 ) {
 				
-				combs <- combVec ( models$Model )
+				combs <- eatTools:::combVec ( models$Model )
 				comp <- function ( m1 , m2 , na , d ) {
 						ret <- data.frame ( "Combination" = na ,
 											"Model1" = m1 ,

@@ -1,5 +1,5 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# cat.pbc
+# catPbc
 # Description: berechnet Kategorientrennschärfen 
 # Version: 	0.1.0
 # Status: alpha
@@ -8,9 +8,9 @@
 #
 # Change Log:
 # 2012-08-28 NH
-# ADDED: cat.pbc provides information about all valid codes 
+# ADDED: catPbc provides information about all valid codes 
 # 2012-08-23 NH
-# ADDED: Argument 'context.vars' in cat.pbc
+# ADDED: Argument 'context.vars' in catPbc
 # 0000-00-00 AA
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -20,7 +20,7 @@
 
 ###############################################################################
 
-cat.pbc <- function(datRaw, datRec, idRaw, idRec, context.vars, values, subunits, xlsx = NULL) {
+catPbc <- function(datRaw, datRec, idRaw, idRec, context.vars, values, subunits, xlsx = NULL) {
 
 ## datRaw:     unrecoded dataset
 ## datRec:     the same dataset as datRaw, in recoded form
@@ -36,7 +36,7 @@ cat.pbc <- function(datRaw, datRec, idRaw, idRec, context.vars, values, subunits
 	idrec <- datRec [ , idRec ]
 	idraw <- datRaw  [ , idRaw ]
 	if ( ! setequal(idrec, idraw) ) {
-		stop ( "cat.pbc: IDs in datasets are not all identical." ) 
+		stop ( "catPbc: IDs in datasets are not all identical." ) 
 	} else {
 
 		# sort IDs 
@@ -103,14 +103,14 @@ cat.pbc <- function(datRaw, datRec, idRaw, idRec, context.vars, values, subunits
 			}
 		}
 		dfr1 <- data.frame(dfr1, stringsAsFactors = FALSE)
-		colnames(dfr1) <- c( "item" , "cat" , "n" , "freq" , "freq.rel" , "cat.pbc" , "recodevalue" )
+		colnames(dfr1) <- c( "item" , "cat" , "n" , "freq" , "freq.rel" , "catPbc" , "recodevalue" )
 		dfr1 [ , 3:6 ] <- apply(dfr1 [ , 3:6 ], 2, as.numeric ) 
 		dfr2 <- merge(dfr1, subunits[ , c("subunit", "subunitType")], by.x = "item", by.y = "subunit",  all.x = T)
 		
 	}
 	
 	if ( !is.null(xlsx)) {
-			try(write.xlsx(dfr2, file = xlsx, sheetName="cat.pbc", col.names=TRUE, row.names=TRUE, append=FALSE))
+			try(write.xlsx(dfr2, file = xlsx, sheetName="catPbc", col.names=TRUE, row.names=TRUE, append=FALSE))
 	}	
 	
 	return(dfr2) 

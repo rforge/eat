@@ -227,7 +227,7 @@ readConquestOutput <- function (jobFolder, subFolder = NULL, item.grouping, name
 			eval.num     = mis, 
 			eval         = mis, 
 	  cat = list(
-				cat.pbc  = mis, 
+				catPbc  = mis, 
 				freq     = mis, 
 				freq.rel = mis
 				),
