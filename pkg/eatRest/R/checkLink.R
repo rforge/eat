@@ -26,7 +26,7 @@ checkLink <- function(dat, remove.non.responser = FALSE, na = NA, verbose = TRUE
                 na <- which( rowSums(is.na(dat)) == ncol ( dat ) )
                 if(length(na)>0) {
                    dat <- dat[-na,]
-                   cat(paste("Remove ",length(na)," cases with missing on all items.\n", sep = ""))
+                   if(verbose == TRUE ) {cat(paste("Remove ",length(na)," cases with missing on all items.\n", sep = ""))}
                 }
              }
              non.missing.cases <- lapply(dat, FUN=function(ii) {which(!is.na(ii))})

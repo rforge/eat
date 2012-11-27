@@ -87,7 +87,13 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                     {rec.items <- paste(na$items,"=NA",collapse="; ")           ### definiere recodierungsvorschrift
                      for (i in 1:ncol(daten))
                          {daten[,i] <- car:::recode(daten[,i], rec.items)}}
-				  if(checkLink == TRUE) {foo <- checkLink(daten)}
+   				        if(checkLink == TRUE) {
+                     linkNaKeep <- checkLink(dat = daten, remove.non.responser = FALSE, verbose = FALSE )
+                     linkNaOmit <- checkLink(dat = daten, remove.non.responser = TRUE, verbose = FALSE )
+                     if(linkNaKeep == FALSE & linkNaOmit == FALSE ) {eatTools:::sunk("WARNING! Dataset is NOT completely linked (even if cases with missings on all items are removed).\n")}
+                     if(linkNaKeep == FALSE & linkNaOmit == TRUE )  {eatTools:::sunk("Note: Dataset is not completely linked. This is probably only due to missings on all cases.\n")}
+                     if(linkNaKeep == TRUE )                        {eatTools:::sunk("Dataset is completely linked.\n")}
+                  }
                   namen.items <- colnames(daten)
                   allVars     <- list(namen.hg.var=HG.var, namen.dif.var=DIF.var, namen.weight.var=weight.var, namen.group.var=group.var)
                   all.Names   <- lapply(allVars, FUN=function(ii) {eatTools:::.existsBackgroundVariables(dat=dat,variable=ii)})
