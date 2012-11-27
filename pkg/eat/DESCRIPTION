@@ -10,4 +10,4 @@ Description: a wrapper package to load all "eat" subpackages
 License: GPL (>= 2)
 LazyLoad: yes
 LazyData: yes
-
+OS_type: windows
