@@ -1476,7 +1476,7 @@ setMethod ( f = "show" , signature = signature ( object="design" ) ,
 											if ( sd == 0 || is.na ( sd ) ) {
 													st <- paste ( st , mean , sep = "" )
 											} else {
-													st <- paste ( st , min , " - " , max , "   M = " , formatC( mean , format = "f", digits = 2 ) , "  Mdn = " , formatC( median , format = "f", digits = 2 ) , "  SD = " , formatC( mean, format = "f", digits = 2 ) , sep = "" )
+													st <- paste ( st , min , " - " , max , "   M = " , formatC( mean , format = "f", digits = 2 ) , "  Mdn = " , formatC( median , format = "f", digits = 2 ) , "  SD = " , formatC( sd , format = "f", digits = 2 ) , sep = "" )
 											}
 											
 											return ( st )

@@ -9,7 +9,7 @@
 \title{Class \code{"design"}}
 \description{
 %%  ~~ A concise (1-5 lines) description of what the class is. ~~
-A design object contains descriptives of a data structure.
+A design object contains definition and descriptives of a data structure ("design").
 }
 \section{Objects from the Class}{
 Objects can be created by calls of the form \code{new("design")}.
@@ -50,7 +50,7 @@ Objects can be created by calls of the form \code{new("design")}.
 	
 	        average path length, see \link[igraph]{average.path.length}
 			
-	        relative frequency of realized (unique) pairwise links in reference to all pairwise links
+	        relative frequency of realized (unique) pairwise links in reference to all possible pairwise links
 			
 	        relative frequency of realized pairwise links in reference to all theoretically possible pairwise links if elements were completely crossed
 			

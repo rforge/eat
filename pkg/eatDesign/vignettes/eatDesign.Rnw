@@ -1,0 +1,283 @@
+\documentclass[12pt]{article}
+\usepackage{Sweave}
+\usepackage{amsmath}
+\usepackage{bm}
+\usepackage[authoryear,round]{natbib}
+\bibliographystyle{plainnat}
+\DefineVerbatimEnvironment{Sinput}{Verbatim}
+{formatcom={\vspace{-2.5ex}},fontshape=sl,
+  fontfamily=courier,fontseries=b, fontsize=\scriptsize}
+\DefineVerbatimEnvironment{Soutput}{Verbatim}
+{formatcom={\vspace{-2.5ex}},fontfamily=courier,fontseries=b,%
+  fontsize=\scriptsize}
+%%\VignetteIndexEntry{compute descriptives of data structures (``designs'')}
+%%\VignetteDepends{eatDesign}
+%%
+\newcommand{\trans}{\ensuremath{^\mathsf{T}}}
+\newcommand{\invtrans}{\ensuremath{^\mathsf{-T}}}
+\title{Using R package eatDesign to compute ``design'' descriptives}
+\author{Martin Hecht\\Humboldt University Berlin, Germany}
+\begin{document}
+\SweaveOpts{engine=R,eps=FALSE,pdf=TRUE,strip.white=true,keep.source=TRUE}
+\SweaveOpts{include=FALSE}
+\setkeys{Gin}{width=\textwidth}
+\newcommand{\code}[1]{\texttt{\small{#1}}}
+\newcommand{\package}[1]{\textsf{\small{#1}}}
+\maketitle
+\begin{abstract}
+  In this tutorial the concepts and functionality of \code{eatDesign} are described and illustrated on several examples.
+\end{abstract}
+
+<<preliminaries,echo=FALSE,print=FALSE>>=
+library(eatDesign)
+@
+
+\section{Terms and Concepts}
+\label{sec:terms}
+
+A ``design'' is a compilation of units of several ``design elements'' and their relations to one another.
+Design elements can be thought of as relevant variables that are sources of data variation.
+Usually such variables are called ID variables, since they describe unique units that the data set is compiled of.
+The terminology and examples in this tutorial are from educational measurement research.
+Still, the \package{eatDesign} package can be used to calculate descriptives for all kinds of structured data.
+Therefore, ``design'' is double-quoted as it refers to just one specific term describing structured data.
+One package that \package{eatDesign} heavily uses and relies on is the \package{igraph} package, since for some statistics
+the relations between the units are first converted to a ``graph''. So sometimes terms from this package are used as well.
+For an overview of concepts in designing educational measurement studies see \citet{frey_ncme_2009}.
+The first example is from this paper as well.
+In addition, a central concept in \package{eatDesign} is a ``link'' that stands for the relation between two units.
+So if two units are connected, they are called ``linked''. In \package{igraph} terminology this would mean that an edge exists that
+connects two vertices. One of the main purposes of \package{eatDesign} is to compute ``link'' descriptives for a ``design''.
+
+\section{Example 1: A Youden Square Design}
+\label{sec:ex1}
+In this example we use the design that is defined in Table 7 in \citet{frey_ncme_2009}.
+This design is a special design called ``Youden Square Design'' because it possesses some special features.\\
+
+<<table7def>>=
+table7 <- data.frame ( "Booklet"  = c(1,1,2,2,3,3) ,
+                       "Position" = c(1,2,1,2,1,2) ,
+                       "Cluster"  = c(1,2,2,3,3,1) )
+
+table7
+@
+
+``Booklet'', ``Position'' and ``Cluster'' are the design elements.
+The numbers in the table are the units of the design elements.
+Note that these units do not need to be numeric, they can be character or a factor as well.
+The rows of this table define the relations of the units.
+For instance, row 1 defines that booklet 1, position 1 and cluster 1 are connected.
+In terms of this concrete example, booklet 1 contains position 1, and cluster 1 is on position 1 in booklet 1.\\
+
+This data frame can be used to create a ``design'' object using function \code{defineDesign}.
+Let's call this object \code{design7} in reference to \code{table7}.\\
+
+<<design7def>>=
+design7 <- defineDesign ( def = table7 )
+@
+
+We now have a design object that contains the design definition and descriptives that have been automatically generated.
+The computation of descriptives can be (very) time consuming, especially when designs get large.
+For some circumstances, e.g. if a lot of (partial) designs are created that are later combined
+(and thus, descriptives are not relevant), it might be worthwile to
+set \code{descriptives = FALSE} in \code{defineDesign} to save computational time.
+Let's have a look at the design object and its descriptives:\\
+
+<<design7show>>=
+design7
+@
+
+\subsection{Design structure}
+\label{subsec:struct}
+The design structure describes the pairwise relation of design elements.
+Design elements can be unconnected, equivalent, nested, partially crossed or completely crossed.
+Unconnected elements have no ``intersection'' of units, that means that in the definition each
+unit of one element is combined with \code{NA} on the other element.
+For equivalent elements each unit of one element is uniquely combined with one unit of the other element.
+In this case, these two elements are practically the same, just the labels are different.
+One element is nested within the other, if each unit of the element is connected to only one unit
+of the other element. Rather hard to label is the relationship ``the other way around'',
+so what should the relation of the element that the units of the other element are nested within be called?
+In \package{eatDesign} we call this ``nestor'', surely acknowleding that this is not the most awesome label.
+This relation is also not shown in the design descriptives, but if you extract the structure data frame
+from the object, e.g. \code{design7@structure}, it can eventually pop up.
+Completely crossed means that each unit of one element is combined with all units of the other element.
+If elements are partially crossed at least one unit of one element is not combined with all elements of the other element
+and at least one unit of one element is combined with at least two units of the other element.
+In short, partially crossed is ``somewhere between unconnected and completely crossed''.
+Further, being ``nested'' can be considered a special case of ``partially crossed''.\\
+
+In \code{design7} booklets and positions are completely crossed.
+This means that each booklet contains all 2 positions and that each position is in every booklet.
+This is pretty standard and not surprising, since booklets usually should contain the same number positions
+and since position is defined in reference to the booklet (``Position'' is actually an abbreviation for
+``Booklet Position'') it is totally obvious that all positions are in every booklet.
+Booklets and clusters are partially crossed. So some -- but not all -- clusters are in every booklet.
+Positions and clusters are completely crossed, meaning that each cluster occurs at every position.
+
+\subsection{Descriptives}
+\label{subsec:descr}
+Section ``Descriptives'' contains basic information on the number of units of one element with reference to units of another element.
+If this number is not constant across units of the other element, additional statistics range, mean, median and standard deviation are displayed.
+In \code{design7} there are 3 booklets per position, 3 booklets per cluster, 2 positions per cluster,
+2 positions per booklet, 2 clusters per booklet and 3 clusters per position.
+Note that these numbers are constant over units of the ``second'' element;
+therefore no range, mean, median and standard deviation is displayed.
+These descriptives are only displayed for connected elements
+(elements that are either completely or partially crossed, or nested).
+For unconnected or equivalent elements, or if one element is nestor of the other element, these descriptives are not displayed, because they
+are less meaningfull and always the same (either 0 or 1, respectively).
+Still, they are computed and are available by extracting the descriptives slot from the object, e.g. \code{design7@descriptives}.
+
+\subsection{Link Descriptives}
+\label{subsec:ldescr}
+
+In section ``Link Descriptives'' several statistics on the magnitude of the link are displayed.
+Each element can be linked with respect to another element.
+This might or might not be relevant or interpretationally feasible in specific contexts.
+The link statistics have a great conceptual resemblance to the graph theory framework
+(which package \package{igraph} is based on). In fact, these link statistics are either just renamed,
+slightly adapted or aggregated statistics from \package{igraph}.\\
+
+The \emph{link length} is the \emph{average path length}. This statistic describes how distant the units are
+on average. If link length is 1 (like in \code{design7}) each unit is directly connected to every other unit.
+\emph{Link rate 1} describes the relative frequency of realized (unique) pairwise links between units
+in reference to all possible pairwise links of these units.
+In \code{design7} link rate 1 is 1.00 (or 100\%) since all units are combined with each other.
+\emph{Link rate 2} describes the relative frequency of realized pairwise links in
+reference to all theoretically possible pairwise links if elements were completely crossed.
+In \code{design7} link rate 2 differs over elements. For instance, link rate 2 of
+clusters linked by position is 1.00 because positions and clusters are completely crossed
+(as is shown in section design structure). Contrarily, the link rate of clusters linked by booklets are less than 100\%,
+because booklets and clusters are only partially crossed. 0.33 (or 33\%) means that there are only one third
+of links between units of the respective elements realized in the design compared to what would be possible if these
+two elements were completely crossed. The \emph{link strength} is the average number of each unit being connected
+with other units. In \package{igraph} terminology, its the mean of the \emph{degree}.
+So for example, if link strength is 2, on average each unit is connected to 2 other units.
+While link strength is the mean, \emph{link dispersion} is the standard deviation of the degree.
+If link dispersion is 0 (as in \code{design7}), then each and every unit is connected to the number of units
+that is denoted by link strength.\\
+
+The displayed number of digits after the decimal point is 2 by default, except for link strength and link dispersion
+for which no digits are shown if they are whole-number. Full numbers (with more than 2 digits) can be accessed by
+extracting the link slot of the object, e.g. \code{design7@link}.
+
+\subsection{Visualization}
+\label{subsec:visu}
+
+As mentioned, the descriptives are calculated on previously defined \emph{graph} objects.
+These objects are accessible in the ``linkList'' slot of the design object, e.g. \code{design7@linkList}
+As the name indicates linkList is a list. As the name does not indicate its a list of \emph{graph} objects.
+That means we can apply all functions that are defined for graph objects, e.g. plot.
+Let's first have a look at the names of the linkList:\\
+
+<<linkListNames>>=
+names(design7@linkList)
+@
+
+The names contain two element names concatenated by ``|'' which stands for ``linked by''
+as in the link descriptives output.
+We now can plot the units and their links for one element linked by another, e.g. clusters linked by booklets.\\
+
+<<linkListPlot,fig=TRUE,include=FALSE,width=8,height=8>>=
+plot(design7@linkList[["Cluster|Booklet"]])
+@
+\begin{figure}[h!]
+  \centering
+  \includegraphics{eatDesign-linkListPlot}
+  \caption{Links between clusters due to booklets.}
+  \label{fig:linkListPlot}
+\end{figure}
+
+In Figure \ref{fig:linkListPlot} we see that there are three clusters (circles with numbers 1, 2 and 3).
+These three clusters are connected by lines that are visual displays of what we have been calling ``links''.
+As can be easily seen each cluster is connected to 2 other clusters
+(resulting in a link strength of 2 and link dispersion of 0, see subsection \ref{subsec:ldescr}).
+Also, each cluster is linked to every other cluster (link rate 1 = 100\%).
+Such plots will certainly not win a beauty contest, but might prove usefull for a visual inspection of the design.
+Besides plots a vast variety of functions that compute statistics on the graph are available in the
+\package{igraph} package.
+
+\subsection{Variance-Covariance Matrix and Design Descriptives}
+\label{subsec:varcov}
+
+For interpretation of the \emph{variance-covariance matrix} and the \emph{D-optimality index} of the design see \citet[p. 48-49]{frey_ncme_2009}.
+
+
+
+\section{Example 2: Adding one more element (items) to design7 of example 1}
+\label{sec:ex2}
+
+In example 1 we have defined 3 booklets that contain 2 positions and 3 clusters that occur on these positions in these booklets.
+We now want to add items to the design.
+Items are often combined to form clusters, so -- since each item is in just one cluster -- items are \emph{nested} within clusters.
+Items can be added to \code{design7} from example 1 in three easy steps.\\
+
+First, we create a data frame that contains the items and there belonging to clusters.\\
+
+<<itemsdef>>=
+itemsdef <- data.frame ( 
+              "Item"    = paste("item",formatC(1:21,format="fg",width=2,flag="0"),sep=""),
+              "Cluster" = c ( rep(1,7), rep(2,8), rep(3,6) ) )
+itemsdef
+@
+
+Note that ``Cluster'' must have the same unit labels as in \code{design7} as we want to integrate (merge) the items into \code{design7}.
+The units of ``Item'' can be named as favoured, however.\\
+
+Second, we define a new design object containing the item-cluster relationship definition \code{itemsdef}.\\
+
+<<itemsdefineDesign>>=
+items <- defineDesign ( def = itemsdef )
+items
+@
+
+A look on the design descriptives reveals some not surprising but interesting facts.
+There are 21 items and 3 clusters with -- as intended -- items being nested within clusters.
+Further, each cluster contains 6 -- 8, on average $M = 7.00$ items.
+An interesting and maybe sometimes misleading feature of the link length occurs here due to the nestedness of items in clusters.
+The link length is 1.00, so each unit is linked to every other unit \emph{within} one cluster.
+Since items are nested within clusters, there is no \emph{between} clusters link of items.
+So a link length of 1.00 does not per se mean that all units are linked to all other,
+as might be incorrectly assumed. Instead, this can actually be seen by link rate 1 which is 0.30 and thus below 1.00.
+Again, we can look at the plot for further insight.\\
+
+<<itemPlot,fig=TRUE,include=FALSE,width=8,height=8>>=
+plot(items@linkList[["Item|Cluster"]])
+@
+\begin{figure}[h!]
+  \centering
+  \includegraphics{eatDesign-itemPlot}
+  \caption{Links between items due to clusters.}
+  \label{fig:itemPlot}
+\end{figure}
+
+\pagebreak
+Third, we add the new design \code{items} to the original design \code{design7} using the ``+'' operator and call the
+resulting design \code{design2}.\\
+
+<<design2>>=
+design2 <- design7 + items
+design2
+@
+
+Probably the most important gain from this maneuver are the descriptives of the added element (items) in reference
+to the original elements (booklets and positions). For instance there are 13 -- 15 items per booklet and items have
+a link strength of 20 and link dispersion of 0 due to the linkage that is created by booklets. And again, a plot can
+be created, e.g. for the items that are linked by booklets.\\
+
+<<itemPlot2,fig=TRUE,include=FALSE,width=8,height=8>>=
+plot(design2@linkList[["Item|Booklet"]])
+@
+\begin{figure}[h!]
+  \centering
+  \includegraphics{eatDesign-itemPlot2}
+  \caption{Links between items due to booklets.}
+  \label{fig:itemPlot2}
+\end{figure}
+
+
+\bibliography{references}
+
+
+\end{document}
