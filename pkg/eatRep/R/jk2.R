@@ -308,9 +308,14 @@ jk2.quantile <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dep
             return(analysis)}
 
 
-jk2.glm <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independent = list(), dependent = list(), complete.permutation = c("nothing", "groups", "independent", "all") , glm.family)    {
+jk2.glm <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independent = list(), reg.statement = NULL, dependent = list(), complete.permutation = c("nothing", "groups", "independent", "all") , glm.family)    {
             complete.permutation <- match.arg ( complete.permutation )
             .GlobalEnv$glm.family <- glm.family                                 ### Hotfix!
+            if(!is.null(reg.statement)) {
+                if( !all ( unlist(lapply(names(independent), FUN = function (u) {grep(u, reg.statement)})) == 1) )  {
+                     stop("Regression statement contains variables not incorporated in independent variables list.\n")
+                }
+            }
             if(is.null(wgt))   {
                cat("No weights specified. Use weight of 1 for each case.\n",sep = "")
                dat$weight_one <- 1
@@ -354,6 +359,13 @@ jk2.glm <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independ
                                              sub.replicates <- replicates[replicates[,"ID"] %in% sub.dat[,ID] ,-1]
                                              design         <- svrepdesign(data = sub.dat[,as.character(imp)], weights = sub.dat[,wgt], type="JKn", scale = 1, rscales = 1, repweights = sub.replicates, combined.weights = TRUE, mse = TRUE)
                                              formel         <- as.formula(paste(imp[["dep"]],"~", paste( independent.names, collapse = " + "), sep = ""))
+                                             if(!is.null(reg.statement))  {
+                                                 replaceCovs <- reg.statement
+                                                 for (z in 1:length(independent.names))  {
+                                                      replaceCovs <- gsub(names(independent)[z],independent.names[z],replaceCovs)
+                                                 }
+                                                 formel     <- as.formula(paste(imp[["dep"]],"~", replaceCovs))
+                                             }
                                              glm.ii         <- svyglm(formula = formel, design = design, return.replicates = FALSE, family = glm.family)
                                              r.squared      <- data.frame ( r.squared = var(glm.ii$fitted.values)/var(glm.ii$y) , N = nrow(sub.dat) , N.valid = length(glm.ii$fitted.values) )
                                              r.nagelkerke   <- NagelkerkeR2(glm.ii)

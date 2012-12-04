@@ -8,7 +8,8 @@ of the survey package.
 }
 \usage{
 jk2.glm(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independent = list(),
-        dependent = list(), complete.permutation = c("nothing", "groups", "independent", "all") ,
+        reg.statement = NULL, dependent = list(),
+        complete.permutation = c("nothing", "groups", "independent", "all") ,
         glm.family) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -42,6 +43,12 @@ all names concerning one variable are interpreted as its imputations. See detail
 %%     ~~Describe \code{sig.dif.bound} here~~
 List of one or more independent variables. If independent variable is a multiple imputation variable, all names concerning one variable are interpreted
 as its imputations. See details for more information.
+}
+ \item{reg.statement}{
+Optional: By default, the regression formula is created automatically  by the independent variables connected by a "+" symbol. However, when interaction terms should
+be defined, the regression has to be specified by the user. The right side of the regression formula has to defined in \code{"reg.statement"} as a string, whereas the
+names of the independent variables occurring in the \code{"independent"} argument have to be used. This is due to various names of one variable in multiple imputed data
+sets. See example 3 for further details.
 }
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -99,17 +106,26 @@ Sebastian Weirich
 }
 \examples{
 data(reading_writing)
-### Computes linear regression from reading score on hisei and gender separately for each country
+### Example 1: Computes linear regression from reading score on hisei separately for each country
 mod1      <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
              group = list(country = "country"),
              dependent = list(reading = paste("reading_score", 1:3, sep = ""), writing = paste("writing_score", 1:3, sep = "")),
              independent = list(hisei = paste("zehisei", 1:5, sep = "")),
              complete.permutation = "no", glm.family = gaussian(link="identity") )
-### Computes log linear regression from pass/fail on hisei and gender separately for each country
-mod1      <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
+### Example 2: Computes log linear regression from pass/fail on hisei and gender separately for each country
+mod2      <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
              group = list(country = "country"),
              dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""), writing.pass = paste("passed_writing", 1:3, sep = "")),
-             independent = list(hisei = paste("zehisei", 1:5, sep = "")),
+             independent = list(hisei = paste("zehisei", 1:5, sep = ""), gender = "sex"),
+             complete.permutation = "no", glm.family = binomial(link="logit") )
+### Example 3: Computes linear regression from pass/fail on hisei and gender (and its' interaction) separately for each country
+### The regression statement has to be defined manually. Note that, despite "hisei" occurs as a multiple imputed variable, only
+### one statement has to be defined.
+mod3      <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
+             group = list(country = "country"),
+             dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""), writing.pass = paste("passed_writing", 1:3, sep = "")),
+             independent = list(hisei = paste("zehisei", 1:5, sep = ""), gender = "sex"),
+             reg.statement = "hisei*gender",
              complete.permutation = "no", glm.family = binomial(link="logit") )
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
