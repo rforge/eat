@@ -1,0 +1,36 @@
+# importFrom(eatTools, sunk)
+importFrom(eatRest, collapseMissings)
+importFrom(eatTools, set.col.type)
+importFrom(eatTools, crop)
+importFrom(car, recode)
+importFrom(xlsx, read.xlsx)
+importFrom(xlsx, read.xlsx2)
+importFrom(xlsx, write.xlsx)
+importFrom(foreign, read.spss)
+importFrom(foreign, write.foreign)
+importFrom(reshape, melt)	
+export(aggregateData)
+export(automateDataPreparation)
+export(catPbc)
+export(checkData)
+export(checkDesign)
+export(checkInput)
+export(loadSav)
+export(makeCodebookInput)
+export(makeInputLists)
+export(makeNumeric)
+export(mergeData)
+export(readDaemonXlsx)
+export(readSpss)
+export(recodeData)
+export(recodeMbiToMnr)
+export(writeSpss)
+
+
+
+
+
+
+
+
+

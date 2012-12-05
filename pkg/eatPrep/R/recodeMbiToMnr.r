@@ -18,7 +18,12 @@ recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, nMbi = 2){
   if (nMbi < 1) {
     stop("nMbi needs to be >= 1")
   }
-  personsWithoutBooklets <- setdiff(dat[ , id], rotation$idstud)
+  
+  if (is.numeric(id)) {
+    id <- colnames(dat)[id]
+  }  
+  
+  personsWithoutBooklets <- setdiff(dat[ , id], rotation[, id])
   if (length(personsWithoutBooklets) > 0){
     cat("Found no booklet information for cases ", personsWithoutBooklets, ". No recoding will be done for these cases.\n")
   }
@@ -26,13 +31,12 @@ recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, nMbi = 2){
   # prepare dataset
   dat.mis <- as.data.frame(sapply(dat, recode, "'mbi'=1; else=0"))
   dat.mis[ , id] <- dat[, id]
-  dat <- merge(dat, rotation, by.x = id, by.y = "idstud", all.x = T)
+  dat <- merge(dat, rotation, by = id, all.x = T)
 
   bookletsWithoutPersons <- setdiff(booklets$booklet, dat$booklet)
   if (length(bookletsWithoutPersons) > 0){
     cat("Found no response data for booklets", bookletsWithoutPersons, ".\n")
     booklets <- booklets [ - which(booklets$booklet %in% bookletsWithoutPersons) , ]
-  
   }
   
   booklet.long <- melt(booklets, id.var = "booklet", na.rm = T)

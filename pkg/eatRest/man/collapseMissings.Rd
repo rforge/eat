@@ -45,13 +45,13 @@ Karoline Sachse, Martin Hecht
 \seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
-\examples{
-	data(inputDat)
-	dat1 <- inputDat[[1]]  # get first dataset from inputDat
-	datColMis <- collapseMissings(dat = dat1, 
-	missing.rule = list(mvi = 0 ,mnr = 0 ,mci = 0 ,mbd = NA ,mir = 0 ,mbi = 0), 
-	items=colnames(dat1)[- c(1:2)])
-}
+%\examples{
+%	data(inputDat)
+%	dat1 <- inputDat[[1]]  # get first dataset from inputDat
+%	datColMis <- collapseMissings(dat = dat1, 
+%	missing.rule = list(mvi = 0 ,mnr = 0 ,mci = 0 ,mbd = NA ,mir = 0 ,mbi = 0), 
+%	items=colnames(dat1)[- c(1:2)])
+%}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{ ~kwd1 }

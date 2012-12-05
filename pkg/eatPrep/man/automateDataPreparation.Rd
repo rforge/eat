@@ -3,7 +3,7 @@
 \title{automateDataPreparation
 }
 \description{
-prepare datasets for \code{\link{automateModels}}
+prepare datasets for \code{automateModels}
 }
 \usage{
 automateDataPreparation( datList = NULL, inputList, path = NULL, loadSav,

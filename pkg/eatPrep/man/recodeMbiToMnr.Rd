@@ -8,6 +8,7 @@ Recode Missing by Intention to Missing not Reached
 }
 
 \usage{
+%recodeMbiToMnr (dat, id, booklets, blocks, rotation, breaks, nMbi = 2)
 recodeMbiToMnr (dat, id, booklets, blocks, rotation, nMbi = 2)
 }
 
@@ -25,8 +26,13 @@ recodeMbiToMnr (dat, id, booklets, blocks, rotation, nMbi = 2)
 		block specification
 	}
 	\item{rotation}{
-		booklet information
+		booklet information: data frame with 2 columns, \code{booklet} and other column with same name as \code{id} in \code{dat}
 	}
+	
+%	\item{breaks}{
+%		Number of blocks after which \code{mbi} shall be recoded to \code{mnr}.
+%	}
+
 	\item{nMbi}{
 		Number of \code{mbi}-Codes required at the end of a block to code \code{mnr}. Needs to be >=1. 
 	}
