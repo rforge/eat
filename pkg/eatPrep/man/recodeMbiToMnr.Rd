@@ -65,6 +65,12 @@ Nicole Haag
 data(inputDat)
 data(inputList)
 
+prepDat <- automateDataPreparation (inputList = inputList, datList = inputDat,
+        loadSav = FALSE, checkData=FALSE, mergeData = TRUE, recodeData=TRUE, 
+		aggregateData=TRUE, scoreData= TRUE, writeSpss=FALSE)
+
+mnrDat <- recodeMbiToMnr (dat = prepDat, id = "ID", booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, nMbi = 2)
+
 }
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the
