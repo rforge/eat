@@ -5,19 +5,36 @@
 \usage{checkDesign (dat, booklets, blocks, rotation, sysMis="NA", id="idstud")}
 \arguments{
   \item{dat}{A data frame}
-  \item{booklets}{A data frame with booklet information. See 'Details'.}
-  \item{blocks}{A data frame with block information. See 'Details'.}
-  \item{rotation}{A data frame with rotation information. See 'Details'.}
+  \item{booklets}{A data frame with booklet information. See 'Examples'.}
+  \item{blocks}{A data frame with block information. See 'Examples'.}
+  \item{rotation}{A data frame with rotation information. See 'Examples'.}
    \item{sysMis}{sysMis identifier as character. Default is "NA".}
   \item{id}{Case-id identifier as character. Default is "idstud".}
 }
-\details{
-tbd
-}
+%% \details{
+%% tbd
+%% }
 
 \author{Karoline Sachse}
 \note{
 %%  ~~further notes~~
+}
+
+\examples{
+data(inputDat)
+data(inputList)
+
+prepDat <- automateDataPreparation (inputList = inputList, datList = inputDat,
+        loadSav = FALSE, checkData=FALSE, mergeData = TRUE, recodeData=TRUE, 
+		aggregateData=TRUE, scoreData= TRUE, writeSpss=FALSE)
+		
+checkDesign(dat = prepDat, booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, sysMis = "mbd", id="ID")
+
+prepDat[1,"I22"] <- "1"
+prepDat[1,"I01"] <- "mbd"
+
+checkDesign(dat = prepDat, booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, sysMis = "mbd", id="ID")
+
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~

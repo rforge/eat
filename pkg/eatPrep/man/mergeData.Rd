@@ -49,10 +49,10 @@ A data frame containing unique cases and unique variables. All cases and all var
 data(inputDat)
 str(inputDat)
 
-mergedDataset <- mergeData("person-id", inputDat, c("idstud", "idstud", "idstud"), addMbd=TRUE)
+mergedDataset <- mergeData("idstud", inputDat, c("ID", "ID", "ID"), addMbd=TRUE)
 str(mergedDataset)
 
-mergedDataset <- mergeData("idstud", inputDat, writeLog=FALSE)
+mergedDataset <- mergeData("ID", inputDat, writeLog=FALSE)
 str(mergedDataset)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

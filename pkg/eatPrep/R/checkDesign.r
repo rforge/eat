@@ -1,13 +1,16 @@
 
 
 checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="idstud") {
-	
+
 	funVersion <- "checkDesign 0.0.2"
 
 	if (is.na(match(id, colnames(dat)))) {
 		stop(paste(funVersion, " ID variable '", id, "' not found in dataset.", sep = "")) }
 
 	# Ausgabe, welche Variablen bei Check ignoriert werden:		
+	blocks <- eatTools:::set.col.type(blocks, col.type = list ( "character" = names(blocks) ))
+	booklets <- eatTools:::set.col.type(booklets, col.type = list ( "character" = names(booklets) ))
+	rotation <- eatTools:::set.col.type(rotation, col.type = list ( "character" = names(rotation) ))
 	gibsNich <- setdiff(names(dat),c(id,blocks$subunit))
 	if (length(gibsNich) > 0) {
 		cat(paste(cat(funVersion, " The following variables are not in info (subunits in blocks) but in dataset. \nThey will be ignored during check: \n"), paste(gibsNich, collapse = ", "), sep = ""), "\n")

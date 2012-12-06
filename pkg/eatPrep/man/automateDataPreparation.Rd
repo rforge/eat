@@ -109,9 +109,9 @@ Karoline Sachse
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-inpList <- inputList
-inpDat <- inputDat
-test <- automateDataPreparation (inputList=inpList, datList = inpDat,
+data(inputList)
+data(inputDat)
+test <- automateDataPreparation(inputList = inputList, datList = inputDat,
         path = "c:/temp/test_eat", loadSav = FALSE, checkData=TRUE,
         mergeData = TRUE, recodeData=TRUE, aggregateData=TRUE, scoreData= TRUE,
         writeSpss=TRUE)

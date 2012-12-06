@@ -70,9 +70,9 @@ Nicole Haag
 data(inputDat)
 data(inputList)
 
-datRaw <- mergeData(newID = "idstud", datList = inputDat, addMbd = TRUE)
+datRaw <- mergeData(newID = "ID", datList = inputDat, addMbd = TRUE)
 datRec <- recodeData(datRaw, values = inputList$values, subunits=inputList$subunits)
-pbcs   <- catPbc(datRaw, datRec, idRaw = "idstud", idRec = "idstud", context.vars = "hisei",
+pbcs   <- catPbc(datRaw, datRec, idRaw = "ID", idRec = "ID", context.vars = "hisei",
                   values = inputList$values, subunits = inputList$subunits)
 
 
