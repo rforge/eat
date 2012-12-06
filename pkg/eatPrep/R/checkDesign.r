@@ -1,6 +1,6 @@
 
 
-checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="idstud") {
+checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="ID") {
 
 	funVersion <- "checkDesign 0.0.2"
 
@@ -52,7 +52,7 @@ checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="idstud
 	.bookletPatternCheck <- function(TH) {
 		subunits <- .subunitsInBooklet(TH)
 		subunitsN <- setdiff(names(dat), c(subunits, id))
-		cases <- rotation$ID[rotation$booklet == TH]
+		cases <- rotation[,id][rotation$booklet == TH]
 		resList <- list()
 		resList[["M"]] <- sapply(subunits, .patternCheckM, TH=TH, cases=cases)
 		resList[["P"]] <- sapply(subunitsN, .patternCheckP, TH=TH, cases=cases)
