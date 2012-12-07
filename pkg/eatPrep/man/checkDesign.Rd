@@ -30,8 +30,8 @@ prepDat <- automateDataPreparation (inputList = inputList, datList = inputDat,
 		
 checkDesign(dat = prepDat, booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, sysMis = "mbd", id="ID")
 
-prepDat[1,"I22"] <- "1"
-prepDat[1,"I01"] <- "mbd"
+prepDat[1:7,"I22"] <- "1"
+prepDat[1,c("I01","I02","I03")] <- "mbd"
 
 checkDesign(dat = prepDat, booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, sysMis = "mbd", id="ID")
 

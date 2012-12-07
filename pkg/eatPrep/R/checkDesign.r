@@ -2,7 +2,7 @@
 
 checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="ID") {
 
-	funVersion <- "checkDesign 0.0.2"
+	funVersion <- "checkDesign 0.0.3"
 
 	if (is.na(match(id, colnames(dat)))) {
 		stop(paste(funVersion, " ID variable '", id, "' not found in dataset.", sep = "")) }
@@ -68,11 +68,11 @@ checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="ID") {
 		cat(paste(funVersion, "Deviations from design detected! \n"))
 		if(!all(unlist(resM <- lapply(resL, function(iz) {iz[["M"]]})) == FALSE)) {
 			for(ll in names(resL)) {
-				if (!all(unlist(resM[[ll]]) == FALSE)) {
-					cat(paste(funVersion, "Found sysMis instead of valid codes for booklet", ll, "for variables:\n"))
+				if (any(tt <- unlist(lapply(resM[[ll]], function(gg) gg[1])) != FALSE)) {
+					cat(paste(funVersion, "Found for", sum(tt),"variable(s) sysMis instead of valid codes for booklet", ll, ":\n"))
 						for(pp in names(resM[[ll]])) {
 							if (resM[[ll]][[pp]][1] != FALSE) {
-								cat(paste(pp, " (cases: ", paste(resM[[ll]][[pp]], collapse = ", "), ") \n", sep=""))
+								cat(paste(pp, " (", length(resM[[ll]][[pp]])," case(s): ", paste(resM[[ll]][[pp]], collapse = ", "), ") \n", sep=""))
 							}
 						}	
 				}
@@ -80,11 +80,11 @@ checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="ID") {
 		} 
 		if(!all(unlist(resP <- lapply(resL, function(iz) {iz[["P"]]})) == FALSE)) {
 			for(ll in names(resL)) {
-				if (!all(unlist(resP[[ll]]) == FALSE)) {
-					cat(paste(funVersion, "Found valid codes instead of sysMis for booklet", ll, "for variables:\n"))
+				if (any(tt <- unlist(lapply(resP[[ll]], function(gg) gg[1])) != FALSE)) {
+					cat(paste(funVersion, "Found for", sum(tt),"variable(s) valid codes instead of sysMis for booklet", ll, ":\n"))
 						for(pp in names(resP[[ll]])) {
 							if (resP[[ll]][[pp]][1] != FALSE) {
-								cat(paste(pp, " (cases: ", paste(resP[[ll]][[pp]], collapse = ", "), ") \n", sep=""))
+								cat(paste(pp, " (", length(resP[[ll]][[pp]])," case(s): ", paste(resP[[ll]][[pp]], collapse = ", "), ") \n", sep=""))
 							}
 						}	
 				}
