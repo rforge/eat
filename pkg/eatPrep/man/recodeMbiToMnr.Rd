@@ -8,8 +8,7 @@ Recode Missing by Intention to Missing not Reached
 }
 
 \usage{
-%recodeMbiToMnr (dat, id, booklets, blocks, rotation, breaks, nMbi = 2)
-recodeMbiToMnr (dat, id, booklets, blocks, rotation, nMbi = 2)
+	recodeMbiToMnr (dat, id, booklets, blocks, rotation, breaks, nMbi = 2)
 }
 
 \arguments{
@@ -29,9 +28,9 @@ recodeMbiToMnr (dat, id, booklets, blocks, rotation, nMbi = 2)
 		booklet information: data frame with 2 columns, \code{booklet} and other column with same name as \code{id} in \code{dat}
 	}
 	
-%	\item{breaks}{
-%		Number of blocks after which \code{mbi} shall be recoded to \code{mnr}.
-%	}
+	\item{breaks}{
+		Number of blocks after which \code{mbi} shall be recoded to \code{mnr}, e.g., \code{c(1,2)} to specify breaks after the first and second block.
+	}
 
 	\item{nMbi}{
 		Number of \code{mbi}-Codes required at the end of a block to code \code{mnr}. Needs to be >=1. 
@@ -69,7 +68,7 @@ prepDat <- automateDataPreparation (inputList = inputList, datList = inputDat,
         loadSav = FALSE, checkData=FALSE, mergeData = TRUE, recodeData=TRUE, 
 		aggregateData=TRUE, scoreData= TRUE, writeSpss=FALSE)
 
-mnrDat <- recodeMbiToMnr (dat = prepDat, id = "ID", booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, nMbi = 2)
+mnrDat <- recodeMbiToMnr (dat = prepDat, id = "ID", booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, breaks = c(1, 2), nMbi = 2)
 
 }
 

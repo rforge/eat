@@ -12,7 +12,7 @@
 
 ###############################################################################
 
-recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, nMbi = 2){
+recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 2){
   
   # check consistency of inputs
   if (nMbi < 1) {
@@ -57,47 +57,75 @@ recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, nMbi = 2){
   if(length(missingSubunits) > 0 ){
     stop("Found no data for subunits", missingSubunits, ".")
   }
-  
-  
-  blockNames <- unique(booklet.long$block)
 
-  for (bb in blockNames) {
-    # bb <- blockNames[1]
-    ll <- unique(booklet.long$booklet[which(booklet.long$block  == bb)])
-    dat.ll <- dat[ which(dat$booklet %in% ll) , ]
-    dat.mis.ll <- dat.mis[ dat$booklet %in% ll , ]
+	# create sequences to group blocks together according to breaks	
+	nBlocks <- ncol(booklets)-1
+	blockBeg <- c(breaks-1, breaks[length(breaks)]+ 1)
+	if(blockBeg[1] != 1) 
+		blockBeg[1] <- 1 
+	if(blockBeg[length(blockBeg)] > nBlocks)
+		blockBeg <- blockBeg[- length(blockBeg) ]
+	stopifnot(length(blockBeg) == length(breaks)+1)
 
-    block.bb <- blocks[ which(blocks$block == bb) , ]
-    dat.bb <- dat.ll[ , block.bb$subunit ]
-    dat.mis.bb <- dat.mis.ll[ , block.bb$subunit ]
+	blockEnd <- breaks
+	if (blockEnd[length(blockEnd)] != ncol(booklets)-1) 
+		blockEnd <- c(blockEnd, nBlocks)
+	stopifnot(length(blockEnd) == length(breaks)+1)
 
-    ## find variables to be recoded
-    nBlockSubunits  <- ncol(dat.bb)
-    subunitSequence <- colnames(dat.bb)
-    mbiList <- apply(dat.mis.bb, 1, function(ii){ which(ii > 0) })
-    toRecodeList <- lapply(mbiList, function(xx) {
-                    toRecode <- NULL
-                    if ( nBlockSubunits %in% xx & length(xx) != nBlockSubunits ){
-                      lastResponse <- max(setdiff(seq(1:(nBlockSubunits - 1)), xx))
-                      if (lastResponse < (nBlockSubunits - (nMbi-1))){
-                        firstRecode <- lastResponse + 1
-                        toRecode <- subunitSequence[firstRecode:nBlockSubunits]
-                      }
-                    }
-                return(toRecode)
-                })
+	blockGrouping <-  mapply(":", blockBeg, blockEnd, SIMPLIFY = F)
 
-    ## recode selected variables
-    names(toRecodeList) <- dat.ll[ , id]
-    for (jj in names(toRecodeList)){
-      if (!is.null(toRecodeList[[jj]])) {
-        dat[ dat[ , id] == jj, which(colnames(dat) %in% toRecodeList[[jj]]) ] <- "mnr"
-      # cat( dat[which(dat[ , id]  == jj), id], rev(toRecodeList[[jj]]), "\n")
-        flush.console()
-        dat.mis[ dat.mis[ , id] == jj, which(colnames(dat.mis) %in% toRecodeList[[jj]]) ] <- 2
-      }
-    }
-  }
+  # recode mbi booklet-wise
+  bookletNames <- unique(booklet.long$booklet)
+
+  for (bb in bookletNames) {
+    # bb <- bookletNames[1]
+    dat.ll <- dat[ which(dat$booklet %in% bb) , ]
+    dat.mis.ll <- dat.mis[ dat$booklet %in% bb , ]
+
+    # find blocks in booklet
+    blocks.bb <- booklet.long[ which(booklet.long$booklet == bb) , ]
+    blocks.bb <- blocks.bb$block[ order(blocks.bb$blockPosition) ] 
+    
+	# group blocks according to breaks
+	groupedBlocks <- lapply(seq(along = blockGrouping), function(ii) {blocks.bb[blockGrouping[[ii]]]})
+
+	for (gg in seq(along = groupedBlocks)){
+		# gg <- 2
+		
+		block.bb <- blocks[ which(blocks$block %in% groupedBlocks[[gg]]) , ]
+		block.bb$orderme <- match(blocks$block, groupedBlocks[[gg]])[!is.na( match(blocks$block, groupedBlocks[[gg]]))]
+		block.bb <- block.bb[order(block.bb$orderme, block.bb$subunitBlockPosition), ]
+		dat.bb <- dat.ll[ , block.bb$subunit ]
+		dat.mis.bb <- dat.mis.ll[ , block.bb$subunit ]
+
+		## find variables to be recoded
+		nBlockSubunits  <- ncol(dat.bb)
+		subunitSequence <- colnames(dat.bb)
+		mbiList <- apply(dat.mis.bb, 1, function(ii){ which(ii > 0) })
+		toRecodeList <- lapply(mbiList, function(xx) {
+						toRecode <- NULL
+						if ( nBlockSubunits %in% xx & length(xx) != nBlockSubunits ){
+						  lastResponse <- max(setdiff(seq(1:(nBlockSubunits - 1)), xx))
+						  if (lastResponse < (nBlockSubunits - (nMbi-1))){
+							firstRecode <- lastResponse + 1
+							toRecode <- subunitSequence[firstRecode:nBlockSubunits]
+						  }
+						}
+					return(toRecode)
+					})
+
+		## recode selected variables
+		names(toRecodeList) <- dat.ll[ , id]
+		for (jj in names(toRecodeList)){
+		  if (!is.null(toRecodeList[[jj]])) {
+			dat[ dat[ , id] == jj, which(colnames(dat) %in% toRecodeList[[jj]]) ] <- "mnr"
+		  # cat( dat[which(dat[ , id]  == jj), id], rev(toRecodeList[[jj]]), "\n")
+			flush.console()
+			dat.mis[ dat.mis[ , id] == jj, which(colnames(dat.mis) %in% toRecodeList[[jj]]) ] <- 2
+		  }
+		}
+	}
+}
 
   
   recodedSubitems <- apply(dat.mis, 1, function(ll) { names(ll)[which(ll == 2)]})
@@ -120,5 +148,3 @@ recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, nMbi = 2){
   return(dat[ , - which(colnames(dat) == "booklet")])
 
 }
-
-
