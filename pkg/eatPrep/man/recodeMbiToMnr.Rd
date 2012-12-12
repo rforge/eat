@@ -8,7 +8,7 @@ Recode Missing by Intention to Missing not Reached
 }
 
 \usage{
-	recodeMbiToMnr (dat, id, booklets, blocks, rotation, breaks, nMbi = 2)
+	recodeMbiToMnr (dat, id, booklets, blocks, rotation, breaks, nMbi = 2, subunits = NULL)
 }
 
 \arguments{
@@ -34,13 +34,17 @@ Recode Missing by Intention to Missing not Reached
 
 	\item{nMbi}{
 		Number of \code{mbi}-Codes required at the end of a block to code \code{mnr}. Needs to be >=1. 
-	}
+	}   
+	
+	\item{subunits}{
+	Optional: A data frame with subunit information. See 'Details'. Used to find names of recoded subunits. 
+}
 		
 }
 \details{
 In order to code \code{mnr}, a certain number of subitems at the end of a block need to be coded \code{mbi}. This number can be specified with the argument \code{nMbi}. The default is 2, i.e. if the last and second to last subitem in a block are coded \code{mbi}, both subitems will be recoded to \code{mnr}. If \code{nMbi} is larger than the number of subitems in a given block, no subitem in this block will be recoded.
 
-If all subitems in a block are coded \code{mbi}, none of them will be recoded to \code{mnr}.
+If all subitems in a block are coded \code{mbi}, none of them will be recoded to \code{mnr}.  Examples for data frame \code{subunits} can be found via \code{data(inputList)}
 }
 \value{
 A data frame with missing not reached coded as \code{mnr}. For each person with at least one \code{mnr} in the returned dataset the names of recoded variables are given as an attribute to \code{dat}.

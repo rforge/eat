@@ -12,7 +12,7 @@
 
 ###############################################################################
 
-recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 2){
+recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 2, subunits = NULL){
   
   # check consistency of inputs
   if (nMbi < 1) {
@@ -22,6 +22,16 @@ recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 
   if (is.numeric(id)) {
     id <- colnames(dat)[id]
   }  
+  
+  if(!is.null(subunits)){
+    cat("Use names for recoded subunits.\n")
+    if (any(is.na(match(blocks$subunit, subunits$subunit)))){ 
+      cat("Found no names for recoded subunit(s) for subunit(s)" , blocks$subunit[which(is.na(match(blocks$subunit, subunits$subunit)))], 
+            "\nThis/Those subunit(s) will be ignored in determining 'mnr'.\n")
+      blocks <- blocks[ - which(is.na(match(blocks$subunit, subunits$subunit))), ]
+    }
+    blocks$subunit[na.omit(match(subunits$subunit, blocks$subunit))] <- subunits$subunitRecoded[ match(blocks$subunit, subunits$subunit) ]
+  }
   
   personsWithoutBooklets <- setdiff(dat[ , id], rotation[, id])
   if (length(personsWithoutBooklets) > 0){
