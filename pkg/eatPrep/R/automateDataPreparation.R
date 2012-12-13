@@ -1,7 +1,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # automateDataPreparation
 # Description: automates data preparation
-# Version: 	0.5.0
+# Version: 	0.6.0
 # Status: alpha
 # Release Date: 	2011-11-13
 # Author:    Karoline Sachse
@@ -56,9 +56,9 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 automateDataPreparation <- function ( datList = NULL, inputList, path = NULL, 
-						loadSav, checkData,  mergeData , recodeData, 
+						loadSav, checkData,  mergeData , recodeData, recodeMnr = FALSE,
 						aggregateData, scoreData, writeSpss, 
-						filedat = "zkddata.txt", filesps = "readZkdData.sps", 
+						filedat = "zkddata.txt", filesps = "readZkdData.sps", breaks=NULL,
 						aggregatemissings = "use.default", rename = TRUE, recodedData = TRUE, 
                         correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL, 
                         missing.rule = list ( mvi = 0 , mnr = 0 , mci = 0 , mbd = NA , mir = 0 , mbi = 0 ) ) {
@@ -98,6 +98,7 @@ automateDataPreparation <- function ( datList = NULL, inputList, path = NULL,
 		stopifnot(is.logical(checkData))
 		stopifnot(is.logical(mergeData))
 		stopifnot(is.logical(recodeData))
+		stopifnot(is.logical(recodeMnr))
 		stopifnot(is.logical(aggregateData))
 		stopifnot(is.logical(scoreData))
 		stopifnot(is.logical(writeSpss))
@@ -110,7 +111,7 @@ automateDataPreparation <- function ( datList = NULL, inputList, path = NULL,
 		}
 		
 		### ggf. sav-files einlesen
-		if( loadSav== TRUE ) {
+		if( loadSav) {
 			eatTools:::sunk ( "\n" )
 			eatTools:::sunk ( paste ( f.n , "Load .sav Files\n" ) )
 			if(!is.null(datList)) {
@@ -132,27 +133,37 @@ automateDataPreparation <- function ( datList = NULL, inputList, path = NULL,
 		if( is.null (oldIDs) ) {oldIDs <- inputList$savFiles$case.id}
 		stopifnot ( !is.null (oldIDs) )
 		
-		if( checkData == TRUE ) {
+		if( checkData ) {
 			eatTools:::sunk ( "\n" )
 			eatTools:::sunk ( paste ( f.n , "Check data...\n" ) )
 			mapply(checkData, datList, MoreArgs = list(inputList$values, inputList$subunits, inputList$units))
-		} else {eatTools:::sunk ( paste ( f.n , "Check was skipped\n" ) )}
+		} else {eatTools:::sunk ( paste ( f.n , "Check has been skipped\n" ) )}
 		
-		if( mergeData == TRUE ) {
+		if( mergeData ) {
 			eatTools:::sunk ( "\n" )
 			eatTools:::sunk ( paste ( f.n , "Start merging\n" ) )
-			if( loadSav== TRUE ) {oldIDs <- rep(newID, length(datList))}
+			if( loadSav) {oldIDs <- rep(newID, length(datList))}
 			if(is.null(newID)) {newID <- "ID"}
 			dat <- mergeData(newID = newID, datList = datList, oldIDs = oldIDs, addMbd=TRUE, writeLog=TRUE)
-		} else {eatTools:::sunk ( paste ( f.n , "Merge was skipped\n" ) )}
+		} else {eatTools:::sunk ( paste ( f.n , "Merge has been skipped\n" ) )}
 		
-		if( recodeData == TRUE ) {
+		if( recodeData ) {
 			eatTools:::sunk ( "\n" )
 			eatTools:::sunk ( paste ( f.n , "Start recoding\n" ) )
 			dat <- recodeData (dat= dat, values=inputList$values, subunits=inputList$subunits)
-		} else {eatTools:::sunk ( paste ( f.n , "Recode was skipped\n" ) )}
+		} else {eatTools:::sunk ( paste ( f.n , "Recode has been skipped\n" ) )}
+		
+		if( recodeMnr ) {
+			eatTools:::sunk ( "\n" )
+			eatTools:::sunk ( paste ( f.n , "Start recoding Mbi to Mnr\n" ) )
+			if(is.null(inputList$booklets)) {eatTools:::sunk ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$booklets. Data frame not available!\n" ) ); stop()}
+			if(is.null(inputList$blocks)) {eatTools:::sunk ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$blocks. Data frame not available!\n" ) ); stop()}
+			if(is.null(inputList$rotation)) {eatTools:::sunk ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$rotation. Data frame not available!\n" ) ); stop()}
+			dat <- recodeMbiToMnr(dat = dat, id = newID, booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, breaks, nMbi = 2, subunits = inputList$subunits)
+		} else {eatTools:::sunk ( paste ( f.n , "RecodeMnr has been skipped\n" ) )}
+						
 			
-		if( aggregateData == TRUE ) {
+		if( aggregateData ) {
 			eatTools:::sunk ( "\n" )
 			eatTools:::sunk ( paste ( f.n , "Start aggregating\n" ) )
 			if ( aggregatemissings == "seeInputList" ) {
@@ -164,15 +175,15 @@ automateDataPreparation <- function ( datList = NULL, inputList, path = NULL,
 			}		
 			dat <- aggregateData (dat=dat, subunits=inputList$subunits, units=inputList$units,
             aggregatemissings = aggregatemissings, rename = rename, recodedData = recodedData)
-		} else {eatTools:::sunk ( paste ( f.n , "Aggregate was skipped\n" ) )}
+		} else {eatTools:::sunk ( paste ( f.n , "Aggregate has been skipped\n" ) )}
 		
-		if( scoreData == TRUE ) {
+		if( scoreData ) {
 			eatTools:::sunk ( "\n" )
 			eatTools:::sunk ( paste ( f.n , "Start scoring\n" ) )
 			dat <- recodeData (dat= dat, values=inputList$unitRecodings, subunits=inputList$units)
-		} else {eatTools:::sunk ( paste ( f.n , "Score was skipped\n" ) )}
+		} else {eatTools:::sunk ( paste ( f.n , "Scoring has been skipped\n" ) )}
 	
-		if( writeSpss == TRUE ) {
+		if( writeSpss ) {
 			eatTools:::sunk ( "\n" )
 			eatTools:::sunk ( paste ( f.n , "Writing dataset in last transformation status to disk\n" ) )
 			if (class(dat) != "data.frame") {

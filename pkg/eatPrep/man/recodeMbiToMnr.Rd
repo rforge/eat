@@ -70,9 +70,9 @@ data(inputList)
 
 prepDat <- automateDataPreparation (inputList = inputList, datList = inputDat,
         loadSav = FALSE, checkData=FALSE, mergeData = TRUE, recodeData=TRUE, 
-		aggregateData=TRUE, scoreData= TRUE, writeSpss=FALSE)
+		aggregateData=FALSE, scoreData= FALSE, writeSpss=FALSE)
 
-mnrDat <- recodeMbiToMnr (dat = prepDat, id = "ID", booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, breaks = c(1, 2), nMbi = 2)
+mnrDat <- recodeMbiToMnr (dat = prepDat, id = "ID", booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, breaks = c(1, 2), nMbi = 2, subunits = inputList$subunits)
 
 }
 

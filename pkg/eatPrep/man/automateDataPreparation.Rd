@@ -7,8 +7,8 @@ prepare datasets for \code{automateModels}
 }
 \usage{
 automateDataPreparation( datList = NULL, inputList, path = NULL, loadSav,
-checkData, mergeData, recodeData,	aggregateData, scoreData, writeSpss,
-filedat = "zkddata.txt", filesps = "readZkdData.sps",
+checkData, mergeData, recodeData, recodeMnr=FALSE, aggregateData, scoreData, writeSpss,
+filedat = "zkddata.txt", filesps = "readZkdData.sps", breaks = NULL,
 aggregatemissings = "use.default", rename = TRUE, recodedData = TRUE,
 correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL,
 missing.rule = list(mvi=0, mnr=0, mci=0, mbd=NA, mir=0, mbi=0))
@@ -38,6 +38,9 @@ logical (whether function \code{\link{mergeData}} shall be called).
   \item{recodeData}{
 logical (whether function \code{\link{recodeData}} shall be called for subunits).
 }
+  \item{recodeMnr}{
+logical (whether function \code{\link{recodeMbiToMnr}} shall be called for subunits).
+}
   \item{aggregateData}{
 logical (whether function \code{\link{aggregateData}} shall be called).
 }
@@ -54,6 +57,9 @@ by \code{\link{writeSpss}}.
   \item{filesps}{
 A character string with the name of the output syntax file required
 by \code{\link{writeSpss}}.
+}
+ \item{breaks}{
+Numeric vector (argument used by \code{\link{recodeMbiToMnr}}).
 }
 \item{missing.rule}{
 A list containing recode information for character missings required
@@ -113,8 +119,8 @@ data(inputList)
 data(inputDat)
 test <- automateDataPreparation(inputList = inputList, datList = inputDat,
         path = "c:/temp/test_eat", loadSav = FALSE, checkData=TRUE,
-        mergeData = TRUE, recodeData=TRUE, aggregateData=TRUE, scoreData= TRUE,
-        writeSpss=TRUE)
+        mergeData = TRUE, recodeData=TRUE, recodeMnr = TRUE, breaks = c(1,2),
+		aggregateData=TRUE, scoreData= TRUE, writeSpss=TRUE)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

@@ -1,16 +1,26 @@
 
 
-checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="ID") {
+checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="ID", subunits = NULL) {
 
-	funVersion <- "checkDesign 0.0.3"
+	funVersion <- "checkDesign 0.0.4"
 
 	if (is.na(match(id, colnames(dat)))) {
 		stop(paste(funVersion, " ID variable '", id, "' not found in dataset.", sep = "")) }
 
-	# Ausgabe, welche Variablen bei Check ignoriert werden:		
 	blocks <- eatTools:::set.col.type(blocks, col.type = list ( "character" = names(blocks) ))
 	booklets <- eatTools:::set.col.type(booklets, col.type = list ( "character" = names(booklets) ))
 	rotation <- eatTools:::set.col.type(rotation, col.type = list ( "character" = names(rotation) ))
+	
+	if(!is.null(subunits)){
+		cat("Use names for recoded subunits.\n")
+		if (any(is.na(match(blocks$subunit, subunits$subunit)))){ 
+		  cat("Found no names for recoded subunit(s) for subunit(s)" , blocks$subunit[which(is.na(match(blocks$subunit, subunits$subunit)))], 
+				"\nThis/Those subunit(s) will be ignored in determining 'mnr'.\n")
+		  blocks <- blocks[ - which(is.na(match(blocks$subunit, subunits$subunit))), ]
+		}
+		blocks$subunit[na.omit(match(subunits$subunit, blocks$subunit))] <- subunits$subunitRecoded[ match(blocks$subunit, subunits$subunit) ]
+	}
+	
 	gibsNich <- setdiff(names(dat),c(id,blocks$subunit))
 	if (length(gibsNich) > 0) {
 		cat(paste(cat(funVersion, " The following variables are not in info (subunits in blocks) but in dataset. \nThey will be ignored during check: \n"), paste(gibsNich, collapse = ", "), sep = ""), "\n")
