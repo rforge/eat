@@ -58,7 +58,7 @@
 automateDataPreparation <- function ( datList = NULL, inputList, path = NULL, 
 						loadSav, checkData,  mergeData , recodeData, recodeMnr = FALSE,
 						aggregateData, scoreData, writeSpss, 
-						filedat = "zkddata.txt", filesps = "readZkdData.sps", breaks=NULL,
+						filedat = "zkddata.txt", filesps = "readZkdData.sps", breaks=NULL, nMbi = 2,
 						aggregatemissings = "use.default", rename = TRUE, recodedData = TRUE, 
                         correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL, 
                         missing.rule = list ( mvi = 0 , mnr = 0 , mci = 0 , mbd = NA , mir = 0 , mbi = 0 ) ) {
@@ -159,7 +159,7 @@ automateDataPreparation <- function ( datList = NULL, inputList, path = NULL,
 			if(is.null(inputList$booklets)) {eatTools:::sunk ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$booklets. Data frame not available!\n" ) ); stop()}
 			if(is.null(inputList$blocks)) {eatTools:::sunk ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$blocks. Data frame not available!\n" ) ); stop()}
 			if(is.null(inputList$rotation)) {eatTools:::sunk ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$rotation. Data frame not available!\n" ) ); stop()}
-			dat <- recodeMbiToMnr(dat = dat, id = newID, booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, breaks, nMbi = 2, subunits = inputList$subunits)
+			dat <- recodeMbiToMnr(dat = dat, id = newID, booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, breaks, nMbi = nMbi, subunits = inputList$subunits)
 		} else {eatTools:::sunk ( paste ( f.n , "RecodeMnr has been skipped\n" ) )}
 						
 			

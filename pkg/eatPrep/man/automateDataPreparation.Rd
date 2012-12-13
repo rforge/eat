@@ -8,7 +8,7 @@ prepare datasets for \code{automateModels}
 \usage{
 automateDataPreparation( datList = NULL, inputList, path = NULL, loadSav,
 checkData, mergeData, recodeData, recodeMnr=FALSE, aggregateData, scoreData, writeSpss,
-filedat = "zkddata.txt", filesps = "readZkdData.sps", breaks = NULL,
+filedat = "zkddata.txt", filesps = "readZkdData.sps", breaks = NULL, nMbi = 2,
 aggregatemissings = "use.default", rename = TRUE, recodedData = TRUE,
 correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL,
 missing.rule = list(mvi=0, mnr=0, mci=0, mbd=NA, mir=0, mbi=0))
@@ -60,6 +60,9 @@ by \code{\link{writeSpss}}.
 }
  \item{breaks}{
 Numeric vector (argument used by \code{\link{recodeMbiToMnr}}).
+}
+ \item{nMbi}{
+Numeric (argument used by \code{\link{recodeMbiToMnr}}).
 }
 \item{missing.rule}{
 A list containing recode information for character missings required
