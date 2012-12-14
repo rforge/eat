@@ -1,5 +1,5 @@
 # importFrom(eatTools, sunk)
-importFrom(eatRest, collapseMissings)
+importFrom(eatTools, collapseMissings)
 importFrom(eatTools, set.col.type)
 importFrom(eatTools, crop)
 importFrom(car, recode)
