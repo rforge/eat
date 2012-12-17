@@ -9,7 +9,7 @@ prepare datasets for \code{automateModels}
 automateDataPreparation( datList = NULL, inputList, path = NULL, loadSav,
 checkData, mergeData, recodeData, recodeMnr=FALSE, aggregateData, scoreData, writeSpss,
 filedat = "zkddata.txt", filesps = "readZkdData.sps", breaks = NULL, nMbi = 2,
-aggregatemissings = "use.default", rename = TRUE, recodedData = TRUE,
+aggregatemissings = NULL, rename = TRUE, recodedData = TRUE,
 correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL,
 missing.rule = list(mvi=0, mnr=0, mci=0, mbd=NA, mir=0, mbi=0))
 }
@@ -69,8 +69,7 @@ A list containing recode information for character missings required
 by \code{\link{writeSpss}}. See 'References' for description of default values.}
 
   \item{aggregatemissings}{
-A character string. Either \code{"use.default"} or \code{"seeInputList"}, if
-pattern was specified in \code{inputList$aggrMiss}.
+A symmetrical \emph{n x n} matrix or a data frame from \code{inputList$aggrMiss} with information on how missing values should be aggregated. If no matrix is given, the default will be used. See 'Details' in \code{\link{aggregateData}}.
 }
   \item{rename}{
 logical. See \code{\link{aggregateData}}.

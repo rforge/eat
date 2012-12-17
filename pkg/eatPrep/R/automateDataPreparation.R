@@ -59,7 +59,7 @@ automateDataPreparation <- function ( datList = NULL, inputList, path = NULL,
 						loadSav, checkData,  mergeData , recodeData, recodeMnr = FALSE,
 						aggregateData, scoreData, writeSpss, 
 						filedat = "zkddata.txt", filesps = "readZkdData.sps", breaks=NULL, nMbi = 2,
-						aggregatemissings = "use.default", rename = TRUE, recodedData = TRUE, 
+						aggregatemissings = NULL, rename = TRUE, recodedData = TRUE, 
                         correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL, 
                         missing.rule = list ( mvi = 0 , mnr = 0 , mci = 0 , mbd = NA , mir = 0 , mbi = 0 ) ) {
 							 
@@ -166,13 +166,13 @@ automateDataPreparation <- function ( datList = NULL, inputList, path = NULL,
 		if( aggregateData ) {
 			eatTools:::sunk ( "\n" )
 			eatTools:::sunk ( paste ( f.n , "Start aggregating\n" ) )
-			if ( aggregatemissings == "seeInputList" ) {
-				stopifnot(!is.null(inputList$aggrMiss))
-				aMiss <- unname(inputList$aggrMiss)
-				aMiss[,8] <- rep("err", 7)
-				aMiss[8,] <- rep("err", 8)
-				aggregatemissings <- as.matrix(aMiss, nrow=8, ncol=8)
-			}		
+#			if ( aggregatemissings == "seeInputList" ) {
+#				stopifnot(!is.null(inputList$aggrMiss))
+#				aMiss <- unname(inputList$aggrMiss)
+#				aMiss[,8] <- rep("err", 7)
+#				aMiss[8,] <- rep("err", 8)
+#				aggregatemissings <- as.matrix(aMiss, nrow=8, ncol=8)
+#			}		
 			dat <- aggregateData (dat=dat, subunits=inputList$subunits, units=inputList$units,
             aggregatemissings = aggregatemissings, rename = rename, recodedData = recodedData)
 		} else {eatTools:::sunk ( paste ( f.n , "Aggregate has been skipped\n" ) )}

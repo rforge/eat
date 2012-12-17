@@ -37,7 +37,7 @@
 # - Pattern aggregation implementieren
 # - wenn rename = TRUE: auch nach unrekodiertem Subitemnamen suchen
 
-aggregateData <- function (dat, subunits, units, aggregatemissings = "use.default", rename = FALSE, recodedData = TRUE) {
+aggregateData <- function (dat, subunits, units, aggregatemissings = NULL, rename = FALSE, recodedData = TRUE) {
   
   funVersion <- "aggregateData: "
 
@@ -57,9 +57,20 @@ aggregateData <- function (dat, subunits, units, aggregatemissings = "use.defaul
   }
   
   # define missing aggregation
-  if ( ! is.matrix (aggregatemissings)) {
-	  if (aggregatemissings == "use.default") {
-		aggregatemissings <- matrix(c(
+  if ((is.null(aggregatemissings)|is.data.frame(aggregatemissings)|is.matrix(aggregatemissings)) == FALSE){
+	stop("aggregatemissings is neither NULL nor a matrix nor a data.frame.")
+  }	
+  
+  if (is.matrix(aggregatemissings)){
+	am <- aggregatemissings
+  } else {
+	if ( is.data.frame(aggregatemissings)) {
+		am <- as.matrix(aggregatemissings[-1])
+		dimnames(am) <- list(aggregatemissings[, 1], colnames(aggregatemissings)[-1])
+	}
+  }
+  if ( is.null(aggregatemissings)) {
+		am <- matrix(c(
 								"vc" , "mvi", "vc" , "mci", "err", "vc" , "vc" , "err",
 								"mvi", "mvi", "err", "mci", "err", "err", "err", "err",
 								"vc" , "err", "mnr", "mci", "err", "mir", "mnr", "err",           
@@ -70,11 +81,15 @@ aggregateData <- function (dat, subunits, units, aggregatemissings = "use.defaul
 								"err", "err", "err", "err", "err", "err", "err", "err" ),
 								nrow = 8, ncol = 8, byrow = TRUE) 
 
-		dimnames(aggregatemissings) <- 
+		dimnames(am) <- 
                 list(c("vc" ,"mvi", "mnr", "mci",  "mbd", "mir", "mbi", "err"), 
 										c("vc" ,"mvi", "mnr", "mci",  "mbd", "mir", "mbi", "err"))      
-	  } 
-  }  
+  }
+  
+  if(!isSymmetric(am)){
+	warning("Matrix used for missing aggregation is not symmetrical. This may lead to unexpected results.")
+  }
+	
   # which subunits should be aggregated?
   unitsToAggregate <- names(aggregateinfo)
   subunitsToAggregate <- unname(unlist(lapply(aggregateinfo, "[[", "subunits")))
@@ -101,7 +116,7 @@ aggregateData <- function (dat, subunits, units, aggregatemissings = "use.defaul
   }  
     
   # erstelle aggregierten Datensatz der Units, die aggregiert werden
-  unitsAggregated <- mapply(aggregateData.aggregate, unitsToAggregate, aggregateinfo, MoreArgs = list(aggregatemissings, dat))
+  unitsAggregated <- mapply(aggregateData.aggregate, unitsToAggregate, aggregateinfo, MoreArgs = list(am, dat))
   
  if(!missing(unitsAggregated)){
 	datAggregated <- cbind(datAggregated, unitsAggregated, stringsAsFactors = FALSE)	
