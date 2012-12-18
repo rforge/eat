@@ -86,7 +86,7 @@ makeInputLists <- function (values, subunits, units, recodedData = TRUE) {
 makeInputCheckData <- function (values, subunits, units) {
 
   checkedInput  <- checkInput(values = values, subunits = subunits, units = units)  
-  
+
   # make varinfo
   varinfoRaw        <- .makeVarinfoRaw(checkedInput$values, checkedInput$subunits)
   varinfoRecoded    <- .makeVarinfoRecoded(checkedInput$values, checkedInput$subunits)

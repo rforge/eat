@@ -66,7 +66,7 @@
 	checkData <- function (dat, values, subunits, units) {
 	  funVersion <- "checkData: "	 
 		varinfo <- makeInputCheckData (values, subunits, units)
-		
+
 		if (class(dat) != "data.frame") {
 			stop (paste(funVersion, "dat must be a data.frame.", sep = ""))
 		}

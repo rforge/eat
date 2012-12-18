@@ -36,7 +36,6 @@ readSpss <- function (file, correctDigits=FALSE, truncateSpaceChar = TRUE, oldID
            	
   suppressWarnings( dat <- data.frame(read.spss(file.path(file),to.data.frame=FALSE, use.value.labels=FALSE), stringsAsFactors=FALSE) )
 
-
 	if (!is.null(newID)){
 		if(length(newID)!=1) {
 			stop("'newID' has to be of length 1.") 
@@ -44,10 +43,10 @@ readSpss <- function (file, correctDigits=FALSE, truncateSpaceChar = TRUE, oldID
 
 		if (!is.null(oldIDs)){
 			idCol  <- na.omit(match(oldIDs, colnames(dat)))
-			if(length(idCol)<1) {
+			if(length(na.omit(match(colnames(dat), oldIDs)))<1) {
 				stop("None of the specified 'oldIDs' were found in dataset.") 
 			}
-			if(length(idCol)>1) {
+			if(length(na.omit(match(colnames(dat), oldIDs)))>1) {
 				stop("More than one of the specified 'oldIDs' were found in dataset.") 
 			}
 			colnames(dat)[idCol] <- newID

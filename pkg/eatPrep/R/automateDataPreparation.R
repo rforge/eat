@@ -109,7 +109,7 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 			stopifnot(readSpss == TRUE)
 			stopifnot(class(inputList$savFiles) == "data.frame")
 		}
-		
+
 		### ggf. sav-files einlesen
 		if( readSpss) {
 			eatTools:::sunk ( "\n" )
@@ -127,18 +127,18 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 			if( is.null (newID) ) {newID <- "ID"}
 			dat <- datList <- lapply(file.path (folder.e, savFiles), readSpss,
                   correctDigits=correctDigits, truncateSpaceChar = truncateSpaceChar, oldIDs = oldIDs, newID = newID )
-		} 			
+		} 				
 		stopifnot ( class ( datList ) == "list" )		
 		stopifnot ( class ( inputList ) == "list" )
 		if( is.null (oldIDs) ) {oldIDs <- inputList$savFiles$case.id}
 		stopifnot ( !is.null (oldIDs) )
-		
+
 		if( checkData ) {
 			eatTools:::sunk ( "\n" )
 			eatTools:::sunk ( paste ( f.n , "Check data...\n" ) )
 			mapply(checkData, datList, MoreArgs = list(inputList$values, inputList$subunits, inputList$units))
 		} else {eatTools:::sunk ( paste ( f.n , "Check has been skipped\n" ) )}
-		
+
 		if( mergeData ) {
 			eatTools:::sunk ( "\n" )
 			eatTools:::sunk ( paste ( f.n , "Start merging\n" ) )
