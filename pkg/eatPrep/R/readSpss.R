@@ -28,12 +28,12 @@
                           
 ### ACHTUNG! read.spss liest Dateinamen manchmal durchgaengig in Groﬂ-, manchmal in Kleinbuchstaben ein. Problem!
 
-readSpss <- function (file, correctDigits=FALSE, truncateSpaceChar = TRUE, oldIDs = NULL, newID = NULL ) {
+readSpss <- function (file, correctDigits=FALSE, truncateSpaceChar = TRUE, oldID = NULL, newID = NULL ) {
 
   if(file.exists(file) != TRUE) {
     stop("Could not find file.\n")
   }  
-           	
+   	
   suppressWarnings( dat <- data.frame(read.spss(file.path(file),to.data.frame=FALSE, use.value.labels=FALSE), stringsAsFactors=FALSE) )
 
 	if (!is.null(newID)){
@@ -41,13 +41,13 @@ readSpss <- function (file, correctDigits=FALSE, truncateSpaceChar = TRUE, oldID
 			stop("'newID' has to be of length 1.") 
 		}   
 
-		if (!is.null(oldIDs)){
-			idCol  <- na.omit(match(oldIDs, colnames(dat)))
-			if(length(na.omit(match(colnames(dat), oldIDs)))<1) {
-				stop("None of the specified 'oldIDs' were found in dataset.") 
+		if (!is.null(oldID)){
+			idCol  <- na.omit(match(oldID, colnames(dat)))
+			if(length(na.omit(match(colnames(dat), oldID)))<1) {
+				stop("Specified 'oldID' wasn't found in dataset.") 
 			}
-			if(length(na.omit(match(colnames(dat), oldIDs)))>1) {
-				stop("More than one of the specified 'oldIDs' were found in dataset.") 
+			if(length(na.omit(match(colnames(dat), oldID)))>1) {
+				stop("Specified 'oldID' was found more than once in dataset.") 
 			}
 			colnames(dat)[idCol] <- newID
 		}

@@ -125,8 +125,8 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 				}
 			}
 			if( is.null (newID) ) {newID <- "ID"}
-			dat <- datList <- lapply(file.path (folder.e, savFiles), readSpss,
-                  correctDigits=correctDigits, truncateSpaceChar = truncateSpaceChar, oldIDs = oldIDs, newID = newID )
+			dat <- datList <- mapply(readSpss, file = file.path (folder.e, savFiles), oldID = oldIDs,
+                  MoreArgs = list(correctDigits=correctDigits, truncateSpaceChar = truncateSpaceChar, newID = newID ))
 		} 				
 		stopifnot ( class ( datList ) == "list" )		
 		stopifnot ( class ( inputList ) == "list" )
