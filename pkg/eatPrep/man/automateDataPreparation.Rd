@@ -6,13 +6,14 @@
 prepare datasets for \code{automateModels}
 }
 \usage{
-automateDataPreparation( datList = NULL, inputList, path = NULL, loadSav,
-checkData, mergeData, recodeData, recodeMnr=FALSE, aggregateData, scoreData, writeSpss,
-filedat = "zkddata.txt", filesps = "readZkdData.sps", breaks = NULL, nMbi = 2,
-aggregatemissings = NULL, rename = TRUE, recodedData = TRUE,
-correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL,
-missing.rule = list(mvi=0, mnr=0, mci=0, mbd=NA, mir=0, mbi=0))
-}
+automateDataPreparation(datList = NULL, inputList, path = NULL, 
+readSpss, checkData,  mergeData , recodeData, recodeMnr = FALSE,
+aggregateData, scoreData, writeSpss, 
+filedat = "mydata.txt", filesps = "readmydata.sps", breaks=NULL, nMbi = 2,
+aggregatemissings = NULL, rename = TRUE, recodedData = TRUE, 
+correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL, 
+missing.rule = list(mvi = 0, mnr = 0, mci = 0, mbd = NA, mir = 0, mbi = 0))
+            }
 \arguments{
   \item{datList}{
   A list of data frames if no .sav files shall be read in.
@@ -22,12 +23,12 @@ missing.rule = list(mvi=0, mnr=0, mci=0, mbd=NA, mir=0, mbi=0))
 }
   \item{path}{
 A character string containing the path where the logfolder will be created. Also
-required by \code{\link{loadSav}} (source of SPSS files) and
+required by \code{\link{readSpss}} (source of SPSS files) and
 \code{\link{writeSpss}}.
 Default is the current \R working directory.
 }
-  \item{loadSav}{
- logical (whether function \code{\link{loadSav}} shall be called).
+  \item{readSpss}{
+ logical (whether function \code{\link{readSpss}} shall be called).
 }
   \item{checkData}{
 logical (whether function \code{\link{checkData}} shall be called).
@@ -78,10 +79,10 @@ logical. See \code{\link{aggregateData}}.
 logical. See \code{\link{aggregateData}}.
 }
   \item{correctDigits}{
-logical. See \code{\link{loadSav}}.
+logical. See \code{\link{readSpss}}.
 }
   \item{truncateSpaceChar}{
-logical. See \code{\link{loadSav}}.
+logical. See \code{\link{readSpss}}.
 }
   \item{newID}{
 A character string containing the case IDs name in the final data frame. Default
@@ -92,6 +93,7 @@ inputList sheet 6 (see \code{\link{readDaemonXlsx}}).
 A vector of character strings containing the IDs names in the original datasets.
 Default is as specified in \code{inputList$savFiles}.
 }
+
 }
 \details{
 \code{inputList} is a list of data frames. It can be created either by ZKDaemon
@@ -120,11 +122,7 @@ Karoline Sachse
 data(inputList)
 data(inputDat)
 test <- automateDataPreparation(inputList = inputList, datList = inputDat,
-        path = "c:/temp/test_eat", loadSav = FALSE, checkData=TRUE,
+        path = "c:/temp/test_eat", readSpss = FALSE, checkData=TRUE,
         mergeData = TRUE, recodeData=TRUE, recodeMnr = TRUE, breaks = c(1,2),
-		aggregateData=TRUE, scoreData= TRUE, writeSpss=TRUE)
+		    aggregateData=TRUE, scoreData= TRUE, writeSpss=TRUE)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

@@ -41,17 +41,16 @@ For missing types see http://code.google.com/p/zkdlib/wiki/MissingHandling
 }
 	
 \examples{
-	data(inputDat)
-	data(inputList)
+data(inputDat)
+data(inputList)
 
-	dat1 <- inputDat[[1]]  # get first dataset from inputDat
+dat1 <- inputDat[[1]]  # get first dataset from inputDat
+
+# recode data
+datRec <- recodeData(dat1, inputList$values, inputList$subunits)
   
-  # recode data
-	datRec <- recodeData(dat1, inputList$values, inputList$subunits) # recode Data first
-  
-  # define matrix for missing aggregation (note: this is the default matrix)
-	am <- matrix(c(
-							"vc" , "mvi", "vc" , "mci", "err", "vc" , "vc" , "err",
+# define matrix for missing aggregation (note: this is the default matrix)
+am <- matrix(c("vc" , "mvi", "vc" , "mci", "err", "vc" , "vc" , "err",
 							"mvi", "mvi", "err", "mci", "err", "err", "err", "err",
 							"vc" , "err", "mnr", "mci", "err", "mir", "mnr", "err",           
 							"mci", "mci", "mci", "mci", "err", "mci", "mci", "err",
@@ -61,13 +60,12 @@ For missing types see http://code.google.com/p/zkdlib/wiki/MissingHandling
 							"err", "err", "err", "err", "err", "err", "err", "err" ),
 							nrow = 8, ncol = 8, byrow = TRUE) 
 
-	dimnames(am) <- 
-              list(c("vc" ,"mvi", "mnr", "mci",  "mbd", "mir", "mbi", "err"), 
+dimnames(am) <- list(c("vc" ,"mvi", "mnr", "mci",  "mbd", "mir", "mbi", "err"), 
 									c("vc" ,"mvi", "mnr", "mci",  "mbd", "mir", "mbi", "err")) 
   
-  print(am)
+print(am)
   
-	datAggr <- aggregateData(datRec, inputList$subunits, inputList$units, 
+datAggr <- aggregateData(datRec, inputList$subunits, inputList$units, 
             aggregatemissings = am, rename = TRUE, recodedData = TRUE)
 }
 

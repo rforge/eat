@@ -31,7 +31,7 @@
 #							~ [,2] 2nd column: ID name in corresponding .sav file
 #							~ [,3] 3rd column: 1st element contains 
 #		inputList (list of 3 dataframes): values, units, subunits 
-# 		loadSav (logical)
+# 		readSpss (logical)
 #		checkData
 #		mergeData
 #		recodeData
@@ -55,13 +55,13 @@
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-automateDataPreparation <- function ( datList = NULL, inputList, path = NULL, 
-						loadSav, checkData,  mergeData , recodeData, recodeMnr = FALSE,
+automateDataPreparation <- function(datList = NULL, inputList, path = NULL, 
+						readSpss, checkData,  mergeData , recodeData, recodeMnr = FALSE,
 						aggregateData, scoreData, writeSpss, 
-						filedat = "zkddata.txt", filesps = "readZkdData.sps", breaks=NULL, nMbi = 2,
+						filedat = "mydata.txt", filesps = "readmydata.sps", breaks=NULL, nMbi = 2,
 						aggregatemissings = NULL, rename = TRUE, recodedData = TRUE, 
-                        correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL, 
-                        missing.rule = list ( mvi = 0 , mnr = 0 , mci = 0 , mbd = NA , mir = 0 , mbi = 0 ) ) {
+            correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL, 
+            missing.rule = list(mvi = 0, mnr = 0, mci = 0, mbd = NA, mir = 0, mbi = 0)) {
 							 
 		### Funktionsname für Meldungen
 		f. <- "automateDataPreparation"
@@ -94,7 +94,7 @@ automateDataPreparation <- function ( datList = NULL, inputList, path = NULL,
 			stopifnot(is.character(newID))
 			stopifnot(length(newID) == 1)
 			}
-		stopifnot(is.logical(loadSav))
+		stopifnot(is.logical(readSpss))
 		stopifnot(is.logical(checkData))
 		stopifnot(is.logical(mergeData))
 		stopifnot(is.logical(recodeData))
@@ -106,26 +106,26 @@ automateDataPreparation <- function ( datList = NULL, inputList, path = NULL,
 		stopifnot(is.logical(truncateSpaceChar))
 		
 		if(is.null(datList)) {
-			stopifnot(loadSav == TRUE)
+			stopifnot(readSpss == TRUE)
 			stopifnot(class(inputList$savFiles) == "data.frame")
 		}
 		
 		### ggf. sav-files einlesen
-		if( loadSav) {
+		if( readSpss) {
 			eatTools:::sunk ( "\n" )
 			eatTools:::sunk ( paste ( f.n , "Load .sav Files\n" ) )
 			if(!is.null(datList)) {
-				eatTools:::sunk(paste ( f.n , "If loadSav == TRUE, datList will be ignored." ) )
+				eatTools:::sunk(paste ( f.n , "If readSpss == TRUE, datList will be ignored." ) )
 			}
 			savFiles <- inputList$savFiles$filename
-			if( is.null (oldIDs) ) {oldIDs <- inputList$savFiles$case.id}
-			if( is.null (newID) ) {
-				if( !is.null (inputList$newID$value[which(inputList$newID$key == "master-id")]) ) {
-					newID <- inputList$newID$value[which(inputList$newID$key == "master-id")]
-				}
-			}
+#			if( is.null (oldIDs) ) {oldIDs <- inputList$savFiles$case.id}
+#			if( is.null (newID) ) {
+#				if( !is.null (inputList$newID$value[which(inputList$newID$key == "master-id")]) ) {
+#					newID <- inputList$newID$value[which(inputList$newID$key == "master-id")]
+#				}
+#			}
 			if( is.null (newID) ) {newID <- "ID"}
-			dat <- datList <- loadSav(path = folder.e, savFiles = savFiles, oldIDS = oldIDs, newID = newID,
+			dat <- datList <- lapply(file.path (folder.e, savFiles), readSpss,
                   correctDigits=correctDigits, truncateSpaceChar = truncateSpaceChar )
 		} 			
 		stopifnot ( class ( datList ) == "list" )		
@@ -142,7 +142,7 @@ automateDataPreparation <- function ( datList = NULL, inputList, path = NULL,
 		if( mergeData ) {
 			eatTools:::sunk ( "\n" )
 			eatTools:::sunk ( paste ( f.n , "Start merging\n" ) )
-			if( loadSav) {oldIDs <- rep(newID, length(datList))}
+			# if( readSpss) {oldIDs <- rep(newID, length(datList))}
 			if(is.null(newID)) {newID <- "ID"}
 			dat <- mergeData(newID = newID, datList = datList, oldIDs = oldIDs, addMbd=TRUE, writeLog=TRUE)
 		} else {eatTools:::sunk ( paste ( f.n , "Merge has been skipped\n" ) )}
@@ -180,7 +180,7 @@ automateDataPreparation <- function ( datList = NULL, inputList, path = NULL,
 		if( scoreData ) {
 			eatTools:::sunk ( "\n" )
 			eatTools:::sunk ( paste ( f.n , "Start scoring\n" ) )
-			dat <- recodeData (dat= dat, values=inputList$unitRecodings, subunits=inputList$units)
+			dat <- scoreData (dat= dat, unitrecodings=inputList$unitRecodings, units=inputList$units)
 		} else {eatTools:::sunk ( paste ( f.n , "Scoring has been skipped\n" ) )}
 	
 		if( writeSpss ) {

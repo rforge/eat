@@ -1,5 +1,6 @@
 importFrom(xlsx,write.xlsx2)
 importFrom(psych,dummy.code)
+importFrom(car, recode)
 export(crop)
 export(commonItems)
 export(commonItems.percent)

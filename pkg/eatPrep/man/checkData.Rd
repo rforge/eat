@@ -10,7 +10,7 @@
   \item{units}{A data frame with unit information. See 'Details'.}
 }
 \details{
-The results of \code{checkData} will be written to a protocol file with \code{eatTools:::sunk}. 
+The results of \code{checkData} will be written to the console. 
 
 Examples of data frames \code{values}, \code{subunits} and \code{units} can be found via \code{data(inputList)}.
 }
@@ -21,17 +21,3 @@ Used for its side effects. The return value is NULL.
 For missing types see http://code.google.com/p/zkdlib/wiki/MissingHandling
 }
 \author{Nicole Haag, Anna Lenski}
-\note{
-%%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-\code{eatTools:::sunk}
-}
-
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

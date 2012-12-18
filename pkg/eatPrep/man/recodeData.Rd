@@ -41,14 +41,9 @@ Martin Hecht, Christiane Penk, Nicole Haag
 \examples{
 data(inputDat)
 data(inputList)
-# library(car) 
 
 dat1 <- inputDat[[1]]  # get first dataset from inputDat
 datRec <- recodeData(dat1, inputList$values, inputList$subunits)
 str(datRec)
 
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

@@ -29,6 +29,8 @@
 # Author:  Nicole Haag
 #
 # Change Log:
+# 2012-12-17 NH
+# CHANGED: removed definition of and calls to 'makeNumeric', using 'asNumericIfPossible' instead.
 # 2012-09-04 NH
 # CHANGED: removed calls to 'eatTools:::sunk'
 # 0000-00-00 AA
@@ -48,11 +50,11 @@
 
 #-----------------------------------------------------------------------------------------
 
-writeSpss <- function (dat, values, subunits, units, filedat = "zkddata.txt", filesps = "readZkdData.sps",
+writeSpss <- function (dat, values, subunits, units, filedat = "mydata.txt", filesps = "readmydata.sps",
   missing.rule = list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 ), 
   path = getwd(), sep = "\t", dec = ",", silent = FALSE) {
   
-  funVersion <- "writeSpss_0.2.0: "
+  funVersion <- "writeSpss: "
   
   varinfo <- makeInputCheckData (values, subunits, units)
   
@@ -75,28 +77,9 @@ writeSpss <- function (dat, values, subunits, units, filedat = "zkddata.txt", fi
            missing.rule = list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 ),
            varnames = colnames(dat), sep = sep, dec = dec)
   if (!silent) {
-    cat(paste(funVersion, "Data values written to", filedat, "\n"))
-    cat(paste(funVersion, "Syntax file written to", filesps, "\n"))
+    cat(paste(funVersion, "Data values written to ", filedat, "\n", sep = ""))
+    cat(paste(funVersion, "Syntax file written to ", filesps, "\n", sep = ""))
   }
-}
-
-#-----------------------------------------------------------------------------------------
-
-adQuote <- function (x) {
- x <- paste("\"", x, "\"", sep = "")
- return(x) 
-}
-
-#-----------------------------------------------------------------------------------------
-
-makeNumeric <- function(variable) {
-  if (is.character(variable)) {   
-    nCharacter <- grep("[[:alpha:]]", variable)
-      if (length(nCharacter) == 0) {
-        variable <- as.numeric(variable)
-      }
-  }
-  return(variable)
 }
 
 #-----------------------------------------------------------------------------------------
@@ -108,7 +91,7 @@ zkdWriteForeignSPSS <- function(dat, varinfo, datafile, codefile,
   funVersion <- "writeSpss: "
   
   # make vars numeric (if possible)
-  dat <- data.frame(lapply(dat, makeNumeric), stringsAsFactors = FALSE)
+  dat <- data.frame(eatTools:::asNumericIfPossible(dat))
   eol <- paste(sep, "\n", sep = "")
   
   # write dataset
@@ -172,12 +155,12 @@ zkdWriteForeignSPSS <- function(dat, varinfo, datafile, codefile,
       freefield <- " free (TAB)\n"
   if (sep != "\t")
       freefield <- cat(" free (\"", sep, "\")\n", sep = "")
-  cat("DATA LIST FILE=", adQuote(datafile), freefield,
+  cat("DATA LIST FILE=", foreign:::adQuote(datafile), freefield,
       file = codefile)
   cat(" /", dl.varnames, ".\n\n", file = codefile, append = TRUE,
       fill = 60, labels = " ")
   cat("VARIABLE LABELS\n", file = codefile, append = TRUE)
-  cat(" ", paste(varnames, adQuote(varlabels), "\n"), ".\n",
+  cat(" ", paste(varnames, foreign:::adQuote(varlabels), "\n"), ".\n",
       file = codefile, append = TRUE)
 
   # get value labels from varinfo
@@ -202,7 +185,7 @@ zkdWriteForeignSPSS <- function(dat, varinfo, datafile, codefile,
         valueLabels <- substring(valueLabels, 1, 120)
         }   
       cat(paste("  ", names(valueLabels),
-      adQuote(valueLabels),"\n",  sep = " "), file = codefile,
+      foreign:::adQuote(valueLabels),"\n",  sep = " "), file = codefile,
       append = TRUE)
     }
     cat(" .\n", file = codefile, append = TRUE)

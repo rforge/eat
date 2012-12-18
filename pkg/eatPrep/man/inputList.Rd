@@ -85,7 +85,7 @@ A list with three data frames:
 								produced by \code{\link{recodeData}}.}
     }
 
-        \item savFiles: information for \code{\link{loadSav}}, contains the following columns:
+        \item savFiles: information for \code{\link{readSpss}}, contains the following columns:
 
 	\describe{
       \item{filename}{SPSS filenames}

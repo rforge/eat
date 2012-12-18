@@ -26,7 +26,7 @@ recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 
   if(!is.null(subunits)){
     cat("Use names for recoded subunits.\n")
     if (any(is.na(match(blocks$subunit, subunits$subunit)))){ 
-      cat("Found no names for recoded subunit(s) for subunit(s)" , blocks$subunit[which(is.na(match(blocks$subunit, subunits$subunit)))], 
+      cat("Found no names for recoded subunit(s) for subunit(s)" , paste(blocks$subunit[which(is.na(match(blocks$subunit, subunits$subunit)))], collapse = ", "), 
             "\nThis/Those subunit(s) will be ignored in determining 'mnr'.\n")
       blocks <- blocks[ - which(is.na(match(blocks$subunit, subunits$subunit))), ]
     }
@@ -130,7 +130,6 @@ recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 
 		  if (!is.null(toRecodeList[[jj]])) {
 			dat[ dat[ , id] == jj, which(colnames(dat) %in% toRecodeList[[jj]]) ] <- "mnr"
 		  # cat( dat[which(dat[ , id]  == jj), id], rev(toRecodeList[[jj]]), "\n")
-			flush.console()
 			dat.mis[ dat.mis[ , id] == jj, which(colnames(dat.mis) %in% toRecodeList[[jj]]) ] <- 2
 		  }
 		}

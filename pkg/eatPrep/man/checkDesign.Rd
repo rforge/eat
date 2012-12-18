@@ -27,15 +27,19 @@ data(inputDat)
 data(inputList)
 
 prepDat <- automateDataPreparation (inputList = inputList, datList = inputDat,
-        loadSav = FALSE, checkData=FALSE, mergeData = TRUE, recodeData=TRUE, 
-		aggregateData=FALSE, scoreData= FALSE, writeSpss=FALSE)
+           readSpss = FALSE, checkData=FALSE, mergeData = TRUE, recodeData=TRUE, 
+		       aggregateData=FALSE, scoreData= FALSE, writeSpss=FALSE)
 		
-checkDesign(dat = prepDat, booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, sysMis = "mbd", id="ID", subunits = inputList$subunits)
+checkDesign(dat = prepDat, booklets = inputList$booklets, blocks = inputList$blocks, 
+            rotation = inputList$rotation, sysMis = "mbd", id="ID", 
+            subunits = inputList$subunits)
 
 prepDat[1:7,"I22R"] <- "1"
 prepDat[1,c("I01R","I02R","I03R")] <- "mbd"
 
-checkDesign(dat = prepDat, booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, sysMis = "mbd", id="ID", subunits = inputList$subunits)
+checkDesign(dat = prepDat, booklets = inputList$booklets, blocks = inputList$blocks, 
+            rotation = inputList$rotation, sysMis = "mbd", id="ID", 
+            subunits = inputList$subunits)
 
 }
 
@@ -44,5 +48,5 @@ checkDesign(dat = prepDat, booklets = inputList$booklets, blocks = inputList$blo
 
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+%\keyword{ ~kwd1 }
+%\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
