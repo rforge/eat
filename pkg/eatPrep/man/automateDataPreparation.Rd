@@ -96,9 +96,8 @@ Default is as specified in \code{inputList$savFiles}.
 
 }
 \details{
-\code{inputList} is a list of data frames. It can be created either by ZKDaemon
-via \code{\link{readDaemonXlsx}} or by
-\code{\link{makeInputLists}}.
+\code{inputList} is a list of data frames. It can be created by ZKDaemon
+via \code{\link{readDaemonXlsx}}.
  Compulsory: units, subunits, values.
  Optional: unitRecodings, savFiles, newID, aggregateMissings.
 }

@@ -13,6 +13,8 @@
 # Change Log:
 # 2012-09-03 NH
 # ADDED: new function readSpss based on loadSav
+# 2012-12-18 NH
+# ADDED: optional renaming of IDs
 # 0000-00-00 AA
 # 2011-11-23 ZKD: stabilisiert
 # 2011_11_04 KS: unique (Z. 61), stringsAsFactors=FALSE (Z. 60)
@@ -26,14 +28,32 @@
                           
 ### ACHTUNG! read.spss liest Dateinamen manchmal durchgaengig in Groﬂ-, manchmal in Kleinbuchstaben ein. Problem!
 
-readSpss <- function (file, correctDigits=FALSE, truncateSpaceChar = TRUE ) {
+readSpss <- function (file, correctDigits=FALSE, truncateSpaceChar = TRUE, oldIDs = NULL, newID = NULL ) {
 
   if(file.exists(file) != TRUE) {
     stop("Could not find file.\n")
-  }   
-
+  }  
+           	
   suppressWarnings( dat <- data.frame(read.spss(file.path(file),to.data.frame=FALSE, use.value.labels=FALSE), stringsAsFactors=FALSE) )
 
+
+	if (!is.null(newID)){
+		if(length(newID)!=1) {
+			stop("'newID' has to be of length 1.") 
+		}   
+
+		if (!is.null(oldIDs)){
+			idCol  <- na.omit(match(oldIDs, colnames(dat)))
+			if(length(idCol)<1) {
+				stop("None of the specified 'oldIDs' were found in dataset.") 
+			}
+			if(length(idCol)>1) {
+				stop("More than one of the specified 'oldIDs' were found in dataset.") 
+			}
+			colnames(dat)[idCol] <- newID
+		}
+	}  
+	
   ### Leerzeichen abschnipseln 
   if(truncateSpaceChar == TRUE)  {
     dat <- do.call("data.frame", list(lapply(dat, crop), stringsAsFactors = FALSE ) )

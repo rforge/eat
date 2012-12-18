@@ -58,3 +58,5 @@ Always use the full path, otherwise SPSS may not be able to find the data file.}
 \references{http://code.google.com/p/zkdlib/wiki/MissingHandling}
 
 \author{Nicole Haag}
+
+\seealso{\code{\link{inputList}}}

@@ -15,7 +15,9 @@ scoreData(dat, unitrecodings, units)
   \item{units}{A data frame with unit information. See 'Details'.}
 }
 \details{
-\code{scoreData} scored data frames with special consideration of missing values. This function is very similar to \code{recodeData}, but with a few defaults that are sensible for scoring. \code{scoreData} will give warnings when incomplete scoring informations are found. Values without scoring information will NOT be scored!
+This function is very similar to \code{recodeData}, but with a few defaults that are more sensible for scoring.
+\code{scoreData} will give warnings when incomplete scoring informations are found. 
+Values without scoring information will not be scored!
 
 Examples of data frames \code{unitrecodings} and \code{units} can be found via \code{data(inputList)}
 
@@ -31,7 +33,7 @@ Nicole Haag
 }
 
 \seealso{
-	\code{\link{recodeData}}, \code{\link{automateDataPreparation}}
+	\code{\link{recodeData}}, \code{\link{automateDataPreparation}}, \code{\link{inputList}}
 }
 \examples{
 data(inputDat)

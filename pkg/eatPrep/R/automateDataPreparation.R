@@ -118,15 +118,15 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 				eatTools:::sunk(paste ( f.n , "If readSpss == TRUE, datList will be ignored." ) )
 			}
 			savFiles <- inputList$savFiles$filename
-#			if( is.null (oldIDs) ) {oldIDs <- inputList$savFiles$case.id}
-#			if( is.null (newID) ) {
-#				if( !is.null (inputList$newID$value[which(inputList$newID$key == "master-id")]) ) {
-#					newID <- inputList$newID$value[which(inputList$newID$key == "master-id")]
-#				}
-#			}
+			if( is.null (oldIDs) ) {oldIDs <- inputList$savFiles$case.id}
+			if( is.null (newID) ) {
+				if( !is.null (inputList$newID$value[which(inputList$newID$key == "master-id")]) ) {
+					newID <- inputList$newID$value[which(inputList$newID$key == "master-id")]
+				}
+			}
 			if( is.null (newID) ) {newID <- "ID"}
 			dat <- datList <- lapply(file.path (folder.e, savFiles), readSpss,
-                  correctDigits=correctDigits, truncateSpaceChar = truncateSpaceChar )
+                  correctDigits=correctDigits, truncateSpaceChar = truncateSpaceChar, oldIDs = oldIDs, newID = newID )
 		} 			
 		stopifnot ( class ( datList ) == "list" )		
 		stopifnot ( class ( inputList ) == "list" )
@@ -142,7 +142,7 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 		if( mergeData ) {
 			eatTools:::sunk ( "\n" )
 			eatTools:::sunk ( paste ( f.n , "Start merging\n" ) )
-			# if( readSpss) {oldIDs <- rep(newID, length(datList))}
+			if( readSpss) {oldIDs <- rep(newID, length(datList))}
 			if(is.null(newID)) {newID <- "ID"}
 			dat <- mergeData(newID = newID, datList = datList, oldIDs = oldIDs, addMbd=TRUE, writeLog=TRUE)
 		} else {eatTools:::sunk ( paste ( f.n , "Merge has been skipped\n" ) )}

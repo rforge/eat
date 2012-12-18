@@ -4,7 +4,7 @@
 Calculate Item Discrimination for Each Category of Categorical Variables
 }
 \description{
-\code{catPbc} calculates discrimination statistics for the categories of categorical variables. This information can be useful in determining which categories of an item are influencing the overall fit and discrimination and/or to find mistakes in recoding.
+\code{catPbc} calculates discrimination statistics for the categories of categorical variables, i.e. the correlations of each category with the total score on the test. This information can be useful in determining which categories of an item are influencing the overall fit and discrimination in item response scaling applications and/or to find mistakes in recoding.
 }
 
 \usage{
@@ -34,7 +34,7 @@ catPbc(datRaw, datRec, idRaw, idRec, context.vars, values, subunits, xlsx = NULL
 		Data frame with information about subunits, see \code{\link{inputList}} for details.
 	}
 	\item{xlsx}{
-		full path of excel to be written
+  Optional: Full path of Excel file for results.
 	}
 }
 \details{
