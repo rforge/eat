@@ -20,60 +20,72 @@
 
 
 asNumericIfPossible <- function(dat, set.numeric=TRUE, transform.factors=FALSE, maintain.factor.scores = TRUE, verbose=TRUE)   {
-            dat.name <- substitute(dat)
-            funVersion  <- "asNumericIfPossible_0.5.0"
-            originWarnLevel <- getOption("warn")
-            wasInputVector  <- FALSE
-            if(!"data.frame" %in% class(dat) ) {
-              if(verbose == TRUE) {cat(paste(funVersion, ": Convert argument 'dat' to class 'data.frame'.\n",sep=""))}
-              dat <- data.frame(dat, stringsAsFactors=FALSE)
-              wasInputVector <- ifelse(ncol(dat) == 1, TRUE, FALSE)
-            }
-            currentClasses <- sapply(dat, FUN=function(ii) {class(ii)})
-            summaryCurrentClasses <- names(table(currentClasses))
-            if ( verbose == TRUE)   {
-               cat(paste(funVersion, ": Object ", dat.name , " contains objects of ",length(summaryCurrentClasses), " class(es):\n    ",sep=""))
-               cat(paste(summaryCurrentClasses,collapse=", ")); cat("\n")
-            }
-            options(warn = -1)                                                  ### zuvor: schalte Warnungen aus!
-            numericable <- sapply(dat, FUN=function(ii)   {
-                  n.na.old       <- sum(is.na(ii))
-                  transformed    <- as.numeric(ii)
-                  transformed.factor <- as.numeric(as.character(ii))
-                  n.na.new       <- sum(is.na(transformed))
-                  n.na.new.factor <- sum(is.na(transformed.factor))
-                  ret            <- rbind(ifelse(n.na.old == n.na.new, TRUE, FALSE),ifelse(n.na.old == n.na.new.factor, TRUE, FALSE))
-                  if(transform.factors == FALSE)   {
-                     if(class(ii) == "factor")   {
-                        ret <- rbind(FALSE,FALSE)
-                     }
-                  }
-                  return(ret)})
-            options(warn = originWarnLevel)                                     ### danach: schalte Warnungen zur¸ck in Ausgangszustand
-            changeVariables <- colnames(dat)[numericable[1,]]
-            changeFactorWithIndices   <- NULL
-            if(transform.factors == TRUE & maintain.factor.scores == TRUE)   {
-               changeFactorWithIndices   <- names(which(sapply(changeVariables,FUN=function(ii) {class(dat[[ii]])=="factor"})))
-               changeFactorWithIndices   <- setdiff(changeFactorWithIndices, names(which(numericable[2,] == FALSE)) )
-               changeVariables           <- setdiff(changeVariables, changeFactorWithIndices)
-            }
-            if(length(changeVariables) >0)   {                                  ### hier werden alle Variablen (auch Faktoren, wenn maintain.factor.scores = FALSE) ggf. ge‰ndert
-               do <- paste ( mapply ( function ( ii ) { paste ( "try(dat$'" , ii , "' <- as.numeric(dat$'",ii, "'), silent=TRUE)" , sep = "" ) } , changeVariables  ) , collapse = ";" )
-               eval ( parse ( text = do ) )
-            }
-            if(length(changeFactorWithIndices) >0)   {                          ### hier werden ausschlieﬂlich FAKTOREN, wenn maintain.factor.scores = TRUE, ggf. ge‰ndert
-               do <- paste ( mapply ( function ( ii ) { paste ( "try(dat$'" , ii , "' <- as.numeric(as.character(dat$'",ii, "')), silent=TRUE)" , sep = "" ) } , changeFactorWithIndices  ) , collapse = ";" )
-               eval ( parse ( text = do ) )
-            }
-            if(set.numeric==FALSE) {return(numericable[1,])}
-            if(set.numeric==TRUE)  {
-              if(verbose == TRUE)      {
-                 if( sum ( numericable[1,] == FALSE ) > 0 )  {
-                     cat(paste("Returned object contains ", sum ( numericable[1,] == FALSE )," untransformed variable(s):\n    ",sep=""))
-                     cat(paste(colnames(dat)[as.numeric(which(numericable[1,] == FALSE))],collapse= ", ")); cat("\n")
-                 }
-              }
-              if(wasInputVector == TRUE) {dat <- unname(unlist(dat))}
-              return(dat)
-           }
-         }
+  dat.name <- substitute(dat)
+  funVersion  <- "asNumericIfPossible"
+  originWarnLevel <- getOption("warn")
+  wasInputVector  <- FALSE
+  if(!"data.frame" %in% class(dat) ) {
+    if(verbose == TRUE) {cat(paste(funVersion, ": Convert argument 'dat' to class 'data.frame'.\n",sep=""))}
+    dat <- data.frame(dat, stringsAsFactors=FALSE)
+    wasInputVector <- ifelse(ncol(dat) == 1, TRUE, FALSE)
+  }
+  currentClasses <- sapply(dat, FUN=function(ii) {class(ii)})
+  summaryCurrentClasses <- names(table(currentClasses))
+  if ( verbose == TRUE)   {
+    cat(paste(funVersion, ": Object ", dat.name , " contains objects of ",length(summaryCurrentClasses), " class(es):\n    ",sep=""))
+    cat(paste(summaryCurrentClasses,collapse=", ")); cat("\n")
+  }
+  options(warn = -1)                                                  ### zuvor: schalte Warnungen aus!
+  numericable <- sapply(dat, FUN=function(ii)   {
+                            n.na.old       <- sum(is.na(ii))
+                            transformed    <- as.numeric(ii)
+                            transformed.factor <- as.numeric(as.character(ii))
+                            n.na.new        <- sum(is.na(transformed))
+                            n.na.new.factor <- sum(is.na(transformed.factor))
+                            ret             <- rbind(ifelse(n.na.old == n.na.new, TRUE, FALSE), 
+                                                  ifelse(n.na.old == n.na.new.factor, TRUE, FALSE))
+                            if(transform.factors == FALSE) {
+                              if(class(ii) == "factor")   {
+                                ret <- rbind(FALSE,FALSE)
+                              }
+                            }
+                            return(ret)
+                            })
+  options(warn = originWarnLevel)                                     ### danach: schalte Warnungen zur¸ck in Ausgangszustand
+  changeVariables <- colnames(dat)[numericable[1,]]
+  changeFactorWithIndices   <- NULL
+  if(transform.factors == TRUE & maintain.factor.scores == TRUE)   {
+    changeFactorWithIndices   <- names(which(sapply(changeVariables,FUN=function(ii) {class(dat[[ii]])=="factor"})))
+    changeFactorWithIndices   <- setdiff(changeFactorWithIndices, names(which(numericable[2,] == FALSE)) )
+    changeVariables           <- setdiff(changeVariables, changeFactorWithIndices)
+  }
+  
+  ### hier werden alle Variablen (auch Faktoren, wenn maintain.factor.scores = FALSE) ggf. ge‰ndert
+  if(length(changeVariables) > 0)   {                                  
+    do <- paste(mapply(function(ii) {
+      paste("try(dat$'", ii , "' <- as.numeric(dat$'",ii, "'), silent=TRUE)" , sep = "" )}, changeVariables), collapse = ";" )
+    eval(parse(text = do))
+  }
+  
+  ### hier werden ausschlieﬂlich FAKTOREN, wenn maintain.factor.scores = TRUE, ggf. ge‰ndert
+  if(length(changeFactorWithIndices) >0)   {                          
+    do <- paste(mapply(function(ii){
+      paste("try(dat$'", ii , "' <- as.numeric(as.character(dat$'",ii, "')), silent=TRUE)", sep = "")}, changeFactorWithIndices), collapse = ";" )
+    eval(parse(text = do))
+  }
+
+  if(set.numeric == TRUE)  {
+    if(verbose == TRUE)      {
+      if( sum ( numericable[1,] == FALSE ) > 0 )  {
+          cat(paste("Returned object contains ", sum(numericable[1,] == FALSE )," untransformed variable(s):\n    ",sep=""))
+          cat(paste(colnames(dat)[as.numeric(which(numericable[1,] == FALSE))],collapse= ", ")); cat("\n")
+        }
+    }
+    if(wasInputVector == TRUE) {
+      dat <- unname(unlist(dat))
+    }
+    return(dat)
+  } else {
+    return(numericable[1,])
+  }
+}

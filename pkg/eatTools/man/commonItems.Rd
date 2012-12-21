@@ -1,68 +1,46 @@
 \name{commonItems}
 \alias{commonItems}
-%- Also NEED an '\alias' for EACH other topic documented here.
-\title{
-identify common items of groups
+\title{Identify Common Items for Several Groups
 }
 \description{
-This function identifies items that groups of persons have in common.
+This function identifies sets of items that have been administered to two groups of persons.
 }
 \usage{
-commonItems ( dat , group.var , na = NA , uncommon = FALSE , simplify = TRUE )
+commonItems(dat, group.var, na = NA, uncommon = FALSE, simplify = TRUE)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
 
-  \item{dat}{ data.frame }
-  \item{group.var}{ group variable in data.frame , eihter numeric indicator of column or column name }  
-  \item{na}{ missing specification }
-  \item{uncommon}{ if \code{TRUE} a vector of uncommon items is additionally returned }
-  \item{simplify}{ if \code{TRUE} a character vector is returned (only in case of 2 groups and uncommon=\code{FALSE}) }
+  \item{dat}{A data frame with item responses and a grouping variable.}
+  \item{group.var}{Name or column number of the group variable in \code{dat}}  
+  \item{na}{A character string indicating which value should be considered as not administered (missing by design)}
+  \item{uncommon}{ if \code{TRUE} a vector of items that have only been administered to one of the two groups is additionally returned. }
+  \item{simplify}{ if \code{TRUE} a character vector is returned (only in case of 2 groups and \code{uncommon=FALSE}) }
   
 }
 \details{
-\code{dat} must only contain the group variable and the items, if further variables are in \code{dat} they are treated as items
+\code{dat} must only contain the group variable and the items, if further variables 
+are in \code{dat} they are treated as items. If \code{group.var} specifies more than two groups,
+pairwise group comparisons are performed. 
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
-returns a list of all \code{group.var} combinations with character vectors of common item names
-if \code{uncommon=TRUE} a vector of uncommon (unique) items of each group is additionally returned
+returns a list of all \code{group.var} combinations with character vectors of common item names.
+If \code{uncommon=TRUE} a vector of uncommon (unique) items of each group is additionally returned.
 
-names of list are both group names concatenated by "|"
-
+The names of list elements are the two group names concatenated by "|".
 }
-\references{
-
-}
-\author{
-Martin Hecht
-}
-\note{
-%%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
+\author{Martin Hecht}
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{commonItems.percent}}
 }
 
 \examples{
 data(science1)
-d <- science1[,c("version",science1.items)]
+d <- science1[ , c("version", science1.items)]
 
 # common items are listed for each combination of groups
-str ( commonItems ( dat = d , group.var = "version" , na = "mbd" ) )
+str(commonItems(dat = d, group.var = "version", na = "mbd"))
 
 # uncommon items are returned as well
-str ( commonItems ( dat = d , group.var = "version" , na = "mbd" , uncommon = TRUE ) )
+str(commonItems(dat = d, group.var = "version", na = "mbd", uncommon = TRUE))
 }
-
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

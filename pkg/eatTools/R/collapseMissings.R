@@ -30,11 +30,10 @@
 
 collapseMissings.create.recode.string <- function ( missing.rule ) {
 
-		paste ( unname ( mapply ( function ( orig , neu ) {
+paste ( unname ( mapply ( function ( orig , neu ) {
 					if ( is.na ( neu ) ) paste ( "'" , orig , "'=" , as.character ( neu ) , sep="" ) else 
 						paste ( "'" , orig , "'='" , as.character ( neu ) , "'" , sep="" )
 			} , names( missing.rule ) , missing.rule , SIMPLIFY=TRUE ) ) , collapse = "; " )
-
 }
 
 collapseMissings <- function( dat , missing.rule = NULL , items = NULL){
@@ -87,7 +86,7 @@ collapseMissings <- function( dat , missing.rule = NULL , items = NULL){
 				else dat
 			} , dat , colnames ( dat ) , MoreArgs = list ( item.names.chr ) , SIMPLIFY = FALSE ) , stringsAsFactors=FALSE )	
 		} else {
-		eatTools:::sunk("collapseMissings found no character column in items - no missings collapsed !!! \n")
+		warning("None of the specified item columns is of class 'character'. collapseMissings did not collapse any missings.")
 		}
 		
 	return ( dat )

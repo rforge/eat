@@ -1,50 +1,25 @@
 \name{crop}
 \alias{crop}
-%- Also NEED an '\alias' for EACH other topic documented here.
-\title{
-crop
-}
+
+\title{Remove Trailing and Leading Characters From Character Strings}
+
 \description{
-remove trailing and leading characters from character strings
+Similarly to the function \code{trim} from the \code{gdata} package, this function
+can be used to remove trailing and leading spaces from character strings. However, 
+in contrast to \code{trim}, any character can be removed by \code{crop}.
 }
+
 \usage{
-crop ( x , char = " " )
+crop(x, char = " ")
 }
-%- maybe also 'usage' for other objects documented here.
+
 \arguments{
 
   \item{x}{ character string }
-  \item{char}{ character to be removed from beginning and end of \code{x} }
+  \item{char}{character to be removed from beginning and end of \code{x} }
 
 }
-%%\details{
-%%  ~~ If necessary, more details than the description above ~~
-%%}
-%%\value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
 
-%%}
-%%\references{
-
-%%}
 \author{
 Martin Hecht, Sebastian Weirich
 }
-%%\note{
-%%  ~~further notes~~
-%%}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-%%\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-%%}
-
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-%%\keyword{ ~kwd1 }
-%%\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
