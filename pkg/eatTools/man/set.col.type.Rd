@@ -1,26 +1,26 @@
 \name{set.col.type}
 \alias{set.col.type}
 \title{
-set type of variable in data.frame
+Set the Class of Columns in a Data Frame
 }
 \description{
-converts type of column(s) to "character" , "numeric" , "logical" , "integer" or "factor" 
+Convert the Class of Columns to  \code{character}, \code{numeric}, \code{logical}, \code{integer} or \code{factor} 
 }
 \usage{
 set.col.type(dat, col.type = list("character" = NULL), verbose = FALSE, ...)
 }
 \arguments{
-  \item{dat}{ data.frame }
-  \item{col.type}{ named list of variable names that are to be converted. names of list is conversion type ( "character" , "numeric" , "numeric.if.possible" , "logical" , "integer" or "factor" ) }
-  \item{verbose}{ if \code{TRUE} variables that have been converted are printed }
-  \item{...}{arguments to be passed to \link{asNumericIfPossible}}
+  \item{dat}{ A data frame }
+  \item{col.type}{A named list of column names that are to be converted. The names of the list indicate the class to which the respective column should be converted (\code{character}, \code{numeric}, \code{numeric.if.possible}, \code{logical}, \code{integer} or \code{factor}) }
+  \item{verbose}{ if \code{TRUE} details about converted columns are printed on the console}
+  \item{...}{Additional arguments to be passed to \link{asNumericIfPossible}}
 }
 \details{
-%% use \code{col.type="numeric.if.possible"} if conversion to numeric should be tested upfront, see \link{asNumericIfPossible} for details
-use \code{col.type="numeric.if.possible"} if conversion to numeric should be tested upfront, see asNumericIfPossible for details
+use \code{col.type="numeric.if.possible"} if conversion to numeric should be tested upfront, see \code{\link{asNumericIfPossible}} for details
+%use \code{col.type="numeric.if.possible"} if conversion to numeric should be tested upfront, see asNumericIfPossible for details
 }
 \value{
-
+A data frame with column classes changed according to the specifications in \code{col.type}
 }
 \author{
 Martin Hecht

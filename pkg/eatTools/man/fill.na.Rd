@@ -1,10 +1,10 @@
 \name{fill.na}
 \alias{fill.na}
 \title{
-fill NAs in a vector
+Replace Missing Values in a Vector
 }
 \description{
-fill NAs with non-NA values depending on left (forward) or right (backward) non-NA value
+Missing values in a vector are replaced by the last (forward) or next (backward) observed value.
 }
 \usage{
 fill.na(vec, backwards = FALSE, na.rm = FALSE)
@@ -12,14 +12,16 @@ fill.na(vec, backwards = FALSE, na.rm = FALSE)
 \arguments{
 
   \item{vec}{ a vector }
-  \item{backwards}{ if \code{FALSE} NAs are filled forward, if \code{TRUE} NAs are filled backwards }
-  \item{na.rm}{ if \code{TRUE} NAs at start and end of vector are removed }
+  \item{backwards}{ if \code{FALSE} NAs are replaced by the last observed value, if \code{TRUE} NAs are replaced by the next observed value }
+  \item{na.rm}{ if \code{TRUE} NAs at the start and end of vector are removed }
   
 }
 \details{
+In the clinical literature, the procedure of replacing a missing value with the last observed value is known as the "Last Observation Carried Forward" imputation technique. However, there is a large body of literature suggesting that this method may lead to biased estimates of means and covariances and should therefore be avoided for imputation.
+
 }
 \value{
-a vector with filled NAs
+A vector with replaced missing values.
 }
 
 \author{

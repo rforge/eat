@@ -1,25 +1,25 @@
 \name{rmNA}
 \alias{rmNA}
 \title{
-remove NA columns and rows from data
+Remove Columns and Rows with Missing Data
 }
 \description{
-remove columns and rows that are completely NA from data.frame or matrix
+Remove columns and rows that contain only missing values from a data frame or a matrix
 }
 \usage{
 rmNA(dat, remove = TRUE, verbose = FALSE)
 }
 \arguments{
 
-  \item{dat}{ data.frame or matrix }
-  \item{remove}{ if \code{TRUE} columns and rows are removed, if \code{FALSE} a list of identified columns and rows is returned }
-  \item{verbose}{ if \code{TRUE} removed columns and rows are printed on output window }
+  \item{dat}{ A data frame or a matrix }
+  \item{remove}{ if \code{TRUE} columns and rows containing only missing values are removed, if \code{FALSE} a list of identified columns and rows is returned}
+  \item{verbose}{ if \code{TRUE} the removed columns and rows are printed on the console. }
   
 }
-\details{
-}
+%\details{
+%}
 \value{
-depends on option \code{remove}
+Either a list indicating which columns and which rows in the data contain only missing values or a data frame or matrix in which all columns and rows containing only missing values are removed.
 }
 \author{
 Martin Hecht

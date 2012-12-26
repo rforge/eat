@@ -2,13 +2,11 @@
 \alias{make.dummies}
 
 \title{
-dummy coded variables
+Create Dummy Variables from a Data Frame
 }
 
 \description{
-creates dummy coded variables using \link[psych]{dummy.code}
-names of dummy coded variables can be customized
-and added to the input data.frame
+Create dummy variables using \link[psych]{dummy.code} from the \code{psych} package. The dummy variables' names can be customized and the variables can be added to the input data frame.
 }
 
 \usage{
@@ -18,21 +16,21 @@ oneToColname = FALSE, zeroToNA = FALSE)
 }
 
 \arguments{
-  \item{dat}{ data.frame }
-  \item{cols}{ colnames of variables to be dummy coded }
-  \item{colname.as.prefix}{ logical, if \code{TRUE} the original variable name is added as prefix }
-  \item{delimiter}{ logical, if \code{TRUE} (and colname.as.prefix = TRUE) variable name and "level" name are delimited by \code{delimiter} }
-  \item{capitalize}{ logical, if \code{TRUE} "levels" are capitalized }
-  \item{nchar}{ numeric, if \code{TRUE} "levels" are truncated to length \code{nchar} }
-  \item{add}{ logical, if \code{TRUE} dummy coded variables are added to \code{dat} }
-  \item{sort.into.dat}{ logical, if \code{TRUE} (and add = TRUE) dummy coded variables are added and sorted into \code{dat} }
-  \item{oneToColname}{ logical, if \code{TRUE} 1-values are set to colname of respective column, be aware that this changes the column class from numeric to character }
-  \item{zeroToNA}{ logical, if \code{TRUE} 0-values are set to NA, be aware that this changes the column class from numeric to character }
+  \item{dat}{ A data frame }
+  \item{cols}{colnames of variables to be dummy coded }
+  \item{colname.as.prefix}{ Logical: If \code{TRUE} the original variable name is added as prefix }
+  \item{delimiter}{ A character string by which the variable name and the level name will be separated (only evaluated if \code{colname.as.prefix = TRUE}) }
+  \item{capitalize}{Logical: If \code{TRUE} the level names are capitalized }
+  \item{nchar}{ Number of characters the level names should be truncated to}
+  \item{add}{Logical: If \code{TRUE} the dummy variables are appended to \code{dat} }
+  \item{sort.into.dat}{Logical: If \code{TRUE} (and \code{add = TRUE}) the dummy variables are added and sorted into \code{dat} according to their column names }
+  \item{oneToColname}{Logical: If \code{TRUE}, the values of cases with a value of 1 on the dummy variable are set to the colname of respective column. This changes the column class from \code{numeric} to \code{character}. }
+  \item{zeroToNA}{Logical: If \code{TRUE}, the values of cases with a value of 0 on the dummy variable are set to \code{NA}.}
 }
 \details{
 }
 \value{
-returns data.frame with dummy coded variables, depending on \code{add} either the original data.frame (\code{dat}) is appended with new dummy code variables or they are purely returned
+A data frame with dummy variables. Depending on \code{add} the returned object contains either the original data frame with the dummy variables appended or only the dummy variables.
 }
 
 \author{

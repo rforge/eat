@@ -1,10 +1,9 @@
 \name{modus}
 \alias{modus}
-\title{
-modus
+\title{Compute the Mode of a Variable
 }
 \description{
-calculates modus (most frequent value)
+Calculate the mode (most frequent value) of a variable
 }
 \usage{
 modus(x, randTies = FALSE) 
@@ -13,14 +12,14 @@ modus(x, randTies = FALSE)
   \item{x}{
 a vector
 }
-  \item{randTies}{
-if ties occur draw a randomized value out of tied values
+  \item{randTies}{If \code{TRUE}, in case more than one mode is found, one random value of all modes is returned.
 }
 }
-\details{
+\details{The \code{modus} function is designed to always return only one value for the mode of a variable. If the variable is bimodal or multimodal, the function returns either \code{NA} (if \code{randTies = FALSE}) or a randomly chosen value of all modes (if \code{randTies = TRUE}).
+
 }
 \value{
-returns the modus (most frequent element)
+the mode (most frequent value) of the variable
 }
 \author{
 Martin Hecht

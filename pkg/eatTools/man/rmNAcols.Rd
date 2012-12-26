@@ -2,10 +2,10 @@
 \alias{rmNAcols}
 
 \title{
-remove NA columns from data
+Remove Columns with Missing Data
 }
 \description{
-remove columns that are completely or partially NA from data.frame or matrix
+Remove columns containing missing values from a data frame or a matrix
 }
 \usage{
 rmNAcols(dat, rows = NULL, tolerance = 0, cumulate = TRUE, 
@@ -13,12 +13,12 @@ rmNAcols(dat, rows = NULL, tolerance = 0, cumulate = TRUE,
 }
 \arguments{
 
-  \item{dat}{ data.frame or matrix }
-  \item{rows}{ rows to include, can be a list of vectors to specify row subsets }  
-  \item{tolerance}{ number of non-NA cells that are "tolerated", can be a list corresponding to \code{rows} }
+  \item{dat}{A data frame or a matrix }
+  \item{rows}{rows to include in evaluating the missing values of columns, can be a list of vectors to specify row subsets}  
+  \item{tolerance}{Number of non-NA cells that are "tolerated", can be a list corresponding to \code{rows} }
   \item{cumulate}{ if \code{TRUE}, \code{tolerance} is cumulated; if \code{FALSE}, exact \code{tolerance} is used }  
-  \item{remove}{ if \code{TRUE}, columns and rows are removed; if \code{FALSE}, identified columns are returned }
-  \item{verbose}{ if \code{TRUE} removed columns and rows are printed on output window }
+  \item{remove}{ if \code{TRUE} columns and rows are removed, if \code{FALSE} identified columns are returned }
+  \item{verbose}{ if \code{TRUE} the removed columns are printed on the console }
   
 }
 \details{
