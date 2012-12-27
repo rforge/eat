@@ -24,7 +24,7 @@ oneToColname = FALSE, zeroToNA = FALSE)
   \item{nchar}{ Number of characters the level names should be truncated to}
   \item{add}{Logical: If \code{TRUE} the dummy variables are appended to \code{dat} }
   \item{sort.into.dat}{Logical: If \code{TRUE} (and \code{add = TRUE}) the dummy variables are added and sorted into \code{dat} according to their column names }
-  \item{oneToColname}{Logical: If \code{TRUE}, the values of cases with a value of 1 on the dummy variable are set to the colname of respective column. This changes the column class from \code{numeric} to \code{character}. }
+  \item{oneToColname}{Logical: If \code{TRUE}, the values of cases with a value of 1 on the dummy variable are set to the colname of respective column. This changes the column class of the dummy variable(s) from \code{numeric} to \code{character}. }
   \item{zeroToNA}{Logical: If \code{TRUE}, the values of cases with a value of 0 on the dummy variable are set to \code{NA}.}
 }
 \details{
@@ -42,28 +42,28 @@ Martin Hecht
 data(science1)
 
 science1.dum <- make.dummies(science1, c("sex","booklet"))
-str(science1.dum[,3:10])
+str(science1.dum[,1:12])
 
 science1.dum <- make.dummies(science1, c("sex","booklet"), nchar = 1)
-str(science1.dum[,3:10])
+str(science1.dum[,1:12])
 
 science1.dum <- make.dummies(science1, c("sex","booklet"), delimiter = "_")
-str(science1.dum[,3:10])
+str(science1.dum[,1:12])
 
 science1.dum <- make.dummies(science1, c("sex","booklet"), delimiter = "", capitalize = TRUE)
-str(science1.dum[,3:10]) 
+str(science1.dum[,1:12])
 
 science1.dum <- make.dummies(science1, c("sex","booklet"), colname.as.prefix = FALSE)
-str(science1.dum[,3:10]) 
+str(science1.dum[,1:12])
 
 science1.dum <- make.dummies(science1, c("sex","booklet"), sort.into.dat = FALSE)
-str(science1.dum[ , (ncol(science1.dum)-5):ncol(science1.dum)])
+str(science1.dum[ , (ncol(science1.dum)-9):ncol(science1.dum)])
 
 science1.dum <- make.dummies(science1, c("sex","booklet"), add = FALSE)
 str(science1.dum)
 
 science1.dum <- make.dummies(science1, c("sex","booklet"), oneToColname = TRUE, zeroToNA = TRUE)
-str(science1.dum)
+str(science1.dum[,1:12])
 
 }
 }

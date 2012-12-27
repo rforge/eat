@@ -65,6 +65,12 @@ make.dummies <- function ( dat , cols , colname.as.prefix = TRUE , delimiter = "
 						# setzen
 						colnames ( x ) <- newcolnames
 
+						# zeroToNA
+						if ( zeroToNA ) {
+								do <- sapply ( colnames ( x ) , function ( sp ) paste ( "x[,\"" , sp , "\"]<-car::recode(x[,\"" , sp , "\"],\"0=NA\")" , sep = "" ) )
+								eval ( parse ( text = do ) )								
+						}		
+
 						# oneToColname
 						if ( oneToColname ) {
 								do <- sapply ( colnames ( x ) , function ( sp ) paste ( "if (!is.character(x[,\"" , sp , "\"]) ) x[,\"" , sp , "\"] <- as.character ( x[,\"" , sp , "\"] )" , sep = "" ) )
@@ -72,14 +78,6 @@ make.dummies <- function ( dat , cols , colname.as.prefix = TRUE , delimiter = "
 								do <- sapply ( colnames ( x ) , function ( sp ) paste ( "x[,\"" , sp , "\"]<-car::recode(x[,\"" , sp , "\"],\"'1'='" , sp , "'\")" , sep = "" ) )
 								eval ( parse ( text = do ) )								
 						}
-						
-						# zeroToNA
-						if ( zeroToNA ) {
-								do <- sapply ( colnames ( x ) , function ( sp ) paste ( "if (!is.character(x[,\"" , sp , "\"]) ) x[,\"" , sp , "\"] <- as.character ( x[,\"" , sp , "\"] )" , sep = "" ) )
-								eval ( parse ( text = do ) )
-								do <- sapply ( colnames ( x ) , function ( sp ) paste ( "x[,\"" , sp , "\"]<-car::recode(x[,\"" , sp , "\"],\"'0'=NA\")" , sep = "" ) )
-								eval ( parse ( text = do ) )								
-						}						
 						
 						# returnen
 						return ( x )
@@ -104,7 +102,7 @@ make.dummies <- function ( dat , cols , colname.as.prefix = TRUE , delimiter = "
 												"),'",na,"')",sep="")
 								}
 								do <- mapply ( fun2 , ret1 , names(ret1) )
-								do <- paste ( do , collapse = ";" )
+								# do <- paste ( do , collapse = ";" )
 								eval ( parse ( text = do ) )
 						}
 				
