@@ -1,7 +1,7 @@
 Package: eatTools
 Type: Package
 Title: eatTools
-Version: 0.0.6
+Version: 0.0.7
 Depends: R (>= 2.14.0), eatData
 Imports: psych, xlsx, car, plyr
 Date: 2012-12-27
