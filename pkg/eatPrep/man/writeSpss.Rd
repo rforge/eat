@@ -7,7 +7,7 @@
 writeSpss(dat, values, subunits, units, 
 		      filedat = "mydata.txt", filesps = "readmydata.sps", 
 		      missing.rule = list(mvi = 0, mnr = 0, mci = NA, mbd = NA, mir = 0, mbi = 0), 
-          path = getwd(), sep = "\t", dec = ",", silent = FALSE)
+          path = getwd(), sep = "\t", dec = ",", verbose = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -34,9 +34,9 @@ writeSpss(dat, values, subunits, units,
   \item{sep}{The separator between the data fields.}
   
   \item{dec}{The decimal separator for numerical data.}
-  
-  \item{silent}{A logical flag stating whether the names of the files should be printed.}
-
+    
+  \item{verbose}{Logical. If \code{TRUE} file names and additional information are printed.
+}
 }
 \details{
 This function automates most of the work needed to export a dataset to SPSS. 
@@ -46,7 +46,7 @@ for a choice of the field and decimal separators, makes some improvements to the
 and provides variable labels and value labels according to the information in the data 
 frames \code{values}, \code{subunits} and \code{units}.
 
-Examples of data frames \code{values}, \code{subunits} and \code{units} can be found on \code{data(inputList)}
+Examples of data frames \code{values}, \code{subunits} and \code{units} can be found on \code{data(\link{inputList})}.
 
 The SPSS syntax file has the proper file names and separators set, 
 so in principle it should run and read the data without alteration. 

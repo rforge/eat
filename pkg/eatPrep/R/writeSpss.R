@@ -2,7 +2,7 @@
 # function:
 #     writeSpss(dat, values, subunits, units, filedat = "zkddata.txt", filesps = "readZkdData.sps",
 #	              missing.rule = list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 ), 
-#               path = getwd(), sep = "\t", dec = ",", silent = FALSE) 
+#               path = getwd(), sep = "\t", dec = ",", verbose = FALSE) 
 #
 # description: schreibt Datensatz gelabelt nach SPSS (soweit Informationen vorhanden sind)
 # 				      angepasste Version von writeForeignSPSS aus dem foreign-Package bzw.
@@ -19,7 +19,7 @@
 #     path (character)      ... (optional) Pfad, in den Files für SPSS geschrieben werden sollen
 #     dec (character)       ... (optional) Dezimaltrennzeichen, das in Daten für SPSS verwendet werden soll
 #     sep (character)       ... (optional) Spaltentrenner, der in Daten für SPSS verwendet werden soll
-#     silent (logical)      ... (optional) Wenn TRUE, werden Namen von codefile und datafile mit Pfad auf Konsole ausgegeben
+#     verbose (logical)      ... (optional) Wenn TRUE, werden Namen von codefile und datafile mit Pfad auf Konsole ausgegeben
 
 
 # Version: 	0.2.0
@@ -52,7 +52,7 @@
 
 writeSpss <- function (dat, values, subunits, units, filedat = "mydata.txt", filesps = "readmydata.sps",
   missing.rule = list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 ), 
-  path = getwd(), sep = "\t", dec = ",", silent = FALSE) {
+  path = getwd(), sep = "\t", dec = ",", verbose = FALSE) {
   
   funVersion <- "writeSpss: "
   
@@ -75,8 +75,8 @@ writeSpss <- function (dat, values, subunits, units, filedat = "mydata.txt", fil
     
   zkdWriteForeignSPSS(dat, varinfo, datafile = filedat, codefile = filesps, 
            missing.rule = list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 ),
-           varnames = colnames(dat), sep = sep, dec = dec)
-  if (!silent) {
+           varnames = colnames(dat), sep = sep, dec = dec, verbose = verbose)
+  if (verbose) {
     cat(paste(funVersion, "Data values written to ", filedat, "\n", sep = ""))
     cat(paste(funVersion, "Syntax file written to ", filesps, "\n", sep = ""))
   }
@@ -86,12 +86,12 @@ writeSpss <- function (dat, values, subunits, units, filedat = "mydata.txt", fil
 
 zkdWriteForeignSPSS <- function(dat, varinfo, datafile, codefile, 
   missing.rule = list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 ),
-  varnames = NULL, dec = ",", sep = "\t") {
+  varnames = NULL, dec = ",", sep = "\t", verbose = FALSE) {
   
   funVersion <- "writeSpss: "
   
   # make vars numeric (if possible)
-  dat <- data.frame(eatTools:::asNumericIfPossible(dat, verbose=FALSE))
+  dat <- data.frame(eatTools:::asNumericIfPossible(dat, verbose = FALSE))
   eol <- paste(sep, "\n", sep = "")
   
   # write dataset
@@ -104,7 +104,7 @@ zkdWriteForeignSPSS <- function(dat, varinfo, datafile, codefile,
   varlabels <- varlabels [ match(varnames, names(varlabels)) ]
   if ( any( sapply(varlabels, is.null)) ) {
 		ind <- which ( sapply(varlabels, is.null ) )
-		cat (paste(funVersion, "Found no variable labels for variable(s) ", paste( varnames[ind], collapse = ", "), ".\n", sep = ""))
+		if (verbose) cat (paste(funVersion, "Found no variable labels for variable(s) ", paste( varnames[ind], collapse = ", "), ".\n", sep = ""))
 		varlabels [ ind ] <- ""
 		names (varlabels)  [ ind ]  <- varnames [ ind ]
 	}

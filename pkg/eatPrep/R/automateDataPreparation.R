@@ -61,7 +61,7 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 						filedat = "mydata.txt", filesps = "readmydata.sps", breaks=NULL, nMbi = 2,
 						aggregatemissings = NULL, rename = TRUE, recodedData = TRUE, 
             correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL, 
-            missing.rule = list(mvi = 0, mnr = 0, mci = 0, mbd = NA, mir = 0, mbi = 0)) {
+            missing.rule = list(mvi = 0, mnr = 0, mci = 0, mbd = NA, mir = 0, mbi = 0), verbose=FALSE) {
 							 
 		### Funktionsname für Meldungen
 		f. <- "automateDataPreparation"
@@ -71,23 +71,12 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 		###folder erstellen
 		if( is.null ( path ) ) {path <- getwd()}
 		folder.e <- path
-		folder.aDP <- file.path ( path , "_automateDataPreparation_" )
+		folder.aDP <- file.path ( path , "_eat_writeSPSS_" )
 		if ( ! file.exists ( folder.aDP ) ) { dir.create ( folder.aDP , recursive = TRUE ) }		
 	
-		###source.it.all sourcen
-	#	source ( "p:/ZKD/source.it.all.R" )
-	#	source.it.all ( folder = "p:/ZKD/development" ,develop.modules = c("loadSav", "recodeData")) #, "checkData", "mergeData", "recodeData", 
-			# "aggregateData", "crop", "writeSpss"))
-	#	source.it.all ( folder = "p:/ZKD/ZKDaemon" , develop.modules = "zkdHelpers" )	
-	#	zkdHelpers_LoadPackage ( "car" )
-	#	zkdHelpers_LoadPackage ( "foreign" )		
-	
-		### logfile initieren
-		sunk.path <- file.path ( folder.aDP , "automateDataPreparation.Log.txt" )
-		
 		### Begrüßung
-		eatTools:::sunk ( "\n" )
-		eatTools:::sunk ( paste (f.n , "Starting automateDataPreparation", Sys.time(), "\n" ) ) 
+		if(verbose) cat ( "\n" )
+		if(verbose) cat ( paste (f.n , "Starting automateDataPreparation", Sys.time(), "\n" ) ) 
 		
 		### Checks
 		if(!is.null(newID)) {
@@ -104,6 +93,7 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 		stopifnot(is.logical(writeSpss))
 		stopifnot(is.logical(correctDigits))
 		stopifnot(is.logical(truncateSpaceChar))
+		stopifnot(is.logical(verbose))
 		
 		if(is.null(datList)) {
 			stopifnot(readSpss == TRUE)
@@ -112,10 +102,10 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 
 		### ggf. sav-files einlesen
 		if( readSpss) {
-			eatTools:::sunk ( "\n" )
-			eatTools:::sunk ( paste ( f.n , "Load .sav Files\n" ) )
+			if(verbose) cat ( "\n" )
+			if(verbose) cat ( paste ( f.n , "Load .sav Files\n" ) )
 			if(!is.null(datList)) {
-				eatTools:::sunk(paste ( f.n , "If readSpss == TRUE, datList will be ignored." ) )
+				warning(paste ( f.n , "If readSpss == TRUE, datList will be ignored." ) )
 			}
 			savFiles <- inputList$savFiles$filename
 			if( is.null (oldIDs) ) {oldIDs <- inputList$savFiles$case.id}
@@ -134,38 +124,42 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 		stopifnot ( !is.null (oldIDs) )
 
 		if( checkData ) {
-			eatTools:::sunk ( "\n" )
-			eatTools:::sunk ( paste ( f.n , "Check data...\n" ) )
-			mapply(checkData, datList, MoreArgs = list(inputList$values, inputList$subunits, inputList$units))
-		} else {eatTools:::sunk ( paste ( f.n , "Check has been skipped\n" ) )}
+			if(verbose) cat ( "\n" )
+			if(verbose) cat ( paste ( f.n , "Check data...\n" ) )
+			mapply(checkData, datList, MoreArgs = list(inputList$values, inputList$subunits, inputList$units, verbose))
+		} else {if(verbose) cat ( "\n" )	
+		if(verbose) cat ( paste ( f.n , "Check has been skipped\n" ) )}
 
 		if( mergeData ) {
-			eatTools:::sunk ( "\n" )
-			eatTools:::sunk ( paste ( f.n , "Start merging\n" ) )
+			if(verbose) cat ( "\n" )
+			if(verbose) cat ( paste ( f.n , "Start merging\n" ) )
 			if( readSpss) {oldIDs <- rep(newID, length(datList))}
 			if(is.null(newID)) {newID <- "ID"}
-			dat <- mergeData(newID = newID, datList = datList, oldIDs = oldIDs, addMbd=TRUE, writeLog=TRUE)
-		} else {eatTools:::sunk ( paste ( f.n , "Merge has been skipped\n" ) )}
+			dat <- mergeData(newID = newID, datList = datList, oldIDs = oldIDs, addMbd=TRUE, verbose=verbose)
+		} else {if(verbose) cat ( "\n" )	
+		if(verbose) cat ( paste ( f.n , "Merge has been skipped\n" ) )}
 		
 		if( recodeData ) {
-			eatTools:::sunk ( "\n" )
-			eatTools:::sunk ( paste ( f.n , "Start recoding\n" ) )
-			dat <- recodeData (dat= dat, values=inputList$values, subunits=inputList$subunits)
-		} else {eatTools:::sunk ( paste ( f.n , "Recode has been skipped\n" ) )}
+			if(verbose) cat ( "\n" )
+			if(verbose) cat ( paste ( f.n , "Start recoding\n" ) )
+			dat <- recodeData (dat= dat, values=inputList$values, subunits=inputList$subunits, verbose=verbose)
+		} else {if(verbose) cat ( "\n" )	
+		if(verbose) cat ( paste ( f.n , "Recode has been skipped\n" ) )}
 		
 		if( recodeMnr ) {
-			eatTools:::sunk ( "\n" )
-			eatTools:::sunk ( paste ( f.n , "Start recoding Mbi to Mnr\n" ) )
-			if(is.null(inputList$booklets)) {eatTools:::sunk ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$booklets. Data frame not available!\n" ) ); stop()}
-			if(is.null(inputList$blocks)) {eatTools:::sunk ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$blocks. Data frame not available!\n" ) ); stop()}
-			if(is.null(inputList$rotation)) {eatTools:::sunk ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$rotation. Data frame not available!\n" ) ); stop()}
-			dat <- recodeMbiToMnr(dat = dat, id = newID, booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, breaks, nMbi = nMbi, subunits = inputList$subunits)
-		} else {eatTools:::sunk ( paste ( f.n , "RecodeMnr has been skipped\n" ) )}
+			if(verbose) cat ( "\n" )
+			if(verbose) cat ( paste ( f.n , "Start recoding Mbi to Mnr\n" ) )
+			if(is.null(inputList$booklets)) {cat ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$booklets. Data frame not available!\n" ) ); stop()}
+			if(is.null(inputList$blocks)) {cat ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$blocks. Data frame not available!\n" ) ); stop()}
+			if(is.null(inputList$rotation)) {cat ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$rotation. Data frame not available!\n" ) ); stop()}
+			dat <- recodeMbiToMnr(dat = dat, id = newID, booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, breaks, nMbi = nMbi, subunits = inputList$subunits, verbose = verbose)
+		} else {if(verbose) cat ( "\n" )	
+		if(verbose) cat ( paste ( f.n , "RecodeMnr has been skipped\n" ) )}
 						
 			
 		if( aggregateData ) {
-			eatTools:::sunk ( "\n" )
-			eatTools:::sunk ( paste ( f.n , "Start aggregating\n" ) )
+			if(verbose) cat ( "\n" )
+			if(verbose) cat ( paste ( f.n , "Start aggregating\n" ) )
 #			if ( aggregatemissings == "seeInputList" ) {
 #				stopifnot(!is.null(inputList$aggrMiss))
 #				aMiss <- unname(inputList$aggrMiss)
@@ -174,37 +168,46 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 #				aggregatemissings <- as.matrix(aMiss, nrow=8, ncol=8)
 #			}		
 			dat <- aggregateData (dat=dat, subunits=inputList$subunits, units=inputList$units,
-            aggregatemissings = aggregatemissings, rename = rename, recodedData = recodedData)
-		} else {eatTools:::sunk ( paste ( f.n , "Aggregate has been skipped\n" ) )}
+            aggregatemissings = aggregatemissings, rename = rename, recodedData = recodedData, verbose = verbose)
+		} else {if(verbose) cat ( "\n" )	
+		if(verbose) cat ( paste ( f.n , "Aggregate has been skipped\n" ) )}
 		
 		if( scoreData ) {
-			eatTools:::sunk ( "\n" )
-			eatTools:::sunk ( paste ( f.n , "Start scoring\n" ) )
-			dat <- scoreData (dat= dat, unitrecodings=inputList$unitRecodings, units=inputList$units)
-		} else {eatTools:::sunk ( paste ( f.n , "Scoring has been skipped\n" ) )}
+			if(verbose) cat ( "\n" )
+			if(verbose) cat ( paste ( f.n , "Start scoring\n" ) )
+			dat <- scoreData (dat= dat, unitrecodings=inputList$unitRecodings, units=inputList$units, verbose = verbose)
+		} else {if(verbose) cat ( "\n" )	
+		if(verbose) cat ( paste ( f.n , "Scoring has been skipped\n" ) )}
 	
 		if( writeSpss ) {
-			eatTools:::sunk ( "\n" )
-			eatTools:::sunk ( paste ( f.n , "Writing dataset in last transformation status to disk\n" ) )
+			if(verbose) cat ( "\n" )
+			if(verbose) cat ( paste ( f.n , "Writing dataset in last transformation status to disk\n" ) )
 			if (class(dat) != "data.frame") {
-				eatTools:::sunk ( paste ( f.n , "Data is no data frame (data frames probably need to be merged).\n" ) )
+				warning ( paste ( f.n , "Data is no data frame (data frames probably need to be merged).\n" ) )
 			}
 			if(inherits(try( writeSpss (dat=dat , values=inputList$values, subunits=inputList$subunits, units=inputList$units,
 					filedat = filedat, filesps = filesps, missing.rule = missing.rule,
-					path = folder.aDP, sep = "\t", dec = ",", silent = FALSE)  ),"try-error")) {
-				eatTools:::sunk ( "\n" )	
-				eatTools:::sunk ( paste ( f.n , "No SPSS-File could be written.\n" ) )
+					path = folder.aDP, sep = "\t", dec = ",", verbose = verbose)  ),"try-error")) {
+				if(verbose) cat ( "\n" )	
+				warning ( paste ( f.n , "No SPSS-File could be written.\n" ) )
 			}
-		} else {eatTools:::sunk ( paste ( f.n , "No SPSS-File has been written.\n" ) )}
+		} else {if(verbose) cat ( "\n" )	
+		if(verbose) cat ( paste ( f.n , "No SPSS-File has been written.\n" ) )}
 		
 		# finale Ausgabe 
-		eatTools:::sunk ( "\n" )
-		eatTools:::sunk ( paste ( f.n , "terminated successfully!", Sys.time(), "\n\n" ) )
+		if(verbose) cat ( "\n" )
+		if(verbose) cat ( paste ( f.n , "terminated successfully!", Sys.time(), "\n\n" ) )
 	
 		# Ergebnisse returnen
 		return ( dat )
 
 }
 
+# data(inputList)
+# data(inputDat)
+# test <- automateDataPreparation(inputList = inputList, datList = inputDat,
+        # path = "c:/temp/test_eat", readSpss = FALSE, checkData=TRUE,
+        # mergeData = TRUE, recodeData=TRUE, recodeMnr = TRUE, breaks = c(1,2),
+		    # aggregateData=TRUE, scoreData= TRUE, writeSpss=TRUE, verbose=TRUE)
 
 

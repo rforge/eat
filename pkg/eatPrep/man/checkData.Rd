@@ -2,12 +2,14 @@
 \alias{checkData}
 \title{Check Datasets for Missing Values and Invalid Codes}
 \description{Check data frames for missing or duplicated entries in the ID variable, persons and/or variables without valid codes, and invalid codes. Invalid codes are codes which are not specified in table \code{values}. }
-\usage{checkData (dat, values, subunits, units)}
+\usage{checkData (dat, values, subunits, units, verbose = TRUE)}
 \arguments{
   \item{dat}{A data frame to be checked.}
   \item{values}{A data frame with code information. See 'Details'.}
   \item{subunits}{A data frame with subunit information. See 'Details'.}
   \item{units}{A data frame with unit information. See 'Details'.}
+    \item{verbose}{Logical. If \code{FALSE} no information is printed.
+}
 }
 \details{
 The results of \code{checkData} will be written to the console. 

@@ -12,7 +12,7 @@ readDaemonXlsx(filename)
 \arguments{
   \item{filename}{
 A character string containing path, name and extension of .xlsx produced by
-ZKDaemon. Caution! Sheet names are important (see Datails).
+ZKDaemon. Caution! Sheet names are important (see Details).
 }
 }
 \details{

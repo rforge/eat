@@ -9,7 +9,7 @@
 
 #-----------------------------------------------------------------------------------------
 
-scoreData <- function (dat, unitrecodings, units) {
+scoreData <- function (dat, unitrecodings, units, verbose = FALSE) {
   funVersion <- "scoreData: "
 
   if (class(dat) != "data.frame") {
@@ -19,14 +19,14 @@ scoreData <- function (dat, unitrecodings, units) {
   scoreinfo <- makeInputRecodeData (values = unitrecodings, subunits = units)
   
   if(length(setdiff(colnames(dat), names(scoreinfo))) > 0) {
-	cat(paste(funVersion, "Found no scoring information for variable(s) ", 
+	if(verbose) cat(paste(funVersion, "Found no scoring information for variable(s) ", 
 		paste(setdiff(colnames(dat), names(scoreinfo)), collapse = ", "), 
 			". \nThis/These variable(s) will not be scored.\n", sep =""))
   }
   
   # make scored data.frame
   datS <- data.frame(mapply(.scoreData.score, dat, 
-  colnames(dat), MoreArgs = list(scoreinfo), USE.NAMES = TRUE), 
+  colnames(dat), MoreArgs = list(scoreinfo, verbose = verbose), USE.NAMES = TRUE), 
   stringsAsFactors = FALSE)
   
   colnames(datS) <- sapply(colnames(datS), .recodeData.renameIDs, scoreinfo, USE.NAMES = FALSE)
@@ -36,7 +36,7 @@ scoreData <- function (dat, unitrecodings, units) {
 
 #-----------------------------------------------------------------------------------------
 
-.scoreData.score <- function (variable, variableName, scoreinfo) {
+.scoreData.score <- function (variable, variableName, scoreinfo, verbose) {
   variableScored <- NULL
   funVersion <- "scoreData: "
   
@@ -52,7 +52,7 @@ scoreData <- function (dat, unitrecodings, units) {
     variable.unique <- na.omit(unique(variable[which(!variable %in% dontcheck)]))
     scoreinfoCheck <- (variable.unique %in% names(unlist(scoreinfo[[variableName]]$values)))
     if (!all(scoreinfoCheck == TRUE)) {
-      cat(paste(funVersion, "Incomplete scoring information for variable ", 
+      if(verbose) cat(paste(funVersion, "Incomplete scoring information for variable ", 
       variableName, ". Value(s) ",  
       paste(sort(variable.unique[!scoreinfoCheck]), collapse = ", "), " will not be scored.\n", sep = ""))
     }
@@ -62,7 +62,7 @@ scoreData <- function (dat, unitrecodings, units) {
     sep = ""), collapse = "; ")
     variableScored <- recode(variable, scoreString, as.factor.result = FALSE, 
     as.numeric.result = FALSE)
-	cat(paste(funVersion, variableName, " has been scored.\n", sep =""))
+	if(verbose) cat(paste(funVersion, variableName, " has been scored.\n", sep =""))
   }
   return(variableScored)
 }

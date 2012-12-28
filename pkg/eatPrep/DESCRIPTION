@@ -1,7 +1,7 @@
 Package: eatPrep
 Type: Package
 Title: eatPrep
-Version: 0.0.9
+Version: 0.1.0
 Depends: R (>= 2.14.0), eatTools, xlsx, car, foreign, reshape 
 Date: 2012-12-18
 Author: eat authors <eat-commits@lists.r-forge.r-project.org>

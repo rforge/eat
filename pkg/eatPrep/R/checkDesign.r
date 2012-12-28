@@ -1,6 +1,6 @@
 
 
-checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="ID", subunits = NULL) {
+checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="ID", subunits = NULL, verbose = TRUE) {
 
 	funVersion <- "checkDesign 0.0.4"
 
@@ -12,9 +12,9 @@ checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="ID", s
 	rotation <- eatTools:::set.col.type(rotation, col.type = list ( "character" = names(rotation) ))
 	
 	if(!is.null(subunits)){
-		cat("Use names for recoded subunits.\n")
+		if(verbose) cat("Use names for recoded subunits.\n")
 		if (any(is.na(match(blocks$subunit, subunits$subunit)))){ 
-		  cat("Found no names for recoded subunit(s) for subunit(s)" , blocks$subunit[which(is.na(match(blocks$subunit, subunits$subunit)))], 
+		  if(verbose) cat("Found no names for recoded subunit(s) for subunit(s)" , blocks$subunit[which(is.na(match(blocks$subunit, subunits$subunit)))], 
 				"\nThis/Those subunit(s) will be ignored in determining 'mnr'.\n")
 		  blocks <- blocks[ - which(is.na(match(blocks$subunit, subunits$subunit))), ]
 		}
@@ -23,7 +23,7 @@ checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="ID", s
 	
 	gibsNich <- setdiff(names(dat),c(id,blocks$subunit))
 	if (length(gibsNich) > 0) {
-		cat(paste(cat(funVersion, " The following variables are not in info (subunits in blocks) but in dataset. \nThey will be ignored during check: \n"), paste(gibsNich, collapse = ", "), sep = ""), "\n")
+		if(verbose) cat(paste(cat(funVersion, " The following variables are not in info (subunits in blocks) but in dataset. \nThey will be ignored during check: \n"), paste(gibsNich, collapse = ", "), sep = ""), "\n")
 		dat <- dat[,-match(gibsNich, names(dat))]
 	}
 	
@@ -73,16 +73,16 @@ checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="ID", s
 	names(resL) <- booklets$booklet
 
 	if(all(unlist(resL) == FALSE)) {
-		cat(paste(funVersion, "No deviations from design detected! \n"))
+		if(verbose) cat(paste(funVersion, "No deviations from design detected! \n"))
 	} else {
-		cat(paste(funVersion, "Deviations from design detected! \n"))
+		if(verbose) cat(paste(funVersion, "Deviations from design detected! \n"))
 		if(!all(unlist(resM <- lapply(resL, function(iz) {iz[["M"]]})) == FALSE)) {
 			for(ll in names(resL)) {
 				if (any(tt <- unlist(lapply(resM[[ll]], function(gg) gg[1])) != FALSE)) {
-					cat(paste(funVersion, "Found for", sum(tt),"variable(s) sysMis instead of valid codes for booklet", ll, ":\n"))
+					if(verbose) cat(paste(funVersion, "Found for", sum(tt),"variable(s) sysMis instead of valid codes for booklet", ll, ":\n"))
 						for(pp in names(resM[[ll]])) {
 							if (resM[[ll]][[pp]][1] != FALSE) {
-								cat(paste(pp, " (", length(resM[[ll]][[pp]])," case(s): ", paste(resM[[ll]][[pp]], collapse = ", "), ") \n", sep=""))
+								if(verbose) cat(paste(pp, " (", length(resM[[ll]][[pp]])," case(s): ", paste(resM[[ll]][[pp]], collapse = ", "), ") \n", sep=""))
 							}
 						}	
 				}
@@ -91,10 +91,10 @@ checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="ID", s
 		if(!all(unlist(resP <- lapply(resL, function(iz) {iz[["P"]]})) == FALSE)) {
 			for(ll in names(resL)) {
 				if (any(tt <- unlist(lapply(resP[[ll]], function(gg) gg[1])) != FALSE)) {
-					cat(paste(funVersion, "Found for", sum(tt),"variable(s) valid codes instead of sysMis for booklet", ll, ":\n"))
+					if(verbose) cat(paste(funVersion, "Found for", sum(tt),"variable(s) valid codes instead of sysMis for booklet", ll, ":\n"))
 						for(pp in names(resP[[ll]])) {
 							if (resP[[ll]][[pp]][1] != FALSE) {
-								cat(paste(pp, " (", length(resP[[ll]][[pp]])," case(s): ", paste(resP[[ll]][[pp]], collapse = ", "), ") \n", sep=""))
+								if(verbose) cat(paste(pp, " (", length(resP[[ll]][[pp]])," case(s): ", paste(resP[[ll]][[pp]], collapse = ", "), ") \n", sep=""))
 							}
 						}	
 				}

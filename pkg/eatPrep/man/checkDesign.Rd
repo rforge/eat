@@ -2,7 +2,8 @@
 \alias{checkDesign}
 \title{Check Datasets for test design deviations}
 \description{Check data frames according to test design for valid codes instead of expected sysMis and for sysMis instead of valid codes. }
-\usage{checkDesign (dat, booklets, blocks, rotation, sysMis="NA", id="ID", subunits = NULL)}
+\usage{checkDesign ( dat, booklets, blocks, rotation, sysMis="NA", id="ID", 
+                     subunits = NULL, verbose = TRUE )}
 \arguments{
   \item{dat}{A data frame}
   \item{booklets}{A data frame with booklet information. See 'Examples'.}
@@ -12,6 +13,8 @@
   \item{id}{Case-id identifier as character. Default is "ID".}
   	\item{subunits}{
 	Optional: A data frame with subunit information (c.f. \code{\link{inputList}}). See 'Details'. Used to find names of recoded subunits. }
+	  \item{verbose}{logical. If \code{FALSE} no information is printed.
+}
 }
 %% \details{
 %% tbd
@@ -27,19 +30,19 @@ data(inputDat)
 data(inputList)
 
 prepDat <- automateDataPreparation (inputList = inputList, datList = inputDat,
-           readSpss = FALSE, checkData=FALSE, mergeData = TRUE, recodeData=TRUE, 
-		       aggregateData=FALSE, scoreData= FALSE, writeSpss=FALSE)
+           readSpss = FALSE, checkData = FALSE, mergeData = TRUE, recodeData = TRUE, 
+           aggregateData = FALSE, scoreData = FALSE, writeSpss = FALSE, verbose = TRUE)
 		
 checkDesign(dat = prepDat, booklets = inputList$booklets, blocks = inputList$blocks, 
             rotation = inputList$rotation, sysMis = "mbd", id="ID", 
-            subunits = inputList$subunits)
+            subunits = inputList$subunits, verbose = TRUE)
 
 prepDat[1:7,"I22R"] <- "1"
 prepDat[1,c("I01R","I02R","I03R")] <- "mbd"
 
 checkDesign(dat = prepDat, booklets = inputList$booklets, blocks = inputList$blocks, 
             rotation = inputList$rotation, sysMis = "mbd", id="ID", 
-            subunits = inputList$subunits)
+            subunits = inputList$subunits, verbose = TRUE)
 
 }
 

@@ -1,7 +1,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # zkdMerge
 # Description: merge datasets standalone
-# Version: 	0.5.0
+# Version: 	0.6.0
 # Status: alpha
 # Release Date:
 # Author:  Karoline Sachse, Nicole Haag
@@ -27,14 +27,13 @@
 
 
 
-mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, writeLog=FALSE) {
-  versNr <- "0.5.0"
+mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, verbose=FALSE) {
+  versNr <- "0.6.0"
   mReturn <- NULL
   stopifnot (is.list (datList))
   if(is.null(oldIDs)) {oldIDs <- rep(newID, length(datList))}
   for ( i in seq(along = datList)) {stopifnot(is.data.frame(datList[[i]]))} 
   for ( i in seq(along = datList)) {stopifnot( oldIDs[i] %in% colnames(datList[[i]]) )} 
-  if(writeLog) {writeL <- TRUE; consoleO <- TRUE} else {writeL <- FALSE; consoleO <- FALSE}
   if ( length(datList) > 0 ) {
 	fkNam <- list()
 	for ( i in seq(along = datList)) {
@@ -46,20 +45,20 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, writeL
     stopifnot(length(datList) == length(oldIDs))
     stopifnot(is.numeric(oldIDs) | is.character(oldIDs))
 		for ( i in seq(along = datList)) {
-		  eatTools:::sunk(paste ( "mergeData_", versNr, ": Start merging of dataset ", i, ".\n", sep=""), write = writeL , console.output = consoleO)
+		  if(verbose) {cat(paste ( "mergeData_", versNr, ": Start merging of dataset ", i, ".\n", sep=""))}
 			if ( i == 1 ) {
 				if ( is.character( oldIDs )) {	IDname1 <- oldIDs[i] }
 				if ( is.numeric( oldIDs )) { IDname1 <- colnames(datList[[i]])[oldIDs[i]]   }
 		
 				if ( length( na.omit( datList[[i]][ , IDname1])) != length( na.omit ( unique( datList[[i]][ , IDname1] ) ) ) ) {
 							doppelt <- na.omit( unique( datList[[i]][ , IDname1][ duplicated(datList[[i]][ , IDname1] ) ] ) )
-							eatTools:::sunk(paste ( "mergeData_", versNr, ": Multiple IDs in dataset ", i, " in " , length(doppelt)," cases. \n",sep=""), write = writeL , console.output = TRUE)
-							stop( eatTools:::sunk(paste ( "Multiple IDs: ", paste( doppelt, collapse = ", "), "\n" ), write = writeL , console.output = TRUE))}
+							cat(paste ( "mergeData_", versNr, ": Multiple IDs in dataset ", i, " in " , length(doppelt)," cases. \n",sep=""))
+							stop( cat(paste ( "Multiple IDs: ", paste( doppelt, collapse = ", "), "\n" )))}
 				if ( is.character(IDname1)) {
 					names(datList[[i]])[names(datList[[i]]) == IDname1] <- newID  
 					mergedData <- datList[[i]]
 				} else {
-					eatTools:::sunk(paste ( "mergeData_", versNr, ": Found no ID variable in dataset", i, "\n") , write = writeL , console.output = TRUE)
+					warning(paste ( "mergeData_", versNr, ": Found no ID variable in dataset", i, "\n"))
 					mReturn <- FALSE
 				}
 			} else {
@@ -101,9 +100,9 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, writeL
                     targetData[ k, j] <- partialData.part [ which( !is.na (partialData.part[ , j] ) )[1], j ] 
                   } else {
   									# nimm den ersten davon und gib eine Warnung aus, wenn nicht alle gleich sind
-                    eatTools:::sunk(paste("mergeData_", versNr, ": Multiple different valid codes in ", colnames(targetData)[j],
+					warning(paste("mergeData_", versNr, ": Multiple different valid codes in variable ", colnames(targetData)[j],
   										  ", ID ", multipleCases [k], ", Codes: ", paste(na.omit ( partialData.part[ 1,j] ), " & ", na.omit ( partialData.part[ 2,j] ),".", sep=""),
-  										  " The first value will be kept.\n", sep = ""), write = writeL , console.output = TRUE)
+  										  " \n The first value will be kept.\n", sep = ""))
   									targetData[ k, j] <- partialData.part [ which( !is.na (partialData.part[ , j] ) )[1], j ]
                   }    
                 } else {
@@ -123,7 +122,7 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, writeL
 					}
 					mergedData <- targetData
 				} else {
-					eatTools:::sunk (paste ( "mergeData_", versNr, ": Found no ID variable in dataset", i, "\n") , write = writeL , console.output = TRUE)
+					warning(paste ( "mergeData_", versNr, ": Found no ID variable in dataset", i, "\n"))
 					mReturn <- FALSE
 				}			
 			}
@@ -131,7 +130,7 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, writeL
 		if(addMbd == TRUE) {mReturn[is.na(mReturn)] <- "mbd"}
 		}
 	} else {    
-		eatTools:::sunk(paste("mergeData_", versNr, ": Found no datasets."), "\n", write = writeL , console.output = TRUE)
+		warning(paste("mergeData_", versNr, ": Found no datasets."), "\n")
 		mReturn <- FALSE
 	}
 	if(is.data.frame(mReturn)) {

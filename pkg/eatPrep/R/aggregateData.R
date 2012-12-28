@@ -37,7 +37,7 @@
 # - Pattern aggregation implementieren
 # - wenn rename = TRUE: auch nach unrekodiertem Subitemnamen suchen
 
-aggregateData <- function (dat, subunits, units, aggregatemissings = NULL, rename = FALSE, recodedData = TRUE) {
+aggregateData <- function (dat, subunits, units, aggregatemissings = NULL, rename = FALSE, recodedData = TRUE, verbose = FALSE) {
   
   funVersion <- "aggregateData: "
 
@@ -108,15 +108,14 @@ aggregateData <- function (dat, subunits, units, aggregatemissings = NULL, renam
 	} else {
 		oneSubunitUnits <- subunits[subunits$subunit %in% subunitsToKeep, c("unit", "subunit")]
 		oneSubunitUnits <- oneSubunitUnits [na.omit(match(colnames(dat), oneSubunitUnits$subunit)), ]
-		colnames(datAggregated)[ match(oneSubunitUnits$subunit, colnames(datAggregated) )] <- oneSubunitUnits$unit         
-	
+		colnames(datAggregated)[ match(oneSubunitUnits$subunit, colnames(datAggregated) )] <- oneSubunitUnits$unit         	
 	}
-	cat(paste(funVersion, "Found ", nrow(oneSubunitUnits), " unit(s) with only one subunit in 'dat'. This/these subunit(s) will be renamed to their respective unit name(s).\nUnits ",
-          paste(oneSubunitUnits$unit, collapse = ", "), "\n", sep = ""))          
+	if(verbose) {cat(paste(funVersion, "Found ", nrow(oneSubunitUnits), " unit(s) with only one subunit in 'dat'. This/these subunit(s) will be renamed to their respective unit name(s).\nUnits ",
+          paste(oneSubunitUnits$unit, collapse = ", "), "\n", sep = ""))  }       
   }  
     
   # erstelle aggregierten Datensatz der Units, die aggregiert werden
-  unitsAggregated <- mapply(aggregateData.aggregate, unitsToAggregate, aggregateinfo, MoreArgs = list(am, dat))
+  unitsAggregated <- mapply(aggregateData.aggregate, unitsToAggregate, aggregateinfo, MoreArgs = list(am, dat, verbose = verbose))
   
  if(!missing(unitsAggregated)){
 	datAggregated <- cbind(datAggregated, unitsAggregated, stringsAsFactors = FALSE)	
@@ -155,14 +154,14 @@ aggregateData <- function (dat, subunits, units, aggregatemissings = NULL, renam
 #-----------------------------------------------------------------------------------------------------------
 # findet zu aggregierende Spalten eines Datensatzes und aggregiert sie nach einer vorgegebenen Aggregierungsregel
 
-aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, dat){
+aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, dat, verbose = FALSE){
   
   funVersion <- "aggregateData: "
   
   unitVars <- aggregateinfo$subunits
   aggRule <- toupper(aggregateinfo$arule)
   
-  cat(paste (funVersion, "Aggregate unit ", unitName, ".\n", sep = ""))
+  if(verbose) cat(paste (funVersion, "Aggregate unit ", unitName, ".\n", sep = ""))
   
   # check: sind alle Subunits vorhanden?	
   if (any((unitVars %in% colnames(dat)) == FALSE)) {
@@ -175,7 +174,7 @@ aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, 
   # check: Datensatz darf keine NAs enthalten. -> werden in mbd umgewandelt
   na <- which(is.na(unitDat))
     if (length(na) > 0) {
-        cat(paste(funVersion, "Data contains NA values. These values will be converted to 'mbd'.\n", sep = ""))
+        if(verbose)  cat(paste(funVersion, "Data contains NA values. These values will be converted to 'mbd'.\n", sep = ""))
 		unitDat[ is.na(unitDat) ] <- "mbd"
   } 
   

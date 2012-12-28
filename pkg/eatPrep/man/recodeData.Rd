@@ -6,18 +6,20 @@
 \description{Recode datasets with special consideration of missing values.
 }
 \usage{
-recodeData(dat, values, subunits)
+recodeData(dat, values, subunits, verbose = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{A data frame}
   \item{values}{A data frame with code information. See 'Details'.}
   \item{subunits}{A data frame with subunit information. See 'Details'.}
+   \item{verbose}{Logical. If \code{TRUE} additional information is printed.
+}
 }
 \details{
 \code{recodeData} recodes data frames with special consideration of missing values. The results of \code{recodeData} will be written to a protocol file with \code{sunk}. \code{recodeData} will give warnings, if missing or incomplete recode informations are found. Values without recode information will NOT be recoded!
 
-Examples of data frames \code{values} and \code{subunits} can be found via \code{data(inputList)}
+Examples of data frames \code{values} and \code{subunits} can be found via \code{data(\link{inputList})}.
 
 }
 \value{
@@ -43,7 +45,7 @@ data(inputDat)
 data(inputList)
 
 dat1 <- inputDat[[1]]  # get first dataset from inputDat
-datRec <- recodeData(dat1, inputList$values, inputList$subunits)
+datRec <- recodeData(dat1, inputList$values, inputList$subunits, verbose = TRUE)
 str(datRec)
 
 }

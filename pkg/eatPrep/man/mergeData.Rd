@@ -1,35 +1,33 @@
 \name{mergeData}
 \alias{mergeData}
-\title{Merge Data Frames using one Key Variable}
-\description{Merges several data frames and matches them using one key variable}
+\title{Merge Data Frames and fill NA gaps}
+\description{Merges data frames using one key variable. Fills NA gaps.}
 \usage{
-mergeData(newID = "ID", datList, oldIDs=NULL, addMbd = FALSE, writeLog=FALSE)
+mergeData(newID = "ID", datList, oldIDs=NULL, addMbd = FALSE, verbose=FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{newID}{
-character string containing the key variable's name in the merged dataset
+character string containing the ID variable's name in the future merged dataset
 }
   \item{datList}{
 list of data frames to be merged
 }
   \item{oldIDs}{
 character vector OR numeric vector containing either names of the key variables in datList or their column number in each dataframe in datList
-default is a vector containing replicates of the value of \code{newID}.
+Default is a vector containing replicates of the value of \code{newID}.
 }
   \item{addMbd}{
-logical; string "mbd" (missing by desgin) will be added instead of NA
+logical. If \code{TRUE} \code{NA} is replaced by "mbd" (missing by desgin).
 }
-  \item{writeLog}{
-logical; if Logfile shall be written via \code{eatTools:::sunk}.
+  \item{verbose}{
+logical. If \code{TRUE} progress is printed.
 }
 }
 %\details{
-%Errors and warnings of \code{mergeData} will be written to a protocol file with
-%\code{eatTools:::sunk}.
 %}
 \value{
-A data frame containing unique cases and unique variables. All cases and all variables that could be identified the original data frames will be kept and matched.
+a data frame containing unique cases and unique variables. All cases and all variables that could be identified in the original data frames will be kept and matched.
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -52,6 +50,6 @@ str(inputDat)
 mergedDataset <- mergeData("idstud", inputDat, c("ID", "ID", "ID"), addMbd=TRUE)
 str(mergedDataset)
 
-mergedDataset <- mergeData("ID", inputDat, writeLog=FALSE)
+mergedDataset <- mergeData("ID", inputDat, verbose=TRUE)
 str(mergedDataset)
 }

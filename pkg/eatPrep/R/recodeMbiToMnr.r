@@ -12,7 +12,7 @@
 
 ###############################################################################
 
-recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 2, subunits = NULL){
+recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 2, subunits = NULL, verbose = FALSE){
   
   # check consistency of inputs
   if (nMbi < 1) {
@@ -24,9 +24,9 @@ recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 
   }  
   
   if(!is.null(subunits)){
-    cat("Use names for recoded subunits.\n")
+    if(verbose) cat("Use names for recoded subunits.\n")
     if (any(is.na(match(blocks$subunit, subunits$subunit)))){ 
-      cat("Found no names for recoded subunit(s) for subunit(s)" , paste(blocks$subunit[which(is.na(match(blocks$subunit, subunits$subunit)))], collapse = ", "), 
+      warning("Found no names for recoded subunit(s) for subunit(s)" , paste(blocks$subunit[which(is.na(match(blocks$subunit, subunits$subunit)))], collapse = ", "), 
             "\nThis/Those subunit(s) will be ignored in determining 'mnr'.\n")
       blocks <- blocks[ - which(is.na(match(blocks$subunit, subunits$subunit))), ]
     }
@@ -35,7 +35,7 @@ recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 
   
   personsWithoutBooklets <- setdiff(dat[ , id], rotation[, id])
   if (length(personsWithoutBooklets) > 0){
-    cat("Found no booklet information for cases ", personsWithoutBooklets, ". No recoding will be done for these cases.\n")
+    warning("Found no booklet information for cases ", personsWithoutBooklets, ". No recoding will be done for these cases.\n")
   }
 
   # prepare dataset
@@ -45,7 +45,7 @@ recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 
 
   bookletsWithoutPersons <- setdiff(booklets$booklet, dat$booklet)
   if (length(bookletsWithoutPersons) > 0){
-    cat("Found no response data for booklets", bookletsWithoutPersons, ".\n")
+    warning("Found no response data for booklets", bookletsWithoutPersons, ".\n")
     booklets <- booklets [ - which(booklets$booklet %in% bookletsWithoutPersons) , ]
   }
   
@@ -60,7 +60,7 @@ recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 
   blocksWithoutSubitems <- setdiff(unique(booklet.long$block), blocks$block)
   
   if (length(blocksWithoutSubitems) > 0){
-    cat("Found no information about subitems for blocks", blocksWithoutSubitems, ". No recoding will be done for these blocks.\n")
+    warning("Found no information about subitems for blocks", blocksWithoutSubitems, ". No recoding will be done for these blocks.\n")
   }
   
   missingSubunits <- setdiff(blocks$subunit, colnames(dat))
@@ -148,9 +148,9 @@ recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 
     }
     output <- data.frame(id = names(recodedSubitems), output, stringsAsFactors = F)
     attr(dat, "recodedSubitems") <- output
-    cat("Recoded 'mbi' to 'mnr' for", nrow(output), "cases.\n")
+    if(verbose) cat("Recoded 'mbi' to 'mnr' for", nrow(output), "cases.\n")
   } else {
-    cat("Found no 'mbi' to be recoded to 'mnr' according to the specifications.\n")
+    if(verbose) cat("Found no 'mbi' to be recoded to 'mnr' according to the specifications.\n")
   
   }
    

@@ -5,9 +5,9 @@
 }
 \description{
 These data frames contain information about codes, subunits and units for the
-datasets in \code{\link{inputDat}} and are necessary inputs for functions
+datasets in \code{\link{inputDat}} and are necessary inputs for e.g.
 \code{\link{automateDataPreparation}}, \code{\link{checkData}},
-\code{\link{recodeData}} and \code{aggregateData}.
+\code{\link{recodeData}}, \code{\link{aggregateData}} and \code{\link{scoreData}}.
 }
 \usage{data(inputList)}
 \format{
@@ -100,7 +100,24 @@ A list with three data frames:
     }
 
  \item aggrMiss: missing aggregation pattern for \code{\link{aggregateData}}
+ 
+ \item blocks: missing aggregation pattern for \code{\link{aggregateData}}
+\describe{
+      \item{subunit}{Subunit name.}
+      \item{block}{Block name.}
+      \item{subunitBlockPosition}{The subunit's position in the corresponding block.}
+}
 
+ \item booklets: Design
+\describe{
+      \item{booklet}{Booklet name.}
+      \item{block1 ... blockX}{Block names in booklet.}
+}
+ \item rotation: Assignment of IDs to booklets
+\describe{
+      \item{ID}{Case identifier.}
+      \item{booklet}{Booklet name.}
+}
 
 }
 }
