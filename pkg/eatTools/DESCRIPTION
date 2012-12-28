@@ -1,10 +1,10 @@
 Package: eatTools
 Type: Package
 Title: eatTools
-Version: 0.0.7
+Version: 0.0.8
 Depends: R (>= 2.14.0), eatData
 Imports: psych, xlsx, car, plyr
-Date: 2012-12-27
+Date: 2012-12-28
 Author: Nicole Haag, Karoline Sachse, Sebastian Weirich, Martin Hecht and Thilo Siegle
 Maintainer: eat authors <eat-commits@lists.r-forge.r-project.org>
 Description: A collection of tools for the eat packages 

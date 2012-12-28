@@ -1,6 +1,6 @@
 
 ### benötigte Pakete
-library(igraph)
+# library(igraph)
 
 ### Class definition of "design" ###
 setClass(
@@ -541,7 +541,7 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 									}
 					
 									# "Paare", rows und columns
-									lowTr <- eatTools:::dfr2long ( s , lower = TRUE , upper = FALSE , diag = FALSE , use.names = TRUE )
+									lowTr <- dfr2long ( s , lower = TRUE , upper = FALSE , diag = FALSE , use.names = TRUE )
 									ro <- lowTr$row
 									co <- lowTr$col
 									
@@ -615,8 +615,8 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 					if ( !empty.structure ) {
 									# Zieldatensatz als lower und upper triangle von @structure im long Format
 									# da man wahrscheinlich von der Sortierung her erst upper haben will: 2 schrittig
-									s1 <- eatTools:::dfr2long ( dsgn@structure , lower = FALSE , upper = TRUE , diag = FALSE , use.names = TRUE )
-									s2 <- eatTools:::dfr2long ( dsgn@structure , lower = TRUE , upper = FALSE , diag = FALSE , use.names = TRUE )
+									s1 <- dfr2long ( dsgn@structure , lower = FALSE , upper = TRUE , diag = FALSE , use.names = TRUE )
+									s2 <- dfr2long ( dsgn@structure , lower = TRUE , upper = FALSE , diag = FALSE , use.names = TRUE )
 									s <- rbind ( s1 , s2 )
 									
 									# nestor zu nested
@@ -1417,7 +1417,7 @@ setMethod ( f = "show" , signature = signature ( object="design" ) ,
 					if ( ! identical ( object@structure , data.frame() ) ) {
 							msga <- "Design structure:\n\n"
 
-							d <- eatTools:::dfr2long ( object@structure , lower = FALSE , upper = TRUE , diag = FALSE , use.names = TRUE )
+							d <- dfr2long ( object@structure , lower = FALSE , upper = TRUE , diag = FALSE , use.names = TRUE )
 							
 							genString <- function ( ro , co , va , einr ) {
 									
@@ -1530,7 +1530,7 @@ setMethod ( f = "show" , signature = signature ( object="design" ) ,
 									na <- paste ( einr , d3$element1 , " linked by " , d3$element2 , "" , sep = "" )
 									rownames ( linkf ) <- na 
 
-									msge <- paste ( msge , eatTools:::dfr2text ( linkf ) , sep = "" )
+									msge <- paste ( msge , dfr2text ( linkf ) , sep = "" )
 									
 							} else msge <- NULL
 					} else {
@@ -1552,7 +1552,7 @@ setMethod ( f = "show" , signature = signature ( object="design" ) ,
 							# Rownames einrücken
 							rownames ( d4 ) <- paste ( einr , rownames ( d4 ) , sep = "" )
 							
-							msgf <- paste ( msgf , eatTools:::dfr2text ( d4 ) , sep = "" )
+							msgf <- paste ( msgf , dfr2text ( d4 ) , sep = "" )
 
 					} else {
 							msgf <- NULL
@@ -1583,7 +1583,7 @@ setMethod ( f = "show" , signature = signature ( object="design" ) ,
 							colnames ( dfr5 ) <- rep ( "" , length ( val ) )
 							rownames ( dfr5 ) <- paste ( einr , names ( d5 ) , ": " , sep = "" )
 							
-							msgg <- paste ( msgg , eatTools:::dfr2text ( dfr5 , blankRowNames = FALSE ) , sep = "" )
+							msgg <- paste ( msgg , dfr2text ( dfr5 , blankRowNames = FALSE ) , sep = "" )
 
 					} else {
 							msgg <- NULL

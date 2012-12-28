@@ -2,9 +2,9 @@ Package: eatDesign
 Type: Package
 Title: eatDesign
 Version: 0.0.3
-Depends: R (>= 2.14.0), eatTools, methods, igraph
+Depends: R (>= 2.14.0), methods, igraph
 Imports: Matrix
-Date: 2012-11-27
+Date: 2012-11-28
 Author: Martin Hecht, Nicole Haag, Karoline Sachse, Thilo Siegle and Sebastian Weirich
 Maintainer: Martin Hecht <martin.hecht@iqb.hu-berlin.de>
 Description: compute descriptives of data structures ("designs")
