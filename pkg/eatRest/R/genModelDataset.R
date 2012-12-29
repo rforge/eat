@@ -61,7 +61,7 @@ genModelDataset <- function( item.grouping , person.grouping , mis.rule , datase
 	cat( paste ( f.n , "Creating model specific dataset .\n") )
 	
 	# missing-rule spezifischen Datensatz setzen
-	dataset <- datasets [[ collapseMissings.create.recode.string ( mis.rule ) ]]
+	dataset <- datasets [[ eatTools:::collapseMissings.create.recode.string ( mis.rule ) ]]
 	
 	# Plausicheck id.name
 	stopifnot ( length ( id.name ) == 1 )

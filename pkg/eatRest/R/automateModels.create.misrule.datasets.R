@@ -30,12 +30,12 @@
 
 	# unique missing.rules Names
 	mis.rule.unique.names <- mapply ( function ( missing.rule ) {
-			collapseMissings.create.recode.string ( missing.rule )
+			eatTools:::collapseMissings.create.recode.string ( missing.rule )
 	} , mis.rule.unique , SIMPLIFY = FALSE )
 	
 	# Analysen nach missing.rule belabeln
 	names ( items.list ) <- mapply ( function ( missing.rule ) {
-			collapseMissings.create.recode.string ( missing.rule )
+			eatTools:::collapseMissings.create.recode.string ( missing.rule )
 	} , mis.rule , SIMPLIFY = TRUE )
 
 	# nach missing.rule Items zusammen
