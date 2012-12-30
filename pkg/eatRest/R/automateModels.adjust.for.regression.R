@@ -49,12 +49,21 @@
 				eval ( parse ( text = do ) )
 				# person side
 				wleadj <- eapadj <- list()
-				wleadj[[dimensions[i]]] <- unlist(lapply(results[[k]][[dimensions[i]]][[1]][[2]], function(ll) {ll$wle})) - results[[k]][[dimensions[i]]][[1]]$descriptives$wle$wle.mean
-				eapadj[[dimensions[i]]] <- unlist(lapply(results[[k]][[dimensions[i]]][[1]][[2]], function(ll) {ll$eap})) - results[[k]][[dimensions[i]]][[1]]$descriptives$pv$pv.mean
+					if(!is.null(wleC <- unlist(lapply(results[[k]][[dimensions[i]]][[1]][[2]], function(ll) {ll$wle})))) {
+						wleadj[[dimensions[i]]] <- wleC - results[[k]][[dimensions[i]]][[1]]$descriptives$wle$wle.mean
+					} else {
+						eatTools:::sunk ( paste ( f.n , "Found no WLEs in analysis", analyses[k], "on dimension", dimensions[i] ) ) 
+					}
+					if(!is.null(eapC <- unlist(lapply(results[[k]][[dimensions[i]]][[1]][[2]], function(ll) {ll$eap})))) {
+						eapadj[[dimensions[i]]] <- eapC - results[[k]][[dimensions[i]]][[1]]$descriptives$pv$pv.mean
+					} else {
+						eatTools:::sunk ( paste ( f.n , "Found no EAPs in analysis", analyses[k], "on dimension", dimensions[i] ) ) 
+					}
 				pvadj <- pNam <- list()
 				for(j in seq(along=names(results[[k]][[dimensions[i]]][[1]][[2]][[1]]$pv))) {
-					pvadj[[dimensions[i]]] <- unlist(lapply(results[[k]][[dimensions[i]]][[1]][[2]], function(ll) {ll$pv[[paste("pv.", j, sep="")]]})) - results[[k]][[dimensions[i]]][[1]]$descriptives$pv$pv.mean
-					pNam[[dimensions[i]]] <- names(results[[k]][[dimensions[i]]][[1]][[2]])
+					if(!is.null(pvC <- unlist(lapply(results[[k]][[dimensions[i]]][[1]][[2]], function(ll) {ll$pv[[paste("pv.", j, sep="")]]})))) {				
+						pvadj[[dimensions[i]]] <- pvC - results[[k]][[dimensions[i]]][[1]]$descriptives$pv$pv.mean
+						pNam[[dimensions[i]]] <- names(results[[k]][[dimensions[i]]][[1]][[2]])
 						make.pvadj <- function ( pers , pvad, wladj, eaadj ) {
 							p.dummy <- results[[k]][[dimensions[i]]][[1]][[2]][[pers]]
 							p.dummy$wle.adj <- wladj[[pers]]
@@ -62,6 +71,9 @@
 							p.dummy$pv[[paste("pv.",j,".adj", sep="")]] <- pvad[[pers]]
 							return(p.dummy)
 						}
+					} else {
+						eatTools:::sunk ( paste ( f.n , "Found no PVs in analysis", analyses[k], "on dimension", dimensions[i] ) )
+					}
 					p.dummies <- mapply ( make.pvadj , pers = pNam[[dimensions[i]]], MoreArgs = list(pvad=pvadj[[dimensions[i]]] , wladj= wleadj[[dimensions[i]]], eaadj=eapadj[[dimensions[i]]]), SIMPLIFY = FALSE )
 					results[[k]][[dimensions[i]]][[1]][[2]]<-p.dummies
 				}				
