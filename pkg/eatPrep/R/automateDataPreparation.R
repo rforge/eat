@@ -99,14 +99,15 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 			stopifnot(readSpss == TRUE)
 			stopifnot(class(inputList$savFiles) == "data.frame")
 		}
-
+	
 		### ggf. sav-files einlesen
-		if( readSpss) {
+		if( readSpss ) {
 			if(verbose) cat ( "\n" )
 			if(verbose) cat ( paste ( f.n , "Load .sav Files\n" ) )
 			if(!is.null(datList)) {
 				warning(paste ( f.n , "If readSpss == TRUE, datList will be ignored." ) )
 			}
+		
 			savFiles <- inputList$savFiles$filename
 			if( is.null (oldIDs) ) {oldIDs <- inputList$savFiles$case.id}
 			if( is.null (newID) ) {
@@ -115,9 +116,34 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 				}
 			}
 			if( is.null (newID) ) {newID <- "ID"}
-			dat <- datList <- mapply(readSpss, file = file.path (folder.e, savFiles), oldID = oldIDs,
-                  MoreArgs = list(correctDigits=correctDigits, truncateSpaceChar = truncateSpaceChar, newID = newID ))
-		} 				
+			
+			# MH 10.01.2013
+			# Problem: folder.e wird oben auf path gesetzt
+			# wenn path=NULL wird auf getwd() defaultet
+			# in getwd() liegen natürlich nicht die savFiles
+			# da ich nicht alle Kombinationen überblicke wird hier folgendermaßen minimalinvasiv gehotfixed:
+			# wenn file.path (folder.e, savFiles) nicht existent wird fullname aus datList genommen
+			# wenn dann immernoch nicht existent, dezidierter Abbruch, da es dann ja keine Daten gibt
+			fulln <- inputList$savFiles$fullname
+			names(fulln) <- inputList$savFiles$filename
+			fls <- file.path (folder.e, savFiles)
+			ex <- sapply ( fls , file.exists )
+			fls2 <- unname ( mapply ( function ( fls, ex , fulln ) if ( ex ) fls else fulln[basename(fls)] , fls , ex , MoreArgs = list ( fulln ) ) )
+			ex2 <- sapply ( fls2 , file.exists )
+			fls3 <- fls2[ex2]
+			
+			if ( ! identical ( fls3 , character(0) ) ) {
+					# MH 10.01.2013
+					# Problem: bei nur einem File crashts unten bei stopifnot ( class ( datList ) == "list" )
+					# deshalb wird hier noch SIMPLIFY=FALSE eingefügt
+					dat <- datList <- mapply(readSpss, file = fls3, oldID = oldIDs,
+						MoreArgs = list(correctDigits=correctDigits, truncateSpaceChar = truncateSpaceChar, newID = newID ),
+						SIMPLIFY=FALSE)
+			} else {
+					stop ( "No data available. Check 'datList', 'inputList' and/or 'path'." )
+			}
+
+		}
 		stopifnot ( class ( datList ) == "list" )		
 		stopifnot ( class ( inputList ) == "list" )
 		if( is.null (oldIDs) ) {oldIDs <- inputList$savFiles$case.id}
