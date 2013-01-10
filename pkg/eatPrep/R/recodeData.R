@@ -46,7 +46,7 @@
 
 recodeData <- function (dat, values, subunits, verbose = FALSE) {
   funVersion <- "recodeData: "
-
+  
   if (class(dat) != "data.frame") {
   stop (paste(funVersion, "'dat' must be a data.frame.\n", sep = ""))
   }  
@@ -75,7 +75,7 @@ recodeData <- function (dat, values, subunits, verbose = FALSE) {
   
   if (is.null(recodeinfo[[variableName]]$values)) {
     variableRecoded <- variable
-    if (verbose) cat(paste(funVersion, "Found no recode information for variable ", variableName, ". This variables will not be recoded.\n", sep =""))
+    if (verbose) cat(paste(funVersion, "Found no recode information for variable ", variableName, ". This variable will not be recoded.\n", sep =""))
   } else {
     dontcheck <- c("mbd")
     variable.unique <- na.omit(unique(variable[which(!variable %in% dontcheck)]))

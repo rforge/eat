@@ -2,7 +2,7 @@
 
 checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="ID", subunits = NULL, verbose = TRUE) {
 
-	funVersion <- "checkDesign 0.0.4"
+	funVersion <- "checkDesign 0.0.5"
 
 	if (is.na(match(id, colnames(dat)))) {
 		stop(paste(funVersion, " ID variable '", id, "' not found in dataset.", sep = "")) }
@@ -10,16 +10,40 @@ checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="ID", s
 	blocks <- eatTools:::set.col.type(blocks, col.type = list ( "character" = names(blocks) ))
 	booklets <- eatTools:::set.col.type(booklets, col.type = list ( "character" = names(booklets) ))
 	rotation <- eatTools:::set.col.type(rotation, col.type = list ( "character" = names(rotation) ))
-	
-	if(!is.null(subunits)){
+
+
+	# MH 10.01.13: diese section hab ich in recodeMbiToMnr überarbeitet/"verschlimmbessert"
+	# ist auch buggy
+	# wird komplett auskommentiert, darunter die Kopie aus recodeMbiToMnr
+	# if(!is.null(subunits)){
+		# if(verbose) cat("Use names for recoded subunits.\n")
+		# if (any(is.na(match(blocks$subunit, subunits$subunit)))){ 
+		  # if(verbose) cat("Found no names for recoded subunit(s) for subunit(s)" , blocks$subunit[which(is.na(match(blocks$subunit, subunits$subunit)))], 
+				# "\nThis/Those subunit(s) will be ignored in determining 'mnr'.\n")
+		  # blocks <- blocks[ - which(is.na(match(blocks$subunit, subunits$subunit))), ]
+		# }
+		# blocks$subunit[na.omit(match(subunits$subunit, blocks$subunit))] <- subunits$subunitRecoded[ match(blocks$subunit, subunits$subunit) ]
+	# }
+	  if(!is.null(subunits)){
 		if(verbose) cat("Use names for recoded subunits.\n")
-		if (any(is.na(match(blocks$subunit, subunits$subunit)))){ 
-		  if(verbose) cat("Found no names for recoded subunit(s) for subunit(s)" , blocks$subunit[which(is.na(match(blocks$subunit, subunits$subunit)))], 
+		
+		# MH 10.01.2013: leichte strukturelle Anpassungen zur besseren Übersicht
+		na <- is.na(match(blocks$subunit, subunits$subunit))
+		if (any( na )){ 
+		  warning("Found no names for recoded subunit(s) for subunit(s) " , paste(blocks$subunit[ na ], collapse = ", "), 
 				"\nThis/Those subunit(s) will be ignored in determining 'mnr'.\n")
-		  blocks <- blocks[ - which(is.na(match(blocks$subunit, subunits$subunit))), ]
+		  blocks <- blocks[ !na , ]
 		}
-		blocks$subunit[na.omit(match(subunits$subunit, blocks$subunit))] <- subunits$subunitRecoded[ match(blocks$subunit, subunits$subunit) ]
-	}
+
+		# blocks$subunit[na.omit(match(subunits$subunit, blocks$subunit))] <- subunits$subunitRecoded[ match(blocks$subunit, subunits$subunit) ]
+		# MH 10.01.2013: Fehler: "Anzahl der zu ersetzenden Elemente ist kein Vielfaches der Ersetzungslänge" 
+		# leider raff ich die Zeile nicht ganz
+		# gehe mal davon aus dass diejenigen subunits in blocks ersetzt werden sollen durch ihren Rekodierungsnamen (wenn es welche gibt)
+		rec <- subunits$subunitRecoded
+		names ( rec ) <- subunits$subunit
+		blocks$subunit[blocks$subunit %in% names(rec)] <- rec[blocks$subunit]
+		# allerdings Problem: was ist bei recodeData=FALSE in automateDataPreparation??	  
+	  }	
 	
 	gibsNich <- setdiff(names(dat),c(id,blocks$subunit))
 	if (length(gibsNich) > 0) {

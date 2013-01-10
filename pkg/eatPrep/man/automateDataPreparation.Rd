@@ -10,7 +10,7 @@ automateDataPreparation(datList = NULL, inputList, path = NULL,
 readSpss, checkData,  mergeData , recodeData, recodeMnr = FALSE,
 aggregateData, scoreData, writeSpss, 
 filedat = "mydata.txt", filesps = "readmydata.sps", breaks=NULL, nMbi = 2,
-aggregatemissings = NULL, rename = TRUE, recodedData = TRUE, 
+rotation.id = NULL, aggregatemissings = NULL, rename = TRUE, recodedData = TRUE, 
 correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL, 
 missing.rule = list(mvi = 0, mnr = 0, mci = 0, mbd = NA, mir = 0, mbi = 0), 
 verbose = FALSE)
@@ -65,6 +65,9 @@ numeric vector (argument used by \code{\link{recodeMbiToMnr}}).
 }
  \item{nMbi}{
 numeric (argument used by \code{\link{recodeMbiToMnr}}).
+}
+ \item{rotation.id}{
+character (argument used by \code{\link{recodeMbiToMnr}}).
 }
 \item{missing.rule}{
 a list containing recode information for character missings required

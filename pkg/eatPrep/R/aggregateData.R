@@ -113,7 +113,7 @@ aggregateData <- function (dat, subunits, units, aggregatemissings = NULL, renam
 	if(verbose) {cat(paste(funVersion, "Found ", nrow(oneSubunitUnits), " unit(s) with only one subunit in 'dat'. This/these subunit(s) will be renamed to their respective unit name(s).\nUnits ",
           paste(oneSubunitUnits$unit, collapse = ", "), "\n", sep = ""))  }       
   }  
-    
+
   # erstelle aggregierten Datensatz der Units, die aggregiert werden
   unitsAggregated <- mapply(aggregateData.aggregate, unitsToAggregate, aggregateinfo, MoreArgs = list(am, dat, verbose = verbose))
   
@@ -155,7 +155,7 @@ aggregateData <- function (dat, subunits, units, aggregatemissings = NULL, renam
 # findet zu aggregierende Spalten eines Datensatzes und aggregiert sie nach einer vorgegebenen Aggregierungsregel
 
 aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, dat, verbose = FALSE){
-  
+
   funVersion <- "aggregateData: "
   
   unitVars <- aggregateinfo$subunits
@@ -189,6 +189,25 @@ aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, 
   unitAggregated <- unname(agg)
   
   options(warn = -1)	
+  
+  # MH 10.01.2013
+  # Hotfix:
+  # wenn die aggRule eine aggRule ist,
+  # die der ZKDaemon auf das unitRecoding Sheet automatisch umsetzt
+  # (z.B. "1:3")
+  # dann ist die aggrule an dieser Stelle hier auch "SUM"
+  # alternativ könnte man das auch gleich im ZKDaemon ändern,
+  # also dass wenn die aggRule nach unitRecoding umgesetzt wurde,
+  # diese in units$unitAggregateRule gelöscht oder auf SUM gesetzt wird
+  # die Erkennung der "bekannten" Regel ist hier sehr primitiv und 
+  # nicht sonderlich erschöpfend/fehlersicher, müsste optimiert werden
+  if ( nchar (aggRule) > 0 ) {
+		if ( grepl ( ":" , aggRule , fixed = TRUE ) ) aggRule <- "SUM"
+  }
+  # hier gleich mal Warnung wenn nicht standardmäßige aggRule
+  if ( !aggRule %in% c("SUM","MEAN","") ) {
+		warning ( paste ( "Unit " , unitName , " has potentially problematic aggregation rule (\"" , aggRule , "\"). Please check.\n" , sep = "" ) )
+  }
   
   # Aggregierung des units je nach Regel
   if( aggRule == "SUM" | nchar (aggRule) == 0 ) {

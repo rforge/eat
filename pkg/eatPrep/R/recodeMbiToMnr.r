@@ -1,36 +1,53 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # recodeMnr
 # Description: convert mbi to mnr 
-# Version: 	0.1.0
+# Version: 	0.1.1
 # Status: alpha
-# Release Date: 2012-08-31
+# Release Date: 2013-01-10
 # Author:  Nicole Haag
 #
 # Change Log:
-# 0000-00-00 AA
+# 2013-01-10 MH: Anpassungen, siehe markierte Stellen
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 
 ###############################################################################
 
-recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 2, subunits = NULL, verbose = FALSE){
-  
+recodeMbiToMnr <- function (dat, id, rotation.id = NULL, booklets, blocks, rotation, breaks, nMbi = 2, subunits = NULL, verbose = FALSE){
+
   # check consistency of inputs
   if (nMbi < 1) {
-    stop("nMbi needs to be >= 1")
+    warning("nMbi needs to be >= 1. It's set to 1.")
+	nMbi <- 1
   }
   
   if (is.numeric(id)) {
     id <- colnames(dat)[id]
   }  
   
+  # MH 10.01.2013
+  # rotation.id defaulten
+  if ( is.null ( rotation.id ) ) rotation.id <- "booklet"
+
+  
   if(!is.null(subunits)){
     if(verbose) cat("Use names for recoded subunits.\n")
-    if (any(is.na(match(blocks$subunit, subunits$subunit)))){ 
-      warning("Found no names for recoded subunit(s) for subunit(s)" , paste(blocks$subunit[which(is.na(match(blocks$subunit, subunits$subunit)))], collapse = ", "), 
+    
+	# MH 10.01.2013: leichte strukturelle Anpassungen zur besseren Übersicht
+	na <- is.na(match(blocks$subunit, subunits$subunit))
+	if (any( na )){ 
+      warning("Found no names for recoded subunit(s) for subunit(s) " , paste(blocks$subunit[ na ], collapse = ", "), 
             "\nThis/Those subunit(s) will be ignored in determining 'mnr'.\n")
-      blocks <- blocks[ - which(is.na(match(blocks$subunit, subunits$subunit))), ]
+      blocks <- blocks[ !na , ]
     }
-    blocks$subunit[na.omit(match(subunits$subunit, blocks$subunit))] <- subunits$subunitRecoded[ match(blocks$subunit, subunits$subunit) ]
+
+	# blocks$subunit[na.omit(match(subunits$subunit, blocks$subunit))] <- subunits$subunitRecoded[ match(blocks$subunit, subunits$subunit) ]
+	# MH 10.01.2013: Fehler: "Anzahl der zu ersetzenden Elemente ist kein Vielfaches der Ersetzungslänge" 
+	# leider raff ich die Zeile nicht ganz
+	# gehe mal davon aus dass diejenigen subunits in blocks ersetzt werden sollen durch ihren Rekodierungsnamen (wenn es welche gibt)
+	rec <- subunits$subunitRecoded
+	names ( rec ) <- subunits$subunit
+	blocks$subunit[blocks$subunit %in% names(rec)] <- rec[blocks$subunit]
+	# allerdings Problem: was ist bei recodeData=FALSE in automateDataPreparation??
   }
   
   personsWithoutBooklets <- setdiff(dat[ , id], rotation[, id])
@@ -41,11 +58,20 @@ recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 
   # prepare dataset
   dat.mis <- as.data.frame(sapply(dat, recode, "'mbi'=1; else=0"))
   dat.mis[ , id] <- dat[, id]
-  dat <- merge(dat, rotation, by = id, all.x = T)
+  
+  # MH 10.01.2013
+  # "if" ergänzt
+  if ( !rotation.id %in% colnames(dat) ) {
+		dat <- merge(dat, rotation, by = id, all.x = T)
+		del.rotation.id <- TRUE
+  } else {
+		del.rotation.id <- FALSE
+  }
 
-  bookletsWithoutPersons <- setdiff(booklets$booklet, dat$booklet)
+  bookletsWithoutPersons <- setdiff(booklets$booklet, dat[,rotation.id])
   if (length(bookletsWithoutPersons) > 0){
-    warning("Found no response data for booklets", bookletsWithoutPersons, ".\n")
+    # MH 10.01.2013: "paste" ergänzt
+	warning(paste ( "Found no response data for booklets", paste( bookletsWithoutPersons, collapse = ", " ), ".\n") )
     booklets <- booklets [ - which(booklets$booklet %in% bookletsWithoutPersons) , ]
   }
   
@@ -60,14 +86,19 @@ recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 
   blocksWithoutSubitems <- setdiff(unique(booklet.long$block), blocks$block)
   
   if (length(blocksWithoutSubitems) > 0){
-    warning("Found no information about subitems for blocks", blocksWithoutSubitems, ". No recoding will be done for these blocks.\n")
+    # MH 10.01.2013: "paste" ergänzt
+	warning(paste ( "Found no information about subitems for blocks", paste ( blocksWithoutSubitems , collapse = ", " ), ". No recoding will be done for these blocks.\n") )
   }
   
   missingSubunits <- setdiff(blocks$subunit, colnames(dat))
   if(length(missingSubunits) > 0 ){
-    stop("Found no data for subunits", missingSubunits, ".")
+    # MH 10.01.2013: "Kritikalität" geändert
+	# kein stop, sondern warning, und wird aus blocks$subunit rausgenommen
+	# "paste" ergänzt
+	warning( paste ( "Found no data for subunits", paste ( missingSubunits, collapse = ", " ), ".") )
+	blocks <- blocks[!blocks$subunit %in% missingSubunits,]
   }
-
+  
 	# create sequences to group blocks together according to breaks	
 	nBlocks <- ncol(booklets)-1
 	blockBeg <- c(breaks-1, breaks[length(breaks)]+ 1)
@@ -82,15 +113,18 @@ recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 
 		blockEnd <- c(blockEnd, nBlocks)
 	stopifnot(length(blockEnd) == length(breaks)+1)
 
-	blockGrouping <-  mapply(":", blockBeg, blockEnd, SIMPLIFY = F)
+	blockGrouping <-  mapply(":", blockBeg, blockEnd, SIMPLIFY = FALSE)
 
+	
   # recode mbi booklet-wise
   bookletNames <- unique(booklet.long$booklet)
 
+  # MH 10.01.2013: rotation.id statt "booklet" bei dat
   for (bb in bookletNames) {
     # bb <- bookletNames[1]
-    dat.ll <- dat[ which(dat$booklet %in% bb) , ]
-    dat.mis.ll <- dat.mis[ dat$booklet %in% bb , ]
+
+    dat.ll <- dat[ which(dat[,rotation.id] %in% bb) , ]
+    dat.mis.ll <- dat.mis[ dat[,rotation.id] %in% bb , ]
 
     # find blocks in booklet
     blocks.bb <- booklet.long[ which(booklet.long$booklet == bb) , ]
@@ -99,14 +133,26 @@ recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 
 	# group blocks according to breaks
 	groupedBlocks <- lapply(seq(along = blockGrouping), function(ii) {blocks.bb[blockGrouping[[ii]]]})
 
-	for (gg in seq(along = groupedBlocks)){
+	# MH 10.01.2013: 
+	# potentiell fehlerproduzierend kann sein
+	# dass bei den Datensatzreduktionen "drop=FALSE" fehlt
+	# das kann nicht (immer) gut gehen
+	# wird entsprechend ergänzt
+	
+	seqGroupedBlocks <- seq(along = groupedBlocks)
+	for (gg in seqGroupedBlocks){
 		# gg <- 2
+
+		# MH 10.01.2013:
+		# fürs debuggen werden die Schleifendurchläufe ausgegeben
+		cat ( paste ( bb , gg , "\n" ) )
+		flush.console()
 		
 		block.bb <- blocks[ which(blocks$block %in% groupedBlocks[[gg]]) , ]
 		block.bb$orderme <- match(blocks$block, groupedBlocks[[gg]])[!is.na( match(blocks$block, groupedBlocks[[gg]]))]
 		block.bb <- block.bb[order(block.bb$orderme, block.bb$subunitBlockPosition), ]
-		dat.bb <- dat.ll[ , block.bb$subunit ]
-		dat.mis.bb <- dat.mis.ll[ , block.bb$subunit ]
+		dat.bb <- dat.ll[ , block.bb$subunit , drop = FALSE ]
+		dat.mis.bb <- dat.mis.ll[ , block.bb$subunit , drop = FALSE ]
 
 		## find variables to be recoded
 		nBlockSubunits  <- ncol(dat.bb)
@@ -125,17 +171,25 @@ recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 
 					})
 
 		## recode selected variables
-		names(toRecodeList) <- dat.ll[ , id]
-		for (jj in names(toRecodeList)){
-		  if (!is.null(toRecodeList[[jj]])) {
-			dat[ dat[ , id] == jj, which(colnames(dat) %in% toRecodeList[[jj]]) ] <- "mnr"
-		  # cat( dat[which(dat[ , id]  == jj), id], rev(toRecodeList[[jj]]), "\n")
-			dat.mis[ dat.mis[ , id] == jj, which(colnames(dat.mis) %in% toRecodeList[[jj]]) ] <- 2
-		  }
+		
+		# MH 10.01.2013:
+		# Fehler bei names(toRecodeList) <- dat.ll[ , id]
+		# Ergänzunglänge stimmt nicht
+		# identifiziert: es kommt vor dass toRecodeList leer ( list() ) ist
+		# warum, kA, müsste verifiziert werden, ob dass ein valider Fall ist
+		# jetzt hotfixen: einfach abfangen = nix tun
+		if ( length ( toRecodeList ) > 0 ) {
+			names(toRecodeList) <- dat.ll[ , id]
+			for (jj in names(toRecodeList)){
+			  if (!is.null(toRecodeList[[jj]])) {
+				dat[ dat[ , id] == jj, which(colnames(dat) %in% toRecodeList[[jj]]) ] <- "mnr"
+			  # cat( dat[which(dat[ , id]  == jj), id], rev(toRecodeList[[jj]]), "\n")
+				dat.mis[ dat.mis[ , id] == jj, which(colnames(dat.mis) %in% toRecodeList[[jj]]) ] <- 2
+			  }
+			}
 		}
 	}
 }
-
   
   recodedSubitems <- apply(dat.mis, 1, function(ll) { names(ll)[which(ll == 2)]})
   if (any(sapply(recodedSubitems, length) > 0)){
@@ -153,7 +207,15 @@ recodeMbiToMnr <- function (dat, id, booklets, blocks, rotation, breaks, nMbi = 
     if(verbose) cat("Found no 'mbi' to be recoded to 'mnr' according to the specifications.\n")
   
   }
-   
-  return(dat[ , - which(colnames(dat) == "booklet")])
-
+  
+  # MH 10.01.2013
+  # falls rotation.id zu dat geaddet wurde, dann wieder löschen
+  # ansonsten war die bereits im Datensatz (und bleibt auch drin)
+  if ( del.rotation.id ) {
+		dat <- dat[ , !colnames(dat) %in% rotation.id ]
+  }
+  
+  # return(dat[ , - which(colnames(dat) == "booklet")])
+  return ( dat )
+  
 }

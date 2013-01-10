@@ -59,6 +59,7 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 						readSpss, checkData,  mergeData , recodeData, recodeMnr = FALSE,
 						aggregateData, scoreData, writeSpss, 
 						filedat = "mydata.txt", filesps = "readmydata.sps", breaks=NULL, nMbi = 2,
+						rotation.id = NULL,
 						aggregatemissings = NULL, rename = TRUE, recodedData = TRUE, 
             correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL, 
             missing.rule = list(mvi = 0, mnr = 0, mci = 0, mbd = NA, mir = 0, mbi = 0), verbose=FALSE) {
@@ -156,6 +157,13 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 		} else {if(verbose) cat ( "\n" )	
 		if(verbose) cat ( paste ( f.n , "Check has been skipped\n" ) )}
 
+		# MH 10.01.13 für user convenience hier noch ne Warnung wenn
+		# mergeData=FALSE ist, aber mehrere Datensätze in der Liste
+		# (bricht zwar dann unten eh ab, aber warum nicht)
+		if ( !mergeData & length ( datList ) > 1 ) {
+				warning ( "datList contains more than 1 data.frame" )
+		}
+		
 		if( mergeData ) {
 			if(verbose) cat ( "\n" )
 			if(verbose) cat ( paste ( f.n , "Start merging\n" ) )
@@ -168,21 +176,66 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 		if( recodeData ) {
 			if(verbose) cat ( "\n" )
 			if(verbose) cat ( paste ( f.n , "Start recoding\n" ) )
+
+			# MH 10.01.13
+			# bei mergeData = FALSE ist das hier noch ne Liste mit Data.frame(s)
+			# bei einem data.frame ist das völlig ok, da wird jetzt "unlisted"
+			# bei mehreren stoppts
+			if ( !is.data.frame ( dat ) & is.list ( dat ) ) {
+					if ( ( l <- length ( dat ) ) > 1 ) {
+							stop ( "Your data contains more then one data.frame. Use option 'mergeData=TRUE'." )
+					} else if ( l == 1 ) {
+							dat <- dat[[1]]
+					} else {
+							dat <- NULL
+					}
+			}
+			if ( is.data.frame(dat)) {
+					if ( nrow ( dat ) == 0 | ncol ( dat ) == 0 ) dat <- NULL
+			}
+			if (!is.data.frame(dat)) {
+					stop ( "internal error: 'dat' is not a data.frame or empty" )
+			}
+
 			dat <- recodeData (dat= dat, values=inputList$values, subunits=inputList$subunits, verbose=verbose)
 		} else {if(verbose) cat ( "\n" )	
 		if(verbose) cat ( paste ( f.n , "Recode has been skipped\n" ) )}
-		
+
 		if( recodeMnr ) {
 			if(verbose) cat ( "\n" )
 			if(verbose) cat ( paste ( f.n , "Start recoding Mbi to Mnr\n" ) )
-			if(is.null(inputList$booklets)) {cat ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$booklets. Data frame not available!\n" ) ); stop()}
-			if(is.null(inputList$blocks)) {cat ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$blocks. Data frame not available!\n" ) ); stop()}
-			if(is.null(inputList$rotation)) {cat ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$rotation. Data frame not available!\n" ) ); stop()}
-			dat <- recodeMbiToMnr(dat = dat, id = newID, booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, breaks, nMbi = nMbi, subunits = inputList$subunits, verbose = verbose)
+			if(is.null(inputList$booklets)) {warning ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$booklets. Data frame not available!\n" ) ) }
+			if(is.null(inputList$blocks)) {warning ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$blocks. Data frame not available!\n" ) ) }
+
+			# MH 10.01.13
+			# neuer Parameter rotation.id
+			# wenn dieser (valid) gesetzt ist wird inputList$rotation gesetzt
+			# nur mal so interessehalber: wo soll "rotation" überhaupt sonst herkommen? konnt mir auch keiner sagen :-)
+	
+			if( is.null(inputList$rotation) ) {
+					if (is.character(rotation.id)) {
+							if ( rotation.id %in% colnames ( dat ) ) {
+									idname <- inputList$newID[inputList$newID$key=="master-id","value"]
+									if ( idname %in% colnames ( dat ) ) {
+											inputList$rotation <- dat[,c(idname,rotation.id),drop=FALSE]
+									}
+							}
+					}
+			}
+		
+			if(is.null(inputList$rotation)) {
+					warning ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$rotation. Data frame not available!\n" ) )
+			}
+			
+			if ( any ( is.null(inputList$booklets), is.null(inputList$blocks), is.null(inputList$rotation) ) ) {
+					warning ( "RecodeMnr had to be skipped due to missing input variables.\n" )
+			} else {
+					dat <- recodeMbiToMnr(dat = dat, id = newID, rotation.id = rotation.id, booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, breaks, nMbi = nMbi, subunits = inputList$subunits, verbose = verbose)
+			}
+			
 		} else {if(verbose) cat ( "\n" )	
 		if(verbose) cat ( paste ( f.n , "RecodeMnr has been skipped\n" ) )}
 						
-			
 		if( aggregateData ) {
 			if(verbose) cat ( "\n" )
 			if(verbose) cat ( paste ( f.n , "Start aggregating\n" ) )
@@ -197,11 +250,11 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
             aggregatemissings = aggregatemissings, rename = rename, recodedData = recodedData, verbose = verbose)
 		} else {if(verbose) cat ( "\n" )	
 		if(verbose) cat ( paste ( f.n , "Aggregate has been skipped\n" ) )}
-		
+	
 		if( scoreData ) {
 			if(verbose) cat ( "\n" )
 			if(verbose) cat ( paste ( f.n , "Start scoring\n" ) )
-			dat <- scoreData (dat= dat, unitrecodings=inputList$unitRecodings, units=inputList$units, verbose = verbose)
+				dat <- scoreData (dat= dat, unitrecodings=inputList$unitRecodings, units=inputList$units, verbose = verbose)
 		} else {if(verbose) cat ( "\n" )	
 		if(verbose) cat ( paste ( f.n , "Scoring has been skipped\n" ) )}
 	

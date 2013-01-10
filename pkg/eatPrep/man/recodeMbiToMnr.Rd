@@ -8,7 +8,7 @@ Recode Missing by Intention to Missing not Reached
 }
 
 \usage{
-	recodeMbiToMnr (dat, id, booklets, blocks, rotation, breaks, nMbi = 2, 
+	recodeMbiToMnr (dat, id, rotation.id, booklets, blocks, rotation, breaks, nMbi = 2, 
 	subunits = NULL, verbose = FALSE)
 }
 
@@ -19,6 +19,9 @@ Recode Missing by Intention to Missing not Reached
 	\item{id}{
 		Name or column number of identifier (ID) variable in dataset.
 	}
+	\item{rotation.id}{
+		Name of rotation indicator (e.g. "booklet") in \code{dat}.
+	}	
 	\item{booklets}{
 		A data frame containing the sequence of blocks in each booklet in wide format. The column names need to be \code{booklet, block1, block2, block3 ...}.
 	}
@@ -59,6 +62,7 @@ A data frame with missing not reached coded as \code{mnr}. For each person with 
 \author{
 Nicole Haag
 }
+
 
 \examples{
 data(inputDat)
