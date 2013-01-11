@@ -172,6 +172,18 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 			dat <- mergeData(newID = newID, datList = datList, oldIDs = oldIDs, addMbd=TRUE, verbose=verbose)
 		} else {if(verbose) cat ( "\n" )	
 		if(verbose) cat ( paste ( f.n , "Merge has been skipped\n" ) )}
+
+
+# MH 11.01.2013: temporär zum debuggen, kann wieder rausgenommen werden		
+# browser()		
+# dat.o <- dat
+# i <- c("M3319A01a","M3312A01n","M3312A01m","M3312A01l","M3312A01k",
+# "M3312A01j","M3312A01i","M3312A01h","M3312A01g","M3312A01f","M3312A01e",
+# "M3312A01d","M3312A01c","M3312A01b","M3312A01a")
+
+		
+		# dat <- dat[, c("idstud",i) ]
+
 		
 		if( recodeData ) {
 			if(verbose) cat ( "\n" )
@@ -235,7 +247,18 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 			
 		} else {if(verbose) cat ( "\n" )	
 		if(verbose) cat ( paste ( f.n , "RecodeMnr has been skipped\n" ) )}
-						
+
+
+# MH 11.01.2013: temporär zum debuggen, kann wieder rausgenommen werden
+# dat.o <- dat
+# i <- c("M3319A01aR","M3312A01nR","M3312A01mR","M3312A01lR","M3312A01kR",
+# "M3312A01jR","M3312A01iR","M3312A01hR","M3312A01gR","M3312A01fR","M3312A01eR",
+# "M3312A01dR","M3312A01cR","M3312A01bR","M3312A01aR")
+# dat <- dat[, c("idstud",i) ]
+# browser()
+
+		
+		
 		if( aggregateData ) {
 			if(verbose) cat ( "\n" )
 			if(verbose) cat ( paste ( f.n , "Start aggregating\n" ) )

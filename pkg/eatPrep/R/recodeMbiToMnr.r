@@ -13,7 +13,7 @@
 ###############################################################################
 
 recodeMbiToMnr <- function (dat, id, rotation.id = NULL, booklets, blocks, rotation, breaks, nMbi = 2, subunits = NULL, verbose = FALSE){
-
+# browser()
   # check consistency of inputs
   if (nMbi < 1) {
     warning("nMbi needs to be >= 1. It's set to 1.")
@@ -145,7 +145,7 @@ recodeMbiToMnr <- function (dat, id, rotation.id = NULL, booklets, blocks, rotat
 
 		# MH 10.01.2013:
 		# fürs debuggen werden die Schleifendurchläufe ausgegeben
-		cat ( paste ( bb , gg , "\n" ) )
+		cat ( paste ( bb , " " , gg , ": " , sep = "" ) )
 		flush.console()
 		
 		block.bb <- blocks[ which(blocks$block %in% groupedBlocks[[gg]]) , ]
@@ -154,7 +154,7 @@ recodeMbiToMnr <- function (dat, id, rotation.id = NULL, booklets, blocks, rotat
 		dat.bb <- dat.ll[ , block.bb$subunit , drop = FALSE ]
 		dat.mis.bb <- dat.mis.ll[ , block.bb$subunit , drop = FALSE ]
 
-		## find variables to be recoded
+		## find variables to be recoded0
 		nBlockSubunits  <- ncol(dat.bb)
 		subunitSequence <- colnames(dat.bb)
 		mbiList <- apply(dat.mis.bb, 1, function(ii){ which(ii > 0) })
@@ -171,15 +171,25 @@ recodeMbiToMnr <- function (dat, id, rotation.id = NULL, booklets, blocks, rotat
 					})
 
 		## recode selected variables
-		
+# browser()		
 		# MH 10.01.2013:
 		# Fehler bei names(toRecodeList) <- dat.ll[ , id]
 		# Ergänzunglänge stimmt nicht
 		# identifiziert: es kommt vor dass toRecodeList leer ( list() ) ist
 		# warum, kA, müsste verifiziert werden, ob dass ein valider Fall ist
 		# jetzt hotfixen: einfach abfangen = nix tun
+		
+		names(toRecodeList) <- dat.ll[ , id]
+		
+		# MH 11.01.2013
+		# NULL aus toRecodeList raus
+		toRecodeList <- toRecodeList[ ! unname ( sapply ( toRecodeList , is.null ) ) ]
+		
 		if ( length ( toRecodeList ) > 0 ) {
-			names(toRecodeList) <- dat.ll[ , id]
+			
+			# MH 11.01.2013
+			cat ( paste ( "mnr for " , length ( toRecodeList ) , " cases.\n" , sep = "" ) )
+			
 			for (jj in names(toRecodeList)){
 			  if (!is.null(toRecodeList[[jj]])) {
 				dat[ dat[ , id] == jj, which(colnames(dat) %in% toRecodeList[[jj]]) ] <- "mnr"
@@ -187,9 +197,12 @@ recodeMbiToMnr <- function (dat, id, rotation.id = NULL, booklets, blocks, rotat
 				dat.mis[ dat.mis[ , id] == jj, which(colnames(dat.mis) %in% toRecodeList[[jj]]) ] <- 2
 			  }
 			}
+		
+		} else {
+			cat ( paste ( "mnr for 0 cases.\n" , sep = "" ) )	
 		}
 	}
-}
+  }
   
   recodedSubitems <- apply(dat.mis, 1, function(ll) { names(ll)[which(ll == 2)]})
   if (any(sapply(recodedSubitems, length) > 0)){

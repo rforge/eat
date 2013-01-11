@@ -210,21 +210,31 @@ aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, 
   }
   
   # Aggregierung des units je nach Regel
-  if( aggRule == "SUM" | nchar (aggRule) == 0 ) {
-  	unitAggregated[unitAggregated == "vc"] <- as.character(rowSums(apply(unitDat[unitAggregated == "vc", ], 2, as.numeric), na.rm = TRUE))
+
+  # MH 11.01.2013
+  # das Ding kann hier auch leer sein, dann crash
+  unitDat.vc <- unitDat[ unitAggregated == "vc", , drop = FALSE ]
+  # wird jetzt abgefangen
+  if ( nrow ( unitDat.vc ) > 0 ) {
+		  if( aggRule == "SUM" | nchar (aggRule) == 0 ) {
+			unitAggregated[unitAggregated == "vc"] <- as.character(rowSums(apply(unitDat.vc, 2, as.numeric), na.rm = TRUE))
+		  }
+		  
+		  if( aggRule == "MEAN" ) {
+			unitAggregated[unitAggregated == "vc"] <- as.character(rowMeans(apply(unitDat.vc, 2, as.numeric), na.rm = TRUE)) 
+		  }
+  } else {
+		unitAggregated <- unitDat
+		cat ( paste ( "No valid cells (only missings) for " , unitName , "\n" , sep = "" ) )
   }
+
+  options(warn = 0)
   
-  if( aggRule == "MEAN" ) {
-  	unitAggregated[unitAggregated == "vc"] <- as.character(rowMeans(apply(unitDat[unitAggregated == "vc", ], 2, as.numeric), na.rm = TRUE)) 
-  }
-  				
   # pattern aggregation (noch nicht getestet)
   #	if( !aggRule %in% c("SUM","MEAN") )  {
   #	unit.pattern <- apply( unitDat[ unit == "vc" ], 1, paste, collapse = "")
   #	unit [ unit == "vc" ] <- recode(unit.pattern, aggRule)
   #	}
-  
-  options(warn = 0)	
   
   return(unitAggregated)
 }
