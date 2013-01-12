@@ -58,6 +58,7 @@
 automateDataPreparation <- function(datList = NULL, inputList, path = NULL, 
 						readSpss, checkData,  mergeData , recodeData, recodeMnr = FALSE,
 						aggregateData, scoreData, writeSpss, 
+						mnrFunction = c( "recodeMbiToMnr" , "mnrCoding" ),
 						filedat = "mydata.txt", filesps = "readmydata.sps", breaks=NULL, nMbi = 2,
 						rotation.id = NULL,
 						aggregatemissings = NULL, rename = TRUE, recodedData = TRUE, 
@@ -242,7 +243,19 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 			if ( any ( is.null(inputList$booklets), is.null(inputList$blocks), is.null(inputList$rotation) ) ) {
 					warning ( "RecodeMnr had to be skipped due to missing input variables.\n" )
 			} else {
-					dat <- recodeMbiToMnr(dat = dat, id = newID, rotation.id = rotation.id, booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, breaks, nMbi = nMbi, subunits = inputList$subunits, verbose = verbose)
+					# Funktion auswählen
+					if ( length ( mnrFunction ) > 1 ) {
+							mnrFunction <- mnrFunction[1]
+					} else {
+							if ( ! mnrFunction %in% c( "recodeMbiToMnr" , "mnrCoding" ) ) {
+									mnrFunction <- "recodeMbiToMnr"
+							}
+					}
+					if ( mnrFunction == "recodeMbiToMnr" ) {
+							dat <- recodeMbiToMnr(dat = dat, id = newID, rotation.id = rotation.id, booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, breaks, nMbi = nMbi, subunits = inputList$subunits, verbose = verbose)
+					} else if ( mnrFunction == "mnrCoding" ) {
+							dat <- eatPrep:::mnrCoding ( dat = dat , pid = newID , rotation.id = rotation.id , blocks = inputList$blocks , booklets = inputList$booklets , breaks = breaks , subunits = inputList$subunits , nMbi = nMbi  , mbiCode = "mbi" , mnrCode = "mnr" , invalidCodes = c ( "mbd", "mir", "mci" ) , verbose = verbose )
+					}
 			}
 			
 		} else {if(verbose) cat ( "\n" )	

@@ -8,7 +8,8 @@ prepare datasets for \code{automateModels}
 \usage{
 automateDataPreparation(datList = NULL, inputList, path = NULL, 
 readSpss, checkData,  mergeData , recodeData, recodeMnr = FALSE,
-aggregateData, scoreData, writeSpss, 
+aggregateData, scoreData, writeSpss,
+mnrFunction = c( "recodeMbiToMnr" , "mnrCoding" ),
 filedat = "mydata.txt", filesps = "readmydata.sps", breaks=NULL, nMbi = 2,
 rotation.id = NULL, aggregatemissings = NULL, rename = TRUE, recodedData = TRUE, 
 correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL, 
@@ -51,6 +52,9 @@ logical. If \code{TRUE} function \code{\link{scoreData}} will be called.
 }
   \item{writeSpss}{
 logical. If \code{TRUE} function \code{\link{writeSpss}} will be called.
+}
+  \item{mnrFunction}{
+character. Choose one of two functions for mnr coding, either "recodeMbiToMnr" (default) or "mnrCoding".
 }
   \item{filedat}{
 a character string containing the name of the output data file required
