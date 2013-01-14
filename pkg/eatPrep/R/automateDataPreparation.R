@@ -254,7 +254,9 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 					if ( mnrFunction == "recodeMbiToMnr" ) {
 							dat <- recodeMbiToMnr(dat = dat, id = newID, rotation.id = rotation.id, booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, breaks, nMbi = nMbi, subunits = inputList$subunits, verbose = verbose)
 					} else if ( mnrFunction == "mnrCoding" ) {
-							dat <- eatPrep:::mnrCoding ( dat = dat , pid = newID , rotation.id = rotation.id , blocks = inputList$blocks , booklets = inputList$booklets , breaks = breaks , subunits = inputList$subunits , nMbi = nMbi  , mbiCode = "mbi" , mnrCode = "mnr" , invalidCodes = c ( "mbd", "mir", "mci" ) , verbose = verbose )
+							# dat <- eatPrep:::mnrCoding ( dat = dat , pid = newID , rotation.id = rotation.id , blocks = inputList$blocks , booklets = inputList$booklets , breaks = breaks , subunits = inputList$subunits , nMbi = nMbi  , mbiCode = "mbi" , mnrCode = "mnr" , invalidCodes = c ( "mbd", "mir", "mci" ) , verbose = verbose )
+							# MH 14.01.2013: zum debuggen/developen ist "eatPrep:::"mnrCoding extrem scheisse :D (wieder mal selbst verarscht)
+							dat <- mnrCoding ( dat = dat , pid = newID , rotation.id = rotation.id , blocks = inputList$blocks , booklets = inputList$booklets , breaks = breaks , subunits = inputList$subunits , nMbi = nMbi  , mbiCode = "mbi" , mnrCode = "mnr" , invalidCodes = c ( "mbd", "mir", "mci" ) , verbose = verbose )
 					}
 			}
 			

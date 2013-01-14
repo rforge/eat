@@ -223,10 +223,14 @@ aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, 
 		  if( aggRule == "MEAN" ) {
 			unitAggregated[unitAggregated == "vc"] <- as.character(rowMeans(apply(unitDat.vc, 2, as.numeric), na.rm = TRUE)) 
 		  }
-  } else {
-		unitAggregated <- unitDat
-		cat ( paste ( "No valid cells (only missings) for " , unitName , "\n" , sep = "" ) )
-  }
+  } 
+  #else {
+  #		unitAggregated <- unitDat
+  #		cat ( paste ( "No valid cells (only missings) for " , unitName , "\n" , sep = "" ) )
+  #}
+  # MH 14.01.2013
+  # der Teil war etwas suboptimal
+  # da die vorige missing aggregation wieder überschrieben wurd :-)
 
   options(warn = 0)
   
