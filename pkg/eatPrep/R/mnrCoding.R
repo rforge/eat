@@ -66,7 +66,7 @@ mnrCoding <- function ( dat , pid , rotation.id , blocks , booklets , breaks , s
 						nombi <- sapply ( dat[,items] , f1 , mbiCode ) 
 						if ( any ( nombi ) ) {
 								cat ( paste ( paste ( items[nombi] , collapse = ", " ) , "\n" , sep = "" ) )
-								cat ( "     If you expect mbi-codes on these variables check your data and option 'mbiCode'\n" )
+								cat ( "     If you expect mbi-codes on these variables check your data and option 'mbiCode'\n\n" )
 						} else {
 								cat ( "none\n\n" )
 						}
@@ -210,9 +210,10 @@ mnrCoding <- function ( dat , pid , rotation.id , blocks , booklets , breaks , s
 				
 						# Zellen/Personen/Items ausgeben
 						if ( verbose ) {
-								cat ( paste ( "number of cells: ", nrow(da) , "\n" , sep = "" ) )
-								cat ( paste ( "number of cases: ", length(unpid) , "\n" , sep = "" ) )
-								cat ( paste ( "number of items: ", length(unitems) , "\n\n" , sep = "" ) )
+								cat ( paste ( "mnr statistics:\n" ) )
+								cat ( paste ( "     mnr cells: ", nrow(da) , "\n" , sep = "" ) )
+								cat ( paste ( "     unique cases with at least one mnr code: ", length(unpid) , "\n" , sep = "" ) )
+								cat ( paste ( "     unique items with at least one mnr code: ", length(unitems) , "\n\n" , sep = "" ) )
 						}
 
 						# Ausgabe von Deskriptives von TH/Abschnitt (auf Wunsch einzelner)
@@ -224,12 +225,12 @@ mnrCoding <- function ( dat , pid , rotation.id , blocks , booklets , breaks , s
 								# jetzt daraus th/abschn : Nperson
 								da.agg2 <- aggregate ( da.agg1 , by = list ( da.agg1$booklet , da.agg1$booklet.section ) , FUN = length )
 								da.agg2 <- da.agg2 [ , c(1,2,3) ]
-								colnames ( da.agg2 ) <- c ( "booklet" , "booklet.section" , paste ( "N_" , pid , sep = "" ) )
+								colnames ( da.agg2 ) <- c ( "booklet" , "booklet.section" , paste ( "N." , pid , sep = "" ) )
 								da.agg2 <- da.agg2[order(da.agg2$booklet,da.agg2$booklet.section),]
 								rownames ( da.agg2 ) <- seq ( along = rownames ( da.agg2 ) )
 						
 								# ausgeben
-								cat ( paste ( "unique cases '" , pid , "' per booklet and booklet section (0s ommitted):\n\n" , sep = "" ) )
+								cat ( paste ( "unique cases ('" , pid , "') per booklet and booklet section (0s ommitted):\n\n" , sep = "" ) )
 								print ( da.agg2 )
 								cat ( "\n" )
 						}
