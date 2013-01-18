@@ -171,8 +171,15 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 			if( readSpss) {oldIDs <- rep(newID, length(datList))}
 			if(is.null(newID)) {newID <- "ID"}
 			dat <- mergeData(newID = newID, datList = datList, oldIDs = oldIDs, addMbd=TRUE, verbose=verbose)
-		} else {if(verbose) cat ( "\n" )	
-		if(verbose) cat ( paste ( f.n , "Merge has been skipped\n" ) )}
+		} else {
+      if(verbose) cat ( "\n" )	
+		  if(verbose) cat ( paste ( f.n , "Merge has been skipped\n" ) )
+		  if (length(datList) > 1) {
+		    stop ( "Your data contains more then one data.frame. Use option 'mergeData=TRUE'." )
+		  } else {
+      dat <- datList[[1]]
+      }  
+    }
 
 
 # MH 11.01.2013: temporär zum debuggen, kann wieder rausgenommen werden		
@@ -190,20 +197,7 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 			if(verbose) cat ( "\n" )
 			if(verbose) cat ( paste ( f.n , "Start recoding\n" ) )
 
-			# MH 10.01.13
-			# bei mergeData = FALSE ist das hier noch ne Liste mit Data.frame(s)
-			# bei einem data.frame ist das völlig ok, da wird jetzt "unlisted"
-			# bei mehreren stoppts
-			if ( !is.data.frame ( dat ) & is.list ( dat ) ) {
-					if ( ( l <- length ( dat ) ) > 1 ) {
-							stop ( "Your data contains more then one data.frame. Use option 'mergeData=TRUE'." )
-					} else if ( l == 1 ) {
-							dat <- dat[[1]]
-					} else {
-							dat <- NULL
-					}
-			}
-			if ( is.data.frame(dat)) {
+      if ( is.data.frame(dat)) {
 					if ( nrow ( dat ) == 0 | ncol ( dat ) == 0 ) dat <- NULL
 			}
 			if (!is.data.frame(dat)) {
