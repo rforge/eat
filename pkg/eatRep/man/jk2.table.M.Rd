@@ -1,16 +1,18 @@
-\name{jk2.table}
-\alias{jk2.table}
+\name{jk2.table.M}
+\alias{jk2.table.M}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{JK2 for frequency tables.}
+\title{Multicore version of jk2.table().}
 \description{Compute frequency tables with standard errors for complex cluster designs with multiple imputed variables
 based on Jackknife (JK2) procedure. Conceptually, the function combines replication methods and methods for
-multiple imputed data. Technically, this is a wrapper for the svymean() function of the survey package called to dichotomous indicators
-of the dependent variable.
+multiple imputed data. Technically, this is a wrapper for the svymean() function of the survey package
+called to dichotomous indicators of the dependent variable. Function uses the parallel package to
+distribute analysis to different logical processors.
 }
 \usage{
-jk2.table(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(),
+jk2.table.M(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(),
           separate.missing.indikator = FALSE, expected.values = list(),
-          complete.permutation = c("nothing", "groups", "all")) }
+          complete.permutation = c("nothing", "groups", "all"),
+          multicoreOptions = list(n.cores = NULL, GBcore = NULL, tempFolder = NULL, nameLogfile = NULL) ) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -63,7 +65,20 @@ permutation, e.g. 5 plausible values and 3 imputations of one group variable res
 data sets will be used, no matter whether the larger number of imputations is a whole multiple of the smaller number of imputations. If \code{"groups"},
 only the number of imputations of more than one grouping variable will be permutated.
 }
-}
+  \item{multicoreOptions}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+A list of several parameters concerning multicore processing.
+\describe{
+ \item{\code{n.cores}}{Desired number of cores to be used for analysis. If \code{NULL}, function chooses appropriate number of cores 
+   considering system memory.}
+ \item{\code{GBcore}}{Desired memory (in giga byte) of RAM preserved for each core. For example, if you work on a 4 core machine with 4 GB
+ RAM and want to preserve 2 GB for each core, only 2 cores are used instead of 4.}
+ \item{\code{tempFolder}}{Multicore operation does not allow to print messages on console. Therefore, a log file will be writte in the 
+ specified folder. If no folder is specified, no log file will be created.}
+ \item{\code{nameLogfile}}{Name of the logfile. If no name is specified, file will be named \code{analyse.log}. }
+ }
+ }
+ }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 Function first creates replicate weights based on JKZone and JKrep variables according to JK2 procedure
@@ -99,11 +114,13 @@ Sebastian Weirich
 }
 \examples{
 data(reading_writing)
+## Not run:
 ### Computes frequencies of the hisei group conditionally on the groups of passed and failed with respect to reading score
-freq.tab  <- jk2.table(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
-             group = list(country = "country", passed.reading = paste("passed_reading",1:3,sep="" )),
-             dependent = list(hisei = paste("zehisei", 1:5, sep = "") ) ,
-             complete.permutation = "no" )
+#freq.tab  <- jk2.table.M(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
+#             group = list(country = "country", passed.reading = paste("passed_reading",1:3,sep="" )),
+#             dependent = list(hisei = paste("zehisei", 1:5, sep = "") ) ,
+#             complete.permutation = "no" )
+## End(Not run)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

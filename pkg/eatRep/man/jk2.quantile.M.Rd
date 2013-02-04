@@ -1,14 +1,17 @@
-\name{jk2.mean}
-\alias{jk2.mean}
+\name{jk2.quantile.M}
+\alias{jk2.quantile.M}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{JK2 for mean estimates.}
-\description{Compute means, variances and standard deviations with standard errors
-for complex cluster designs with multiple imputed variables (e.g. plausible values) based on Jackknife (JK2)
-procedure. Conceptually, the function combines replication methods and methods for multiple imputed data.
-Technically, this is a wrapper for the svymean() and svyvar() functions of the survey package.}
+\title{Multicore version of jk2.quantile().}
+\description{Compute quantiles with standard errors for complex cluster designs with multiple imputed variables
+(e.g. plausible values) based on Jackknife (JK2) procedure. Conceptually, the function combines
+replication methods and methods for multiple imputed data. Technically, this is a wrapper for
+the svyquantile() function of the survey package which uses the parallel package to distribute analysis
+to different logical processors.
+}
 \usage{
-jk2.mean(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), group.differences.by = NULL,
-         dependent = list(), na.rm = FALSE, complete.permutation = c("nothing", "groups", "all"), forcePooling = TRUE)}
+jk2.quantile.M(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(),
+probs = seq(0, 1, 0.25), complete.permutation = c("nothing", "groups", "all"),
+multicoreOptions = list(n.cores = NULL, GBcore = NULL, tempFolder = NULL, nameLogfile = NULL) ) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -37,41 +40,44 @@ Variable name or column number of variable indicating replicate ID.
 Optional: List of one or more grouping variables. If grouping variable is a multiple imputation variable,
 all names concerning one variable are interpreted as its imputations. See details for more information.
 }
-  \item{group.differences.by}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Optional: Specifies variable group differences should be computed for.
-}
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 List of one or more grouping variables. Each dependent variable will result in a separate analysis.
 If grouping variable is a multiple imputation variable, all names concerning one variable are interpreted
 as its imputations. See details for more information.
 }
-  \item{na.rm}{
+  \item{probs}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Logical: Should cases with missing values be dropped?
+Numeric vector with probabilities for which to compute quantiles.
 }
   \item{complete.permutation}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Argument defines the number of multiple imputed data sets. In general, the number is defined by the number of imputations
-of a variable. Therefore, this argument only becomes relevant, if the number of imputation of one variable (e.g. plausible values of the
-dependent variable) differs from the number of imputations used for group variable(s). If \code{"all"}, number of datasets are determined through
+of a variable. Therefore, this argument only becomes relevant, if the number of imputation of one variable (e.g. number of plausible values of the dependent variable)
+differs from the number of imputations used for group variable(s). If \code{"all"}, number of datasets are determined through
 permutation, e.g. 5 plausible values and 3 imputations of one group variable results in 3x5=15 imputed data sets. If \code{"nothing"}, only 5 imputed
 data sets will be used, no matter whether the larger number of imputations is a whole multiple of the smaller number of imputations. If \code{"groups"},
 only the number of imputations of more than one grouping variable will be permutated.
 }
-  \item{forcePooling}{
+  \item{multicoreOptions}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Logical: If variables in groups or subgroups does not have a positive variance, standard errors cannot be computed or pooled.
-Function will abort with an error message consequently. However, \code{forcePooling = TRUE} force the algorithm to continue.
-Invalid variance estimators and standard errors will set to zero to allow pooling. A warning is printed to console.
-}
-}
+A list of several parameters concerning multicore processing.
+\describe{
+ \item{\code{n.cores}}{Desired number of cores to be used for analysis. If \code{NULL}, function chooses appropriate number of cores 
+   considering system memory.}
+ \item{\code{GBcore}}{Desired memory (in giga byte) of RAM preserved for each core. For example, if you work on a 4 core machine with 4 GB
+ RAM and want to preserve 2 GB for each core, only 2 cores are used instead of 4.}
+ \item{\code{tempFolder}}{Multicore operation does not allow to print messages on console. Therefore, a log file will be writte in the 
+ specified folder. If no folder is specified, no log file will be created.}
+ \item{\code{nameLogfile}}{Name of the logfile. If no name is specified, file will be named \code{analyse.log}. }
+ }
+ }
+ }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 Function first creates replicate weights based on JKZone and JKrep variables according to JK2 procedure
 implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
-The function afterwards serves as a wrapper for svymean() called by svyby() implemented in the 'survey' package.
+The function afterwards serves as a wrapper for svyquantile() called by svyby() implemented in the 'survey' package.
 The results of the several analyses are then pooled according to Rubin's rule.
 }
 \value{
@@ -80,9 +86,7 @@ The results of the several analyses are then pooled according to Rubin's rule.
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-A list of data frames, one for each dependent variable. Each data frame contains means, variances, standard deviations and
-standard errors for all of them. If group differences were estimated, they occur as attributes of each data frame. See
-examples for further details.
+A list of data frames, one for each dependent variable. Each data frame contains percentile values and their standard errors.
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -101,17 +105,14 @@ Sebastian Weirich
 }
 \examples{
 data(reading_writing)
-### First example: only means, SD and variances for each country
-means  <- jk2.mean(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
-          group = list(country = "country"),
-          dependent = list(reading = paste("reading_score",1:3,sep=""), writing = paste("writing_score",1:3,sep="") ),
-          complete.permutation = "all" )
-### Second example: Sex differences by country
-means  <- jk2.mean(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
-          group = list(country = "country", GENDER = "sex"), group.differences.by = "GENDER",
-          dependent = list(reading = paste("reading_score",1:3,sep=""), writing = paste("writing_score",1:3,sep="") ),
-          complete.permutation = "all" )
-attr(means[[1]], "difference")
+## Not run:
+### Computes percentile for reading and writing scores conditionally on country
+#perzent   <- jk2.quantile.M(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
+#             group = list(country = "country"),
+#             dependent = list(reading = paste("reading_score", 1:3, sep = ""), writing = paste("writing_score", 1:3, sep = "")  ) ,
+#             probs = seq(0.1,0.9,0.2),
+#             complete.permutation = "no" )
+## End(Not run)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

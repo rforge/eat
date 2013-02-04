@@ -1,13 +1,13 @@
 Package: eatRep
 Type: Package
 Title: eatRep
-Version: 0.0.1
-Depends: R (>= 2.14.0), eatTools, eatData, survey, reshape
+Version: 0.1.2
+Depends: R (>= 2.14.0), eatData, survey, reshape, parallel, stringr
 Imports: fmsb
-Date: 2012-11-20
+Date: 2013-02-04
 Author: Sebastian Weirich, Martin Hecht, Nicole Haag, Karoline Sachse and Thilo Siegle
 Maintainer: Sebastian Weirich <sebastian.weirich@iqb.hu-berlin.de>
-Description: compute descriptives for complex survey designs with multiple imputed data 
+Description: compute descriptives for complex survey designs with multiple imputed data and multicore processing
 License: GPL (>= 2)
 LazyLoad: yes
 LazyData: yes
