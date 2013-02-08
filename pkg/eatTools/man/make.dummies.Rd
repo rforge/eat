@@ -12,7 +12,7 @@ Create dummy variables using \link[psych]{dummy.code} from the \code{psych} pack
 \usage{
 make.dummies(dat, cols, colname.as.prefix = TRUE, delimiter = ".", 
 capitalize = FALSE, nchar = NULL, add = TRUE, sort.into.dat = TRUE, 
-oneToColname = FALSE, zeroToNA = FALSE)
+oneToColname = FALSE, zeroToNA = FALSE, factor.indices = FALSE )
 }
 
 \arguments{
@@ -26,6 +26,7 @@ oneToColname = FALSE, zeroToNA = FALSE)
   \item{sort.into.dat}{Logical: If \code{TRUE} (and \code{add = TRUE}) the dummy variables are added and sorted into \code{dat} according to their column names }
   \item{oneToColname}{Logical: If \code{TRUE}, the values of cases with a value of 1 on the dummy variable are set to the colname of respective column. This changes the column class of the dummy variable(s) from \code{numeric} to \code{character}. }
   \item{zeroToNA}{Logical: If \code{TRUE}, the values of cases with a value of 0 on the dummy variable are set to \code{NA}.}
+  \item{factor.indices}{Logical: If \code{TRUE}, numeric indices of factor levels are used instead of factor level names.}
 }
 \details{
 }
@@ -63,6 +64,9 @@ science1.dum <- make.dummies(science1, c("sex","booklet"), add = FALSE)
 str(science1.dum)
 
 science1.dum <- make.dummies(science1, c("sex","booklet"), oneToColname = TRUE, zeroToNA = TRUE)
+str(science1.dum[,1:12])
+
+science1.dum <- make.dummies(science1, c("sex","booklet"), factor.indices = TRUE)
 str(science1.dum[,1:12])
 
 }

@@ -4,8 +4,8 @@ isPseudoNumeric <- function ( x ) {
 		unname ( asNumericIfPossible ( data.frame ( x , stringsAsFactors=FALSE ), set.numeric=FALSE, transform.factors=FALSE, maintain.factor.scores = FALSE, verbose=FALSE ) )
 }
 						
-make.dummies <- function ( dat , cols , colname.as.prefix = TRUE , delimiter = "." , capitalize = FALSE , nchar = NULL , add = TRUE , sort.into.dat = TRUE , oneToColname = FALSE , zeroToNA = FALSE ) {
-		
+make.dummies <- function ( dat , cols , colname.as.prefix = TRUE , delimiter = "." , capitalize = FALSE , nchar = NULL , add = TRUE , sort.into.dat = TRUE , oneToColname = FALSE , zeroToNA = FALSE , factor.indices = FALSE ) {
+	
 		# cols nicht in colnames
 		w <- !cols %in% colnames(dat)
 		if ( any ( w ) ) {
@@ -16,25 +16,33 @@ make.dummies <- function ( dat , cols , colname.as.prefix = TRUE , delimiter = "
 		} else {
 		
 				# Schleife um Vars
-				fun <- function ( col , dat , colname.as.prefix , delimiter , nchar ) {
-
+				fun <- function ( col , dat , colname.as.prefix , delimiter , nchar , factor.indices ) {
+						
+						# Spalten-Vektor
+						sp <- dat[,col]
+						
 						# wenn Variable numerisch oder pseudo-numerisch (d.h. nach numerisch wandelbar) ist
 						# wird colname.as.prefix = TRUE gesetzt, da Variablen-Namen nicht mit einer Zahl anfangen können,
 						# wird von dummy.code ein "X" gesetzt
 						# dieses wird entfernt, weil das dann schöner ist
 
-						pseudonumeric <- isPseudoNumeric ( dat[,col] )
+						pseudonumeric <- isPseudoNumeric ( sp )
 						
-						if ( is.numeric ( dat[,col] ) | pseudonumeric ) {
+						if ( is.numeric ( sp ) | pseudonumeric ) {
 								isNum <- TRUE 
 								if ( !colname.as.prefix ) {
 										warning ( paste ( "Variable " , col , " is numeric or pseudo-numeric. That's why colname.as.prefix is set to TRUE for this variable because it's nicer this way." , sep = "" ) )
 										colname.as.prefix = TRUE
 								}
 						} else isNum <- FALSE
+				
+						# wenn factor.indices genutzt werden sollen, vorher "umkodieren"
+						if ( is.factor ( sp ) & factor.indices ) {
+								sp <- as.integer ( sp )
+						}
 						
 						# dummies bilden
-						x <- psych::dummy.code ( dat[,col] )
+						x <- psych::dummy.code ( sp )
 						newcolnames <- colnames ( x )
 						x <- data.frame ( x )
 						
@@ -82,7 +90,7 @@ make.dummies <- function ( dat , cols , colname.as.prefix = TRUE , delimiter = "
 						# returnen
 						return ( x )
 				}
-				ret1 <- mapply ( fun , cols , MoreArgs = list ( dat , colname.as.prefix , delimiter , nchar ) , SIMPLIFY = FALSE )
+				ret1 <- mapply ( fun , cols , MoreArgs = list ( dat , colname.as.prefix , delimiter , nchar , factor.indices ) , SIMPLIFY = FALSE )
 				
 				# unnamen damit do.call / "cbind" nicht noch den Listennamen an die Colnames rantut
 				# entspricht cbind deparse.level = 0 ( was aber irgendwie nicht so einfach an do.call übergebbar ist
