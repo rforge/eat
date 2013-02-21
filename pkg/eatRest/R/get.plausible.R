@@ -31,110 +31,56 @@
 #
 ####################################################################################################################
 
-get.plausible <- function (file) {
-    funVersion <- "get.plausible_2.5.0"
+get.plausible <- function (file, verbose = FALSE) {
+                    input           <- scan(file, what = "character", sep = "\n", quiet = TRUE)
+                    input           <- crop(gsub("-"," -",input) )
+                    input           <- strsplit(input," +")                     ### Untere Zeile gibt die maximale Spaltenanzahl
+                    n.spalten       <- max ( sapply(input,FUN=function(ii){ length(ii) }) )
+                    input           <- data.frame( matrix( t( sapply(input,FUN=function(ii){ ii[1:n.spalten] }) ),length(input),byrow=F), stringsAsFactors=F)
+                    pv.pro.person   <- sum (input[-1,1]==1:(nrow(input)-1) )    ### Problem: wieviele PVs gibt es pro Person? Kann nicht suchen, ob erste Ziffer ganzzahlig, denn das kommt manchmal auch bei Zeile 7/8 vor, wenn entsprechende Werte = 0.0000
+                    n.person        <- nrow(input)/(pv.pro.person+3)            ### Anzahl an PVs pro Person wird bestimmt anhand der Übereinstimmung der ersten Spalte mit aufsteigenden 1,2,3,4...
+                    weg             <- c(1, as.numeric( sapply(1:n.person,FUN=function(ii){((pv.pro.person+3)*ii-1):((pv.pro.person+3)*ii+1)}) ) )
+                    cases           <- input[(1:n.person)*(pv.pro.person+3)-(pv.pro.person+2),1:2]
+                    input.sel       <- input[-weg,]
+                    n.dim           <- dim(input.sel)[2]-1                      ### Anzahl der Dimensionen
+                    if(verbose == TRUE) {
+                       cat(paste("Found",n.person,"person(s) and",n.dim,"dimension(s).\n"))
+                       cat(paste("Found",pv.pro.person,"plausible values for each person and each dimension.\n"))
+                    }
+                    ID              <- input[  (pv.pro.person + 3) *  (1:n.person) - (pv.pro.person + 2) ,2]
+                    ### suche ggf. Dimensionsnamen im Lab.file
+	                  lab.file        <- gsub ( "\\.[^\\.]+$" , ".lab", file )
+	                  dimNames        <- NULL
+                    if(!file.exists(lab.file)) {
+                       if(verbose == TRUE) { cat(paste("Expected label file '",lab.file,"' was not found. Dimension(s) will be labeled by default as 'dim'.\n",sep="")) }
+                    }  else {
+                       dimNames <- getDimnamesFromLabfile (lab.file = lab.file )
+                       stopifnot(length(dimNames) == 0 | length(dimNames) == n.dim )
+    	              }
+	                  if (is.null(dimNames)) {
+                        dimNames <- paste("dim.",1:n.dim,sep="")
+                    }
+                    colnames(input.sel) <- c("PV.Nr", dimNames)
+                    input.sel[,1]   <- gsub( " ", "0", formatC(input.sel[,1],width = max(nchar(input.sel[,1]))))
+                    input.sel$ID    <- rep(ID, each = pv.pro.person)
+                    is.na.ID        <- FALSE
+                    if(is.na(input.sel$ID[1])) {                                ### wenn keine ID im PV-File, wird hier eine erzeugt (Fall-Nr), da sonst reshapen misslingt
+                       is.na.ID        <- TRUE                                  ### Die ID wird später wieder gelöscht. Um das machen zu können, wird Indikatorvariable erzeugt, die sagt, ob ID fehlend war.
+                       input.sel$ID    <- rep( 1: n.person, each = pv.pro.person)
+                    }
+                    input.melt      <- melt(input.sel, id = c("ID", "PV.Nr") , stringsAsFactors = FALSE)
+                    input.wide      <- data.frame( case = gsub(" ", "0",formatC(as.character(1:n.person),width = nchar(n.person))) , cast(input.melt, ... ~ variable + PV.Nr) , stringsAsFactors = FALSE)
+                    colnames(input.wide)[-c(1:2)] <- paste("pv.", rep(dimNames, each = pv.pro.person), "_", rep(1:pv.pro.person, n.dim), sep="")
+                    weg.eap         <- (1:n.person)*(pv.pro.person+3) - (pv.pro.person+2)
+                    input.eap    <- input[setdiff(weg,weg.eap),]                ### nimm EAPs und deren Standardfehler und hänge sie an Datensatz - all rows that have not been used before
+                    input.eap    <- na.omit(input.eap[,-ncol(input.eap),drop=F])### find EAPs and posterior standard deviations
+                    stopifnot(ncol(input.eap) ==  n.dim)
+                    input.eap    <- lapply(1:n.dim, FUN=function(ii) {matrix(unlist(as.numeric(input.eap[,ii])), ncol=2,byrow=T)})
+                    input.eap    <- do.call("data.frame",input.eap)
+                    colnames(input.eap) <- paste(rep(c("eap","se.eap"),n.dim), rep(dimNames, each = 2), sep = ".")
+                    PV           <- data.frame(input.wide,input.eap, stringsAsFactors = FALSE)
+                    numericColumns <- setdiff(1:ncol(PV), grep("^ID$", colnames(PV))) ### alle außer ID-Spalte sollen numerisch werden
+                    if(is.na.ID == TRUE) {PV$ID <- NA}
+                    for (ii in numericColumns) {PV[,ii] <- as.numeric(as.character(PV[,ii]))  }
+                    return(PV)}
 
-	# if (!exists("melt")) {
-        # library(reshape)
-    # }
-	
-# input <- read.table(file, sep = "", header = FALSE, fill = TRUE, stringsAsFactors = FALSE)
-	input           <- scan(file,what="character",sep="\n",quiet=TRUE)
-  input           <- crop(gsub("-"," -",input) )              ### crop dauert hier zu lange
-  input           <- strsplit(input," +")                     ### Untere Zeile gibt die maximale Spaltenanzahl
-  n.spalten       <- max ( sapply(input,FUN=function(ii){ length(ii) }) )
-  input           <- data.frame( matrix( t( sapply(input,FUN=function(ii){ ii[1:n.spalten] }) ),length(input),byrow=F), stringsAsFactors=F)
-
-	# find number of PVs per person
-    nPersonPVs <- sum(input[-1, 1] == 1:(nrow(input) - 1))
-    
-	# find number of persons
-	nPerson <- nrow(input)/(nPersonPVs + 3)
-    
-	# keep only rows which contain PVs
-	isPVrow <- c ( FALSE, rep ( rep ( c(TRUE, FALSE), times = c ( nPersonPVs, 3 )), nPerson))
-	isPVrow <- isPVrow [ - length(isPVrow) ]
-	output <- input [ isPVrow, ]
-	
-	# find number of dimensions and dimension names from lab file
-### MH 1.3.12 
-### das ist hier suboptimal, wenn der plausible values file nicht die Endung "pvl" hat, crasht das alles später
-### die Idee ist aber gut, ich versuche das zu optimieren
-#	lab.file <- gsub("pvl", "lab", file ) 
-	lab.file <- gsub ( "\\.[^\\.]+$" , ".lab", file )
-
-
-	
-	# set default
-	dimNames <- NULL
-  if(!file.exists(lab.file)) {
-    eatTools:::sunk(paste(funVersion, ": Expected label file '",lab.file,"' was not found. Dimension(s) will be labeled by default as 'dim'.\n",sep=""))
-  }  
-  # if label file exists, default will be replaced
-
-### MH 1.3.12
-### jobFolder auf getwd() setzen ist hochgradig gefährlich!!!
-### Trennung von wd und lab.file falls lab.file mit path, man kann/sollte auch nicht davon ausgehen, das lab.file in getwd() ist
-# wd <- gsub ( "(.*)/[^/]+$" , "\\1", lab.file )
-# if ( identical ( wd , file ) ) wd <- getwd()
-# lab.file <- gsub ( "(.*)/([^/]+)$" , "\\2", lab.file )
-
-  if (file.exists(lab.file)) {	
-		# dimNames <- getDimensionNames (lab.file = lab.file, jobFolder = getwd(), lab.file.only = TRUE ) 
-		dimensionNames <- getDimnamesFromLabfile (lab.file = lab.file ) 
-		nDimensions <- length(dimensionNames)
-	}
-	
-	if (is.null(dimensionNames)) {
-		nDimensions <- ncol(output) - 1
-		dimensionNames <- paste (rep("dim", nDimensions), 1:nDimensions , sep = ".")
-	}
-    eatTools:::sunk(paste(funVersion, ": Found ", nPerson, " person(s) and ", nDimensions, " dimension(s).\n",sep=""))
-    eatTools:::sunk(paste(funVersion, ": Found ", nPersonPVs, " plausible values for each person and each dimension.\n",sep=""))
-	
-
-	# name output cols
-	output         <- data.frame(sapply(output, FUN=function(ii) {as.numeric(ii)}),stringsAsFactors=FALSE)
-	outputColNames <- c("PVno", paste ( rep( "pv", nDimensions), dimensionNames, sep = ".") )
-	colnames(output) <- outputColNames
-    
-	# find case IDs - every (nPersonPVs + 3) rows
-	isCaseIDrow <- c ( TRUE, rep( rep ( c(FALSE, TRUE), times = c ( nPersonPVs + 2, 1)), nPerson )) 
-	isCaseIDrow <- isCaseIDrow [ - length(isCaseIDrow) ]
-	cases <- input[isCaseIDrow, 1:2]
-	colnames(cases) <-  c( "case", "ID")
-	cases$case <- as.numeric(cases$case)
-	
-	# find EAPs and posterior standard deviations - all rows that have not been used before
-	isIDorPVrow <- isCaseIDrow + isPVrow  
-  posteriorStats <- input [ ! isIDorPVrow , 1:nDimensions,drop=FALSE]
-  posteriorStats <- data.frame(sapply(posteriorStats, FUN=function(ii) {as.numeric(ii)}),stringsAsFactors=FALSE)
-  if ( mode (posteriorStats) == "numeric" ) {
-	 posteriorStats <- matrix (posteriorStats, ncol=nDimensions, byrow=TRUE  )
- }
-	posteriorStatsColNames <- dimensionNames 
-	colnames(posteriorStats) <- posteriorStatsColNames
-	posteriorStats <- data.frame ( case = rep ( cases [ , 1], each = 2), parameter =  c ( "eap", "eap.se" ), posteriorStats , stringsAsFactors = FALSE)  
-	posteriorStats <- melt ( posteriorStats, id.vars = c("case", "parameter") )
-	posteriorStats$variable = paste ( posteriorStats$parameter, posteriorStats$variable, sep = ".")
-	posteriorStats <- cast (posteriorStats, case ~ variable)
-	
-	# repeat each row in cases nPersonPVs times
-	options (warn = -1)
-	cases <- do.call ( "rbind" , mapply ( function ( n , d ) d , 1:nPersonPVs , MoreArgs = list ( cases ) , SIMPLIFY = FALSE ) )
-	cases <- cases [ order ( cases$case ) , ]
-	
-	if ( all ( is.na ( cases$ID ) ) )  {
-		cases$ID <- gsub(" ", "0", formatC ( cases$case , width = max ( nchar ( cases$case ) ) ) )
-	}
-	options (warn = 0)
-	output <- data.frame ( cases, output, stringsAsFactors = FALSE )
- 	
-	# reshape output
-	output <- recast(output, id.var = c( "case", "ID", "PVno"), formula = case + ID ~ variable + PVno)
-
-	# merge output & posteriorStats
-	output <- merge ( output, posteriorStats, by = "case", all = TRUE ) 
-
-    return(output)
-}
