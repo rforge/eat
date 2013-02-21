@@ -4,12 +4,15 @@
 \title{Read ConQuest Plausible Values Output Files}
 \description{This function reads ConQuest plausible value files and automatically identifies the number of cases, the number of plausible values and the number of dimensions.}
 \usage{
-get.plausible(file)}
+get.plausible(file, verbose = FALSE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{file}{
 %%     ~~Describe \code{file} here~~
 Character string with the name of the ConQuest plausible values file. 
+}
+  \item{verbose}{
+Logical: Should messages printed on console?
 }
 }
 \details{
