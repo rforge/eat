@@ -77,7 +77,7 @@ get.plausible <- function (file, verbose = FALSE) {
                     stopifnot(ncol(input.eap) ==  n.dim)
                     input.eap    <- lapply(1:n.dim, FUN=function(ii) {matrix(unlist(as.numeric(input.eap[,ii])), ncol=2,byrow=T)})
                     input.eap    <- do.call("data.frame",input.eap)
-                    colnames(input.eap) <- paste(rep(c("eap","se.eap"),n.dim), rep(dimNames, each = 2), sep = ".")
+                    colnames(input.eap) <- paste(rep(c("eap","eap.se"),n.dim), rep(dimNames, each = 2), sep = ".")
                     PV           <- data.frame(input.wide,input.eap, stringsAsFactors = FALSE)
                     numericColumns <- setdiff(1:ncol(PV), grep("^ID$", colnames(PV))) ### alle außer ID-Spalte sollen numerisch werden
                     if(is.na.ID == TRUE) {PV$ID <- NA}
