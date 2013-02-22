@@ -3,7 +3,7 @@
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{JK2 for linear regression models.}
 \description{Compute linear regression models for complex cluster designs with multiple imputed variables based on Jackknife (JK2) procedure.
-Conceptually, the function combines replication methods and methods for multiple imputed data. Technically, this is a wrapper for the svyglm() function
+Conceptually, the function combines replication methods and methods for multiple imputed data. Technically, this is a wrapper for the \code{svyglm()} function
 of the survey package.
 }
 \usage{
@@ -37,15 +37,16 @@ Variable name or column number of variable indicating replicate ID.
   \item{group}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Optional: List of one or more grouping variables. If grouping variable is a multiple imputation variable,
-all names concerning one variable are interpreted as its imputations. See details for more information.
+all names concerning one variable are interpreted as its imputations. See example 1, where two group variables are used: One group variable
+is multiple imputed, the other is not.
 }
   \item{independent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 List of one or more independent variables. If independent variable is a multiple imputation variable, all names concerning one variable are interpreted
-as its imputations. See details for more information.
+as its imputations. See details and example 2 for more information.
 }
  \item{reg.statement}{
-Optional: By default, the regression formula is created automatically  by the independent variables connected by a "+" symbol. However, when interaction terms should
+Optional: By default, the regression formula is created automatically  by the independent variables connected by a \code{"+"} symbol. However, when interaction terms should
 be defined, the regression has to be specified by the user. The right side of the regression formula has to defined in \code{"reg.statement"} as a string, whereas the
 names of the independent variables occurring in the \code{"independent"} argument have to be used. This is due to various names of one variable in multiple imputed data
 sets. See example 3 for further details.
@@ -54,7 +55,7 @@ sets. See example 3 for further details.
 %%     ~~Describe \code{sig.dif.bound} here~~
 List of one or more dependent variables. Each dependent variable will result in a separate analysis.
 If dependent variable is a multiple imputation variable, all names concerning one variable are interpreted
-as its imputations. See details for more information.
+as its imputations. See details and example 1 for more information.
 }
   \item{complete.permutation}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -87,7 +88,8 @@ The results of the several analyses are then pooled according to Rubin's rule.
 A list of data frames, one for each dependent variable. Each data frame contains columns for group variables (if specified),
 regression weights, standard errors and r squared. Each row in the data frame corresponds to one parameter (specified in column \code{"reg"})
 in one group (specified in the column which name refers to the group name) for one dependent variable (specified in the name of the
-corresponding list element).
+corresponding list element). Please not the r squared and Nagelkerkes r squared are computed each time. You should refer to common r squared in
+a linear regression, and to Nagelkerkes r squared in a logistic regression.
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -106,21 +108,27 @@ Sebastian Weirich
 }
 \examples{
 data(reading_writing)
-### Example 1: Computes linear regression from reading score on hisei separately for each country
-mod1      <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
-             group = list(country = "country"),
-             dependent = list(reading = paste("reading_score", 1:3, sep = ""), writing = paste("writing_score", 1:3, sep = "")),
-             independent = list(hisei = paste("zehisei", 1:5, sep = "")),
+### Example 1: Computes linear regression from reading score on gender separately for each
+### country and each hisei. This serves as an example for two group variables, where one
+### group variable is a multiple imputed one.
+mod1      <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
+             JKrep = "JKrep", group = list(country = "country", hisei = paste("zehisei", 1:5, sep = "")),
+             dependent = list(reading = paste("reading_score", 1:3, sep = ""),
+                              writing = paste("writing_score", 1:3, sep = "")),
+             independent = list(gender = "sex"),
              complete.permutation = "no", glm.family = gaussian(link="identity") )
-### Example 2: Computes log linear regression from pass/fail on hisei and gender separately for each country
-mod2      <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
-             group = list(country = "country"),
-             dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""), writing.pass = paste("passed_writing", 1:3, sep = "")),
+### Example 2: Computes log linear regression from pass/fail on hisei and gender
+### separately for each country
+mod2      <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
+             JKrep = "JKrep", group = list(country = "country"),
+             dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""),
+                              writing.pass = paste("passed_writing", 1:3, sep = "")),
              independent = list(hisei = paste("zehisei", 1:5, sep = ""), gender = "sex"),
              complete.permutation = "no", glm.family = binomial(link="logit") )
-### Example 3: Computes linear regression from pass/fail on hisei and gender (and its' interaction) separately for each country
-### The regression statement has to be defined manually. Note that, despite "hisei" occurs as a multiple imputed variable, only
-### one statement has to be defined.
+### Example 3: Computes linear regression from pass/fail on hisei and gender (and its' interaction)
+### separately for each country. The regression statement has to be defined manually. Note that,
+### despite "hisei" occurs as a multiple imputed variable, only one statement has to be defined.
+### Specifically, write "hisei*gender" instead of "zehisei1*sex" in the reg.statement argument.
 mod3      <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
              group = list(country = "country"),
              dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""), writing.pass = paste("passed_writing", 1:3, sep = "")),

@@ -1,23 +1,54 @@
+setCatParameter <- function ( dat ) {
+                   if(!is.null(attr(dat, "logFile")) ) {
+                       file   <- attr(dat, "logFile")
+                       append <- TRUE
+                   } else {
+                     file   <- ""
+                     append <- FALSE  }
+                   return(list(file = file, append = append))}
+
+
+adjustDependentForNested <- function ( dependent, complete.permutation, group ) {
+            if(sum(sapply(dependent, is.list)) > 0)   {
+                if(complete.permutation != "nothing") {cat("Warning: 'complete.permutation' should be set to 'nothing' if a nested structure is implemented.\n")}
+                foo       <- checkNest ( group = group, dependent = dependent )
+                dependent <- lapply(dependent, FUN = function (d) {
+                             if(is.list(d) ) {
+                                unlistD                 <- unlist(d)
+                                attr(unlistD, "nested") <- d
+                             } else { unlistD <- d }
+                             return(unlistD) })
+            }
+            return(dependent)}
+
+
+### dat               ... Datensatz als data.frame
+### ID                ... ID als Spalte oder Spaltenname
+### group             ... optional: Liste aus Gruppierungsvariablen, ggf. imputiert, Bsp.:
+###                       group = list(EGP = c("EGP1", "EGP2", "EGP3", "EGP4", "EGP5"))
+###                       Bei mehr als einer Gruppierungsvariable wird kreuztabuliert
+### dependent         ... Liste der abhängigen variablen, ggf. imputiert, Bsp.:
+###                       dependent = list(Lesen = paste("Lesen", gsub(" ", "0", formatC(1:15, width = 2)), sep = ""))
+### group.differences.by  optional: nach welcher Variable sollen Gruppendifferenzen bestimmt werden? Variable muss eine der Variablen in group sein!
+###                       angegeben werden muss dabei der Name des Listenelementes, sofern es sich um eine imputierte Variable handelt
+###                       Bsp.: group = list(BL = c("bl1", "bl2", "bl3", "bl4", "bl5"), geschlecht = "sex"), group.differences.by = "geschlecht". Hier werden in jedem BL Geschlechtsunterschiede bestimmt.
+### complete.permutation  Wenn Anzahl der Imputationen von unabhängiger und abhängiger Variable varriiert
 jk2.mean <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), group.differences.by = NULL, dependent = list(), na.rm = FALSE, complete.permutation = c("nothing", "groups", "all"), forcePooling = TRUE)    {
-            if(!is.null(attr(dat, "logFile")) ) {
-               file   <- attr(dat, "logFile")
-               append <- TRUE
-            } else {
-               file   <- ""
-               append <- FALSE
-            }      
             complete.permutation <- match.arg ( complete.permutation )
+#            if(!exists("melt"))       {library(reshape)}
+            dependent     <- adjustDependentForNested ( dependent = dependent, complete.permutation = complete.permutation, group = group )
+            catPrms       <- setCatParameter(dat)
             if(!is.null(group.differences.by)) {
                if(!group.differences.by %in% names(group)) {stop()} }
             if(is.null(wgt))   {
-               cat("No weights specified. Use weight of 1 for each case.\n",file=file, append=append)
+               cat("No weights specified. Use weight of 1 for each case.\n",file=catPrms$file, append=catPrms$append)
                dat$weight_one <- 1
                wgt <- "weight_one"
             }
-           # if(!exists("svrepdesign"))      {library(survey)}
+#            if(!exists("svrepdesign"))      {library(survey)}
             replicates  <- generate.replicates(dat = dat, ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep )
             if(length(group) == 0) {
-               cat("No group(s) specified. Analyses will be computed only for the whole sample.\n", file=file, append=append)
+               cat("No group(s) specified. Analyses will be computed only for the whole sample.\n", file=catPrms$file, append=catPrms$append)
                dat$whole_group <- "whole_group"
                group           <- list(whole_group = "whole_group")
             }
@@ -28,107 +59,40 @@ jk2.mean <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), group.d
             ### Missings duerfen nur in abhaengiger Variable auftreten!
             kritisch    <- setdiff( names(missings[missings!=0]) , unlist(dependent ) )
             if(length(kritisch)>0) {stop(paste("Found NAs in variable(s) ",paste(kritisch, collapse = ", "), "\n",sep = "") )}
-            cat(paste("Found ",length(group)," grouping variable(s).\n",sep=""), file=file, append=append)
+            cat(paste("Found ",length(group)," grouping variable(s).\n",sep=""), file=catPrms$file, append=catPrms$append)
             .checkGroupConsistency(dat = dat, group = group)
-            cat(paste("Run ",length(dependent)," analyses overall.\n", sep = ""), file=file, append=append)
+            cat(paste("Run ",length(dependent)," analyses overall.\n", sep = ""), file=catPrms$file, append=catPrms$append)
             if ( complete.permutation == "groups" ) {group <- as.list(expand.grid(group, stringsAsFactors = FALSE))}
             analysis    <- lapply(dependent, FUN = function ( dep ) {
-                           group.origin <- group
-                           if(complete.permutation == "all" ) {
-                              group$dep <- dep
-                              workbook  <- expand.grid(group, stringsAsFactors = FALSE)
-                           }  else  {
-                              max.elements <- max ( c( unlist(lapply(group, length)) , length(dep) ) )
-                              group$dep    <- dep
-                              group        <- lapply(group, FUN = function (uu) {rep(uu, times = max.elements)[1:max.elements]})
-                              workbook     <- data.frame(group, stringsAsFactors = FALSE)
-                           }
-                           cat(paste("Use ",nrow(workbook)," replication(s) overall.\n",sep=""), file=file, append=append)
-                           ana <- apply(workbook, MARGIN = 1, FUN = function (imp) {
-                                  cat("."); flush.console()
-                                  design         <- svrepdesign(data = dat.i[,c(as.character(imp[-length(imp)]), dep) ], weights = dat.i[,wgt], type="JKn", scale = 1, rscales = 1, repweights = replicates[,-1], combined.weights = TRUE, mse = TRUE)
-                                  formel         <- as.formula(paste("~ ",imp[["dep"]], sep = "") )
-                                  means          <- svyby(formula = formel, by = as.formula(paste("~", paste(as.character(imp[-length(imp)]), collapse = " + "))), design = design, FUN = svymean, na.rm=na.rm, deff = FALSE, return.replicates = TRUE)
-                                  colnames(means) <- gsub("^se$", "se.mean", colnames(means) )
-                                  vars           <- svyby(formula = formel, by = as.formula(paste("~", paste(as.character(imp[-length(imp)]), collapse = " + "))), design = design, FUN = svyvar, deff = FALSE, return.replicates = TRUE)
-                                  colnames(vars) <- gsub("^V1$", "variance", colnames(vars))
-                                  colnames(vars) <- gsub("^se$", "se.variance", colnames(vars))
-                                  ### Standardabweichungen muessen separat bestimmt werden (Lumley, Mail 17. Oktober 2012). Delta method
-                                  ### da die delta method "von hand" programmiert werden muss, kann sie nicht mittels svyby() uebergeben werden, muss also aehnlich wie svyglm() von hand mittels lapply() auf die verschiedenen abhaengigen variablen verteilt werden
-                                  sds            <- do.call("rbind", by(data = dat.i, INDICES =  dat.i[,as.character(imp[-length(imp)])], FUN = function (uu) {
-                                                    namen          <- sapply(uu[,as.character(imp[-length(imp)]), drop = FALSE], FUN = function ( yy ) {
-                                                                      retu <- table(yy)
-                                                                      return(names(retu)[retu>0]) })
-                                                    sub.replicates <- replicates[ match(uu[,"idstud"], replicates[,"ID"] ) ,  ]
-                                                    design.uu      <- svrepdesign(data = uu[ ,c(as.character(imp[-length(imp)]), dep)], weights = uu$wgtSTUD, type="JKn", scale = 1, rscales = 1, repweights = sub.replicates[,-1], combined.weights = TRUE, mse = TRUE)
-                                                    var.uu         <- svyvar(x = as.formula(paste("~",imp[["dep"]],sep="")), design = design.uu, deff = FALSE, return.replicates = TRUE, na.rm = na.rm)
-                                                    ret            <- data.frame(t(namen), SD = as.numeric(sqrt(coef(var.uu))), se.SD =  as.numeric(sqrt(vcov(var.uu)/(4*coef(var.uu)))), stringsAsFactors = FALSE ) }) )
-                                  difs           <- NULL
-                                  if(!is.null(group.differences.by))   {
-                                     m            <- means
-                                     m$comb.group <- apply(m, 1, FUN = function (ii) { crop(paste( ii[as.character(imp[-length(imp)])], collapse = "."))})
-                                     repl         <- data.frame(t(attr(means, "replicates")), stringsAsFactors = FALSE )
-                                     repl[,"comb.group"] <- rownames(repl)
-                                     m              <- merge(m, repl, by = "comb.group" )
-                                     m$all.group    <- 1
-                                     res.group      <- setdiff(names(group.origin), group.differences.by)
-                                     if(length(res.group) == 0 ) {res.group <- "all.group"} else {res.group <- as.character(imp[-length(imp)][res.group])}
-                                     difs           <- by(data = m, INDICES = m[,res.group], FUN = function (iii)   {
-                                                       true.diff <- diff(iii[,which(colnames(iii) %in% dep)])
-                                                       cols      <- grep("^X[[:digit:]]{1,3}$", colnames(iii) )
-                                                       other.diffs <- apply(iii[,cols], 2, diff)
-                                                       dif.iii   <- data.frame(dif = true.diff, se =  sqrt(sum((true.diff - other.diffs)^2)), stringsAsFactors = FALSE )
-                                                       return(dif.iii)
-                                     })
-                                     difs           <- do.call("rbind", difs)
-                                  }
-                                  common            <- as.character(imp[-length(imp)])
-                                  ret               <- merge(means, vars, by = common, all = TRUE)
-                                  ret               <- merge(ret, sds , by = common, all = TRUE )
-                                  attr(ret, "difs") <- difs
-                                  return(ret)
-                           })
-                           cat("\nPooling Standard errors.\n", file=file, append=append)
-                           ana.frame           <- do.call("cbind", ana)
-                           mean.cols           <- unlist(lapply(dep, FUN = function ( uu ) {grep(paste(uu,"$",sep=""), colnames(ana.frame))}))
-                           se.mean.cols        <- grep("^se.mean",colnames(ana.frame))
-                           sd.cols             <- grep("^SD",colnames(ana.frame))
-                           se.sd.cols          <- grep("^se.SD", colnames(ana.frame))
-                           var.cols            <- grep("^variance", colnames(ana.frame))
-                           se.var.cols         <- grep("^se.variance", colnames(ana.frame))
-                           stopifnot(length(mean.cols ) == length(se.mean.cols) )
-                           stopifnot(length(se.mean.cols ) == length(sd.cols) )
-                           stopifnot(length(sd.cols ) == length(se.sd.cols) )
-                           stopifnot(length(var.cols ) == length(se.var.cols) ) ### untere Zeile: check for unexpected missings in standard error columns
-                           replaceAsNecessary  <- list(MEANS = se.mean.cols, SD = se.sd.cols, VAR = se.var.cols)
-                           for (repl in replaceAsNecessary) {
-                                misSe               <- lapply(ana.frame[,repl, drop=FALSE], FUN = function (u) {which(is.na(u))})
-                                nMissings           <- lapply(misSe, length)  ### missings in standard error?
-                                if(!all( nMissings == 0)) {
-                                   varName          <- lapply(replaceAsNecessary, FUN = function (v) {all(v == repl)})
-                                   varName          <- names(varName)[varName == TRUE]
-                                   cat(paste("Unexpected missings in standard errors of ",varName,".\n", sep = ""), file=file, append=append)
-                                   if(forcePooling == TRUE)    {
-                                      cat("Replace missing standard errors by '0'.\n", file=file, append=append)
-                                      for (i in 1:length(misSe)) {
-                                           if(length(misSe[[i]]) > 0 )  { ana.frame[misSe[[i]],repl] <- 0  }
-                                      }
-                                   }
-                                }
-                           }
-                           if(length(se.mean.cols)>1) {                         ### Es wird nur gepoolt, wenn es mehr als einen Standardfehler gibt
-                              pooled              <- t(apply(ana.frame, MARGIN = 1, FUN = function (iii) {
-                                                     unlist(c(pool.means(m = as.numeric(iii[mean.cols]), se = as.numeric(iii[se.mean.cols]))$summary[c("m.pooled","se.pooled")],
-                                                     pool.means(m = as.numeric(iii[sd.cols]), se = as.numeric(iii[se.sd.cols]))$summary[c("m.pooled","se.pooled")],
-                                                     pool.means(m = as.numeric(iii[var.cols]), se = as.numeric(iii[se.var.cols]))$summary[c("m.pooled","se.pooled")]))
-                              }))
-                              colnames(pooled)    <- paste(rep(c("", "se."), 3)  , rep(c("mean", "SD", "variance"), each = 2), sep = "")
-                              pooled              <- data.frame(ana.frame[,1:length(group.origin),drop = FALSE], pooled, stringsAsFactors = FALSE )
-                           }
-                           if(length(se.mean.cols)==1) {
-                              pooled              <- data.frame(ana.frame[,1:length(group.origin),drop = FALSE], mean = ana.frame[,mean.cols], se.mean = ana.frame[,se.mean.cols], SD = ana.frame[,sd.cols], se.SD = ana.frame[,se.sd.cols], variance = ana.frame[,var.cols], se.variance = ana.frame[,se.var.cols], stringsAsFactors = FALSE )
-                           }
-                           colnames(pooled)[1:length(group.origin)] <- names(group.origin)
+                           workbook <- .generateWorkbook(group = group, dep = dep, complete.permutation.all = (complete.permutation == "all") )
+                           cat(paste("Use ",nrow(workbook$workbook)," replication(s) overall.\n",sep=""), file=catPrms$file, append=catPrms$append)
+                           ana <- apply(workbook$workbook, MARGIN = 1, FUN = jackknife.mean, dat.i = dat.i, dep = dep, replicates = replicates, ID = ID, wgt = wgt, na.rm = na.rm , group.differences.by = group.differences.by, workbook = workbook)
+                           cat("\nPooling Standard errors.\n", file=catPrms$file, append=catPrms$append)
+                           if(!is.null(attr(dep, "nested")))   {
+                               struktur <- attr(dep, "nested")
+                               if(is.null(names(struktur)) )   { names(struktur) <- paste("n",gsub(" ","0",formatC(1:length(struktur), width = nchar(length(struktur)))), sep="") }
+                           }  else  {struktur <- list(n1 = dep, n2 = NULL) }
+                           if(length(ana)>1)    {                               ### Es wird nur gepoolt, wenn es mehr als einen Standardfehler gibt
+                              anaL      <- data.frame( do.call("rbind", lapply(ana, FUN = function (a) {melt.data.frame(data = a, measure.vars = intersect(dep, colnames(a)) , na.rm=TRUE)}) ), nesting = factor(NA , levels = names(struktur)), stringsAsFactors = FALSE )
+                              for ( x in 1 : length(struktur)) {if(!is.null(struktur[[x]])) {anaL[wo.sind(struktur[[x]], anaL[,"variable"], quiet = TRUE),"nesting"] <- names(struktur)[x]}  }
+                              for ( x in c("se.mean", "se.SD", "se.variance")) {### ersetze ggf. missings in Standardfehlern
+                                    mis <- which(is.na(anaL[,x]))
+                                    if(length(mis)>0) {
+                                       cat(paste("Unexpected missings in standard errors of ",x,".\n", sep = ""), file=catPrms$file, append=catPrms$append)
+                                       if(forcePooling == TRUE)    {
+                                          cat("Replace missing standard errors by '0'.\n", file=catPrms$file, append=catPrms$append)
+                                          anaL[mis ,x] <- 0
+                                       }
+                                    }
+                              }
+                              retList <- by(data = anaL, INDICES = anaL[, names(workbook$group.origin)], FUN = function ( u ) {
+                                         nested  <- by ( data = u, INDICES = u[,"nesting"], FUN = function ( uu ) { return(uu)}) })
+                              pooled  <- do.call("rbind", lapply(retList, FUN = function ( p ) {
+                                         m   <- pool.means ( m = lapply(p, FUN = function ( pp ) { pp[,"value"]}), se = lapply(p, FUN = function ( pp ) { pp[,"se.mean"]}) )$summary[c("m.pooled","se.pooled")]
+                                         SD  <- pool.means ( m = lapply(p, FUN = function ( pp ) { pp[,"SD"]}), se = lapply(p, FUN = function ( pp ) { pp[,"se.SD"]}) )$summary[c("m.pooled","se.pooled")]
+                                         VAR <- pool.means ( m = lapply(p, FUN = function ( pp ) { pp[,"variance"]}), se = lapply(p, FUN = function ( pp ) { pp[,"se.variance"]}) )$summary[c("m.pooled","se.pooled")]
+                                         return( data.frame( p[[1]][1,names(workbook$group.origin), drop = FALSE], matrix(m, nrow=1, dimnames = list(NULL, c("mean", "se.mean"))), matrix(SD, nrow=1, dimnames = list(NULL, c("SD", "se.SD"))), matrix(VAR, nrow=1, dimnames = list(NULL, c("variance", "se.variance"))), stringsAsFactors = FALSE ) ) }))
+                           } else { pooled <- ana[[1]] }
                            pooled.dif <- NULL
                            if(!is.null(attr(ana[[1]], "difs")))   {
                                if(length(ana) == 1) {pooled.dif <- attr(ana[[1]], "difs")}
@@ -141,8 +105,9 @@ jk2.mean <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), group.d
                                 }))
                                }
                            }
-                           attr(pooled, "difference") <- pooled.dif
-                           attr(pooled, "unpooled")   <- ana.frame
+                           attr(pooled, "difference")     <- pooled.dif
+                           attr(pooled, "unpooledList")   <- ana
+                           attr(pooled, "unpooledFrame")  <- anaL
                            return(pooled)
             })
             return(analysis)}
@@ -160,7 +125,7 @@ jk2.mean.M <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), depen
              mach.es <- function ( laufnummer, ...  ) {
                         # if(!exists("jk2.mean"))    {source(multicoreOptions[["functionFolder"]])}
                         library(eatRep)
-						datS             <- dat                                 ### initialisiere Datensatz
+                        datS             <- dat                                 ### initialisiere Datensatz
                         if(length(groupList[["splitGroup"]])>0)    {
                            for (u in names(groupList[["splitGroup"]]))    {     ### selektiere Datensatz
                                 datS        <- datS[datS[,groupList[["splitGroup"]][[u]]] == groupList[["groupList"]][laufnummer,u] , ]
@@ -185,30 +150,25 @@ jk2.mean.M <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), depen
              cat("Analysis finished: "); print(ende-beginn)
              return(counts) }
 
-             
+
 ### separate.missing.indikator ... Soll eine separate Kategorie für missings definiert werden?
 ### expected.values            ... optional (und empfohlen): Vorgabe für erwartete Werte, vgl. "table.muster"
 ###                                kann entweder eine benannte Liste sein, mit Namen wie in "dependent", oder ein einfacher character Vektor, dann werden diese Vorgaben für alle abhängigen Variablen übernommen
 ###                                bleibt "expected.values" leer, dann wird es automatisch mit den Werten der Variablen in ihrer Gesamtheit belegt!
 jk2.table <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(), separate.missing.indikator = FALSE, expected.values = list(), complete.permutation = c("nothing", "groups", "all") )    {
-            if(!is.null(attr(dat, "logFile")) ) {
-               file   <- attr(dat, "logFile")
-               append <- TRUE
-            } else {
-               file   <- ""
-               append <- FALSE
-            }      
             complete.permutation <- match.arg ( complete.permutation )
-       #     if(!exists("svrepdesign"))      {library(survey)}
-        #    if(!exists("melt.data.frame"))  {library(reshape)}
+            dependent            <- adjustDependentForNested ( dependent = dependent, complete.permutation = complete.permutation, group = group )
+            catPrms              <- setCatParameter(dat)
+#            if(!exists("svrepdesign"))      {library(survey)}
+#            if(!exists("melt.data.frame"))  {library(reshape)}
             if(is.null(wgt))   {
-               cat("No weights specified. Use weight of 1 for each case.\n",file=file, append=append)
+               cat("No weights specified. Use weight of 1 for each case.\n",file=catPrms$file, append=catPrms$append)
                dat$weight_one <- 1
                wgt <- "weight_one"
             }
             replicates  <- generate.replicates(dat = dat, ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep )
             if(length(group) == 0) {
-               cat("No group(s) specified. Analyses will be computed only for the whole sample.\n", file=file, append=append)
+               cat("No group(s) specified. Analyses will be computed only for the whole sample.\n", file=catPrms$file, append=catPrms$append)
                dat$whole_group <- "whole_group"
                group           <- list(whole_group = "whole_group")
             }
@@ -219,9 +179,9 @@ jk2.table <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), depend
             ### Missings duerfen nur in abhaengiger Variable auftreten!
             kritisch    <- setdiff( names(missings[missings!=0]) , unlist(dependent ) )
             if(length(kritisch)>0) {stop(paste("Found NAs in variable(s) ",paste(kritisch, collapse = ", "), "\n",sep = "") )}
-            cat(paste("Found ",length(group)," grouping variable(s).\n",sep=""), file=file, append=append)
+            cat(paste("Found ",length(group)," grouping variable(s).\n",sep=""), file=catPrms$file, append=catPrms$append)
             .checkGroupConsistency(dat = dat, group = group)
-            cat(paste("Run ",length(dependent)," analyses overall.\n", sep = ""), file=file, append=append)
+            cat(paste("Run ",length(dependent)," analyses overall.\n", sep = ""), file=catPrms$file, append=catPrms$append)
             flush.console()
             if(length(expected.values)>0) {
                if(class(expected.values) == "character")  {
@@ -244,81 +204,27 @@ jk2.table <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), depend
             names(dependent) <- names.dependent
             if ( complete.permutation == "groups" ) {group <- as.list(expand.grid(group, stringsAsFactors = FALSE))}
             analysis    <- lapply(dependent, FUN = function ( dep ) {
-                           group.origin <- group
-                           if(complete.permutation == "all" ) {
-                              group$dep <- dep
-                              workbook  <- expand.grid(group, stringsAsFactors = FALSE)
-                           }  else  {
-                              max.elements <- max ( c( unlist(lapply(group, length)) , length(dep) ) )
-                              group$dep    <- dep
-                              group        <- lapply(group, FUN = function (uu) {rep(uu, times = max.elements)[1:max.elements]})
-                              workbook     <- data.frame(group, stringsAsFactors = FALSE)
-                           }
-                           cat(paste("Use ",nrow(workbook)," replication(s) overall.\n",sep=""), file=file, append=append)
-                           ana <- apply(workbook, MARGIN = 1, FUN = function (imp) {
-                                  cat("."); flush.console()
-                                  stopifnot(length(imp[["dep"]]) == 1 )
-                                  original.levels   <- names(table(dat.i[,imp[["dep"]]]))
-                                  if(!is.null( attr(dep,"expected") ))   {
-                                     if(length(setdiff(original.levels, attr(dep,"expected"))) >0) {stop()}
-                                     original.levels <- sort(attr(dep,"expected"))
-                                  }
-                                  dat.ana  <- dat.i
-                                  if(attr(dep, "separate.missing") == TRUE ) {
-                                     original.levels <- sort(c(original.levels, "missing"))
-                                     weg             <- which(is.na(dat.ana[,imp[["dep"]]]))
-                                     if ( length(weg)>0) {
-                                        dat.ana[weg,imp[["dep"]]] <- "missing"
-                                     }
-                                  }
-                                  if(attr(dep, "separate.missing") == FALSE ) {
-                                     weg <- which(is.na(dat.ana[,imp[["dep"]]]))
-                                     if(length(weg)>0) {
-                                        cat(paste(" Warning: No seperate missing categorie was chosen. ", length(weg), " missings were found anyhow for variable ",imp[["dep"]],". Missings will be deteted from the data.\n",sep=""), file=file, append=append)
-                                        dat.ana   <- dat.ana[-weg,]
-                                     }
-                                  }
-                                  n.levels  <- table(original.levels)
-                                  n.double  <- which(n.levels > 1 )
-                                  if(length(n.double)>0) {
-                                     cat(paste("    Warning! ",length(n.double), " multiple level indicators of dependent variable found:\n",sep=""), file=file, append=append)
-                                     cat("    "); print(n.double)
-                                     if(append == TRUE) { cat(paste(n.double, "\n",sep=""), file=file, append=append)  }
-                                     cat("    Double level indicators will be merged to one common indicator.\n", file=file, append=append)
-                                     original.levels <- unique(original.levels)
-                                  }
-                                  dat.ana$what.I.want <- factor(dat.ana[,imp[["dep"]]], levels = original.levels)
-                                  design    <- svrepdesign(data = dat.ana[,c(as.character(imp[-length(imp)]), "what.I.want")], weights = dat.ana[,wgt], type="JKn", scale = 1, rscales = 1, repweights = replicates[match(dat.ana[,"idstud"], replicates[,"ID"], ),-1], combined.weights = TRUE, mse = TRUE)
-                                  means     <- svyby(formula = ~factor(what.I.want, levels = original.levels), by = as.formula(paste("~", paste(as.character(imp[-length(imp)]), collapse = " + "))), design = design, FUN = svymean, deff = FALSE, return.replicates = TRUE)
-                                  cols      <- match(paste("factor(what.I.want, levels = original.levels)",original.levels,sep=""), colnames(means))
-                                  colnames(means)[cols] <- paste("mittelmean",original.levels, sep="____________")
-                                  cols.se   <- grep("^se", colnames(means) )
-                                  stopifnot(length(cols) == length(cols.se))
-                                  colnames(means)[cols.se] <- paste("se____________", original.levels, sep="")
-                                  molt           <- melt.data.frame(data=means, id.vars=as.character(imp[-length(imp)]), na.rm=TRUE)
-                                  xx             <- data.frame(matrix(unlist(strsplit(as.character(molt$variable), "____________")), ncol= 2, byrow = TRUE ), stringsAsFactors = FALSE )
-                                  colnames(xx)   <- c("var", "suffix")
-                                  molt           <- data.frame(molt[,-match("variable", colnames(molt))], xx, stringsAsFactors = FALSE )
-                                  table.cast     <- cast(molt, ... ~ var)
-                                  return(table.cast)
-                           })
-                           cat("\nPooling Standard errors.\n", file=file, append=append)
-                           ana.frame           <- do.call("cbind", ana)
-                           kategorie.cols      <- grep("suffix$", colnames(ana.frame))[1]
-                           mean.cols           <- grep("mittelmean$", colnames(ana.frame))
-                           se.cols             <- grep("se$",colnames(ana.frame))
-                           stopifnot(length(mean.cols) == length(se.cols))
-                           group.cols          <- unlist(lapply(group.origin, FUN = function(u) {grep(u[1], colnames(ana.frame))[1]}))
-                           if(length(se.cols)>1) {                              ## Es wird nur gepoolt, wenn es mehr als einen Standardfehler gibt
-                              pooled              <- t(apply(ana.frame, MARGIN = 1, FUN = function (iii) {
-                                                     unlist(c(pool.means(m = as.numeric(iii[mean.cols]), se = as.numeric(iii[se.cols]))$summary[c("m.pooled","se.pooled")]))}))
-                              pooled              <- data.frame(ana.frame[,c(group.cols,kategorie.cols)], pooled, stringsAsFactors = FALSE )
-                           }
-                           if(length(se.cols)==1) {
-                              pooled              <- data.frame(ana.frame[,c(group.cols, kategorie.cols)], m = ana.frame[,mean.cols], se = ana.frame[,se.cols], stringsAsFactors = FALSE )
-                           }
-                           colnames(pooled)[1:length(group.origin)] <- names(group.origin)
-                           attr(pooled, "unpooled") <- ana.frame
+                           workbook <- .generateWorkbook(group = group, dep = dep, complete.permutation.all = (complete.permutation == "all") )
+                           cat(paste("Use ",nrow(workbook)," replication(s) overall.\n",sep=""), file=catPrms$file, append=catPrms$append)
+                           ana <- apply(workbook$workbook, MARGIN = 1, FUN = jackknife.table, dat.i = dat.i, dep = dep , replicates = replicates, ID = ID, wgt = wgt, catPrms = catPrms)
+                           names(ana)             <- workbook$workbook[,"dep"]
+                           if(!is.null(attr(dep, "nested")))   {
+                               struktur <- attr(dep, "nested")
+                               if(is.null(names(struktur)) )   { names(struktur) <- paste("n",gsub(" ","0",formatC(1:length(struktur), width = nchar(length(struktur)))), sep="") }
+                           }  else  {struktur <- list(n1 = dep, n2 = NULL) }
+                           if(length(ana)>1)    {                               ### Es wird nur gepoolt, wenn es mehr als einen Standardfehler gibt
+                              if(length(workbook$group.origin)>0) {
+                                 ana    <- lapply(ana, FUN = function( a ) {
+                                           for ( aa in 1:length(workbook$group.origin)) { colnames(a) <- gsub( workbook$group.origin[[aa]][which(workbook$group.origin[[aa]] %in% colnames(a))], names(workbook$group.origin)[aa], colnames(a) )}
+                                           return(a)})
+                              }
+                              anaL      <- do.call("rbind", ana)
+                              anaL[,"dep_imp"] <- halve.string(string = rownames(anaL), pattern = "\\.", first = FALSE )[,1]
+                              pooled    <- do.call("rbind", by(data = anaL, INDICES = anaL[,c(names(workbook$group.origin), "suffix")], FUN = function ( p ) {
+                                           m   <- lapply(struktur, FUN = function (ss) {p[p[,"dep_imp"] %in% ss , "mittelmean"]})
+                                           se  <- lapply(struktur, FUN = function (ss) {p[p[,"dep_imp"] %in% ss , "se"]})
+                                           ret <- data.frame( p[1,c(names(workbook$group.origin), "suffix")], pool.means(m = m, se = se)$summary[c("m.pooled","se.pooled")] , stringsAsFactors = FALSE ) }))
+                           } else { pooled <- ana[[1]] }
                            return(pooled)
             })
             return(analysis)}
@@ -336,7 +242,7 @@ jk2.table.M <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), depe
              mach.es <- function ( laufnummer, ...  ) {
                         # if(!exists("jk2.mean"))    {source(multicoreOptions[["functionFolder"]])}
                         library(eatRep)
-						datS             <- dat                                 ### initialisiere Datensatz
+                        datS             <- dat                                 ### initialisiere Datensatz
                         if(length(groupList[["splitGroup"]])>0)    {
                            for (u in names(groupList[["splitGroup"]]))    {     ### selektiere Datensatz
                                 datS        <- datS[datS[,groupList[["splitGroup"]][[u]]] == groupList[["groupList"]][laufnummer,u] , ]
@@ -360,27 +266,22 @@ jk2.table.M <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), depe
              ende    <- Sys.time()
              cat("Analysis finished: "); print(ende-beginn)
              return(counts) }
-            
+
 
 jk2.quantile <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(), probs = seq(0, 1, 0.25),  complete.permutation = c("nothing", "groups", "all") )    {
-            if(!is.null(attr(dat, "logFile")) ) {
-               file   <- attr(dat, "logFile")
-               append <- TRUE
-            } else {
-               file   <- ""
-               append <- FALSE
-            }      
             complete.permutation <- match.arg ( complete.permutation )
-        #    if(!exists("svrepdesign"))      {library(survey)}
-        #    if(!exists("melt.data.frame"))  {library(reshape)}
+            dependent            <- adjustDependentForNested ( dependent = dependent, complete.permutation = complete.permutation, group = group )
+            catPrms              <- setCatParameter(dat)
+#            if(!exists("svrepdesign"))      {library(survey)}
+#            if(!exists("melt.data.frame"))  {library(reshape)}
             if(is.null(wgt))   {
-               cat("No weights specified. Use weight of 1 for each case.\n",file=file, append=append)
+               cat("No weights specified. Use weight of 1 for each case.\n",file=catPrms$file, append=catPrms$append)
                dat$weight_one <- 1
                wgt <- "weight_one"
             }
             replicates  <- generate.replicates(dat = dat, ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep )
             if(length(group) == 0) {
-               cat("No group(s) specified. Analyses will be computed only for the whole sample.\n",file=file, append=append)
+               cat("No group(s) specified. Analyses will be computed only for the whole sample.\n",file=catPrms$file, append=catPrms$append)
                dat$whole_group <- "whole_group"
                group           <- list(whole_group = "whole_group")
             }
@@ -389,50 +290,34 @@ jk2.quantile <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dep
             dat.i       <- dat[,unlist(all.Names)]
             missings    <- sapply(dat.i, FUN = function (uu) {length(which(is.na(uu)))})
             if(!all(missings == 0)) {stop(paste("Found NAs in variable(s) ",paste(names(missings[missings!=0]), collapse = ", "), "\n",sep = "") )}
-            cat(paste("Found ",length(group)," grouping variable(s).\n",sep=""),file=file, append=append)
+            cat(paste("Found ",length(group)," grouping variable(s).\n",sep=""),file=catPrms$file, append=catPrms$append)
             .checkGroupConsistency(dat = dat, group = group)
             groupsize   <- sapply(group, FUN = function (iii ) {length(iii)})
-            cat(paste("Run ",length(dependent)," analyses overall.\n", sep = ""),file=file, append=append)
+            cat(paste("Run ",length(dependent)," analyses overall.\n", sep = ""),file=catPrms$file, append=catPrms$append)
             if ( complete.permutation == "groups" ) {group <- as.list(expand.grid(group, stringsAsFactors = FALSE))}
             analysis    <- lapply(dependent, FUN = function ( dep ) {
-                           group.origin <- group
-                           if(complete.permutation == "all" ) {
-                              group$dep <- dep
-                              workbook  <- expand.grid(group, stringsAsFactors = FALSE)
-                           }  else  {
-                              max.elements <- max ( c( unlist(lapply(group, length)) , length(dep) ) )
-                              group$dep    <- dep
-                              group        <- lapply(group, FUN = function (uu) {rep(uu, times = max.elements)[1:max.elements]})
-                              workbook    <- data.frame(group, stringsAsFactors = FALSE)
-                           }
-                           cat(paste("Use ",nrow(workbook)," replications overall.\n",sep=""))
-                           ana <- apply(workbook, MARGIN = 1, FUN = function (imp) {
-                                  cat("."); flush.console()
-                                  design         <- svrepdesign(data = dat.i[,c(as.character(imp[-length(imp)]), dep) ], weights = dat.i[,wgt], type="JKn", scale = 1, rscales = 1, repweights = replicates[,-1], combined.weights = TRUE, mse = TRUE)
-                                  formel         <- as.formula(paste("~ ",imp[["dep"]], sep = "") )
-                                  quantile.imp   <- svyby(formula = formel, by = as.formula(paste("~", paste(as.character(imp[-length(imp)]), collapse = " + "))), design = design, FUN = svyquantile, quantiles = probs, return.replicates = TRUE, na.rm = TRUE)
-                                  molt           <- melt.data.frame(data=quantile.imp, id.vars=as.character(imp[-length(imp)]), na.rm=TRUE)
-                                  xx             <- colsplit(gsub("([[:digit:]]+)", "\\.\\1", molt$variable), "\\.", names = c("var", "per.number"))
-                                  molt           <- data.frame(molt[,-match("variable", colnames(molt))], xx, stringsAsFactors = FALSE )
-                                  quantile.cast  <- cast(molt, ... ~ var)       ### Jetzt sollen noch die verwendeten Perzentilgroessen angebunden werden
-                                  probnamen      <- data.frame(Nummer = 1:length(probs), per.number = probs, stringsAsFactors = FALSE )
-                                  quantile.cast[,"per.number"] <- probnamen[ match(quantile.cast[,"per.number"], probnamen[,1])  ,2]
-                                  return(quantile.cast)
-                           })
-                           cat("\nPooling Standard errors.\n",file=file, append=append)
-                           ana.frame           <- do.call("cbind", ana)
-                           mean.cols           <- grep("V$",colnames(ana.frame))
-                           se.cols             <- grep("se$",colnames(ana.frame))
-                           group.cols          <- unlist(lapply(c(as.character(workbook[1,names(group.origin)]), "per.number"), FUN = function (hh)  {grep(hh, colnames(ana.frame))[1]}))
-                           if(length(se.cols)>1) {                              ## Es wird nur gepoolt, wenn es mehr als einen Standardfehler gibt
-                              pooled              <- t(apply(ana.frame, MARGIN = 1, FUN = function (iii) {
-                                                     unlist(c(pool.means(m = as.numeric(iii[mean.cols]), se = as.numeric(iii[se.cols]))$summary[c("m.pooled","se.pooled")]))  }))
-                           }
-                           if(length(se.cols)==1) {
-                              pooled              <- data.frame(m = ana.frame[,mean.cols, drop = FALSE], se = ana.frame[,se.cols, drop = FALSE], stringsAsFactors = FALSE )
-                           }
-                           pooled              <- data.frame(ana.frame[,group.cols, drop = FALSE], pooled, stringsAsFactors = FALSE )
-                           attr(pooled, "unpooled") <- ana.frame
+                           workbook <- .generateWorkbook(group = group, dep = dep, complete.permutation.all = (complete.permutation == "all") )
+                           cat(paste("Use ",nrow(workbook$workbook)," replication(s) overall.\n",sep=""), file=catPrms$file, append=catPrms$append)
+                           ana <- apply(workbook$workbook, MARGIN = 1, FUN = jackknife.quantile, dat.i = dat.i, dep=dep, replicates = replicates, ID = ID, wgt = wgt, probs = probs)
+                           cat("\nPooling Standard errors.\n",file=catPrms$file, append=catPrms$append)
+                           names(ana)          <- workbook$workbook[,"dep"]
+                           if(!is.null(attr(dep, "nested")))   {
+                               struktur <- attr(dep, "nested")
+                               if(is.null(names(struktur)) )   { names(struktur) <- paste("n",gsub(" ","0",formatC(1:length(struktur), width = nchar(length(struktur)))), sep="") }
+                           }  else  {struktur <- list(n1 = dep, n2 = NULL) }
+                           if(length(ana)>1)    {                               ### Es wird nur gepoolt, wenn es mehr als einen Standardfehler gibt
+                              if(length(workbook$group.origin)>0) {
+                                 ana    <- lapply(ana, FUN = function( a ) {
+                                           for ( aa in 1:length(workbook$group.origin)) { colnames(a) <- gsub( workbook$group.origin[[aa]][which(workbook$group.origin[[aa]] %in% colnames(a))], names(workbook$group.origin)[aa], colnames(a) )}
+                                           return(a)})
+                              }
+                              anaL      <- do.call("rbind", ana)
+                              anaL[,"dep_imp"] <- halve.string(string = rownames(anaL), pattern = "\\.", first = FALSE )[,1]
+                              pooled    <- do.call("rbind", by(data = anaL, INDICES = anaL[,c(names(workbook$group.origin), "per.number")], FUN = function ( p ) {
+                                           m   <- lapply(struktur, FUN = function (ss) {p[p[,"dep_imp"] %in% ss , "V"]})
+                                           se  <- lapply(struktur, FUN = function (ss) {p[p[,"dep_imp"] %in% ss , "se"]})
+                                           ret <- data.frame( p[1,c(names(workbook$group.origin), "per.number")], pool.means(m = m, se = se)$summary[c("m.pooled","se.pooled")] , stringsAsFactors = FALSE ) }))
+                           } else { pooled <- ana[[1]] }
                            return(pooled)
             })
             return(analysis)}
@@ -449,7 +334,7 @@ jk2.quantile.M <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), d
              mach.es <- function ( laufnummer, ...  ) {
                         # if(!exists("jk2.mean"))    {source(multicoreOptions[["functionFolder"]])}
                         library(eatRep)
-						datS             <- dat                                 ### initialisiere Datensatz
+                        datS             <- dat                                 ### initialisiere Datensatz
                         if(length(groupList[["splitGroup"]])>0)    {
                            for (u in names(groupList[["splitGroup"]]))    {     ### selektiere Datensatz
                                 datS        <- datS[datS[,groupList[["splitGroup"]][[u]]] == groupList[["groupList"]][laufnummer,u] , ]
@@ -473,34 +358,29 @@ jk2.quantile.M <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), d
              ende    <- Sys.time()
              cat("Analysis finished: "); print(ende-beginn)
              return(counts) }
-            
+
 
 jk2.glm <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independent = list(), reg.statement = NULL, dependent = list(), complete.permutation = c("nothing", "groups", "independent", "all") , glm.family)    {
-            if(!is.null(attr(dat, "logFile")) ) {
-               file   <- attr(dat, "logFile")
-               append <- TRUE
-            } else {
-               file   <- ""
-               append <- FALSE
-            }      
             complete.permutation <- match.arg ( complete.permutation )
+            dependent            <- adjustDependentForNested ( dependent = dependent, complete.permutation = complete.permutation, group = group )
+            catPrms              <- setCatParameter(dat)
             .GlobalEnv$glm.family <- glm.family                                 ### Hotfix!
-         #   if(!exists("NagelkerkeR2"))     {library(fmsb)}
-        #    if(!exists("svrepdesign"))      {library(survey)}
-          #  if(!exists("melt.data.frame"))  {library(reshape)}
+#            if(!exists("NagelkerkeR2"))     {library(fmsb)}
+#            if(!exists("svrepdesign"))      {library(survey)}
+#            if(!exists("melt.data.frame"))  {library(reshape)}
             if(!is.null(reg.statement)) {
                 if( !all ( unlist(lapply(names(independent), FUN = function (u) {grep(u, reg.statement)})) == 1) )  {
                      stop("Regression statement contains variables not incorporated in independent variables list.\n")
                 }
             }
             if(is.null(wgt))   {
-               cat("No weights specified. Use weight of 1 for each case.\n",file=file, append=append)
+               cat("No weights specified. Use weight of 1 for each case.\n",file=catPrms$file, append=catPrms$append)
                dat$weight_one <- 1
                wgt <- "weight_one"
             }
             replicates  <- generate.replicates(dat = dat, ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep )
             if(length(group) == 0) {
-               cat("No group(s) specified. Analyses will be computed only for the whole sample.\n",file=file, append=append)
+               cat("No group(s) specified. Analyses will be computed only for the whole sample.\n",file=catPrms$file, append=catPrms$append)
                dat$whole_group <- "whole_group"
                group           <- list(whole_group = "whole_group")
             }
@@ -509,85 +389,41 @@ jk2.glm <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independ
             dat.i       <- dat[,unlist(all.Names)]
             missings    <- sapply(dat.i, FUN = function (uu) {length(which(is.na(uu)))})
             if(!all(missings == 0)) {stop(paste("Found NAs in variable(s) ",paste(names(missings[missings!=0]), collapse = ", "), "\n",sep = "") )}
-            cat(paste("Found ",length(group)," grouping variable(s).\n",sep=""),file=file, append=append)
+            cat(paste("Found ",length(group)," grouping variable(s).\n",sep=""),file=catPrms$file, append=catPrms$append)
             .checkGroupConsistency(dat = dat, group = group)
             cat(paste("Run ",length(dependent)," analyses overall.\n", sep = ""))
             if ( complete.permutation == "groups" )      {group       <- as.list(expand.grid(group, stringsAsFactors = FALSE))}
             if ( complete.permutation == "independent" ) {independent <- as.list(expand.grid(independent, stringsAsFactors = FALSE))}
             pre.workbook   <- c(group, independent)
             analysis    <- lapply(dependent, FUN = function ( dep ) {
-                           if(complete.permutation == "all" ) {
-                              pre.workbook$dep <- dep
-                              workbook  <- expand.grid(pre.workbook, stringsAsFactors = FALSE)
-                           }  else  {
-                              max.elements        <- max ( c( unlist(lapply(group, length)) , length(dep) ) )
-                              pre.workbook$dep    <- dep
-                              pre.workbook        <- lapply(pre.workbook, FUN = function (uu) {rep(uu, times = max.elements)[1:max.elements]})
-                              workbook            <- data.frame(pre.workbook, stringsAsFactors = FALSE)
-                           }
-                           cat(paste("Use ",nrow(workbook)," replications overall.\n",sep=""))
-                           ana <- apply(workbook, MARGIN = 1, FUN = function (imp) {
-                                  group.names       <- as.character(imp[names(group)])
-                                  independent.names <- setdiff(as.character(imp), group.names)
-                                  independent.names <- setdiff(independent.names, as.character(imp[["dep"]]) )
-                                  cat("."); flush.console()
-                                  stopifnot(length(imp[["dep"]]) == 1 )
-                                  sub.ana <- by(data = dat.i, INDICES = dat.i[,group.names], FUN = function (sub.dat) {
-                                             sub.replicates <- replicates[replicates[,"ID"] %in% sub.dat[,ID] ,-1]
-                                             design         <- svrepdesign(data = sub.dat[,as.character(imp)], weights = sub.dat[,wgt], type="JKn", scale = 1, rscales = 1, repweights = sub.replicates, combined.weights = TRUE, mse = TRUE)
-                                             formel         <- as.formula(paste(imp[["dep"]],"~", paste( independent.names, collapse = " + "), sep = ""))
-                                             if(!is.null(reg.statement))  {
-                                                 replaceCovs <- reg.statement
-                                                 for (z in 1:length(independent.names))  {
-                                                      replaceCovs <- gsub(names(independent)[z],independent.names[z],replaceCovs)
-                                                 }
-                                                 formel     <- as.formula(paste(imp[["dep"]],"~", replaceCovs))
-                                             }
-                                             glm.ii         <- svyglm(formula = formel, design = design, return.replicates = FALSE, family = glm.family)
-                                             r.squared      <- data.frame ( r.squared = var(glm.ii$fitted.values)/var(glm.ii$y) , N = nrow(sub.dat) , N.valid = length(glm.ii$fitted.values) )
-                                             r.nagelkerke   <- NagelkerkeR2(glm.ii)
-                                             group.values   <- data.frame(matrix(sapply(sub.dat[,as.character(imp[names(group)]), drop = FALSE], FUN = function(uu) {names(table(as.character(uu)))}), nrow = 1), stringsAsFactors = FALSE )
-                                             colnames(group.values) <- names(group)
-                                             res.bl         <- data.frame(group.values, reg = rownames(summary(glm.ii)$coefficients[,c(1:2)]), summary(glm.ii)$coefficients[,c(1:2)], r.squared, r.nagelkerke = r.nagelkerke$R2, stringsAsFactors = FALSE )
-                                             # stopifnot(nrow(res.bl) == length(independent)+1)
-                                             # res.bl[-1,"reg"]  <- names(independent)
-                                             return(res.bl)
-                                  })
-                                  sub.ana <- do.call("rbind", sub.ana)
-                                  return(sub.ana)
-                           })
-                           cat("\nPooling Standard errors.\n",file=file, append=append)
-                           ana.frame           <- do.call("cbind", ana)
-                           mean.cols           <- grep("Estimate",colnames(ana.frame))
-                           se.cols             <- grep("Std..Error",colnames(ana.frame))
-                           r.squar.cols        <- grep("r.squared",colnames(ana.frame))
-                           r.nagel.cols        <- grep("r.nagelkerke", colnames(ana.frame))
-                           n.valid.cols        <- grep("N.valid",colnames(ana.frame))
-                           group.cols          <- sapply(names(group), FUN = function (uu) {grep(uu, colnames(ana.frame))[1]})
-                           coef.col            <- grep("reg$", colnames(ana.frame))[1]
-                           stopifnot(length(mean.cols ) == length(se.cols) )
-                           stopifnot(length(se.cols ) == length(r.squar.cols) )
-                           stopifnot(length(r.squar.cols ) == length(r.nagel.cols) )
-                           stopifnot(length(r.squar.cols ) == length(n.valid.cols) )
-                           if(length(se.cols) > 1)  {
-                               pooled         <- do.call("rbind", apply(X = ana.frame, MARGIN = 1, FUN = function (ii ) {
-                                                 frame.1 <- data.frame(pool.means(m = as.numeric(ii[mean.cols]), se = as.numeric(ii[se.cols]))$summary[c("m.pooled","se.pooled")], stringsAsFactors = FALSE)
-                                                 colnames(frame.1) <- c("estimate", "se.pooled")
-                                                 frame.2 <- data.frame(pool.R2 ( r2 = as.numeric(ii[r.squar.cols]), N = as.numeric(ii[n.valid.cols]), quiet = TRUE ), stringsAsFactors = FALSE)
-                                                 colnames(frame.2) <- c("pooled.R2", "se.R2")
-                                                 frame.3 <- data.frame(pool.R2 ( r2 = as.numeric(ii[r.nagel.cols]), N = as.numeric(ii[n.valid.cols]), quiet = TRUE ), stringsAsFactors = FALSE)
-                                                 colnames(frame.3) <- c("pooled.R2.nagelkerke", "se.R2.nagelkerke")
-                                                 return( data.frame(frame.1, frame.2, frame.3, stringsAsFactors = FALSE)) }))
-                              pooled <- data.frame(ana.frame[,c(group.cols, coef.col, drop = FALSE)], pooled, stringsAsFactors = FALSE )
-                           }
-                           if(length(se.cols) == 1)  {
-                              pooled <- data.frame(ana.frame[,c(group.cols, coef.col, mean.cols, se.cols, r.squar.cols, r.nagel.cols)], stringsAsFactors = FALSE )
-                           }
-                           attr(pooled, "unpooled") <- ana.frame
+                           workbook <- .generateWorkbook(group = pre.workbook, dep = dep, complete.permutation.all = (complete.permutation == "all") )
+                           cat(paste("Use ",nrow(workbook$workbook)," replications overall.\n",sep=""))
+                           ana <- apply(workbook$workbook, MARGIN = 1, FUN = jackknife.glm, group = group, reg.statement = reg.statement, glm.family = glm.family, independent = independent, dat.i = dat.i, replicates = replicates, ID = ID, wgt = wgt )
+                           cat("\nPooling Standard errors.\n",file=catPrms$file, append=catPrms$append)
+                           names(ana)          <- workbook$workbook[,"dep"]
+                           if(!is.null(attr(dep, "nested")))   {
+                               struktur <- attr(dep, "nested")
+                               if(is.null(names(struktur)) )   { names(struktur) <- paste("n",gsub(" ","0",formatC(1:length(struktur), width = nchar(length(struktur)))), sep="") }
+                           }  else  {struktur <- list(n1 = dep, n2 = NULL) }
+                           if(length(ana)>1)    {                               ### Es wird nur gepoolt, wenn es mehr als einen Standardfehler gibt
+                              ana       <- lapply(names(ana), FUN = function ( a ) {
+                                           ana[[a]][,"dep_imp"] <- a
+                                           return(ana[[a]])})
+                              anaL      <- do.call("rbind", ana)
+                              pooled    <- do.call("rbind", by(data = anaL, INDICES = anaL[,names(group)], FUN = function ( p ) {
+                                           subD <- do.call("rbind", by(data = p, INDICES = p[,"reg"], FUN = function ( ss ) {
+                                                   choosen <- unlist(lapply(c("Estimate", "Std..Error", "r.squared", "r.nagelkerke", "N.valid"), FUN = function (zz) {
+                                                              ret <- lapply(struktur, FUN = function (mm) {
+                                                                     return(ss[ss[,"dep_imp"] %in% mm , zz])}) }), recursive = FALSE )
+                                                   ret     <- data.frame(ss[1,c(names(group), "reg","N", "N.valid")], pool.means(m = choosen[1:2], se = choosen[3:4])$summary[c("m.pooled","se.pooled")], pool.R2(r2 = choosen[5:6], N = choosen[9:10]), pool.R2(r2 = choosen[7:8], N = choosen[9:10]), stringsAsFactors = FALSE )
+                                                   colnames(ret)[(ncol(ret)-5):ncol(ret)] <- c("beta", "se.beta", "R2", "se.R2", "R.nagelk", "se.R.nagelk")
+                                                   return(ret)
+                                           }) ) }))
+                           } else { pooled <- ana[[1]] }
                            return(pooled)
             })
-            return(analysis) }
-            
+            return(analysis)}
+
 
 ### multicore version of jk2.glm()
 jk2.glm.M <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independent = list(), reg.statement = NULL, dependent = list(), complete.permutation = c("nothing", "groups", "independent", "all") , glm.family, multicoreOptions = list(n.cores = NULL, GBcore = NULL, tempFolder = NULL, nameLogfile = NULL))    {
@@ -601,7 +437,7 @@ jk2.glm.M <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), indepe
              mach.es <- function ( laufnummer, ...  ) {
                         # if(!exists("jk2.mean"))    {source(multicoreOptions[["functionFolder"]])}
                         library(eatRep)
-						datS             <- dat                                 ### initialisiere Datensatz
+                        datS             <- dat                                 ### initialisiere Datensatz
                         if(length(groupList[["splitGroup"]])>0)    {
                            for (u in names(groupList[["splitGroup"]]))    {     ### selektiere Datensatz
                                 datS        <- datS[datS[,groupList[["splitGroup"]][[u]]] == groupList[["groupList"]][laufnummer,u] , ]
@@ -631,7 +467,7 @@ jk2.glm.M <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), indepe
 ### GBcores sagt: wieviele GB pro core
 ### chooseCores(); chooseCores(12, 0.2)
 chooseCores <- function(cores = NULL, GBcore = NULL) {
-          #   if(!exists("detectCores"))   {library(parallel)}
+#             if(!exists("detectCores"))   {library(parallel)}
              n.cores <- detectCores()
              if(is.na(n.cores))     {cat("Cannot detect cores. Computer does not seem to be suited for multicore analysis.\n")}
              ram     <- memory.limit()
@@ -716,6 +552,192 @@ chooseCores <- function(cores = NULL, GBcore = NULL) {
                                  stopifnot(all ( actual == first ) )
                         })
                         }})}
+
+
+### prueft die genestete Struktur
+checkNest <- function(group, dependent, independent = NULL) {
+             if(length(group)>0 & length(independent)>0) {
+                if( length( setdiff( as.numeric(names(table(c(unlist(sapply(group,length)), unlist(sapply(independent,length)) ) ))), 1 ) ) > 1 )  {
+                    cat("Warning: Nesting structure does not seem to be appropriate. Number of imputations for group variables differs from number of imputations for independent variable.\n")
+                }
+             }
+             ld        <- sapply(dependent, FUN = function (x ) {ifelse(is.list(x), length(x), 1)})
+             sapply( list(group, independent ), FUN = function ( x ) {
+                     if(length(x) > 0 )  {
+                        lg     <- sapply(x, length)
+                        ret    <- lapply(ld, FUN = function (y) {y / lg})
+                        falsch <- which(!sapply(ret, FUN = function (r) { all( r == round (r) ) }))
+                        if(length(falsch)>0) {
+                           cat(paste("Warning! Nesting structure does not seem to be appropriate for dependent variable(s) ",paste(falsch, collapse=", "),". Standard errors may be not trustworthy!\n", sep=""))
+                        }
+                     } } )  }
+
+
+.generateWorkbook <- function (group, dep, complete.permutation.all ) {
+                     group.origin <- group
+                     if(complete.permutation.all == TRUE ) {
+                        group$dep <- dep
+                        workbook  <- expand.grid(group, stringsAsFactors = FALSE)
+                        }  else  {
+                        if(is.null(attr(dep, "nested")) )    {
+                        max.elements <- max ( c( unlist(lapply(group, length)) , length(dep) ) )
+                        group$dep    <- dep
+                        group        <- lapply(group, FUN = function (uu) {rep(uu, times = max.elements)[1:max.elements]})
+                        workbook     <- data.frame(group, stringsAsFactors = FALSE)
+                        }  else  {
+                        workbook     <- NULL
+                        for ( m in 1 : length(attr(dep, "nested")) )   {
+                              n.nested <- sapply(group.origin, length)
+                              mm       <- sapply(n.nested, FUN = function ( nn ) { ifelse(nn >= m, m, nn ) } )
+                              frame1   <- sapply( names(n.nested), FUN = function ( ii ) { group.origin[[ii]][mm[[ii]]] })
+                              ret      <- data.frame ( t(frame1), dep = attr(dep, "nested")[[m]], stringsAsFactors = FALSE )
+                              workbook <- rbind(workbook, ret)
+                        }
+                       }
+                     }
+                     return(list(workbook = workbook, group = group, group.origin = group.origin ) ) }
+
+
+### Hilfsfunktion fuer jk2.glm()
+jackknife.glm <- function (imp, group, reg.statement, glm.family, independent, dat.i , replicates , ID , wgt ) {
+                 group.names       <- as.character(imp[names(group)])
+                 independent.names <- setdiff(as.character(imp), group.names)
+                 independent.names <- setdiff(independent.names, as.character(imp[["dep"]]) )
+                 cat("."); flush.console()
+                 stopifnot(length(imp[["dep"]]) == 1 )
+                 sub.ana <- do.call("rbind", by(data = dat.i, INDICES = dat.i[,group.names], FUN = function (sub.dat) {
+                            sub.replicates <- replicates[replicates[,"ID"] %in% sub.dat[,ID] ,-1]
+                            design         <- svrepdesign(data = sub.dat[,as.character(imp)], weights = sub.dat[,wgt], type="JKn", scale = 1, rscales = 1, repweights = sub.replicates, combined.weights = TRUE, mse = TRUE)
+                            formel         <- as.formula(paste(imp[["dep"]],"~", paste( independent.names, collapse = " + "), sep = ""))
+                            if(!is.null(reg.statement))  {
+                                replaceCovs <- reg.statement
+                                for (z in 1:length(independent.names))  {
+                                     replaceCovs <- gsub(names(independent)[z],independent.names[z],replaceCovs)
+                                }
+                                formel     <- as.formula(paste(imp[["dep"]],"~", replaceCovs))
+                            }
+                            glm.ii         <- svyglm(formula = formel, design = design, return.replicates = FALSE, family = glm.family)
+                            r.squared      <- data.frame ( r.squared = var(glm.ii$fitted.values)/var(glm.ii$y) , N = nrow(sub.dat) , N.valid = length(glm.ii$fitted.values) )
+                            r.nagelkerke   <- NagelkerkeR2(glm.ii)
+                            group.values   <- data.frame(matrix(sapply(sub.dat[,as.character(imp[names(group)]), drop = FALSE], FUN = function(uu) {names(table(as.character(uu)))}), nrow = 1), stringsAsFactors = FALSE )
+                            colnames(group.values) <- names(group)
+                            res.bl         <- data.frame(group.values, reg = rownames(summary(glm.ii)$coefficients[,c(1:2)]), summary(glm.ii)$coefficients[,c(1:2)], r.squared, r.nagelkerke = r.nagelkerke$R2, stringsAsFactors = FALSE )
+                            for (aa in 1:length(independent)) {                 ### Hotfix ...
+                                 res.bl[which(res.bl[,"reg"] %in% independent[[aa]]) ,"reg"]   <- names(independent)[aa]
+                            }
+                            return(res.bl)
+                 }) )
+                 return(sub.ana) }
+
+
+jackknife.quantile <- function ( imp, dat.i, dep, replicates , ID, wgt , probs ) {
+                      cat("."); flush.console()
+                      design         <- svrepdesign(data = dat.i[,c(as.character(imp[-length(imp)]), dep) ], weights = dat.i[,wgt], type="JKn", scale = 1, rscales = 1, repweights = replicates[,-1], combined.weights = TRUE, mse = TRUE)
+                      formel         <- as.formula(paste("~ ",imp[["dep"]], sep = "") )
+                      quantile.imp   <- svyby(formula = formel, by = as.formula(paste("~", paste(as.character(imp[-length(imp)]), collapse = " + "))), design = design, FUN = svyquantile, quantiles = probs, return.replicates = TRUE, na.rm = TRUE)
+                      molt           <- melt.data.frame(data=quantile.imp, id.vars=as.character(imp[-length(imp)]), na.rm=TRUE)
+                      xx             <- colsplit(gsub("([[:digit:]]+)", "\\.\\1", molt$variable), "\\.", names = c("var", "per.number"))
+                      molt           <- data.frame(molt[,-match("variable", colnames(molt))], xx, stringsAsFactors = FALSE )
+                      quantile.cast  <- cast(molt, ... ~ var)       ### Jetzt sollen noch die verwendeten Perzentilgroessen angebunden werden
+                      probnamen      <- data.frame(Nummer = 1:length(probs), per.number = probs, stringsAsFactors = FALSE )
+                      quantile.cast[,"per.number"] <- probnamen[ match(quantile.cast[,"per.number"], probnamen[,1])  ,2]
+                      return(quantile.cast) }
+
+
+jackknife.table <- function ( imp, dat.i, dep,  replicates , ID , wgt , catPrms  ) {
+                   cat("."); flush.console()
+                   stopifnot(length(imp[["dep"]]) == 1 )
+                   original.levels   <- names(table(dat.i[,imp[["dep"]]]))
+                   if(!is.null( attr(dep,"expected") ))   {
+                       if(length(setdiff(original.levels, attr(dep,"expected"))) >0) {stop()}
+                       original.levels <- sort(attr(dep,"expected"))
+                   }
+                   dat.ana  <- dat.i
+                   if(attr(dep, "separate.missing") == TRUE ) {
+                      original.levels <- sort(c(original.levels, "missing"))
+                      weg             <- which(is.na(dat.ana[,imp[["dep"]]]))
+                      if ( length(weg)>0) {
+                           dat.ana[weg,imp[["dep"]]] <- "missing"
+                      }
+                   }  else {
+                      weg <- which(is.na(dat.ana[,imp[["dep"]]]))
+                      if(length(weg)>0) {
+                         cat(paste(" Warning: No seperate missing categorie was chosen. ", length(weg), " missings were found anyhow for variable ",imp[["dep"]],". Missings will be deteted from the data.\n",sep=""), file=catPrms$file, append=catPrms$append)
+                         dat.ana   <- dat.ana[-weg,]
+                      }
+                   }
+                   n.levels  <- table(original.levels)
+                   n.double  <- which(n.levels > 1 )
+                   if(length(n.double)>0) {
+                      cat(paste("    Warning! ",length(n.double), " multiple level indicators of dependent variable found:\n",sep=""), file=catPrms$file, append=catPrms$append)
+                      cat("    "); print(n.double)
+                      if(append == TRUE) { cat(paste(n.double, "\n",sep=""), file=catPrms$file, append=catPrms$append)  }
+                      cat("    Double level indicators will be merged to one common indicator.\n", file=catPrms$file, append=catPrms$append)
+                      original.levels <- unique(original.levels)
+                   }
+                   dat.ana$what.I.want <- factor(dat.ana[,imp[["dep"]]], levels = original.levels)
+                   design    <- svrepdesign(data = dat.ana[,c(as.character(imp[-length(imp)]), "what.I.want")], weights = dat.ana[,wgt], type="JKn", scale = 1, rscales = 1, repweights = replicates[match(dat.ana[,"idstud"], replicates[,"ID"], ),-1], combined.weights = TRUE, mse = TRUE)
+                   means     <- svyby(formula = ~factor(what.I.want, levels = original.levels), by = as.formula(paste("~", paste(as.character(imp[-length(imp)]), collapse = " + "))), design = design, FUN = svymean, deff = FALSE, return.replicates = TRUE)
+                   cols      <- match(paste("factor(what.I.want, levels = original.levels)",original.levels,sep=""), colnames(means))
+                   colnames(means)[cols] <- paste("mittelmean",original.levels, sep="____________")
+                   cols.se   <- grep("^se", colnames(means) )
+                   stopifnot(length(cols) == length(cols.se))
+                   colnames(means)[cols.se] <- paste("se____________", original.levels, sep="")
+                   molt           <- melt.data.frame(data=means, id.vars=as.character(imp[-length(imp)]), na.rm=TRUE)
+                   xx             <- data.frame(matrix(unlist(strsplit(as.character(molt$variable), "____________")), ncol= 2, byrow = TRUE ), stringsAsFactors = FALSE )
+                   colnames(xx)   <- c("var", "suffix")
+                   molt           <- data.frame(molt[,-match("variable", colnames(molt))], xx, stringsAsFactors = FALSE )
+                   table.cast     <- cast(molt, ... ~ var)
+                   return(table.cast)}
+
+
+jackknife.mean <- function (imp, dat.i , dep, replicates , ID, wgt, na.rm, group.differences.by, workbook  )   {
+                  cat("."); flush.console()
+                  design         <- svrepdesign(data = dat.i[,c(as.character(imp[-length(imp)]), dep) ], weights = dat.i[,wgt], type="JKn", scale = 1, rscales = 1, repweights = replicates[,-1], combined.weights = TRUE, mse = TRUE)
+                  formel         <- as.formula(paste("~ ",imp[["dep"]], sep = "") )
+                  means          <- svyby(formula = formel, by = as.formula(paste("~", paste(as.character(imp[-length(imp)]), collapse = " + "))), design = design, FUN = svymean, na.rm=na.rm, deff = FALSE, return.replicates = TRUE)
+                  colnames(means) <- gsub("^se$", "se.mean", colnames(means) )
+                  vars           <- svyby(formula = formel, by = as.formula(paste("~", paste(as.character(imp[-length(imp)]), collapse = " + "))), design = design, FUN = svyvar, deff = FALSE, return.replicates = TRUE)
+                  colnames(vars) <- gsub("^V1$", "variance", colnames(vars))    ### Standardabweichungen muessen separat bestimmt werden (Lumley, Mail 17. Oktober 2012). Delta method
+                  colnames(vars) <- gsub("^se$", "se.variance", colnames(vars)) ### da die delta method "von hand" programmiert werden muss, kann sie nicht mittels svyby() uebergeben werden, muss also aehnlich wie svyglm() von hand mittels lapply() auf die verschiedenen abhaengigen variablen verteilt werden
+                  sds            <- do.call("rbind", by(data = dat.i, INDICES =  dat.i[,as.character(imp[-length(imp)])], FUN = function (uu) {
+                                    namen          <- sapply(uu[,as.character(imp[-length(imp)]), drop = FALSE], FUN = function ( yy ) {
+                                                      retu <- table(yy)
+                                                      return(names(retu)[retu>0]) })
+                                    sub.replicates <- replicates[ match(uu[,"idstud"], replicates[,"ID"] ) ,  ]
+                                    design.uu      <- svrepdesign(data = uu[ ,c(as.character(imp[-length(imp)]), dep)], weights = uu$wgtSTUD, type="JKn", scale = 1, rscales = 1, repweights = sub.replicates[,-1], combined.weights = TRUE, mse = TRUE)
+                                    var.uu         <- svyvar(x = as.formula(paste("~",imp[["dep"]],sep="")), design = design.uu, deff = FALSE, return.replicates = TRUE, na.rm = na.rm)
+                                    ret            <- data.frame(t(namen), SD = as.numeric(sqrt(coef(var.uu))), se.SD =  as.numeric(sqrt(vcov(var.uu)/(4*coef(var.uu)))), stringsAsFactors = FALSE ) }) )
+                  difs           <- NULL
+                  if(!is.null(group.differences.by))   {
+                      m            <- means
+                      m$comb.group <- apply(m, 1, FUN = function (ii) { crop(paste( ii[as.character(imp[-length(imp)])], collapse = "."))})
+                      repl         <- data.frame(t(attr(means, "replicates")), stringsAsFactors = FALSE )
+                      repl[,"comb.group"] <- rownames(repl)
+                      m              <- merge(m, repl, by = "comb.group" )
+                      m$all.group    <- 1
+                      res.group      <- setdiff(names(workbook$group.origin), group.differences.by)
+                      if(length(res.group) == 0 ) {res.group <- "all.group"} else {res.group <- as.character(imp[-length(imp)][res.group])}
+                      difs           <- by(data = m, INDICES = m[,res.group], FUN = function (iii)   {
+                                        true.diff <- diff(iii[,which(colnames(iii) %in% dep)])
+                                        cols      <- grep("^X[[:digit:]]{1,3}$", colnames(iii) )
+                                        other.diffs <- apply(iii[,cols], 2, diff)
+                                        dif.iii   <- data.frame(dif = true.diff, se =  sqrt(sum((true.diff - other.diffs)^2)), stringsAsFactors = FALSE )
+                                        return(dif.iii)
+                      })
+                      difs           <- do.call("rbind", difs)
+                  }
+                  common            <- as.character(imp[-length(imp)])
+                  ret               <- merge(means, vars, by = common, all = TRUE)
+                  ret               <- merge(ret, sds , by = common, all = TRUE )
+                  impG              <- imp[!imp %in% imp[["dep"]] ]
+                  if(length(impG)>0) {                                          ### Jetzt werden noch die Namen der Gruppenvariablen vereinheitlicht
+                     for ( u in 1:length(impG))    {                            ### notwendig, wenn durch Imputationen etc. dieselbe Gruppenvariable verschiedene Variablennamen hat
+                           colnames(ret) <- gsub(impG[u], names(impG)[u], colnames(ret))
+                     }}
+                     attr(ret, "difs") <- difs
+                     return(ret) }
+
 
 generate.replicates <- function ( dat, ID, wgt = NULL, JKZone, JKrep )      {
                        stopifnot(length(JKZone) == 1 & length(JKrep) == 1 )

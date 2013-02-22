@@ -34,7 +34,7 @@ halve.string <- function (string, pattern, first = TRUE )  {
     }
     else {
         locations <- stringr:::str_locate_all(string, pattern)
-        do.call("rbind", plyr:::llply(seq_along(locations), function(i) {
+        do.call("rbind", llply(seq_along(locations), function(i) {
             location <- locations[[i]]
             string <- string[i]
             pieces <- 1
@@ -57,4 +57,22 @@ table.unlist <- function(dataFrame)   {
                 column.by.column   <- do.call("rbind.fill.matrix", lapply(dataFrame, FUN=function(ii) {t(table(ii))}) )
                 freq.table         <- colSums(column.by.column,na.rm=TRUE)
                 return(freq.table)}
+                
+wo.sind <- function(a,b,quiet=FALSE)
+           {b <- data.frame(1:length(b),b,stringsAsFactors=FALSE)               ### zusätzliche Syntaxbefehle sind notwendig, damit die Funktion mit missing values umgehen kann.
+            if(sum(which(is.na(a)))>0)     {cat("a contains missing values. \n")}
+            if(sum(which(is.na(b[,2])))>0) {cat("b contains missing values. \n")}
+            if(length(na.omit(a)) > length(unique(na.omit(a))))     {cat("a contains duplicate elements. \n")}
+            if(length(intersect(a,b[,2])) == 0) {cat("No common elements in a and b. \n")}
+            if(quiet==FALSE) { if(length(intersect(a,b[,2])) > 0) {if(length(setdiff(a,b[,2]))>0)      {cat("Not all Elemente of a included in b. \n")} } }
+            a <- unique(a)
+            if(sum(which(is.na(a)))>0)     {a <- a[-which(is.na(a))]}           ### Sofern vorhanden, werden missing values aus a entfernt
+            b <- na.omit(b)                                                     ### Sofern vorhanden, werden missing values aus b entfernt; aber: Rangplatz der
+            reihe <- NULL                                                       ### der nicht fehlenden Elemente in b bleibt erhalten
+            if(length(a)>0) {for (i in 1:length(a))
+                                 {reihe <- c(reihe,b[,1][a[i]==b[,2]])}
+                             if(quiet==FALSE) { cat(paste("Found",length(reihe),"elements.")); cat("\n") }}
+            if(length(a)==0) {cat("No valid values in a.\n")}
+            return(reihe)}
+
 	

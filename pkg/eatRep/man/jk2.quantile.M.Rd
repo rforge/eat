@@ -5,13 +5,15 @@
 \description{Compute quantiles with standard errors for complex cluster designs with multiple imputed variables
 (e.g. plausible values) based on Jackknife (JK2) procedure. Conceptually, the function combines
 replication methods and methods for multiple imputed data. Technically, this is a wrapper for
-the svyquantile() function of the survey package which uses the parallel package to distribute analysis
+the \code{svyquantile()} function of the survey package which uses the parallel package to distribute analysis
 to different logical processors.
 }
 \usage{
 jk2.quantile.M(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(),
-probs = seq(0, 1, 0.25), complete.permutation = c("nothing", "groups", "all"),
-multicoreOptions = list(n.cores = NULL, GBcore = NULL, tempFolder = NULL, nameLogfile = NULL) ) }
+              probs = seq(0, 1, 0.25),
+              complete.permutation = c("nothing", "groups", "all"),
+              multicoreOptions = list(n.cores = NULL, GBcore = NULL,
+                                 tempFolder = NULL, nameLogfile = NULL) ) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -67,7 +69,7 @@ A list of several parameters concerning multicore processing.
    considering system memory.}
  \item{\code{GBcore}}{Desired memory (in giga byte) of RAM preserved for each core. For example, if you work on a 4 core machine with 4 GB
  RAM and want to preserve 2 GB for each core, only 2 cores are used instead of 4.}
- \item{\code{tempFolder}}{Multicore operation does not allow to print messages on console. Therefore, a log file will be writte in the 
+ \item{\code{tempFolder}}{Multicore operation does not allow to print messages on console. Therefore, a log file will be written in the
  specified folder. If no folder is specified, no log file will be created.}
  \item{\code{nameLogfile}}{Name of the logfile. If no name is specified, file will be named \code{analyse.log}. }
  }
@@ -77,7 +79,7 @@ A list of several parameters concerning multicore processing.
 %%  ~~ If necessary, more details than the description above ~~
 Function first creates replicate weights based on JKZone and JKrep variables according to JK2 procedure
 implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
-The function afterwards serves as a wrapper for svyquantile() called by svyby() implemented in the 'survey' package.
+The function afterwards serves as a wrapper for \code{svyquantile()} called by \code{svyby()} implemented in the 'survey' package.
 The results of the several analyses are then pooled according to Rubin's rule.
 }
 \value{
@@ -107,9 +109,10 @@ Sebastian Weirich
 data(reading_writing)
 ## Not run:
 ### Computes percentile for reading and writing scores conditionally on country
-#perzent   <- jk2.quantile.M(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
-#             group = list(country = "country"),
-#             dependent = list(reading = paste("reading_score", 1:3, sep = ""), writing = paste("writing_score", 1:3, sep = "")  ) ,
+#perzent   <- jk2.quantile.M(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
+#             JKrep = "JKrep", group = list(country = "country"),
+#             dependent = list(reading = paste("reading_score", 1:3, sep = ""),
+#                              writing = paste("writing_score", 1:3, sep = "")  ) ,
 #             probs = seq(0.1,0.9,0.2),
 #             complete.permutation = "no" )
 ## End(Not run)

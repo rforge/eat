@@ -5,11 +5,12 @@
 \description{Compute quantiles with standard errors for complex cluster designs with multiple imputed variables
 (e.g. plausible values) based on Jackknife (JK2) procedure. Conceptually, the function combines
 replication methods and methods for multiple imputed data. Technically, this is a wrapper for
-the svyquantile() function of the survey package.
+the \code{svyquantile()} function of the survey package.
 }
 \usage{
 jk2.quantile(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(),
-probs = seq(0, 1, 0.25), complete.permutation = c("nothing", "groups", "all")) }
+            probs = seq(0, 1, 0.25),
+            complete.permutation = c("nothing", "groups", "all")) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -62,7 +63,7 @@ only the number of imputations of more than one grouping variable will be permut
 %%  ~~ If necessary, more details than the description above ~~
 Function first creates replicate weights based on JKZone and JKrep variables according to JK2 procedure
 implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
-The function afterwards serves as a wrapper for svyquantile() called by svyby() implemented in the 'survey' package.
+The function afterwards serves as a wrapper for \code{svyquantile()} called by \code{svyby()} implemented in the 'survey' package.
 The results of the several analyses are then pooled according to Rubin's rule.
 }
 \value{
@@ -91,11 +92,11 @@ Sebastian Weirich
 \examples{
 data(reading_writing)
 ### Computes percentile for reading and writing scores conditionally on country
-perzent   <- jk2.quantile(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
-             group = list(country = "country"),
-             dependent = list(reading = paste("reading_score", 1:3, sep = ""), writing = paste("writing_score", 1:3, sep = "")  ) ,
-             probs = seq(0.1,0.9,0.2),
-             complete.permutation = "no" )
+perzent   <- jk2.quantile(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD",
+             JKZone = "JKZone", JKrep = "JKrep", group = list(country = "country"),
+             dependent = list(reading = paste("reading_score", 1:3, sep = ""),
+                              writing = paste("writing_score", 1:3, sep = "")  ) ,
+             probs = seq(0.1,0.9,0.2), complete.permutation = "no" )
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

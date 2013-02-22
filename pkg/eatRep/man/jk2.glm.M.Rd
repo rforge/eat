@@ -3,14 +3,15 @@
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Multicore version of jk2.glm().}
 \description{Compute linear regression models for complex cluster designs with multiple imputed variables based on Jackknife (JK2) procedure.
-Conceptually, the function combines replication methods and methods for multiple imputed data. Technically, this is a wrapper for the svyglm() function
+Conceptually, the function combines replication methods and methods for multiple imputed data. Technically, this is a wrapper for the \code{svyglm()} function
 of the survey package which uses the parallel package to distribute analysis to different logical processors.
 }
 \usage{
 jk2.glm.M(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independent = list(),
         reg.statement = NULL, dependent = list(),
         complete.permutation = c("nothing", "groups", "independent", "all") ,
-        glm.family, multicoreOptions = list(n.cores = NULL, GBcore = NULL, tempFolder = NULL, nameLogfile = NULL) ) }
+        glm.family, multicoreOptions = list(n.cores = NULL, GBcore = NULL,
+        tempFolder = NULL, nameLogfile = NULL) ) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -37,12 +38,13 @@ Variable name or column number of variable indicating replicate ID.
   \item{group}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Optional: List of one or more grouping variables. If grouping variable is a multiple imputation variable,
-all names concerning one variable are interpreted as its imputations. See details for more information.
+all names concerning one variable are interpreted as its imputations. See example 1, where two group variables are used: One group variable
+is multiple imputed, the other is not.
 }
   \item{independent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 List of one or more independent variables. If independent variable is a multiple imputation variable, all names concerning one variable are interpreted
-as its imputations. See details for more information.
+as its imputations. See details and example 2 for more information.
 }
  \item{reg.statement}{
 Optional: By default, the regression formula is created automatically  by the independent variables connected by a "+" symbol. However, when interaction terms should
@@ -54,7 +56,7 @@ sets. See example 3 for further details.
 %%     ~~Describe \code{sig.dif.bound} here~~
 List of one or more dependent variables. Each dependent variable will result in a separate analysis.
 If dependent variable is a multiple imputation variable, all names concerning one variable are interpreted
-as its imputations. See details for more information.
+as its imputations. See details and example 1 for more information.
 }
   \item{complete.permutation}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -78,7 +80,7 @@ A list of several parameters concerning multicore processing.
    considering system memory.}
  \item{\code{GBcore}}{Desired memory (in giga byte) of RAM preserved for each core. For example, if you work on a 4 core machine with 4 GB
  RAM and want to preserve 2 GB for each core, only 2 cores are used instead of 4.}
- \item{\code{tempFolder}}{Multicore operation does not allow to print messages on console. Therefore, a log file will be writte in the 
+ \item{\code{tempFolder}}{Multicore operation does not allow to print messages on console. Therefore, a log file will be written in the
  specified folder. If no folder is specified, no log file will be created.}
  \item{\code{nameLogfile}}{Name of the logfile. If no name is specified, file will be named \code{analyse.log}. }
  }
@@ -120,24 +122,31 @@ Sebastian Weirich
 \examples{
 data(reading_writing)
 ## Not run:
-### Example 1: Computes linear regression from reading score on hisei separately for each country
-#mod1      <- jk2.glm.M(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
-#             group = list(country = "country"),
-#             dependent = list(reading = paste("reading_score", 1:3, sep = ""), writing = paste("writing_score", 1:3, sep = "")),
-#             independent = list(hisei = paste("zehisei", 1:5, sep = "")),
+### Example 1: Computes linear regression from reading score on gender separately for each
+### country and each hisei. This serves as an example for two group variables, where one
+### group variable is a multiple imputed one.
+#mod1      <- jk2.glm.M(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
+#             JKrep = "JKrep",
+#             group = list(country = "country", hisei = paste("zehisei", 1:5, sep = "")),
+#             dependent = list(reading = paste("reading_score", 1:3, sep = ""),
+#                              writing = paste("writing_score", 1:3, sep = "")),
+#             independent = list(gender = "sex"),
 #             complete.permutation = "no", glm.family = gaussian(link="identity") )
-### Example 2: Computes log linear regression from pass/fail on hisei and gender separately for each country
-#mod2      <- jk2.glm.M(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
-#             group = list(country = "country"),
-#             dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""), writing.pass = paste("passed_writing", 1:3, sep = "")),
+### Example 2: Computes log linear regression from pass/fail on hisei and gender separately
+### for each country
+#mod2      <- jk2.glm.M(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
+#             JKrep = "JKrep", group = list(country = "country"),
+#             dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""),
+#                              writing.pass = paste("passed_writing", 1:3, sep = "")),
 #             independent = list(hisei = paste("zehisei", 1:5, sep = ""), gender = "sex"),
 #             complete.permutation = "no", glm.family = binomial(link="logit") )
-### Example 3: Computes linear regression from pass/fail on hisei and gender (and its' interaction) separately for each country
-### The regression statement has to be defined manually. Note that, despite "hisei" occurs as a multiple imputed variable, only
-### one statement has to be defined.
-#mod3      <- jk2.glm.M(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
-#             group = list(country = "country"),
-#             dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""), writing.pass = paste("passed_writing", 1:3, sep = "")),
+### Example 3: Computes linear regression from pass/fail on hisei and gender (and its' interaction)
+### separately for each country. The regression statement has to be defined manually. Note that,
+### despite "hisei" occurs as a multiple imputed variable, only one statement has to be defined.
+#mod3      <- jk2.glm.M(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
+#             JKrep = "JKrep", group = list(country = "country"),
+#             dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""),
+#                              writing.pass = paste("passed_writing", 1:3, sep = "")),
 #             independent = list(hisei = paste("zehisei", 1:5, sep = ""), gender = "sex"),
 #             reg.statement = "hisei*gender",
 #             complete.permutation = "no", glm.family = binomial(link="logit") )
