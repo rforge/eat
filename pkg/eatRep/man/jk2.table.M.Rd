@@ -12,7 +12,8 @@ distribute analysis to different logical processors.
 jk2.table.M(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(),
           separate.missing.indikator = FALSE, expected.values = list(),
           complete.permutation = c("nothing", "groups", "all"),
-          multicoreOptions = list(n.cores = NULL, GBcore = NULL, tempFolder = NULL, nameLogfile = NULL) ) }
+          multicoreOptions = list(n.cores = NULL, GBcore = NULL, tempFolder = NULL,
+          nameLogfile = NULL) ) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -67,15 +68,17 @@ only the number of imputations of more than one grouping variable will be permut
 }
   \item{multicoreOptions}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-A list of several parameters concerning multicore processing.
+A list of several optional parameters concerning multicore processing.
 \describe{
- \item{\code{n.cores}}{Desired number of cores to be used for analysis. If \code{NULL}, function chooses appropriate number of cores 
+ \item{\code{n.cores}}{Desired number of cores to be used for analysis. If \code{NULL}, function chooses appropriate number of cores
    considering system memory.}
- \item{\code{GBcore}}{Desired memory (in giga byte) of RAM preserved for each core. For example, if you work on a 4 core machine with 4 GB
- RAM and want to preserve 2 GB for each core, only 2 cores are used instead of 4.}
- \item{\code{tempFolder}}{Multicore operation does not allow to print messages on console. Therefore, a log file will be writte in the 
+ \item{\code{GBcore}}{Desired memory (in giga byte) of RAM preserved for each core. For example, if you work on a quad core machine with 4 GB
+ RAM and want to preserve 2 GB for each core, type \code{multicoreOptions = list ( GBcore = 2 )}. This will result in automatically using only 2 cores instead of 4.
+ If \code{NULL}, no restriction on cores to be used is made. \code{n.cores} will be used than, or, if \code{n.cores = NULL}, all available cores will be used.}
+ \item{\code{tempFolder}}{Multicore operation does not allow to print messages on console. Therefore, a log file will be written in the
  specified folder. If no folder is specified, no log file will be created.}
- \item{\code{nameLogfile}}{Name of the logfile. If no name is specified, file will be named \code{analyse.log}. }
+ \item{\code{nameLogfile}}{Name of the logfile. If no name is specified, file will be named \code{analyse.log}. If \code{analyse.log} already exists in the
+ specified folder, logfile will be renamed automatically \code{analyse1.log}.}
  }
  }
  }
@@ -85,7 +88,7 @@ Function first creates replicate weights based on JKZone and JKrep variables acc
 implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
 The function afterwards serves as a wrapper for svymean() called by svyby() implemented in the 'survey' package.
 Relative frequencies of the categories of the dependent variable are computed by the means of the indicators of
-each category. The results of the several analyses are then pooled according to Rubin's rule.
+each category. The results of the several analyses are then pooled according to Rubin's rule, which is adapted for nested imputations if the \code{dependent} argument implies a nested structure.
 }
 \value{
 %%  ~Describe the value returned
@@ -116,8 +119,10 @@ Sebastian Weirich
 data(reading_writing)
 ## Not run:
 ### Computes frequencies of the hisei group conditionally on the groups of passed and failed with respect to reading score
-#freq.tab  <- jk2.table.M(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
-#             group = list(country = "country", passed.reading = paste("passed_reading",1:3,sep="" )),
+#freq.tab  <- jk2.table.M(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD",
+#             JKZone = "JKZone", JKrep = "JKrep",
+#             group = list(country = "country",
+#                          passed.reading = paste("passed_reading",1:3,sep="" )),
 #             dependent = list(hisei = paste("zehisei", 1:5, sep = "") ) ,
 #             complete.permutation = "no" )
 ## End(Not run)

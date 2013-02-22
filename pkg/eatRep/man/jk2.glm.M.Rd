@@ -70,28 +70,30 @@ If \code{"independent"}, only the number of imputations of more than one indepen
 }
   \item{glm.family}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Argument of class "family", specifying the link function. See help file of 'glm' for details.
+Argument of class \code{"family"}, specifying the link function. See help file of \code{'glm()'} function for details.
 }
   \item{multicoreOptions}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-A list of several parameters concerning multicore processing.
+A list of several optional parameters concerning multicore processing.
 \describe{
  \item{\code{n.cores}}{Desired number of cores to be used for analysis. If \code{NULL}, function chooses appropriate number of cores 
    considering system memory.}
- \item{\code{GBcore}}{Desired memory (in giga byte) of RAM preserved for each core. For example, if you work on a 4 core machine with 4 GB
- RAM and want to preserve 2 GB for each core, only 2 cores are used instead of 4.}
+ \item{\code{GBcore}}{Desired memory (in giga byte) of RAM preserved for each core. For example, if you work on a quad core machine with 4 GB
+ RAM and want to preserve 2 GB for each core, type \code{multicoreOptions = list ( GBcore = 2 )}. This will result in automatically using only 2 cores instead of 4.
+ If \code{NULL}, no restriction on cores to be used is made. \code{n.cores} will be used than, or, if \code{n.cores = NULL}, all available cores will be used.}
  \item{\code{tempFolder}}{Multicore operation does not allow to print messages on console. Therefore, a log file will be written in the
  specified folder. If no folder is specified, no log file will be created.}
- \item{\code{nameLogfile}}{Name of the logfile. If no name is specified, file will be named \code{analyse.log}. }
+ \item{\code{nameLogfile}}{Name of the logfile. If no name is specified, file will be named \code{analyse.log}. If \code{analyse.log} already exists in the
+ specified folder, logfile will be renamed automatically \code{analyse1.log}.}
  }
  }
  }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
-Function first creates replicate weights based on JKZone and JKrep variables according to JK2 procedure
+Function first creates replicate weights based on \code{JKZone} and \code{JKrep} variables according to JK2 procedure
 implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
-The function afterwards serves as a wrapper for svyglm() implemented in the 'survey' package.
-The results of the several analyses are then pooled according to Rubin's rule.
+The function afterwards serves as a wrapper for \code{svyglm()} implemented in the \code{'survey'} package.
+The results of the several analyses are then pooled according to Rubin's rule, which is adapted for nested imputations if the \code{dependent} argument implies a nested structure.
 }
 \value{
 %%  ~Describe the value returned

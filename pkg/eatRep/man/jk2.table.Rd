@@ -70,7 +70,7 @@ Function first creates replicate weights based on JKZone and JKrep variables acc
 implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
 The function afterwards serves as a wrapper for svymean() called by svyby() implemented in the 'survey' package.
 Relative frequencies of the categories of the dependent variable are computed by the means of the indicators of
-each category. The results of the several analyses are then pooled according to Rubin's rule.
+each category. The results of the several analyses are then pooled according to Rubin's rule, which is adapted for nested imputations if the \code{dependent} argument implies a nested structure.
 }
 \value{
 %%  ~Describe the value returned
@@ -100,8 +100,10 @@ Sebastian Weirich
 \examples{
 data(reading_writing)
 ### Computes frequencies of the hisei group conditionally on the groups of passed and failed with respect to reading score
-freq.tab  <- jk2.table(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
-             group = list(country = "country", passed.reading = paste("passed_reading",1:3,sep="" )),
+freq.tab  <- jk2.table(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD",
+             JKZone = "JKZone", JKrep = "JKrep",
+             group = list(country = "country",
+                          passed.reading = paste("passed_reading",1:3,sep="" )),
              dependent = list(hisei = paste("zehisei", 1:5, sep = "") ) ,
              complete.permutation = "no" )
 }

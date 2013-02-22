@@ -604,17 +604,19 @@ jackknife.glm <- function (imp, group, reg.statement, glm.family, independent, d
                  independent.names <- setdiff(as.character(imp), group.names)
                  independent.names <- setdiff(independent.names, as.character(imp[["dep"]]) )
                  cat("."); flush.console()
-                 stopifnot(length(imp[["dep"]]) == 1 )
+                 stopifnot(length(imp[["dep"]]) == 1 ); stopifnot(length(independent.names) == length( independent) )
                  sub.ana <- do.call("rbind", by(data = dat.i, INDICES = dat.i[,group.names], FUN = function (sub.dat) {
+                            for (aa in 1:length(independent)) {                 ### Hotfix: alle Imputationen einer Variablen je Nestungsebene muessen gleich heissen, sonst mißlingt das Poolen
+                                 stopifnot(  independent.names[aa] %in% independent[[aa]] )
+                                 stopifnot( !names(independent)[aa] %in% colnames ( sub.dat ) )
+                                 sub.dat[, names(independent)[aa] ] <- sub.dat[, independent.names[aa] ]
+                                 imp       <- gsub(independent.names[aa] , names(independent)[aa] , imp )
+                            }
                             sub.replicates <- replicates[replicates[,"ID"] %in% sub.dat[,ID] ,-1]
                             design         <- svrepdesign(data = sub.dat[,as.character(imp)], weights = sub.dat[,wgt], type="JKn", scale = 1, rscales = 1, repweights = sub.replicates, combined.weights = TRUE, mse = TRUE)
-                            formel         <- as.formula(paste(imp[["dep"]],"~", paste( independent.names, collapse = " + "), sep = ""))
+                            formel         <- as.formula(paste(imp[["dep"]],"~", paste( imp[names(independent)], collapse = " + "), sep = ""))
                             if(!is.null(reg.statement))  {
-                                replaceCovs <- reg.statement
-                                for (z in 1:length(independent.names))  {
-                                     replaceCovs <- gsub(names(independent)[z],independent.names[z],replaceCovs)
-                                }
-                                formel     <- as.formula(paste(imp[["dep"]],"~", replaceCovs))
+                                formel     <- as.formula(paste(imp[["dep"]],"~", reg.statement))
                             }
                             glm.ii         <- svyglm(formula = formel, design = design, return.replicates = FALSE, family = glm.family)
                             r.squared      <- data.frame ( r.squared = var(glm.ii$fitted.values)/var(glm.ii$y) , N = nrow(sub.dat) , N.valid = length(glm.ii$fitted.values) )
@@ -622,9 +624,6 @@ jackknife.glm <- function (imp, group, reg.statement, glm.family, independent, d
                             group.values   <- data.frame(matrix(sapply(sub.dat[,as.character(imp[names(group)]), drop = FALSE], FUN = function(uu) {names(table(as.character(uu)))}), nrow = 1), stringsAsFactors = FALSE )
                             colnames(group.values) <- names(group)
                             res.bl         <- data.frame(group.values, reg = rownames(summary(glm.ii)$coefficients[,c(1:2)]), summary(glm.ii)$coefficients[,c(1:2)], r.squared, r.nagelkerke = r.nagelkerke$R2, stringsAsFactors = FALSE )
-                            for (aa in 1:length(independent)) {                 ### Hotfix ...
-                                 res.bl[which(res.bl[,"reg"] %in% independent[[aa]]) ,"reg"]   <- names(independent)[aa]
-                            }
                             return(res.bl)
                  }) )
                  return(sub.ana) }

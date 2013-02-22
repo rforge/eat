@@ -64,7 +64,7 @@ only the number of imputations of more than one grouping variable will be permut
 Function first creates replicate weights based on JKZone and JKrep variables according to JK2 procedure
 implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
 The function afterwards serves as a wrapper for \code{svyquantile()} called by \code{svyby()} implemented in the 'survey' package.
-The results of the several analyses are then pooled according to Rubin's rule.
+The results of the several analyses are then pooled according to Rubin's rule, which is adapted for nested imputations if the \code{dependent} argument implies a nested structure.
 }
 \value{
 %%  ~Describe the value returned

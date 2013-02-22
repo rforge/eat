@@ -69,15 +69,15 @@ If \code{"independent"}, only the number of imputations of more than one indepen
 }
   \item{glm.family}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Argument of class "family", specifying the link function. See help file of 'glm' for details.
+Argument of class \code{"family"}, specifying the link function. See help file of \code{"glm()"} function for details.
 }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
-Function first creates replicate weights based on JKZone and JKrep variables according to JK2 procedure
+Function first creates replicate weights based on \code{JKZone} and \code{JKrep} variables according to JK2 procedure
 implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
-The function afterwards serves as a wrapper for svyglm() implemented in the 'survey' package.
-The results of the several analyses are then pooled according to Rubin's rule.
+The function afterwards serves as a wrapper for svyglm() implemented in the \code{'survey'} package.
+The results of the several analyses are then pooled according to Rubin's rule, which is adapted for nested imputations if the \code{dependent} argument implies a nested structure.
 }
 \value{
 %%  ~Describe the value returned
@@ -111,30 +111,31 @@ data(reading_writing)
 ### Example 1: Computes linear regression from reading score on gender separately for each
 ### country and each hisei. This serves as an example for two group variables, where one
 ### group variable is a multiple imputed one.
-mod1      <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
-             JKrep = "JKrep", group = list(country = "country", hisei = paste("zehisei", 1:5, sep = "")),
-             dependent = list(reading = paste("reading_score", 1:3, sep = ""),
-                              writing = paste("writing_score", 1:3, sep = "")),
-             independent = list(gender = "sex"),
-             complete.permutation = "no", glm.family = gaussian(link="identity") )
+mod1  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
+         JKrep = "JKrep", group = list(country = "country", hisei = paste("zehisei", 1:5, sep = "")),
+         dependent = list(reading = paste("reading_score", 1:3, sep = ""),
+                          writing = paste("writing_score", 1:3, sep = "")),
+         independent = list(gender = "sex"),
+         complete.permutation = "no", glm.family = gaussian(link="identity") )
 ### Example 2: Computes log linear regression from pass/fail on hisei and gender
 ### separately for each country
-mod2      <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
-             JKrep = "JKrep", group = list(country = "country"),
-             dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""),
-                              writing.pass = paste("passed_writing", 1:3, sep = "")),
-             independent = list(hisei = paste("zehisei", 1:5, sep = ""), gender = "sex"),
-             complete.permutation = "no", glm.family = binomial(link="logit") )
+mod2  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
+         JKrep = "JKrep", group = list(country = "country"),
+         dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""),
+                          writing.pass = paste("passed_writing", 1:3, sep = "")),
+         independent = list(hisei = paste("zehisei", 1:5, sep = ""), gender = "sex"),
+         complete.permutation = "no", glm.family = binomial(link="logit") )
 ### Example 3: Computes linear regression from pass/fail on hisei and gender (and its' interaction)
 ### separately for each country. The regression statement has to be defined manually. Note that,
 ### despite "hisei" occurs as a multiple imputed variable, only one statement has to be defined.
 ### Specifically, write "hisei*gender" instead of "zehisei1*sex" in the reg.statement argument.
-mod3      <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone", JKrep = "JKrep",
-             group = list(country = "country"),
-             dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""), writing.pass = paste("passed_writing", 1:3, sep = "")),
-             independent = list(hisei = paste("zehisei", 1:5, sep = ""), gender = "sex"),
-             reg.statement = "hisei*gender",
-             complete.permutation = "no", glm.family = binomial(link="logit") )
+mod3  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
+         JKrep = "JKrep", group = list(country = "country"),
+         dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""),
+                          writing.pass = paste("passed_writing", 1:3, sep = "")),
+         independent = list(hisei = paste("zehisei", 1:5, sep = ""), gender = "sex"),
+         reg.statement = "hisei*gender",
+         complete.permutation = "no", glm.family = binomial(link="logit") )
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
