@@ -243,7 +243,8 @@ See examples
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-returns results in specific format
+\item{\code{run=TRUE}}{returns results in specific format}
+\item{\code{run=FALSE}}{path(es) to batch file(s) are returned as character vector}
 }
 \references{
 %% ~put references to the literature/web site here ~

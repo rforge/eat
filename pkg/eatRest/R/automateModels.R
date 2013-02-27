@@ -294,11 +294,11 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 				# wenn run = FALSE
 				# d.h. nur Syntax wird erzeugt
 				# Rückgabe sind die batches
-				results <- batches
+				results <- unlist ( batches )
 		
 				# Ausgabe
 				eatTools:::sunk ( "\n" )
-				eatTools:::sunk ( paste ( f.n , "Syntax successfully created. Batches returned.\n\n" ) )
+				eatTools:::sunk ( paste ( f.n , "Syntax successfully created. Path(es) to batch file(s) are returned as character vector.\n\n" ) )
 		}
 		
 		# Ergebnisse returnen
