@@ -18,7 +18,7 @@ m.model = NULL, software = NULL, dif = NULL, weight = NULL, anchor = NULL,
 regression = NULL, adjust.for.regression = TRUE, q3 = FALSE,
 q3.p.est = c ( "wle" , "pv" , "eap" ), icc = FALSE, missing.rule = NULL,
 cross = NULL, subfolder.order = NULL, subfolder.mode = NULL,
-allNAdelete = TRUE, additionalSubFolder = NULL, run.mode = NULL,
+allNAdelete = TRUE, additionalSubFolder = NULL, run = TRUE, run.mode = NULL,
 n.batches = NULL, run.timeout = 1440, run.status.refresh = 0.2,
 cores = NULL, email = NULL, smtpServer = NULL, write.txt.dataset = FALSE,
 write.xls.results = TRUE, delete.folder.countdown = 5,
@@ -72,7 +72,6 @@ character vector of group names chosen for analysis
 		logical: If \code{TRUE}, items in dataset are checked for being connected with each other via design (function \code{\link{checkLink}} is called)
 		23.02.2012: not yet implemented
 }
-
   \item{additional.item.props}{
 %%     ~~Describe \code{additional.item.props} here~~
 data.frame of additional item information to be merged to model results, first column must be 'item' and contain item names
@@ -174,6 +173,10 @@ Note: this is a global option, that is set for all modelss
 %%     ~~Describe \code{additionalSubFolder} here~~
 specification for 'data' and 'out' subfolder (constant over all analyses)
 }
+  \item{run}{
+%%     ~~Describe \code{run} here~~
+logical, if \code{TRUE} (default) models are run, if \code{FALSE} only syntax is created and batches are returned
+}
   \item{run.mode}{
 %%     ~~Describe \code{run.mode} here~~
 "serial": serial runs on local machine. see option 'cores' to specify number of parallel runs
@@ -265,7 +268,7 @@ Martin Hecht, Karoline Sachse, Sebastian Weirich, Christiane Penk, Malte Jansen,
 # if software="conquest" (currently the only and default option) the path of the
 # 		windows executable ConQuest console must be specified by setting
 #		conquestParameters = list ("pathConquest"="<path_to_your_conquest.exe>")
-#				e.g. conquestParameters = list ("pathConquest"=""C:/ConQuest/console.exe"")
+#				e.g. conquestParameters = list ("pathConquest"="C:/ConQuest/console.exe")
 # if not explicitely specified it is searched for in 
 #		file.path(.Library,"eat/winexe/conquest")
 #				e.g. "C:/R/R-2.14.2/library/eat/winexe/conquest"

@@ -54,6 +54,7 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 							 cross = NULL , subfolder.order = NULL , subfolder.mode = NULL ,
 							 allNAdelete = TRUE ,
 							 additionalSubFolder = NULL ,
+							 run = TRUE ,
 							 run.mode = NULL , n.batches = NULL , run.timeout = 1440 , run.status.refresh = 0.2 ,
 							 cores = NULL ,
 							 email = NULL , smtpServer = NULL , 
@@ -243,50 +244,63 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 		# Batches erzeugen 
 		batches <- .automateModels.genBatches ( model.specs , folder.aM , run.mode , n.batches , cores )
 	
-		# Batches starten
-		check <- .automateModels.runBatches ( batches , run.mode )
-		stopifnot ( check )
+		if ( run ) {
 		
-		# in Monitor-Modus gehen
-		model.specs$done <- .automateModels.monitor.progress ( model.specs$folder , additionalSubFolder$out , model.specs$analyse.name ,
-										   software = model.specs$software , refresh = run.status.refresh , time.out = run.timeout , 
-										   email = email , smtpServer = smtpServer )
+				# Batches starten
+				check <- .automateModels.runBatches ( batches , run.mode )
+				stopifnot ( check )
+				
+				# in Monitor-Modus gehen
+				model.specs$done <- .automateModels.monitor.progress ( model.specs$folder , additionalSubFolder$out , model.specs$analyse.name ,
+												   software = model.specs$software , refresh = run.status.refresh , time.out = run.timeout , 
+												   email = email , smtpServer = smtpServer )
+				
+				# Ergebnisse einsammeln
+				results <- .automateModels.collect.results ( model.specs , additionalSubFolder ) 	
+				
+				# Personenmittel auf 0 (wichtig falls/für regression)
+				if(adjust.for.regression) {
+					results <- .automateModels.adjust.for.regression ( results )
+				}
+				# Convergence Summary schreiben
+				isConverged ( folder , txt = TRUE )
+				
+				# Deviance Change Plots
+				plotDevianceChange ( folder , plot = TRUE , pdf = TRUE )
+				
+				# Itembewertung durchführen
+				# results <- .automateModels.item.eval ( results )
+				# Q3 erzeugen
+				results <- make.q3 ( results , model.specs , q3.p.est )
+				# Excels erzeugen
+				check <- .automateModels.writeResultsExcel ( results , model.specs$analyse.name , model.specs$folder , folder.aM , additional.item.props , write.xls.results )
+				
+				# ICCs schreiben
+				if ( icc ) temp <- automateModels.plot.icc ( results , model.specs )
+				
+				# auf Platte schreiben
+				save ( model.specs , file = file.path ( folder.aM , "model.specs.Rdata" )  )
+				save ( results , file = file.path ( folder.aM , "results.Rdata" )  )
+				save ( dat , file = file.path ( folder.aM , "dat.Rdata" )  )
+				save ( id.name , file = file.path ( folder.aM , "id.name.Rdata" )  )
+				save ( cont.names , file = file.path ( folder.aM , "cont.names.Rdata" )  )
+				save ( item.names , file = file.path ( folder.aM , "item.names.Rdata" )  )
+			
+				# finale Ausgabe 
+				eatTools:::sunk ( "\n" )
+				eatTools:::sunk ( paste ( f.n , "terminated successfully!\n\n" ) )
 		
-		# Ergebnisse einsammeln
-		results <- .automateModels.collect.results ( model.specs , additionalSubFolder ) 	
+		} else {
+				# wenn run = FALSE
+				# d.h. nur Syntax wird erzeugt
+				# Rückgabe sind die batches
+				results <- batches
 		
-		# Personenmittel auf 0 (wichtig falls/für regression)
-		if(adjust.for.regression) {
-			results <- .automateModels.adjust.for.regression ( results )
+				# Ausgabe
+				eatTools:::sunk ( "\n" )
+				eatTools:::sunk ( paste ( f.n , "Syntax successfully created. Batches returned.\n\n" ) )
 		}
-		# Convergence Summary schreiben
-		isConverged ( folder , txt = TRUE )
 		
-		# Deviance Change Plots
-		plotDevianceChange ( folder , plot = TRUE , pdf = TRUE )
-		
-		# Itembewertung durchführen
-		# results <- .automateModels.item.eval ( results )
-		# Q3 erzeugen
-		results <- make.q3 ( results , model.specs , q3.p.est )
-		# Excels erzeugen
-		check <- .automateModels.writeResultsExcel ( results , model.specs$analyse.name , model.specs$folder , folder.aM , additional.item.props , write.xls.results )
-		
-		# ICCs schreiben
-		if ( icc ) temp <- automateModels.plot.icc ( results , model.specs )
-		
-		# auf Platte schreiben
-		save ( model.specs , file = file.path ( folder.aM , "model.specs.Rdata" )  )
-		save ( results , file = file.path ( folder.aM , "results.Rdata" )  )
-		save ( dat , file = file.path ( folder.aM , "dat.Rdata" )  )
-		save ( id.name , file = file.path ( folder.aM , "id.name.Rdata" )  )
-		save ( cont.names , file = file.path ( folder.aM , "cont.names.Rdata" )  )
-		save ( item.names , file = file.path ( folder.aM , "item.names.Rdata" )  )
-	
-		# finale Ausgabe 
-		eatTools:::sunk ( "\n" )
-		eatTools:::sunk ( paste ( f.n , "terminated successfully!\n\n" ) )
-	
 		# Ergebnisse returnen
 		return ( results )
 }
