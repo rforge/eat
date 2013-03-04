@@ -1,0 +1,14 @@
+Package: eatDev
+Type: Package
+Title: eatDev
+Version: 0.0.1
+Depends: R (>= 2.14.0)
+Suggests: 
+Date: 2013-03-04
+Author: everybody
+Maintainer: nobody
+Description: development platform, no documention, no garanties
+License: GPL (>= 2)
+LazyLoad: yes
+LazyData: yes
+OS_type: windows
