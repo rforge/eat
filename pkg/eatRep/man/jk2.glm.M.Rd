@@ -56,7 +56,16 @@ sets. See example 3 for further details.
 %%     ~~Describe \code{sig.dif.bound} here~~
 List of one or more dependent variables. Each dependent variable will result in a separate analysis.
 If dependent variable is a multiple imputation variable, all names concerning one variable are interpreted
-as its imputations. See details and example 1 for more information.
+as its imputations. See details and example 1 for more information. If dependent variable is a nested imputation variable, the nesting structure has to be specified
+in an appropriate listing structure. This structure has to be in agreement with the grouping variable and the independent variable if necessary. If nested imputation
+variables are included in the analysis, \code{complete.permutation} is strongly recommended to set to \code{FALSE}. If you are interested in one single dependent variable
+which may be labeled as \code{"reading_competence_plausible_value"} in the data file,
+type \code{dependent = list(reading = "reading_competence_plausible_value"}. If you are interested in one multiple imputed dependent variable
+labeled as \code{"reading_PV1"}, \code{"reading_PV2"}, \code{"reading_PV3"} and so on, type \code{dependent = list(reading = c("reading_PV1", "reading_PV2", "reading_PV3"))}.
+If you are interested in one multiple imputed dependent variable with a nesting structure, where you have \code{n = 2} nests and \code{m = 3} imputations in each nest, your
+corresponding variables may be labeled as \code{"PV1_1"}, \code{"PV1_2"}, \code{"PV1_3"}, \code{"PV2_1"}, \code{"PV2_2"}, \code{"PV2_3"}. In that case the nesting structure has to
+be reproduced in an appropriate list structur. Therefore type \code{dependent = list(reading = list(nest1 = c("PV1_1","PV1_2","PV1_3"), nest2 = c("PV2_1","PV2_2","PV2_3"))) }.
+Example 3 gives a short introduction to this concept.
 }
   \item{complete.permutation}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -145,13 +154,23 @@ data(reading_writing)
 ### Example 3: Computes linear regression from pass/fail on hisei and gender (and its' interaction)
 ### separately for each country. The regression statement has to be defined manually. Note that,
 ### despite "hisei" occurs as a multiple imputed variable, only one statement has to be defined.
-#mod3      <- jk2.glm.M(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
-#             JKrep = "JKrep", group = list(country = "country"),
-#             dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""),
-#                              writing.pass = paste("passed_writing", 1:3, sep = "")),
-#             independent = list(hisei = paste("zehisei", 1:5, sep = ""), gender = "sex"),
-#             reg.statement = "hisei*gender",
-#             complete.permutation = "no", glm.family = binomial(link="logit") )
+### Specifically, write "hisei*gender" instead of "zehisei1*sex" in the reg.statement argument.
+### Moreover, the dependent variable herin is defined as a nested imputed variable with two nests
+### and 3 imputations in each nest. The group and independent variable(s) have to correspond to
+### the nested structure, i.e. they have to be specified as a single variable (i.e. without any
+### imputations), or they also may be imputed in two nests with 3 imputations in each nest, or
+### they may be imputed with two imputations (according to the number of nests in the dependent
+### variable.
+### In example 3, group variable has no imputations, and the first independent variable has 2
+### imputations (according to the two nests), whereas the second independent variable also has
+### no imputations.
+#mod3  <- jk2.glm.M(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
+#         JKrep = "JKrep", group = list(country = "country"),
+#         dependent = list(ability = list ( nest1 = paste("passed_reading", 1:3, sep = ""),
+#                                           nest2 = paste("passed_writing", 1:3, sep = ""))),
+#         independent = list(hisei = paste("zehisei", 1:2, sep = ""), gender = "sex"),
+#         reg.statement = "hisei*gender",
+#         complete.permutation = "no", glm.family = binomial(link="logit") )
 ## End(Not run)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

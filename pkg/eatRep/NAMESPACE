@@ -1,5 +1,5 @@
 importFrom(fmsb, NagelkerkeR2)
-importFrom(plyr, llply)
+importFrom(plyr, llply, rbind.fill.matrix)
 export(jk2.mean)
 export(jk2.table)
 export(jk2.quantile)

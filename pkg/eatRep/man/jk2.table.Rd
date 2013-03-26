@@ -68,9 +68,10 @@ only the number of imputations of more than one grouping variable will be permut
 %%  ~~ If necessary, more details than the description above ~~
 Function first creates replicate weights based on JKZone and JKrep variables according to JK2 procedure
 implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
-The function afterwards serves as a wrapper for svymean() called by svyby() implemented in the 'survey' package.
-Relative frequencies of the categories of the dependent variable are computed by the means of the indicators of
-each category. The results of the several analyses are then pooled according to Rubin's rule, which is adapted for nested imputations if the \code{dependent} argument implies a nested structure.
+The function afterwards serves as a wrapper for \code{svymean()} called by \code{svyby()} implemented in the \code{'survey'} package.
+Relative frequencies of the categories of the dependent variable are computed by the means of the dichotomous indicators
+(e.g. dummy variables) of each category. The results of the several analyses are then pooled according to Rubin's rule,
+which is adapted for nested imputations if the \code{dependent} argument implies a nested structure.
 }
 \value{
 %%  ~Describe the value returned
@@ -83,7 +84,9 @@ a columns called \code{"suffix"} which indicates the value of the corresponding 
 it's standard error.
 }
 \references{
-%% ~put references to the literature/web site here ~
+  Rubin, D.B. (2003): Nested multiple imputation of NMES
+  via partially incompatible MCMC.
+  \emph{Statistica Neerlandica} \bold{57, 1}, 3--18.
 }
 \author{
 Sebastian Weirich
@@ -99,7 +102,8 @@ Sebastian Weirich
 }
 \examples{
 data(reading_writing)
-### Computes frequencies of the hisei group conditionally on the groups of passed and failed with respect to reading score
+### Computes frequencies of the hisei group conditionally on the groups of passed
+### and failed with respect to reading score
 freq.tab  <- jk2.table(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD",
              JKZone = "JKZone", JKrep = "JKrep",
              group = list(country = "country",

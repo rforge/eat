@@ -1,37 +1,38 @@
 pool.means <- function (m, se, na.rm = FALSE) {
      if(!is.list(m))  { listM  <- list(m)}  else {listM  <- m }
-     if(!is.list(se)) { listSE <- list(se)} else {listSE <- se}
+     if(!is.list(se)) { listSE <- list(se)} else {listSE <- se}                 ### Untere Zeile: Listeneintraege mit 0 Elementen werden geloescht
      stopifnot(all(unlist(lapply(listM, length)) == unlist(lapply(listSE, length)) ) )
-     stopifnot(is.list(listM))
-     stopifnot(is.list(listSE))                                                 ### Untere Zeile: Listeneintraege mit 0 Elementen werden geloescht
      if( length(which(unlist(lapply(listM, length)) == 0 )) > 0 ) {listM <- listM[-which(unlist(lapply(listM, length)) == 0 )]}
      if( length(which(unlist(lapply(listSE, length)) == 0 )) > 0 ) {listSE <- listSE[-which(unlist(lapply(listSE, length)) == 0 )]}
-     listM  <- data.frame(t(data.frame(listM,  stringsAsFactors = FALSE)), stringsAsFactors = FALSE )
-     listSE <- data.frame(t(data.frame(listSE, stringsAsFactors = FALSE)), stringsAsFactors = FALSE )
-     na.m  <- lapply(listM, FUN = function ( m ) {which(is.na(m))})
-     na.se <- lapply(listSE, FUN = function ( se ) {which(is.na(se))})
-     if(na.rm == FALSE) {
-       if(!all(lapply(na.m, length) == 0 ) ) {stop("Find unexpected missings in means.\n")}
-       if(!all(lapply(na.se, length) == 0) ) {stop("Find unexpected missings in standard errors.\n")}
-     }
-     if(na.rm == TRUE) {
-       if(!all(unlist(lapply(na.m, length)) == unlist(lapply(na.se, length))) ) {stop("Location(s) of missings in means differ from location(s) of missings in standard errors.\n")}
-       listM  <- lapply(listM, FUN = function (m) {m <- na.omit(m)})
-       listSE <- lapply(listSE, FUN = function (se) {se <- na.omit(se)})
-     }
-     N        <- length(listM[[1]])
-     M        <- length(listM)
+     listM  <- data.frame(listM,  stringsAsFactors = FALSE)
+     listSE <- data.frame(listSE, stringsAsFactors = FALSE)
+    # na.m  <- lapply(listM, FUN = function ( m ) {which(is.na(m))})
+    # na.se <- lapply(listSE, FUN = function ( se ) {which(is.na(se))})
+    # if(na.rm == FALSE) {
+    #   if(!all(lapply(na.m, length) == 0 ) ) {stop("Find unexpected missings in means.\n")}
+    #   if(!all(lapply(na.se, length) == 0) ) {stop("Find unexpected missings in standard errors.\n")}
+    # }
+    # if(na.rm == TRUE) {
+    #   if(!all(unlist(lapply(na.m, length)) == unlist(lapply(na.se, length))) ) {stop("Location(s) of missings in means differ from location(s) of missings in standard errors.\n")}
+    #   listM  <- lapply(listM, FUN = function (m) {m <- na.omit(m)})
+    #   listSE <- lapply(listSE, FUN = function (se) {se <- na.omit(se)})
+    # }                                                                         ### follows from Rubin, D. B. (2003): Nested multiple imputation of NMES via partially incompatible MCMC
+     M        <- length(listM[[1]])
+     N        <- length(listM)                                                  ### wenn nicht genestet, muss N == 1!
      Q.all    <- mean(unlist(lapply(listM, mean)))                              ### Rubin 2003b, S. 6, unterste Formel
-     Q.m      <- lapply(listM, mean)                                            ### Rubin 2003b, S. 7, 1. Formel
+     Q.m      <- apply(listM, 1, mean)                                          ### Rubin 2003b, S. 7, 1. Formel. hier muss immer ein Vektor stehen, egal ob nested oder nicht!
      U        <- mean(unlist(lapply(listSE, FUN = function ( se ) {mean(se^2)})))## Rubin 2003b, S. 7, 2. Formel
      MS.b     <- N/(M-1) * sum((unlist(Q.m) - Q.all)^2)
-     MS.omega <- 1/(M*(N-1)) * sum(unlist(lapply(listM, FUN = function ( mm ) { sum((mm - mean(mm))^2)})))
-     if(is.na(MS.omega)) {MS.omega <- 0}                                        ### wenn es keine Nestungen gibt, soll die Varianz zwischen Nestungen auf 0 gesetzt sein
+     MS.omega <- 1/(M*(N-1)) *  sum((listM - Q.m)^2)                            ### Rubin 2003b, S. 7, 4. Formel
+     if(all(is.na(MS.omega))) {MS.omega <- 0}                                   ### wenn keine nestung vorliegt, wird within-nest SQ zu Null
      var.total <- U+1/N*(1+1/M)*MS.b + (1-1/N)*MS.omega                         ### Rubin 2003b, "The quantity T", S. 7, 5. Formel
      se.pooled <- sqrt(var.total)
+     betweenN  <- ifelse(N>1, ( ( 1-1/N)*MS.omega / var.total )^2 * 1/(M*(N-1)), 0 )
+     # df        <- 1 / ( (1/N*(1+1/M)*MS.b / var.total)^2 * 1/(M-1) + betweenN )
      df        <- NA
      pooled <- list(m = listM, var = lapply(listSE, FUN = function (x) {x^2}), summary = data.frame ( m.pooled = Q.all, se.pooled = se.pooled, df = df, stringsAsFactors = FALSE ) )
      return(pooled) }
+
 
 
 ### r2         ... Vektor von R^2-Werten aus multiple imputieren Analysen
