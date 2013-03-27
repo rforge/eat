@@ -67,7 +67,7 @@
 
 automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.var=NULL, weight=NULL, items, na=list(items=NULL, DIF=NULL, HG=NULL, group=NULL, weight=NULL), person.grouping=NULL, item.grouping=NULL, compute.fit = TRUE,
                                     model.statement="item", m.model="1pl", Title = NULL, jobName, jobFolder, subFolder=list(), dataName=NULL, anchor=NULL, pathConquest="C:/ConQuest/console_Feb2007.exe", method=NULL,std.err=NULL,distribution=NULL,
-                                    n.plausible=NULL, set.constraints=NULL, nodes=NULL, p.nodes=NULL, f.nodes=NULL, n.iterations=NULL, converge=NULL, deviancechange=NULL, name.unidim=NULL, 	allowAllScoresEverywhere = FALSE,
+                                    n.plausible=NULL, set.constraints=NULL, nodes=NULL, p.nodes=NULL, f.nodes=NULL, n.iterations=NULL, converge=NULL, deviancechange=NULL, seed = NULL, name.unidim=NULL, 	allowAllScoresEverywhere = FALSE,
                                     equivalence.table="wle",use.letters=FALSE, checkLink = FALSE, verbose = TRUE, export = list(logfile = TRUE, systemfile = TRUE, history = TRUE, covariance = TRUE, reg_coefficients = TRUE, designmatrix = TRUE) )	 {
 
 	original.options <- options("scipen")                         ### lese Option für Anzahl der Nachkommastellen 
@@ -82,7 +82,7 @@ automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.va
     if(length(weight)>1) {stop(paste("Error in automateConquestModel_",ver,": There can only be one weight variable.\n",sep="")) }
 
 	### Defaults
-	if(is.null(dataName))        {dataName <- paste(jobName,".dat",sep="")} 
+	if(is.null(dataName))        {dataName <- paste(jobName,".dat",sep="")}
 	if(is.null(subFolder))        {subFolder <- list()} 
     if(is.null(n.plausible))     {n.plausible <- 5}
 	if(is.null(set.constraints)) {set.constraints <- "cases"}
@@ -166,7 +166,7 @@ automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.va
                                         namen.weight.var=conquestDataset$namen.weight.var, weight.char=conquestDataset$weight.char,method=method,std.err=std.err,model.statement=model.statement,
 										distribution=distribution,model=item.grouping, ANKER=anchor, jobFolder=jobFolder, name.dataset=dataName, subFolder=subFolder, Title=Title, n.plausible=n.plausible,
                                         constraints=set.constraints, n.iterations=n.iterations, nodes=nodes, p.nodes=p.nodes, f.nodes=f.nodes, converge=converge, deviancechange=deviancechange, 
-                                        name.unidim=name.unidim, equivalence.table=equivalence.table,use.letters=use.letters,var.char=conquestDataset$var.char,  pathConquest = pathConquest, allowAllScoresEverywhere = allowAllScoresEverywhere, export = export)  ),"try-error"))
+                                        name.unidim=name.unidim, equivalence.table=equivalence.table,use.letters=use.letters,var.char=conquestDataset$var.char,  pathConquest = pathConquest, allowAllScoresEverywhere = allowAllScoresEverywhere, seed = seed, export = export)  ),"try-error"))
       { ret <- FALSE; eatTools:::sunk(paste("automateConquestModel_",ver,": Error in generating syntax and label list.\n",sep="")); stop()}
 
 		flush.console()

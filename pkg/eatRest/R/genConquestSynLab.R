@@ -79,7 +79,7 @@
 genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, namen.dif.var , DIF.char, namen.weight.var, weight.char, namen.all.hg,all.hg.char, namen.group.var=NULL, model = NULL, ANKER = NULL,std.err=c("quick","full","none"),name.unidim="dimension_1", compute.fit,
                               model.statement="item", distribution=c("normal","discrete"), jobFolder, subFolder=NULL, name.dataset=NULL, Title=NULL,constraints =c("cases","none","items"), method=c("gauss", "quadrature", "montecarlo"), n.plausible=5,n.iterations=1000,nodes=NULL, p.nodes=2000,f.nodes=2000,converge=0.0001,deviancechange=0.0001,
                               equivalence.table=c("wle","mle","NULL"),var.char,use.letters = use.letters, allowAllScoresEverywhere, pathConquest,
-                              export )       {
+                              seed, export )       {
                    export.default <- list(logfile = TRUE, systemfile = TRUE, history = TRUE, covariance = TRUE, reg_coefficients = TRUE, designmatrix = TRUE)
                    ver           <- "0.19.0"
                    .mustersyntax <- c("title = ####hier.title.einfuegen####;",
@@ -96,6 +96,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                                       "caseweight",
                                       "set constraints=####hier.constraints.einfuegen####;",
                                       "set warnings=no,update=yes,n_plausible=####hier.anzahl.pv.einfuegen####,p_nodes=####hier.anzahl.p.nodes.einfuegen####,f_nodes=####hier.anzahl.f.nodes.einfuegen####;",
+                                      "set seed=####hier.seed.einfuegen####;",
                                       "regression",
                                       "model ####hier.model.statement.einfuegen####;",
                                       "estimate ! fit=####hier.fitberechnen.einfuegen####,method=####hier.method.einfuegen####,iter=####hier.anzahl.iterations.einfuegen####,nodes=####hier.anzahl.nodes.einfuegen####,converge=####hier.converge.einfuegen####,deviancechange=####hier.deviancechange.einfuegen####,stderr=####hier.std.err.einfuegen####,distribution=####hier.distribution.einfuegen####;",
@@ -137,6 +138,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    syntax    <- gsub("####hier.anzahl.f.nodes.einfuegen####",f.nodes,syntax)
                    syntax    <- gsub("####hier.converge.einfuegen####",converge,syntax)
                    syntax    <- gsub("####hier.deviancechange.einfuegen####",deviancechange,syntax)
+                   syntax    <- gsub("####hier.seed.einfuegen####",seed,syntax)
                    syntax    <- gsub("####hier.constraints.einfuegen####",match.arg(constraints),syntax)
                    compute.fit  <- if(compute.fit == TRUE ) compute.fit <- "yes" else compute.fit <- "no"
                    syntax    <- gsub("####hier.fitberechnen.einfuegen####",compute.fit,syntax)
@@ -150,10 +152,15 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
 					    eatTools:::sunk(paste("genConquestSynLab_",ver,": Warning: Due to user specification, only ",nodes," nodes are used for '",method,"' estimation. Please note or re-specify your analysis.\n",sep=""))
 					 }
 					} 
-				   if(method != "montecarlo" & is.null(nodes) )   {
-					  eatTools:::sunk(paste("genConquestSynLab_",ver,": Number of nodes was not explicitly specified. Set nodes to 15 for method '",method,"'.\n",sep=""))
-					  nodes <- 15
-				    }
+         if(method != "montecarlo") {
+            if ( is.null(nodes) )   {
+            eatTools:::sunk(paste("Number of nodes was not explicitly specified. Set nodes to 15 for method '",method,"'.\n",sep=""))
+            nodes <- 15
+            }
+            if ( !is.null(seed)) {
+                 eatTools:::sunk("Warning! 'seed'-Parameter is appropriate only in Monte Carlo estimation method. (see conquest manual, p. 225) Recommend to set 'seed' to FALSE.\n")
+            }
+         }
 				   syntax    <- gsub("####hier.anzahl.nodes.einfuegen####",nodes,syntax)
                    syntax    <- gsub("####hier.std.err.einfuegen####",match.arg(std.err),syntax)
                    syntax    <- gsub("####hier.distribution.einfuegen####",match.arg(distribution),syntax)
@@ -338,6 +345,10 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                                                      syntax <- syntax[-ind.5]}                                              
                    if(is.null(ANKER))  {ind.2 <- grep("anchor_parameter",syntax)### wenn keine Anker gesetzt, loesche entsprechende Syntaxzeile
                                         syntax <- syntax[-ind.2]}
+                   if(is.null(seed)) {                                          ### wenn keine seed-Statement definiert, loesche Zeile
+                      ind.7   <- grep("^set seed",syntax)
+                      stopifnot(length(ind.7)==1)
+                      syntax <- syntax[-ind.7]}
                    if(!is.null(ANKER)) {ind.2 <- grep("^set constraints",syntax) ### wenn Anker gesetzt, setze constraints auf "none"
                                         if(match.arg(constraints) != "none") { eatTools:::sunk(paste("genConquestSynLab_",ver,": Anchorparameter were defined. Set constraints to 'none'.\n",sep=""))}
                                         syntax[ind.2]  <- "set constraints=none;"}
