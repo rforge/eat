@@ -138,7 +138,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    syntax    <- gsub("####hier.anzahl.f.nodes.einfuegen####",f.nodes,syntax)
                    syntax    <- gsub("####hier.converge.einfuegen####",converge,syntax)
                    syntax    <- gsub("####hier.deviancechange.einfuegen####",deviancechange,syntax)
-                   syntax    <- gsub("####hier.seed.einfuegen####",seed,syntax)
+                   if(!is.null(seed)) {syntax    <- gsub("####hier.seed.einfuegen####",seed,syntax)}
                    syntax    <- gsub("####hier.constraints.einfuegen####",match.arg(constraints),syntax)
                    compute.fit  <- if(compute.fit == TRUE ) compute.fit <- "yes" else compute.fit <- "no"
                    syntax    <- gsub("####hier.fitberechnen.einfuegen####",compute.fit,syntax)
