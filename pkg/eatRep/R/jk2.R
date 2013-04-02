@@ -73,7 +73,7 @@ jk2.mean <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), group.d
                                if(is.null(names(struktur)) )   { names(struktur) <- paste("n",gsub(" ","0",formatC(1:length(struktur), width = nchar(length(struktur)))), sep="") }
                            }  else  {struktur <- list(n1 = dep, n2 = NULL) }
                            if(length(ana)>1)    {                               ### Es wird nur gepoolt, wenn es mehr als einen Standardfehler gibt
-                              anaL      <- data.frame( do.call("rbind", lapply(ana, FUN = function (a) {melt(data = a, measure.vars = intersect(dep, colnames(a)) , na.rm=TRUE)}) ), nesting = factor(NA , levels = names(struktur)), stringsAsFactors = FALSE )
+                              anaL      <- data.frame( do.call("rbind", lapply(ana, FUN = function (a) {reshape2::melt(data = a, measure.vars = intersect(dep, colnames(a)) , na.rm=TRUE)}) ), nesting = factor(NA , levels = names(struktur)), stringsAsFactors = FALSE )
                               for ( x in 1 : length(struktur)) {if(!is.null(struktur[[x]])) {anaL[wo.sind(struktur[[x]], anaL[,"variable"], quiet = TRUE),"nesting"] <- names(struktur)[x]}  }
                               for ( x in c("se.mean", "se.SD", "se.variance")) {### ersetze ggf. missings in Standardfehlern
                                     mis <- which(is.na(anaL[,x]))
@@ -634,10 +634,10 @@ jackknife.quantile <- function ( imp, dat.i, dep, replicates , ID, wgt , probs )
                       design         <- svrepdesign(data = dat.i[,c(as.character(imp[-length(imp)]), dep) ], weights = dat.i[,wgt], type="JKn", scale = 1, rscales = 1, repweights = replicates[,-1], combined.weights = TRUE, mse = TRUE)
                       formel         <- as.formula(paste("~ ",imp[["dep"]], sep = "") )
                       quantile.imp   <- svyby(formula = formel, by = as.formula(paste("~", paste(as.character(imp[-length(imp)]), collapse = " + "))), design = design, FUN = svyquantile, quantiles = probs, return.replicates = TRUE, na.rm = TRUE)
-                      molt           <- melt(data=quantile.imp, id.vars=as.character(imp[-length(imp)]), na.rm=TRUE)
+                      molt           <- reshape2::melt(data=quantile.imp, id.vars=as.character(imp[-length(imp)]), na.rm=TRUE)
                       xx             <- colsplit(gsub("([[:digit:]]+)", "\\.\\1", molt$variable), "\\.", names = c("var", "per.number"))
                       molt           <- data.frame(molt[,-match("variable", colnames(molt))], xx, stringsAsFactors = FALSE )
-                      quantile.cast  <- dcast(molt, ... ~ var)       ### Jetzt sollen noch die verwendeten Perzentilgroessen angebunden werden
+                      quantile.cast  <- reshape2::dcast(molt, ... ~ var)       ### Jetzt sollen noch die verwendeten Perzentilgroessen angebunden werden
                       probnamen      <- data.frame(Nummer = 1:length(probs), per.number = probs, stringsAsFactors = FALSE )
                       quantile.cast[,"per.number"] <- probnamen[ match(quantile.cast[,"per.number"], probnamen[,1])  ,2]
                       return(quantile.cast) }
@@ -682,11 +682,11 @@ jackknife.table <- function ( imp, dat.i, dep,  replicates , ID , wgt , catPrms 
                    cols.se   <- grep("^se", colnames(means) )
                    stopifnot(length(cols) == length(cols.se))
                    colnames(means)[cols.se] <- paste("se____________", original.levels, sep="")
-                   molt           <- melt(data=means, id.vars=as.character(imp[-length(imp)]), na.rm=TRUE)
+                   molt           <- reshape2::melt(data=means, id.vars=as.character(imp[-length(imp)]), na.rm=TRUE)
                    xx             <- data.frame(matrix(unlist(strsplit(as.character(molt$variable), "____________")), ncol= 2, byrow = TRUE ), stringsAsFactors = FALSE )
                    colnames(xx)   <- c("var", "suffix")
                    molt           <- data.frame(molt[,-match("variable", colnames(molt))], xx, stringsAsFactors = FALSE )
-                   table.cast     <- dcast(molt, ... ~ var)
+                   table.cast     <- reshape2::dcast(molt, ... ~ var)
                    return(table.cast)}
 
 

@@ -140,15 +140,6 @@ data(reading_writing)
 #          complete.permutation = "all" )
 #
 
-### Second example: Sex differences by country
-#means  <- jk2.mean.M(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
-#          JKrep = "JKrep", group = list(country = "country", GENDER = "sex"),
-#          group.differences.by = "GENDER",
-#          dependent = list(reading = paste("reading_score",1:3,sep=""),
-#                           writing = paste("writing_score",1:3,sep="") ),
-#          complete.permutation = "all" )
-#attr(means[[1]], "difference")
-
 ### Third example: Nested imputations of dependent variable
 ### First split the income in above and below 2000
 #reading_writing[,"income1"] <- ifelse(reading_writing[,"income1"]>2000,1,0)
