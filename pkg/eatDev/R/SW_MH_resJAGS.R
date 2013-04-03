@@ -68,14 +68,40 @@ resJAGS <- function ( JAGS.object , burnin = 1000 , retList = TRUE ) {
 		   
 	   
 		   # wenn nicht Liste returned werden soll, long-Datensatz draus machen
-browser()
+
 		   if ( ! retList ) {
 					prms <- do.call ( "rbind" , prms )
-					
-					
 		   }
 		   
 		   return(prms)
 }
+
+
+
+### 03.04.2013 Plots erstmal nicht prioritär ###
+# make.plots <- function ( a ) {
+	
+		
+		# plot ( a[1,] )
+		
+		# burnin <- 1000
+		
+		# a2 <- data.frame ( "Iteration" = seq ( along = a[1,] ) , "Estimate" = a[1,] )
+# browser()			
+		# ggplot ( dat = a2 , aes(x=Iteration, y=Estimate) ) +
+		# geom_point( shape=16, size=4.25 ) +
+		# geom_point( shape=16, size=1, color="red" ) +
+		# geom_smooth ( method="loess" , se=FALSE , size = 1.5 , color="red" ) +
+		# geom_smooth ( dat = a2[a2$Iteration>burnin,] , method="lm" , se=TRUE , size = 1 , color="yellow" )
+		
+		
+		# ggplot(dat, aes(x=xvar, y=yvar, color=cond)) + geom_point(shape=1)
+		
+# }
+# sapply ( e2 , make.plots )
+
+
+
+
 		   
 		   
