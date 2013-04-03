@@ -4,10 +4,10 @@
 \title{Multicore version of jk2.glm().}
 \description{Compute linear regression models for complex cluster designs with multiple imputed variables based on Jackknife (JK2) procedure.
 Conceptually, the function combines replication methods and methods for multiple imputed data. Technically, this is a wrapper for the \code{svyglm()} function
-of the survey package which uses the parallel package to distribute analysis to different logical processors.
+of the \code{'survey'} package which uses the parallel package to distribute analysis to different logical processors.
 }
 \usage{
-jk2.glm.M(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independent = list(),
+jk2.glm.M(dat, ID, wgt = NULL, JKZone, JKrep,  group = list(), independent = list(),
         reg.statement = NULL, dependent = list(),
         complete.permutation = c("nothing", "groups", "independent", "all") ,
         glm.family, multicoreOptions = list(n.cores = NULL, GBcore = NULL,
@@ -37,13 +37,13 @@ Variable name or column number of variable indicating replicate ID.
 }
   \item{group}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Optional: List of one or more grouping variables. If grouping variable is a multiple imputation variable,
+Optional: List of one or more grouping variables. If grouping variable is a multiple imputed variable,
 all names concerning one variable are interpreted as its imputations. See example 1, where two group variables are used: One group variable
 is multiple imputed, the other is not.
 }
   \item{independent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-List of one or more independent variables. If independent variable is a multiple imputation variable, all names concerning one variable are interpreted
+List of one or more independent variables. If independent variable is a multiple imputed variable, all names concerning one variable are interpreted
 as its imputations. See details and example 2 for more information.
 }
  \item{reg.statement}{
@@ -55,9 +55,9 @@ sets. See example 3 for further details.
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 List of one or more dependent variables. Each dependent variable will result in a separate analysis.
-If dependent variable is a multiple imputation variable, all names concerning one variable are interpreted
-as its imputations. See details and example 1 for more information. If dependent variable is a nested imputation variable, the nesting structure has to be specified
-in an appropriate listing structure. This structure has to be in agreement with the grouping variable and the independent variable if necessary. If nested imputation
+If dependent variable is a multiple imputed variable, all names concerning one variable are interpreted
+as its imputations. See details and example 1 for more information. If dependent variable is a nested imputed variable, the nesting structure has to be specified
+in an appropriate listing structure. This structure has to be in agreement with the grouping variable and the independent variable if necessary. If nested imputed
 variables are included in the analysis, \code{complete.permutation} is strongly recommended to set to \code{FALSE}. If you are interested in one single dependent variable
 which may be labeled as \code{"reading_competence_plausible_value"} in the data file,
 type \code{dependent = list(reading = "reading_competence_plausible_value"}. If you are interested in one multiple imputed dependent variable
@@ -70,7 +70,7 @@ Example 3 gives a short introduction to this concept.
   \item{complete.permutation}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Argument defines the number of multiple imputed data sets. In general, the number is defined by the number of imputations
-of a variable. Therefore, this argument only becomes relevant, if the number of imputation of one variable
+of a variable. Therefore, this argument only becomes relevant, if the number of imputations of one variable
 (e.g. the number of plausible values of the dependent variable) differs from the number of imputations used for independent variable(s).
 If \code{"all"}, number of datasets are determined through permutation, e.g. 5 plausible values and 3 imputations of the independent variable
 results in 3x5=15 imputed data sets. If \code{"nothing"}, only 5 imputed data sets will be used, no matter whether the larger number of imputations

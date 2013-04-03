@@ -5,11 +5,11 @@
 \description{Compute quantiles with standard errors for complex cluster designs with multiple imputed variables
 (e.g. plausible values) based on Jackknife (JK2) procedure. Conceptually, the function combines
 replication methods and methods for multiple imputed data. Technically, this is a wrapper for
-the \code{svyquantile()} function of the survey package which uses the parallel package to distribute analysis
+the \code{svyquantile()} function of the \code{'survey'} package which uses the parallel package to distribute analyses
 to different logical processors.
 }
 \usage{
-jk2.quantile.M(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(),
+jk2.quantile.M(dat, ID, wgt = NULL, JKZone, JKrep,  group = list(), dependent = list(),
               probs = seq(0, 1, 0.25),
               complete.permutation = c("nothing", "groups", "all"),
               multicoreOptions = list(n.cores = NULL, GBcore = NULL,
@@ -39,13 +39,13 @@ Variable name or column number of variable indicating replicate ID.
 }
   \item{group}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Optional: List of one or more grouping variables. If grouping variable is a multiple imputation variable,
+Optional: List of one or more grouping variables. If grouping variable is a multiple imputed variable,
 all names concerning one variable are interpreted as its imputations. See details for more information.
 }
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 List of one or more grouping variables. Each dependent variable will result in a separate analysis.
-If grouping variable is a multiple imputation variable, all names concerning one variable are interpreted
+If grouping variable is a multiple imputed variable, all names concerning one variable are interpreted
 as its imputations. See details for more information.
 }
   \item{probs}{
@@ -81,7 +81,7 @@ A list of several optional parameters concerning multicore processing.
 %%  ~~ If necessary, more details than the description above ~~
 Function first creates replicate weights based on JKZone and JKrep variables according to JK2 procedure
 implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
-The function afterwards serves as a wrapper for \code{svyquantile()} called by \code{svyby()} implemented in the 'survey' package.
+The function afterwards serves as a wrapper for \code{svyquantile()} called by \code{svyby()} implemented in the \code{'survey'} package.
 The results of the several analyses are then pooled according to Rubin's rule, which is adapted for nested imputations if the \code{dependent} argument implies a nested structure.
 }
 \value{

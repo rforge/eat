@@ -8,7 +8,7 @@ replication methods and methods for multiple imputed data. Technically, this is 
 the \code{svyquantile()} function of the survey package.
 }
 \usage{
-jk2.quantile(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(),
+jk2.quantile(dat, ID, wgt = NULL, JKZone, JKrep,  group = list(), dependent = list(),
             probs = seq(0, 1, 0.25),
             complete.permutation = c("nothing", "groups", "all")) }
 %- maybe also 'usage' for other objects documented here.
@@ -36,13 +36,13 @@ Variable name or column number of variable indicating replicate ID.
 }
   \item{group}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Optional: List of one or more grouping variables. If grouping variable is a multiple imputation variable,
+Optional: List of one or more grouping variables. If grouping variable is a multiple imputed variable,
 all names concerning one variable are interpreted as its imputations. See details for more information.
 }
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 List of one or more grouping variables. Each dependent variable will result in a separate analysis.
-If grouping variable is a multiple imputation variable, all names concerning one variable are interpreted
+If grouping variable is a multiple imputed variable, all names concerning one variable are interpreted
 as its imputations. See details for more information.
 }
   \item{probs}{
@@ -52,7 +52,7 @@ Numeric vector with probabilities for which to compute quantiles.
   \item{complete.permutation}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Argument defines the number of multiple imputed data sets. In general, the number is defined by the number of imputations
-of a variable. Therefore, this argument only becomes relevant, if the number of imputation of one variable (e.g. number of plausible values of the dependent variable)
+of a variable. Therefore, this argument only becomes relevant, if the number of imputations of one variable (e.g. number of plausible values of the dependent variable)
 differs from the number of imputations used for group variable(s). If \code{"all"}, number of datasets are determined through
 permutation, e.g. 5 plausible values and 3 imputations of one group variable results in 3x5=15 imputed data sets. If \code{"nothing"}, only 5 imputed
 data sets will be used, no matter whether the larger number of imputations is a whole multiple of the smaller number of imputations. If \code{"groups"},

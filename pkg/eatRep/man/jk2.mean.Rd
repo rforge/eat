@@ -5,9 +5,9 @@
 \description{Compute means, variances and standard deviations with standard errors
 for complex cluster designs with multiple imputed variables (e.g. plausible values) based on Jackknife (JK2)
 procedure. Conceptually, the function combines replication methods and methods for multiple imputed data. Nested imputations of the dependent variable(s) are supported as well.
-Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} functions of the survey package.}
+Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} functions of the \code{'survey'} package.}
 \usage{
-jk2.mean(dat, ID, wgt = NULL, JKZone, JKrep, group = list(),
+jk2.mean(dat, ID, wgt = NULL, JKZone, JKrep,  group = list(),
          group.differences.by = NULL, dependent = list(), na.rm = FALSE,
          complete.permutation = c("nothing", "groups", "all"), forcePooling = TRUE)}
 %- maybe also 'usage' for other objects documented here.
@@ -35,7 +35,7 @@ Variable name or column number of variable indicating replicate ID.
 }
   \item{group}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Optional: List of one or more grouping variables. If grouping variable is a multiple imputation variable,
+Optional: List of one or more grouping variables. If grouping variable is a multiple imputed variable,
 all names concerning one variable are interpreted as its imputations. If a nesting structure in the dependent variable is implemented,
 all grouping variables are expected to have no imputations (i.e. only one variable in the data frame) or exactly as many imputations as
 nests are specified in the dependent variable. For example, if two nests are specified in the dependent variable, a statement like this may be appropriate:
@@ -50,9 +50,9 @@ Optional: Specifies variable group differences should be computed for.
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 List of one or more dependent variables. Each dependent variable will result in a separate analysis.
-If dependent variable is a multiple imputation variable, all names concerning one variable are interpreted
-as its imputations. If dependent variable is a nested imputation variable, the nesting structure has to be specified
-in an appropriate listing structure. This structure has to be in agreement with the grouping variable if necessary. If nested imputation
+If dependent variable is a multiple imputed variable, all names concerning one variable are interpreted
+as its imputations. If dependent variable is a nested imputed variable, the nesting structure has to be specified
+in an appropriate listing structure. This structure has to be in agreement with the grouping variable if necessary. If nested imputed
 variables are included in the analysis, \code{complete.permutation} is strongly recommended to set to \code{FALSE}. To give a short example:
 If you are interested in one single dependent variable which may be labeled as \code{"reading_competence_plausible_value"} in the data file,
 type \code{dependent = list(reading = "reading_competence_plausible_value"}. If you are interested in one multiple imputed dependent variable
@@ -69,7 +69,7 @@ Logical: Should cases with missing values be dropped?
   \item{complete.permutation}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Argument defines the number of multiple imputed data sets. In general, the number is defined by the number of imputations
-of a variable. Therefore, this argument only becomes relevant, if the number of imputation of one variable (e.g. plausible values of the
+of a variable. Therefore, this argument only becomes relevant, if the number of imputations of one variable (e.g. plausible values of the
 dependent variable) differs from the number of imputations used for group variable(s). If \code{"all"}, number of datasets are determined through
 permutation, e.g. 5 plausible values and 3 imputations of one group variable results in 3 x 5 = 15 imputed data sets. If \code{"nothing"}, only 5 imputed
 data sets will be used, no matter whether the larger number of imputations is a whole multiple of the smaller number of imputations. If \code{"groups"},

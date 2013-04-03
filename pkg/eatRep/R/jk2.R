@@ -34,6 +34,7 @@ adjustDependentForNested <- function ( dependent, complete.permutation, group ) 
 ###                       Bsp.: group = list(BL = c("bl1", "bl2", "bl3", "bl4", "bl5"), geschlecht = "sex"), group.differences.by = "geschlecht". Hier werden in jedem BL Geschlechtsunterschiede bestimmt.
 ### complete.permutation  Wenn Anzahl der Imputationen von unabhängiger und abhängiger Variable varriiert
 jk2.mean <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), group.differences.by = NULL, dependent = list(), na.rm = FALSE, complete.permutation = c("nothing", "groups", "all"), forcePooling = TRUE)    {
+            JK   <- doJK( JKZone = JKZone , JKrep = JKrep )
             complete.permutation <- match.arg ( complete.permutation )
 #            if(!exists("melt"))       {library(reshape)}
             dependent     <- adjustDependentForNested ( dependent = dependent, complete.permutation = complete.permutation, group = group )
@@ -46,7 +47,7 @@ jk2.mean <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), group.d
                wgt <- "weight_one"
             }
 #            if(!exists("svrepdesign"))      {library(survey)}
-            replicates  <- generate.replicates(dat = dat, ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep )
+            if(JK == TRUE )  {replicates  <- generate.replicates(dat = dat, ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep )}
             if(length(group) == 0) {
                cat("No group(s) specified. Analyses will be computed only for the whole sample.\n", file=catPrms$file, append=catPrms$append)
                dat$whole_group <- "whole_group"
@@ -114,7 +115,7 @@ jk2.mean <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), group.d
 
 
 ### multicore version of jk2.mean()
-jk2.mean.M <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(), na.rm = FALSE, complete.permutation = c("nothing", "groups", "all"), forcePooling = TRUE, multicoreOptions = list(n.cores = NULL, GBcore = NULL, tempFolder = NULL, nameLogfile = NULL) )    {
+jk2.mean.M <- function(dat, ID, wgt = NULL, JKZone, JKrep,  group = list(), dependent = list(), na.rm = FALSE, complete.permutation = c("nothing", "groups", "all"), forcePooling = TRUE, multicoreOptions = list(n.cores = NULL, GBcore = NULL, tempFolder = NULL, nameLogfile = NULL) )    {
              if(is.null(multicoreOptions[["nameLogfile"]])) { multicoreOptions[["nameLogfile"]] <- "analyse.log" }
              beginn               <- Sys.time()
              complete.permutation <- match.arg ( complete.permutation )
@@ -155,7 +156,8 @@ jk2.mean.M <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), depen
 ### expected.values            ... optional (und empfohlen): Vorgabe für erwartete Werte, vgl. "table.muster"
 ###                                kann entweder eine benannte Liste sein, mit Namen wie in "dependent", oder ein einfacher character Vektor, dann werden diese Vorgaben für alle abhängigen Variablen übernommen
 ###                                bleibt "expected.values" leer, dann wird es automatisch mit den Werten der Variablen in ihrer Gesamtheit belegt!
-jk2.table <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(), separate.missing.indikator = FALSE, expected.values = list(), complete.permutation = c("nothing", "groups", "all") )    {
+jk2.table <- function(dat, ID, wgt = NULL,JKZone, JKrep,   group = list(), dependent = list(), separate.missing.indikator = FALSE, expected.values = list(), complete.permutation = c("nothing", "groups", "all") )    {
+            JK   <- doJK( JKZone = JKZone , JKrep = JKrep )
             complete.permutation <- match.arg ( complete.permutation )
             dependent            <- adjustDependentForNested ( dependent = dependent, complete.permutation = complete.permutation, group = group )
             catPrms              <- setCatParameter(dat)
@@ -166,7 +168,7 @@ jk2.table <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), depend
                dat$weight_one <- 1
                wgt <- "weight_one"
             }
-            replicates  <- generate.replicates(dat = dat, ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep )
+            if(JK == TRUE )  {replicates  <- generate.replicates(dat = dat, ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep )}
             if(length(group) == 0) {
                cat("No group(s) specified. Analyses will be computed only for the whole sample.\n", file=catPrms$file, append=catPrms$append)
                dat$whole_group <- "whole_group"
@@ -231,7 +233,7 @@ jk2.table <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), depend
 
 
 ### multicore version of jk2.table()
-jk2.table.M <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(), separate.missing.indikator = FALSE, expected.values = list(), complete.permutation = c("nothing", "groups", "all"), multicoreOptions = list(n.cores = NULL, GBcore = NULL, tempFolder = NULL, nameLogfile = NULL))    {
+jk2.table.M <- function(dat, ID, wgt = NULL, JKZone, JKrep,  group = list(), dependent = list(), separate.missing.indikator = FALSE, expected.values = list(), complete.permutation = c("nothing", "groups", "all"), multicoreOptions = list(n.cores = NULL, GBcore = NULL, tempFolder = NULL, nameLogfile = NULL))    {
              if(is.null(multicoreOptions[["nameLogfile"]])) { multicoreOptions[["nameLogfile"]] <- "analyse.log" }
              beginn               <- Sys.time()
              complete.permutation <- match.arg ( complete.permutation )
@@ -268,7 +270,8 @@ jk2.table.M <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), depe
              return(counts) }
 
 
-jk2.quantile <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(), probs = seq(0, 1, 0.25),  complete.permutation = c("nothing", "groups", "all") )    {
+jk2.quantile <- function(dat, ID, wgt = NULL, JKZone, JKrep,   group = list(), dependent = list(), probs = seq(0, 1, 0.25),  complete.permutation = c("nothing", "groups", "all") )    {
+            JK   <- doJK( JKZone = JKZone , JKrep = JKrep )
             complete.permutation <- match.arg ( complete.permutation )
             dependent            <- adjustDependentForNested ( dependent = dependent, complete.permutation = complete.permutation, group = group )
             catPrms              <- setCatParameter(dat)
@@ -279,7 +282,7 @@ jk2.quantile <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dep
                dat$weight_one <- 1
                wgt <- "weight_one"
             }
-            replicates  <- generate.replicates(dat = dat, ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep )
+            if(JK == TRUE )  {replicates  <- generate.replicates(dat = dat, ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep )}
             if(length(group) == 0) {
                cat("No group(s) specified. Analyses will be computed only for the whole sample.\n",file=catPrms$file, append=catPrms$append)
                dat$whole_group <- "whole_group"
@@ -323,7 +326,7 @@ jk2.quantile <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dep
             return(analysis)}
 
 
-jk2.quantile.M <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(), probs = seq(0, 1, 0.25),  complete.permutation = c("nothing", "groups", "all"), multicoreOptions = list(n.cores = NULL, GBcore = NULL, tempFolder = NULL, nameLogfile = NULL))    {
+jk2.quantile.M <- function(dat, ID, wgt = NULL, JKZone, JKrep,  group = list(), dependent = list(), probs = seq(0, 1, 0.25),  complete.permutation = c("nothing", "groups", "all"), multicoreOptions = list(n.cores = NULL, GBcore = NULL, tempFolder = NULL, nameLogfile = NULL))    {
              if(is.null(multicoreOptions[["nameLogfile"]])) { multicoreOptions[["nameLogfile"]] <- "analyse.log" }
              beginn               <- Sys.time()
              complete.permutation <- match.arg ( complete.permutation )
@@ -360,7 +363,8 @@ jk2.quantile.M <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), d
              return(counts) }
 
 
-jk2.glm <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independent = list(), reg.statement = NULL, dependent = list(), complete.permutation = c("nothing", "groups", "independent", "all") , glm.family)    {
+jk2.glm <- function(dat, ID, wgt = NULL,JKZone, JKrep,  group = list(), independent = list(), reg.statement = NULL, dependent = list(), complete.permutation = c("nothing", "groups", "independent", "all") , glm.family)    {
+            JK   <- doJK( JKZone = JKZone , JKrep = JKrep )
             complete.permutation <- match.arg ( complete.permutation )
             dependent            <- adjustDependentForNested ( dependent = dependent, complete.permutation = complete.permutation, group = group )
             catPrms              <- setCatParameter(dat)
@@ -378,7 +382,7 @@ jk2.glm <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independ
                dat$weight_one <- 1
                wgt <- "weight_one"
             }
-            replicates  <- generate.replicates(dat = dat, ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep )
+            if(JK == TRUE )  {replicates  <- generate.replicates(dat = dat, ID = ID, wgt = wgt, JKZone = JKZone, JKrep = JKrep )}
             if(length(group) == 0) {
                cat("No group(s) specified. Analyses will be computed only for the whole sample.\n",file=catPrms$file, append=catPrms$append)
                dat$whole_group <- "whole_group"
@@ -426,7 +430,7 @@ jk2.glm <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independ
 
 
 ### multicore version of jk2.glm()
-jk2.glm.M <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independent = list(), reg.statement = NULL, dependent = list(), complete.permutation = c("nothing", "groups", "independent", "all") , glm.family, multicoreOptions = list(n.cores = NULL, GBcore = NULL, tempFolder = NULL, nameLogfile = NULL))    {
+jk2.glm.M <- function(dat, ID, wgt = NULL, JKZone, JKrep,  group = list(), independent = list(), reg.statement = NULL, dependent = list(), complete.permutation = c("nothing", "groups", "independent", "all") , glm.family, multicoreOptions = list(n.cores = NULL, GBcore = NULL, tempFolder = NULL, nameLogfile = NULL))    {
              if(is.null(multicoreOptions[["nameLogfile"]])) { multicoreOptions[["nameLogfile"]] <- "analyse.log" }
              beginn               <- Sys.time()
              complete.permutation <- match.arg ( complete.permutation )
@@ -461,6 +465,13 @@ jk2.glm.M <- function(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), indepe
              ende    <- Sys.time()
              cat("Analysis finished: "); print(ende-beginn)
              return(counts) }
+
+
+doJK <- function ( JKZone , JKrep ) {
+        if(is.null(JKZone) | is.null(JKrep))   {
+           cat("No jacknifing variables. Assume no cluster structure.\n")
+           JK  <- FALSE } else { JK <- TRUE }
+        return(JK)}
 
 
 ### GBcores ueberschreibt noetigenfalls cores
@@ -704,7 +715,7 @@ jackknife.mean <- function (imp, dat.i , dep, replicates , ID, wgt, na.rm, group
                                                       retu <- table(yy)
                                                       return(names(retu)[retu>0]) })
                                     sub.replicates <- replicates[ match(uu[,"idstud"], replicates[,"ID"] ) ,  ]
-                                    design.uu      <- svrepdesign(data = uu[ ,c(as.character(imp[-length(imp)]), dep)], weights = uu$wgtSTUD, type="JKn", scale = 1, rscales = 1, repweights = sub.replicates[,-1], combined.weights = TRUE, mse = TRUE)
+                                    design.uu      <- svrepdesign(data = uu[ ,c(as.character(imp[-length(imp)]), dep)], weights = uu[,wgt], type="JKn", scale = 1, rscales = 1, repweights = sub.replicates[,-1], combined.weights = TRUE, mse = TRUE)
                                     var.uu         <- svyvar(x = as.formula(paste("~",imp[["dep"]],sep="")), design = design.uu, deff = FALSE, return.replicates = TRUE, na.rm = na.rm)
                                     ret            <- data.frame(t(namen), SD = as.numeric(sqrt(coef(var.uu))), se.SD =  as.numeric(sqrt(vcov(var.uu)/(4*coef(var.uu)))), stringsAsFactors = FALSE ) }) )
                   difs           <- NULL

@@ -4,10 +4,10 @@
 \title{JK2 for linear regression models.}
 \description{Compute linear regression models for complex cluster designs with multiple imputed variables based on Jackknife (JK2) procedure.
 Conceptually, the function combines replication methods and methods for multiple imputed data. Technically, this is a wrapper for the \code{svyglm()} function
-of the survey package.
+of the \code{'survey'} package.
 }
 \usage{
-jk2.glm(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), independent = list(),
+jk2.glm(dat, ID, wgt = NULL, JKZone, JKrep,  group = list(), independent = list(),
         reg.statement = NULL, dependent = list(),
         complete.permutation = c("nothing", "groups", "independent", "all") ,
         glm.family) }
@@ -36,13 +36,13 @@ Variable name or column number of variable indicating replicate ID.
 }
   \item{group}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Optional: List of one or more grouping variables. If grouping variable is a multiple imputation variable,
+Optional: List of one or more grouping variables. If grouping variable is a multiple imputed variable,
 all names concerning one variable are interpreted as its imputations. See example 1, where two group variables are used: One group variable
 is multiple imputed, the other is not.
 }
   \item{independent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-List of one or more independent variables. If independent variable is a multiple imputation variable, all names concerning one variable are interpreted
+List of one or more independent variables. If independent variable is a multiple imputed variable, all names concerning one variable are interpreted
 as its imputations. See details and example 2 for more information.
 }
  \item{reg.statement}{
@@ -54,9 +54,9 @@ sets. See example 3 for further details.
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 List of one or more dependent variables. Each dependent variable will result in a separate analysis.
-If dependent variable is a multiple imputation variable, all names concerning one variable are interpreted
-as its imputations. See details and example 1 for more information. If dependent variable is a nested imputation variable, the nesting structure has to be specified
-in an appropriate listing structure. This structure has to be in agreement with the grouping variable and the independent variable if necessary. If nested imputation
+If dependent variable is a multiple imputed variable, all names concerning one variable are interpreted
+as its imputations. See details and example 1 for more information. If dependent variable is a nested imputed variable, the nesting structure has to be specified
+in an appropriate listing structure. This structure has to be in agreement with the grouping variable and the independent variable if necessary. If nested imputed
 variables are included in the analysis, \code{complete.permutation} is strongly recommended to set to \code{FALSE}. If you are interested in one single dependent variable
 which may be labeled as \code{"reading_competence_plausible_value"} in the data file,
 type \code{dependent = list(reading = "reading_competence_plausible_value"}. If you are interested in one multiple imputed dependent variable
@@ -85,7 +85,7 @@ Argument of class \code{"family"}, specifying the link function. See help file o
 %%  ~~ If necessary, more details than the description above ~~
 Function first creates replicate weights based on \code{JKZone} and \code{JKrep} variables according to JK2 procedure
 implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
-The function afterwards serves as a wrapper for svyglm() implemented in the \code{'survey'} package.
+The function afterwards serves as a wrapper for \code{svyglm()} implemented in the \code{'survey'} package.
 The results of the several analyses are then pooled according to Rubin's rule, which is adapted for nested imputations if the \code{dependent} argument implies a nested structure.
 }
 \value{
