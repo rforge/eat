@@ -158,7 +158,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
             nodes <- 15
             }
             if ( !is.null(seed)) {
-                 eatTools:::sunk("Warning! 'seed'-Parameter is appropriate only in Monte Carlo estimation method. (see conquest manual, p. 225) Recommend to set 'seed' to FALSE.\n")
+                 eatTools:::sunk("Warning! Parameter 'seed' is appropriate only in Monte Carlo estimation method (see ConQuest manual, p. 225). It's recommended to set 'seed' to NULL (default).\n")
             }
          }
 				   syntax    <- gsub("####hier.anzahl.nodes.einfuegen####",nodes,syntax)

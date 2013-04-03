@@ -129,7 +129,7 @@ automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.va
 	
     eatTools:::sunk(paste("automateConquestModel_",ver,": Use following settings:\n",sep=""))
     eatTools:::sunk(paste("    constraints: ",set.constraints,"; method: ",method,"; standard error: ",std.err,"; assumed population distribution: ",distribution,"\n",sep=""))
-    eatTools:::sunk(paste("    max. iterations: ",n.iterations,"; converge: ",paste("0",substring(as.character(converge+1),2),sep=""),"; deviancechange: ",paste("0",substring(as.character(deviancechange+1),2),sep=""),"; f.nodes: ",f.nodes,"; p.nodes: ",p.nodes,"\n",sep=""))
+    eatTools:::sunk(paste("    max. iterations: ",n.iterations,"; nodes: ",nodes,"; converge: ",paste("0",substring(as.character(converge+1),2),sep=""),"; deviancechange: ",paste("0",substring(as.character(deviancechange+1),2),sep=""),"; f.nodes: ",f.nodes,"; p.nodes: ",p.nodes,"\n",sep=""))
         	  
     ### Verzeichnisangaben dürfen weder mit einem Schrägstrich beginnen noch damit enden!
     if(!missing(jobFolder))

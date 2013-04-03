@@ -97,6 +97,7 @@
 				eatTools:::sunk ( paste ( "cat('" ,  einr , "n.iterations = " , conquestParameters$n.iterations , sep = "" , "\n')" ) )				
 				eatTools:::sunk ( paste ( "cat('" ,  einr , "converge = " , conquestParameters$converge , sep = "" , "\n')" ) )				
 				eatTools:::sunk ( paste ( "cat('" ,  einr , "deviancechange = " , conquestParameters$deviancechange , sep = "" , "\n')" ) )				
+				eatTools:::sunk ( paste ( "cat('" ,  einr , "seed = " , conquestParameters$seed , sep = "" , "\n')" ) )				
 				eatTools:::sunk ( paste ( "cat('" ,  einr , "allowAllScoresEverywhere = " , conquestParameters$allowAllScoresEverywhere , sep = "" , "\n')" ) )				
 				eatTools:::sunk ( paste ( "cat('" ,  einr , "equivalence.table = " , conquestParameters$equivalence.table , sep = "" , "\n')" ) )				
 				eatTools:::sunk ( paste ( "cat('" ,  einr , "use.letters = " , conquestParameters$use.letters , sep = "" , "\n')" ) )				
@@ -136,6 +137,7 @@
 						n.iterations = conquestParameters$n.iterations ;			
 						converge = conquestParameters$converge ;			
 						deviancechange = conquestParameters$deviancechange ;			
+						seed = conquestParameters$seed ;			
 						allowAllScoresEverywhere = conquestParameters$allowAllScoresEverywhere ;			
 						equivalence.table = conquestParameters$equivalence.table ;			
 						use.letters = conquestParameters$use.letters ;
@@ -173,6 +175,7 @@
 						"n.iterations" ,
 						"converge" ,
 						"deviancechange" ,
+						"seed" ,
 						"allowAllScoresEverywhere" ,
 						"equivalence.table" ,
 						"use.letters" ,
@@ -212,6 +215,7 @@
 										n.iterations = conquestParameters$n.iterations ,			
 										converge = conquestParameters$converge ,			
 										deviancechange = conquestParameters$deviancechange ,			
+										seed = conquestParameters$seed ,			
 										allowAllScoresEverywhere = conquestParameters$allowAllScoresEverywhere ,			
 										equivalence.table = conquestParameters$equivalence.table ,			
 										use.letters = conquestParameters$use.letters ,
