@@ -46,7 +46,7 @@ resJAGS <- function ( JAGS.object , burnin = 1000 , retList = TRUE ) {
                                                 if(all(chain == chain[1])) {HPD <- rep(NA,3)} else {HPD <-  c(HPD, diff(HPD))}
                                                 names(HPD) <- paste( paste(   ki*100,"%.HPD",sep=""),   c("lb", "ub", "diff"),sep="_")
                                                 return(HPD)})                     ### Returns equal-tailed (I95) interval
-                                 se        <- ifelse(all(chain == chain[1]), NA, HPD[[2]][3]/(2*qnorm(0.025)))
+                                 se        <- if (all(chain == chain[1])) NA else HPD[[2]][3]/(2*qnorm(0.025))
                                  ETI       <- lapply( c ( .90, .95, .99 ), FUN = function ( ki ) {
                                               ETI <- c( quantile( chain, (1-ki)/2 ),  quantile( chain, 1-(1-ki)/2 ) )
                                               if(all(chain == chain[1]))  {ETI <- rep(NA,3)} else {ETI <-  c(ETI, diff(ETI))}
@@ -68,8 +68,11 @@ resJAGS <- function ( JAGS.object , burnin = 1000 , retList = TRUE ) {
 		   
 	   
 		   # wenn nicht Liste returned werden soll, long-Datensatz draus machen
+browser()
 		   if ( ! retList ) {
-		   
+					prms <- do.call ( "rbind" , prms )
+					
+					
 		   }
 		   
 		   return(prms)
