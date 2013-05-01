@@ -110,6 +110,10 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                           namen.all.hg.vars[[i]] <- substituteNames$new
                           eatTools:::sunk(paste("genConquestDataset_",ver,": Conquest does not allow '.', '-' and '_' in explicit variable names. Delete signs from variables names for explicit variables.\n",sep=""))
                           colnames(dat)[substituteNames$cols] <- substituteNames$new
+                          if(model.statement != "item") { 
+                                cat("    Remove deleted signs from variables names for explicit variables also in the model statement. Please chack afterwards for consistency!\n")
+                                model.statement <- gsub(substituteNames$old, substituteNames$new, model.statement)
+						 }
                        }   
                   }
 				  for (ii in seq(along=namen.all.hg.vars)) {assign(names(namen.all.hg.vars)[ii], namen.all.hg.vars[[ii]])}

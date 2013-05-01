@@ -165,7 +165,7 @@ genConquestSynLab <- function(jobName, datConquest, namen.items, namen.hg.var, n
                    syntax    <- gsub("####hier.std.err.einfuegen####",match.arg(std.err),syntax)
                    syntax    <- gsub("####hier.distribution.einfuegen####",match.arg(distribution),syntax)
                    syntax    <- gsub("####hier.equivalence.table.einfuegen####",match.arg(equivalence.table),syntax)
-				   syntax    <- gsub("####hier.model.statement.einfuegen####",model.statement,syntax)
+				   syntax    <- gsub("####hier.model.statement.einfuegen####",tolower(model.statement),syntax)
 
 				   # INIT Parameter
 				   syntax    <- gsub("####hier.init_parameters.einfuegen####",paste(jobName,"_INIT.prm",sep=""),syntax)
