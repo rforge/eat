@@ -74,5 +74,131 @@ wo.sind <- function(a,b,quiet=FALSE)
                              if(quiet==FALSE) { cat(paste("Found",length(reihe),"elements.")); cat("\n") }}
             if(length(a)==0) {cat("No valid values in a.\n")}
             return(reihe)}
+            
+            
+desk <- function(variable,na=NA, p.weights = NULL, na.rm = FALSE) {
+         variable <- data.frame(as.matrix(variable),stringsAsFactors = FALSE)
+         if(!is.null(p.weights)) {
+             Mis.weight <- FALSE
+             stopifnot( length(p.weights) == nrow(variable) )
+          #   if(!exists("wtd.mean"))      {library(Hmisc)}
+             } else { Mis.weight <- TRUE}
+         onlyMis  <- sapply(variable, FUN = function ( y ) { all( is.na(y) ) } )
+         if(sum(onlyMis)>0) {
+            cat("Folgende Variablen wurden aufgrund durchgehend fehlender oder nicht-numerischer Werte ausgeschlossen: \n")
+            cat(paste(colnames(variable)[which(onlyMis)], collapse = ", ")); cat("\n")
+            variable <- variable[, -which(onlyMis), drop = FALSE ]
+         }
+         ret      <- do.call("rbind", lapply(variable, FUN = function ( y ) {
+                     if(Mis.weight == TRUE ) {
+                        Summe      <- sum(y, na.rm = na.rm)
+                        Mittelwert <- mean(y, na.rm = na.rm)
+                        Varianz    <- var(y, na.rm = na.rm) }
+                     if(Mis.weight == FALSE ) {
+                        Summe <- sum( y * p.weights )
+                        Mittelwert <- Hmisc::wtd.mean(x = y, weights = p.weights, na.rm = na.rm)
+                        Varianz    <- Hmisc::wtd.var(y, na.rm = na.rm)}
+                     dataFrame <- data.frame ( N = length(y), N.valid = length(na.omit(y)), Missing = length(y) - length(na.omit(y)), Minimum = min(y, na.rm = na.rm), Maximum = max(y, na.rm = na.rm), Summe = Summe, Mittelwert = Mittelwert, std.err = sd(y, na.rm = na.rm) / sqrt(length(na.omit(y))), sig = t.test(x = y)$p.value, Median = median(y, na.rm = na.rm), Streuung = sqrt(Varianz), Varianz = Varianz , stringsAsFactors = FALSE )
+                     return(dataFrame)}))
+         rownames(ret) <- colnames(variable)
+         return(ret)}
 
-	
+         
+as.numeric.if.possible <- function(dataFrame, set.numeric=TRUE, transform.factors=FALSE, maintain.factor.scores = TRUE, verbose=TRUE)   {
+            originWarnLevel <- getOption("warn")
+            wasInputVector  <- FALSE
+            if( !"data.frame" %in% class(dataFrame) ) {
+              if(verbose == TRUE )  {cat(paste("Warning! Argument of 'as.numeric.if.possible' has to be of class 'data.frame'. Object will be converted to data.frame.\n",sep="")) }
+              dataFrame <- data.frame(dataFrame, stringsAsFactors=FALSE)
+              wasInputVector <- ifelse(ncol(dataFrame) == 1, TRUE, FALSE)
+            }
+            currentClasses <- sapply(dataFrame, FUN=function(ii) {class(ii)})
+            summaryCurrentClasses <- names(table(currentClasses))
+            if(verbose == TRUE )  {
+               cat(paste("Current data frame consists of following ",length(summaryCurrentClasses), " classe(s):\n    ",sep=""))
+               cat(paste(summaryCurrentClasses,collapse=", ")); cat("\n")
+            }
+            options(warn = -1)                                                  ### zuvor: schalte Warnungen aus!
+            numericable <- sapply(dataFrame, FUN=function(ii)   {
+                  n.na.old       <- sum(is.na(ii))
+                  transformed    <- as.numeric(ii)
+                  transformed.factor <- as.numeric(as.character(ii))
+                  n.na.new       <- sum(is.na(transformed))
+                  n.na.new.factor <- sum(is.na(transformed.factor))
+                  ret            <- rbind(ifelse(n.na.old == n.na.new, TRUE, FALSE),ifelse(n.na.old == n.na.new.factor, TRUE, FALSE))
+                  if(transform.factors == FALSE)   {
+                     if(class(ii) == "factor")   {
+                        ret <- rbind(FALSE,FALSE)
+                     }
+                  }
+                  return(ret)})
+            options(warn = originWarnLevel)                                     ### danach: schalte Warnungen wieder in Ausgangszustand!
+            changeVariables <- colnames(dataFrame)[numericable[1,]]
+            changeFactorWithIndices   <- NULL
+            if(transform.factors == TRUE & maintain.factor.scores == TRUE)   {
+               changeFactorWithIndices   <- names(which(sapply(changeVariables,FUN=function(ii) {class(dataFrame[[ii]])=="factor"})))
+               changeFactorWithIndices   <- setdiff(changeFactorWithIndices, names(which(numericable[2,] == FALSE)) )
+               changeVariables           <- setdiff(changeVariables, changeFactorWithIndices)
+            }
+            if(length(changeVariables) >0)   {                                  ### hier werden alle Variablen (auch Faktoren, wenn maintain.factor.scores = FALSE) ggf. ge‰ndert
+               do <- paste ( mapply ( function ( ii ) { paste ( "try(dataFrame$'" , ii , "' <- as.numeric(dataFrame$'",ii, "'), silent=TRUE)" , sep = "" ) } , changeVariables  ) , collapse = ";" )
+               eval ( parse ( text = do ) )
+            }
+            if(length(changeFactorWithIndices) >0)   {                          ### hier werden ausschlieﬂlich FAKTOREN, wenn maintain.factor.scores = TRUE, ggf. ge‰ndert
+               do <- paste ( mapply ( function ( ii ) { paste ( "try(dataFrame$'" , ii , "' <- as.numeric(as.character(dataFrame$'",ii, "')), silent=TRUE)" , sep = "" ) } , changeFactorWithIndices  ) , collapse = ";" )
+               eval ( parse ( text = do ) )
+            }
+            if(set.numeric==FALSE) {return(numericable[1,])}
+            if(set.numeric==TRUE)  {
+              if(verbose == TRUE)      {
+                 if( sum ( numericable[1,] == FALSE ) > 0 )  {
+                     cat(paste("Following ",sum ( numericable[1,] == FALSE )," variable(s) won't be transformed:\n    ",sep=""))
+                     cat(paste(colnames(dataFrame)[as.numeric(which(numericable[1,] == FALSE))],collapse= ", ")); cat("\n")
+                 }
+              }
+              if(wasInputVector == TRUE) {dataFrame <- unname(unlist(dataFrame))}
+              return(dataFrame)
+           }
+         }
+         
+make.indikator <- function(variable, name.var = "ind", force.indicators = NULL, separate.missing.indikator = c("no","ifany", "always"), sep = "_" )  {
+                  separate.missing.indikator <- match.arg(separate.missing.indikator)
+                  t.var <- table(variable, useNA = separate.missing.indikator )
+                  if(!is.null(force.indicators))  {
+                     additional <- setdiff(as.character(force.indicators), names(t.var))
+                     if(length(additional) > 0 )  {
+                        add <- rep(0,length(additional))
+                        names(add) <- additional
+                        t.var      <- c(t.var, add)
+                     }
+                  }
+                  ind.i <- data.frame( variable, sapply(names(t.var), FUN = function(iii) {
+                           if(!is.na(iii)) {ind.iii  <- which(variable == iii)}
+                           if(is.na(iii))  {ind.iii  <- which(is.na(variable))}
+                           ret      <- rep(0, length(variable) )
+                           if(length(ind.iii)>0)  {ret[ind.iii] <- 1}
+                           if(separate.missing.indikator == "no" )  {
+                              if(length(which(is.na(variable))) > 0 ) {
+                                 ret[which(is.na(variable))] <- NA
+                              }
+                           }
+                           return(ret)}), stringsAsFactors = FALSE )
+                  colnames(ind.i)[-1] <- paste(name.var, names(t.var), sep=sep)
+                  return(ind.i)}
+                  
+### as.numeric(remove.non.numeric) gives "NA" instead of empty "" in case of no numbers in n-th string
+### Bsp.: remove.non.numeric(c("5","  h89 kj.9","2-4h","aags"))
+remove.non.numeric <- function(string)
+                      {if(!is.null(dim(string))) {dimension <- dim(string)}
+                       splitt <- strsplit(string,"")
+                       options(warn = -1)                                       ### warnungen aus
+                       splitt <- unlist ( lapply(splitt, FUN=function(ii) {paste( na.omit(as.numeric(ii)),collapse="")}))
+                       options(warn = 0)                                        ### warnungen wieder an
+                       if(!is.null(dim(string))) {splitt <- matrix(splitt,dimension[1],dimension[2],byrow = FALSE)}
+                       return(splitt)}
+					   
+remove.pattern     <- function ( string, pattern ) {
+                      splitt <- strsplit(string, pattern)
+                      ret    <- unlist(lapply(splitt, FUN = function ( y ) { paste(y, collapse="")}))
+                      return(ret)}					   
+                  

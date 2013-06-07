@@ -2,15 +2,17 @@
 \alias{jk2.table.M}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Multicore version of jk2.table().}
-\description{Compute frequency tables with standard errors for complex cluster designs with multiple imputed variables
-based on Jackknife (JK2) procedure. Conceptually, the function combines replication methods and methods for
-multiple imputed data. Technically, this is a wrapper for the svymean() function of the survey package
-called to dichotomous indicators of the dependent variable. Function uses the parallel package to
-distribute analysis to different logical processors.
+\description{Compute frequency tables for categorical variables (e.g. factors: dichotomous or polytomous) in complex
+cluster designs. Estimation of standard errors optionally takes the clustered structure and multiple imputed
+variables into account. To date, only the Jackknife-2 procedure (JK2) is implemented to account for clustered designs.
+Procedures of Rubin (1987) and Rubin (2003) are implemented to account for multiple imputed data and nested imputed data.
+Conceptually, the function combines replication and imputation methods. Technically, this is a wrapper
+for the svymean() function of the survey package.
 }
 \usage{
-jk2.table.M(dat, ID, wgt = NULL, JKZone, JKrep, group = list(), dependent = list(),
-          separate.missing.indikator = FALSE, expected.values = list(),
+jk2.table.M(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, group = list(),
+          dependent = list(), separate.missing.indikator = FALSE,
+          expected.values = list(),
           complete.permutation = c("nothing", "groups", "all"),
           multicoreOptions = list(n.cores = NULL, GBcore = NULL, tempFolder = NULL,
           nameLogfile = NULL) ) }
@@ -31,11 +33,13 @@ all cases will be equally weighted.
 }
   \item{JKZone}{
 %%     ~~Describe \code{abs.dif.bound} here~~
-Variable name or column number of variable indicating Jackknifing Zone.
+Optional: Variable name or column number of variable indicating Jackknifing Zone. If \code{NULL}, no cluster structure is assumed and
+standard errors are computed according to a random sample.
 }
   \item{JKrep}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Variable name or column number of variable indicating replicate ID.
+Optional: Variable name or column number of variable indicating replicate ID. If \code{NULL}, no cluster structure is assumed and
+standard errors are computed according to a random sample.
 }
   \item{group}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -44,9 +48,13 @@ all names concerning one variable are interpreted as its imputations. See detail
 }
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-List of one or more grouping variables. Each dependent variable will result in a separate analysis.
-If grouping variable is a multiple imputed variable, all names concerning one variable are interpreted
-as its imputations. See details for more information.
+List of one or more dependent variables, which have to be dichotomous or polytomous. (In R, variables of this kind
+are often represented as factors. However, dependent variable may also be of class numeric or character.)
+Each dependent variable will result in a separate analysis.
+If dependent variable is a multiple imputed variable, all names concerning one variable are interpreted
+as its imputations. If dependent variable is a nested imputed variable, the nesting structure has to be specified
+in an appropriate listing structure. This structure has to be in agreement with the grouping variable if necessary. If nested imputed
+variables are included in the analysis, \code{complete.permutation} is strongly recommended to set to \code{FALSE}.
 }
   \item{separate.missing.indikator}{
 %%     ~~Describe \code{sig.dif.bound} here~~

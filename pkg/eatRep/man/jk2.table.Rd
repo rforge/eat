@@ -2,14 +2,17 @@
 \alias{jk2.table}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{JK2 for frequency tables.}
-\description{Compute frequency tables with standard errors for complex cluster designs with multiple imputed variables
-based on Jackknife (JK2) procedure. Conceptually, the function combines replication methods and methods for
-multiple imputed data. Technically, this is a wrapper for the svymean() function of the survey package called to dichotomous indicators
-of the dependent variable.
+\description{Compute frequency tables for categorical variables (e.g. factors: dichotomous or polytomous) in complex
+cluster designs. Estimation of standard errors optionally takes the clustered structure and multiple imputed
+variables into account. To date, only the Jackknife-2 procedure (JK2) is implemented to account for clustered designs.
+Procedures of Rubin (1987) and Rubin (2003) are implemented to account for multiple imputed data and nested imputed data.
+Conceptually, the function combines replication and imputation methods. Technically, this is a wrapper
+for the svymean() function of the survey package.
 }
 \usage{
-jk2.table(dat, ID, wgt = NULL, JKZone, JKrep,  group = list(), dependent = list(),
-          separate.missing.indikator = FALSE, expected.values = list(),
+jk2.table(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, group = list(),
+          dependent = list(), separate.missing.indikator = FALSE,
+          expected.values = list(),
           complete.permutation = c("nothing", "groups", "all")) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -28,11 +31,13 @@ all cases will be equally weighted.
 }
   \item{JKZone}{
 %%     ~~Describe \code{abs.dif.bound} here~~
-Variable name or column number of variable indicating Jackknifing Zone.
+Optional: Variable name or column number of variable indicating Jackknifing Zone. If \code{NULL}, no cluster structure is assumed and
+standard errors are computed according to a random sample.
 }
   \item{JKrep}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Variable name or column number of variable indicating replicate ID.
+Optional: Variable name or column number of variable indicating replicate ID. If \code{NULL}, no cluster structure is assumed and
+standard errors are computed according to a random sample.
 }
   \item{group}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -41,9 +46,13 @@ all names concerning one variable are interpreted as its imputations. See detail
 }
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-List of one or more grouping variables. Each dependent variable will result in a separate analysis.
-If grouping variable is a multiple imputed variable, all names concerning one variable are interpreted
-as its imputations. See details for more information.
+List of one or more dependent variables, which have to be dichotomous or polytomous. (In R, variables of this kind
+are often represented as factors. However, dependent variable may also be of class numeric or character.)
+Each dependent variable will result in a separate analysis.
+If dependent variable is a multiple imputed variable, all names concerning one variable are interpreted
+as its imputations. If dependent variable is a nested imputed variable, the nesting structure has to be specified
+in an appropriate listing structure. This structure has to be in agreement with the grouping variable if necessary. If nested imputed
+variables are included in the analysis, \code{complete.permutation} is strongly recommended to set to \code{FALSE}.
 }
   \item{separate.missing.indikator}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -102,13 +111,24 @@ Sebastian Weirich
 }
 \examples{
 data(reading_writing)
-### Computes frequencies of the hisei group conditionally on the groups of passed
-### and failed with respect to reading score
+### First example: Computes frequencies of the hisei group conditionally on the
+### groups of passed and failed with respect to reading score
 freq.tab  <- jk2.table(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD",
              JKZone = "JKZone", JKrep = "JKrep",
              group = list(country = "country",
                           passed.reading = paste("passed_reading",1:3,sep="" )),
              dependent = list(hisei = paste("zehisei", 1:5, sep = "") ) ,
+             complete.permutation = "no" )
+
+### Second example: Computes frequencies of the hisei group conditionally on the
+### groups of passed and failed with respect to reading score. Assuming no cluster
+### but a nested imputation structure. 'complete.permutation' is recommended to set
+### to 'nothing'.
+freq.tab  <- jk2.table(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD",
+             group = list(country = "country",
+                          passed.reading = paste("passed_reading",1:2,sep="" )),
+             dependent = list(hisei = list(nest1 = paste("zehisei", 1:2, sep = "") ,
+                                           nest2 = paste("zehisei", 3:4, sep = "") )),
              complete.permutation = "no" )
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

@@ -8,8 +8,8 @@ replication methods and methods for multiple imputed data. Technically, this is 
 the \code{svyquantile()} function of the survey package.
 }
 \usage{
-jk2.quantile(dat, ID, wgt = NULL, JKZone, JKrep,  group = list(), dependent = list(),
-            probs = seq(0, 1, 0.25),
+jk2.quantile(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, group = list(),
+            dependent = list(), probs = seq(0, 1, 0.25),
             complete.permutation = c("nothing", "groups", "all")) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -28,11 +28,13 @@ all cases will be equally weighted.
 }
   \item{JKZone}{
 %%     ~~Describe \code{abs.dif.bound} here~~
-Variable name or column number of variable indicating Jackknifing Zone.
+Variable name or column number of variable indicating Jackknifing Zone. If \code{NULL}, no cluster structure is assumed and
+standard errors are computed according to a random sample.
 }
   \item{JKrep}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Variable name or column number of variable indicating replicate ID.
+Variable name or column number of variable indicating replicate ID. If \code{NULL}, no cluster structure is assumed and
+standard errors are computed according to a random sample.
 }
   \item{group}{
 %%     ~~Describe \code{sig.dif.bound} here~~

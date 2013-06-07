@@ -7,9 +7,10 @@ for complex cluster designs with multiple imputed variables (e.g. plausible valu
 procedure. Conceptually, the function combines replication methods and methods for multiple imputed data. Nested imputations of the dependent variable(s) are supported as well.
 Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} functions of the \code{'survey'} package.}
 \usage{
-jk2.mean(dat, ID, wgt = NULL, JKZone, JKrep,  group = list(),
+jk2.mean(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, group = list(),
          group.differences.by = NULL, dependent = list(), na.rm = FALSE,
-         complete.permutation = c("nothing", "groups", "all"), forcePooling = TRUE)}
+         complete.permutation = c("nothing", "groups", "all"), forcePooling = TRUE,
+         boundary = 3)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -27,11 +28,13 @@ all cases will be equally weighted.
 }
   \item{JKZone}{
 %%     ~~Describe \code{abs.dif.bound} here~~
-Variable name or column number of variable indicating Jackknifing Zone.
+Optional: Variable name or column number of variable indicating Jackknifing Zone. If \code{NULL}, no cluster structure is assumed and
+standard errors are computed according to a random sample.
 }
   \item{JKrep}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Variable name or column number of variable indicating replicate ID.
+Optional: Variable name or column number of variable indicating replicate ID. If \code{NULL}, no cluster structure is assumed and
+standard errors are computed according to a random sample.
 }
   \item{group}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -54,12 +57,16 @@ If dependent variable is a multiple imputed variable, all names concerning one v
 as its imputations. If dependent variable is a nested imputed variable, the nesting structure has to be specified
 in an appropriate listing structure. This structure has to be in agreement with the grouping variable if necessary. If nested imputed
 variables are included in the analysis, \code{complete.permutation} is strongly recommended to set to \code{FALSE}. To give a short example:
-If you are interested in one single dependent variable which may be labeled as \code{"reading_competence_plausible_value"} in the data file,
-type \code{dependent = list(reading = "reading_competence_plausible_value"}. If you are interested in one multiple imputed dependent variable
-labeled as \code{"reading_PV1"}, \code{"reading_PV2"}, \code{"reading_PV3"} and so on, type \code{dependent = list(reading = c("reading_PV1", "reading_PV2", "reading_PV3"))}.
-If you are interested in one multiple imputed dependent variable with a nesting structure, where you have \code{n = 2} nests and \code{m = 3} imputations in each nest, your
+If you are interested in one single dependent variable
+which may be labeled as \code{"reading_competence_plausible_value"} in the data file,
+type \code{dependent = list(reading = "reading_competence_plausible_value")}. This statement does not imply any imputation structure, therefore standard errors will not be pooled after
+the analysis. If your dependent variable is a multiple imputed one whereas the imputations are labeled as \code{"r_PV1"}, \code{"r_PV2"}, \code{"r_PV3"} and so on,
+type \code{dependent = list(reading = c("r_PV1", "r_PV2", "r_PV3"))}. This is to define three imputations
+belonging to one common scale which you can label arbitrarily. The results afterwards will be pooled according to Rubin (1987). If you are interested in one multiple imputed
+dependent variable with a nesting structure, where you have \emph{N} = 2 nests and \emph{M} = 3 imputations in each nest, your
 corresponding variables may be labeled as \code{"PV1_1"}, \code{"PV1_2"}, \code{"PV1_3"}, \code{"PV2_1"}, \code{"PV2_2"}, \code{"PV2_3"}. In that case the nesting structure has to
-be reproduced in an appropriate list structur. Therefore type \code{dependent = list(reading = list(nest1 = c("PV1_1","PV1_2","PV1_3"), nest2 = c("PV2_1","PV2_2","PV2_3"))) }.
+be reproduced in an appropriate list structur. Therefore type \code{dependent = list(reading = list(nest1 = c("PV1_1","PV1_2","PV1_3"), nest2 = c("PV2_1","PV2_2","PV2_3"))) }. This
+is to define which variables belong to which nest, whereas all variables belong to one common scale. The results afterwards will be pooled according to Rubin (2003).
 See details and examples for more information.
 }
   \item{na.rm}{
@@ -79,8 +86,13 @@ should be set to \code{FALSE}. See examples for further details.
   \item{forcePooling}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Logical: If variables in groups or subgroups does not have a positive variance, standard errors cannot be computed or pooled.
-Function will abort with an error message consequently. However, \code{forcePooling = TRUE} force the algorithm to continue.
-Invalid variance estimators and standard errors will set to zero to allow pooling. A warning is printed to console.
+Function will abort with an error message consequently. However, \code{forcePooling = TRUE} forces the algorithm to continue until the
+number of missing values does not exceed the criteria defined in \code{boundary}.
+Invalid variance estimators and standard errors will set to zero to allow pooling. A warning is printed to console. However, it is strongly
+advised not to trust in starndard errors then.
+}
+  \item{boundary}{
+Numerical: Defines the maximum number of missing values in standard errors to continue pooling when \code{forcePooling == TRUE}.
 }
 }
 \details{
@@ -124,10 +136,10 @@ means  <- jk2.mean(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone
                            writing = paste("writing_score",1:3,sep="") ),
           complete.permutation = "all" )
 
-### Second example: Sex differences by country
-means  <- jk2.mean(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
-          JKrep = "JKrep", group = list(country = "country", GENDER = "sex"),
-          group.differences.by = "GENDER",
+### Second example: Sex differences by country. Assume equally weighted cases by omitting
+### 'wgt' argument.
+means  <- jk2.mean(dat = reading_writing, ID = "idstud", JKZone = "JKZone",JKrep = "JKrep",
+          group = list(country = "country", GENDER = "sex"), group.differences.by = "GENDER",
           dependent = list(reading = paste("reading_score",1:3,sep=""),
                            writing = paste("writing_score",1:3,sep="") ),
           complete.permutation = "all" )
@@ -144,6 +156,13 @@ means  <- jk2.mean(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone
           dependent = list(ability = list(nest1 = paste("reading_score",1:3,sep=""),
                                           nest2 = paste("writing_score",1:3,sep="") )),
           complete.permutation = "no" )
+
+### Fourth example: Assume a completely random sample (e.g. no cluster structure and no weights)
+means  <- jk2.mean(dat = reading_writing, ID = "idstud",
+          group = list(country = "country", GENDER = "sex"),
+          dependent = list(reading = paste("reading_score",1:3,sep=""),
+                           writing = paste("writing_score",1:3,sep="") ),
+          complete.permutation = "all" )
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
