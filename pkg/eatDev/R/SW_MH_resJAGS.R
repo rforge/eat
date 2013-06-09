@@ -85,38 +85,43 @@ resJAGS <- function ( JAGS.object , burnin = 1000 , retList = TRUE ) {
    return(prms)
 }
 
-
-
-### 03.04.2013 Plots erstmal nicht prioritär ###
-plotJAGS <- function ( JAGS.object , burnin = 1000 ) {
-browser()	
+plotJAGS <- function ( JAGS.object , burnin = 1000 , folder = NULL) {
 
 		prepped <- .prepJAGS ( JAGS.object , burnin )
 		obj <- prepped$obj
 		burnin.l <- prepped$burnin.l
+		# Parameter-spezifisches Burnin erstmal nicht implementiert
 		
-		plot ( a[1,] )
+		looppars <- function ( obj , burnin ) {
 		
-		burnin <- 1000
+				make.plots <- function ( obj , burnin ) {
+						a2 <- data.frame ( "Iteration" = seq ( along = obj ) , "Estimate" = obj )
+						pl <- ggplot ( dat = a2 , aes(x=Iteration, y=Estimate) ) +
+						geom_point( shape=16, size=4.25 ) +
+						geom_point( shape=16, size=1, color="red" ) +
+						geom_smooth ( method="loess" , se=FALSE , size = 1.5 , color="red" ) +
+						## Achtung, hier wird noch globales burnin genommen, statt burnin.l !!!
+						geom_smooth ( dat = a2[a2$Iteration>burnin,] , method="lm" , se=TRUE , size = 1 , color="yellow" )
+						return ( pl )
+				}
+				pl <- apply ( obj , 1 , make.plots , burnin )
+				
+				return ( pl )
+		}
+		pl <- sapply ( obj , looppars , burnin , simplify = FALSE )
 		
-		a2 <- data.frame ( "Iteration" = seq ( along = a[1,] ) , "Estimate" = a[1,] )
-			
-		ggplot ( dat = a2 , aes(x=Iteration, y=Estimate) ) +
-		geom_point( shape=16, size=4.25 ) +
-		geom_point( shape=16, size=1, color="red" ) +
-		geom_smooth ( method="loess" , se=FALSE , size = 1.5 , color="red" ) +
-		geom_smooth ( dat = a2[a2$Iteration>burnin,] , method="lm" , se=TRUE , size = 1 , color="yellow" )
+		# printen
+		if ( ! is.null ( folder ) ) {
+				for ( i in seq ( along = pl ) ) {
+						fl <- file.path ( folder , paste0 ( names ( pl )[i] , ".pdf" ) ) 
+						pdf ( fl , paper = "a4r" , width = 11.6 , height = 8.2 )
+						for ( j in seq ( along = pl[[i]] ) ) {
+								print ( pl[[i]][[j]] )
+						}
+						invisible ( dev.off ( ) )
+				}
+		}
 		
-		
-		ggplot(dat, aes(x=xvar, y=yvar, color=cond)) + geom_point(shape=1)
-
-sapply ( e2 , make.plots )		
-		
+		return ( pl )
 }
 
-
-
-
-
-		   
-		   
