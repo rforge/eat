@@ -30,7 +30,7 @@
   if the variables of interest stem from a multiple imputation process and occur, for example, as plausible values.
   This tutorial describes some basic analyses to compute descriptives in complex survey designs using the R package \code{eatRep}, which was
   designed mainly to supply replications methods in R. To date, only the Jackknife-2 (JK2) method is supported. Some functions overlap with 
-  methods provided in the computer software WesVar \citep{Westat2000} -- in this case the package only allows for executing 
+  methods provided in the computer software WesVar \citep{Westat2000}---in this case the package only allows for executing
   these analyses in R, which may be easier to implement due
   to a syntax related interface. Some methods in WesVar are not implemented in \code{eatRep} yet, for example methods of balanced repeated
   replicates (BRR) or bootstrapping or even JK1. However, some methods are only implemented in \code{eatRep}, for example analyses for nested
@@ -147,7 +147,7 @@ in which replicate of the original data. We may think of \code{"reading\_score1"
 plausible values for the reading competence. The data set does not contain any replicates, only the information required for generating
 them. 
 
-\subsection{Populations means, standard deviations and variances}
+\subsection{Populations means, standard deviations, variances and mean differences}
 \label{subsec:means}
 
 We now want to compute the means by each country, considering the clustered structure as well as the multiple imputed data structure. The replicates
@@ -167,12 +167,12 @@ would refer to two imputations of the group variable.\\
 
 While the function is operating, some additional information is displayed on console. First we see that 81 replicate weights are created
 due to 81 distinct jackknifing zones in the JKZone variable. In fact, this means that the subsequent analysis have to be repeated 81 times,
-each with a slightly modified weighting variable -- remember that one jackknifing zone with two cluster units (e.g. schools) is choosen,
+each with a slightly modified weighting variable---remember that one jackknifing zone with two cluster units (e.g. schools) is choosen,
 the weights of one unit are set to zero, the weights of the other unit are doubled, whereas the weights of all other cluster units in all
 other jackknifing zones remain unchainged. Each analysis revealed slighty different results. This variation is used
 to estimate the sampling variance. But why it is talking about 3 replications overall? This is because we have defined three
 imputations (e.g. three plausible values) of the dependent variable. In fact, for each of the three imputations, 81 analyses are
-executed, which results in $3\times 81=243$ analyses overall. The little dots continuously appearing on console are intended to work as
+executed, which results in $3\times 81=243$ analyses overall. The little dots continuously appearing on the console are intended to work as
 a rough progress bar. Each dot represents one replication. When the procedure finished, the results are pooled.\\
 
 <<readingMeansByCountryResultsdef>>=
@@ -200,6 +200,29 @@ means <- jk2.mean(dat = reading_writing, ID = "idstud",
       JKrep = "JKrep", group = list(federalState = "country"), 
 	  dependent = list(reading = c("reading_score1", "reading_score2", "reading_score3")))
 means	  
+@
+
+A possibly interesting feature is to compute mean differences. The group for which mean differences should be computed has to be specified
+in the \code{group.differences.by} argument. To date, only groups with exact two levels (for example gender with its two levels males and
+females) are allowed. It is important that the group defined in \code{group.differences.by} also has to occur in the \code{group} statement.
+To estimate gender differences \emph{within each federal state}, gender and federal state has to be part of the \code{group} statement,
+whereas only gender has to be used in the \code{group.differences.by} argument:\\
+
+<<readingMeansByCountry4def>>=
+means <- jk2.mean(dat = reading_writing, ID = "idstud",
+      JKrep = "JKrep", group = list(federalState = "country", gender = "sex"),
+      group.differences.by = "gender",
+	  dependent = list(reading = c("reading_score1", "reading_score2", "reading_score3")))
+@
+
+Please note that you have to use the name of the group variable, not the group variable itself: \code{group.differences.by = "gender"}
+instead of \code{group.differences.by = "sex"}! To estimate gender differences \emph{across each federal state}, only gender has to
+be part of the \code{group} statement, and only gender has to be used in the \code{group.differences.by} argument. The output of the
+analysis is exactly the same as we would have omitted the \code{group.differences.by} argument. The results of this additional analysis are
+captured in the attributes of the results. (This solution if far from elegant and may be improved another time.)\\
+
+<<readingMeansByCountry5def>>=
+attr(means[[1]], "difference")
 @
 
 \subsection{Frequency tables}
@@ -292,7 +315,7 @@ See the examples in the help file of \code{jk2.quantile()}.\\
 
 Considering multiple imputations and clustered structure in the estimation of generalized linear models is based on the same 
 principes mentioned before. However, some additional comments due to specific characteristics of regression models have to be 
-made. First we now have another type of variable -- independent variables, which may occur as multiple imputed variables, too. 
+made. First we now have another type of variable---independent variables, which may occur as multiple imputed variables, too.
 Second, we (optionally) have to specify the regression expression, what about we may are confused, as one variable occurs 
 in different labels in multiple imputed data sets. Third, we will have to specify the kind of regression we propose to estimate, 
 for example linear or logistic regression. We start with a simple example using the same data as before.\\
@@ -304,20 +327,25 @@ mod1  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone =
                           writing = paste("writing_score", 1:3, sep = "")),
          independent = list(gender = "sex", INCOME = c("income1", "income2")),
          complete.permutation = "no", glm.family = gaussian(link="identity") )
-mod1
+mod1[1]
 @
 
-As we might have expected, the outcome is a list of two data frames, according to the two dependent variables. However, please note that
+As we might have expected, the outcome is a list of two data frames, according to the two dependent variables. Owing to space constraints,
+only the first data frame of the result list is printed above. Please note that
 each data frame contains results of more than one analysis! As we specified one group variable dividing the data into three distinct
 groups, for which we instruct \code{jk2.glm()} to fit the regression model separately, we find results of the three models in each
-data frame. more specifically, for each country, an intercept and two regression coefficients according to \code{gender} and
-\code{INCOME} are estimated. If we would have used \code{gender} as a group variable instead of a predictor variable, the two
+data frame. More specifically, for each country, an intercept and two regression coefficients according to \code{gender} and
+\code{INCOME} are estimated. If we would have used \code{gender} as an additional group variable instead of a predictor variable, the two
 group variables would have divided the data into $3\times 2=6$ distinct groups (male vs. female in each of the three countries),
 which would have result in six regression models for each of the two dependent variables.\\
 
 Remember what was said about factors in the chapter about frequency tables: The gender variable now
 has to be defined explicitly to be of class factor! Otherwise, albeit gender variable may be coded as 0/1, it would be treated to be a
-continuous numeric variable. What we see additionally is that R implicitly defined the female group to be the reference -- the 
+continuous numeric variable. With only two levels---male and female---this may have no effect on the results, but consider a factor
+variable with three levels, which may be coded 0, 1 and 2. We are interested in two coefficients which correspond
+to the effect of level 1 vs. level 0 and the effect of level 2 vs. level 0. If we miss to define the variable to be of class factor,
+only one coefficient is computed, and the variable is assumed to be continuous.
+What we see additionally is that R implicitly defined the female group to be the reference---the
 regression parameter was labelled \code{gendermale}.\\ 
 
 Now we try something different. First we define gender to be our dependent variable. Secondly, we use country as a predictor. 
@@ -346,10 +374,10 @@ address three little questions one might ask oneself.
 \subsection{How to change reference group at costumer's option}
 \label{subsec:faq1}
 
-As we saw in the preceding section, R choosed the refenrence group of factor variables by itself. Persuading R to meet our needs
+As we saw in the preceding section, R choosed the reference group of factor variables by itself. Persuading R to meet our needs
 is easier said than done. The essentially easiest way is a rather dummy method: recode the variable so that your favourite
 reference group occurs at first when ordered alphabetically. We will demonstrate this procedure about the gender variable in our
-fictitious data set. Remember the first example in section 3 -- R choosed the females to be the reference. Why? Simply because
+fictitious data set. Remember the first example in section 3---R choosed the females to be the reference. Why? Simply because
 female comes before male in the alphabet. Let's use the \code{recode()} function from the \code{car} package to define a new
 variable \code{sexRecoded}:\\
 
@@ -394,7 +422,7 @@ mod1  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone =
          complete.permutation = "no", glm.family = gaussian(link="identity") )
 @
 
-Please not that the regression statement -- if specified -- must contain all variables defined in the \code{independent} argument. 
+Please not that the regression statement---if specified---must contain all variables defined in the \code{independent} argument.
 Note further that the names of the variables occurring in the \code{independent} argument are used instead of single imputation 
 variable names. Don't try your luck with \code{reg.statement = "sexRecoded * income1"}! This logic implies that the list of
 variables in the \code{independent} argument has to be named. Consequently, \code{independent = list("sexRecoded", c("income1", "income2"))}
