@@ -4,11 +4,10 @@ Title: eatRep
 Version: 0.3.9
 Depends: R (>= 2.14.0), eatData, survey, reshape2, parallel, stringr, Hmisc
 Imports: fmsb, plyr
-Date: 2013-05-17
+Date: 2013-06-25
 Author: Sebastian Weirich, Martin Hecht
 Maintainer: Sebastian Weirich <sebastian.weirich@iqb.hu-berlin.de>
 Description: Compute descriptives for complex survey designs with multiple imputed data and multicore processing
 License: GPL (>= 2)
 LazyLoad: yes
 LazyData: yes
-OS_type: windows

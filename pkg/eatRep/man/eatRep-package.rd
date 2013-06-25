@@ -38,7 +38,7 @@
 Package: \tab eatRep\cr
 Type: \tab Package\cr
 Version: \tab 0.3.9\cr
-Date: \tab 2013-05-17\cr
+Date: \tab 2013-06-25\cr
 License: \tab GPL(>=2)
 }
 }
@@ -48,7 +48,7 @@ License: \tab GPL(>=2)
 \references{
   Foy, P., Galia , J. & Li, I. (2008). Scaling the data from the TIMSS 2007 mathematics
   and science asssessment. In J. F. Olson, M. O. Martin & I. V. S. Mullis (ed.),
-  \emph{TIMSS 2007 Technical Report} (S. 225–280). Chestnut Hill, MA: TIMSS & PIRLS
+  \emph{TIMSS 2007 Technical Report} (S. 225--280). Chestnut Hill, MA: TIMSS & PIRLS
   International Study Center, Lynch School of Education, Boston College.
 
   Lumley, T. (2004). Analysis of complex survey samples. \emph{Journal of Statistical Software} \bold{9(1)}: 1--19
