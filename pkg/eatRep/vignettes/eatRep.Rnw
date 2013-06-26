@@ -44,6 +44,8 @@
 \end{abstract}
 
 <<preliminaries,echo=FALSE,print=FALSE>>=
+library(fmsb)
+library(eatData)
 library(eatRep)
 @
 
