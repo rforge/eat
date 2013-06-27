@@ -49,10 +49,21 @@ resJAGS <- function ( JAGS.object , burnin = 1000 , retList = TRUE ) {
 								 # MH 27.06.2013, standard error des Mittelwerts
 								 chainlength <- length ( chain )
 								 if ( chainlength < 2 ) chainlength <- NA
-								 if ( !is.na ( chainlength ) ) EAP.se <- EAP / sqrt ( chainlength ) else EAP.se <- NA
+								 if ( !is.na ( chainlength ) ) {
+										EAP.sd <- sd ( chain )
+										EAP.se <- EAP.sd / sqrt ( chainlength )
+								 } else {
+										EAP.sd <- NA
+										EAP.se <- NA
+								}
 								 
 								 # MH 27.06.2013, effektives N
-								 neff <- ceiling ( fneff ( chain ) )
+								 tried <- try ( neff <- fneff ( chain ) , silent = TRUE )
+								 if ( inherits ( tried , "try-error" ) ) {
+										neff <- NA
+								 } else {
+										neff <- ceiling ( neff )
+								}
 								 
 								 sortChain <- sort( chain )                     ### Hier wird highest posterior density interval (HPD) bestimmt, auf einem 90, 95 und 99% Niveau
 								 HPD       <- lapply( c ( .90, .95, .99 ), FUN = function ( ki ) {
@@ -70,7 +81,7 @@ resJAGS <- function ( JAGS.object , burnin = 1000 , retList = TRUE ) {
 											  names(ETI) <- paste( paste(   ki*100,"%.ETI",sep=""),   c("lb", "ub", "diff"),sep="_")
 											  return(ETI)})
 								 
-								 ret       <- data.frame( MAP = MAP, EAP = EAP, EAP.se = EAP.se, neff = neff , se = se, t(unlist(HPD)), t(unlist(ETI)), stringsAsFactors = FALSE )
+								 ret       <- data.frame( MAP = MAP, EAP = EAP, EAP.sd = EAP.sd, EAP.se = EAP.se, neff = neff , se = se, t(unlist(HPD)), t(unlist(ETI)), stringsAsFactors = FALSE )
 								 ind       <- grep("^X[[:digit:]]{2}", names(ret))
 								 names(ret)[ind] <- gsub("\\.\\.", "%.", substring(names(ret)[ind],2))
 								 
@@ -96,6 +107,8 @@ resJAGS <- function ( JAGS.object , burnin = 1000 , retList = TRUE ) {
 
 plotJAGS <- function ( JAGS.object , burnin = 1000 , folder = NULL) {
 
+		require ( ggplot2 )
+		
 		prepped <- .prepJAGS ( JAGS.object , burnin )
 		obj <- prepped$obj
 		burnin.l <- prepped$burnin.l
@@ -141,8 +154,14 @@ fspec0 <- function( chain ){
 	#		is Marcov chain
 	# Value:
 	#	is SPEC0
-	fit <- spec.ar( chain , plot = FALSE )
-	val <- fit$spec[ 1 ]
+
+	tried <- try ( fit <- suppressWarnings ( spec.ar( chain , plot = FALSE ) ) , silent = TRUE )
+	if ( inherits ( tried , "try-error" ) ) {
+			val <- NA
+	} else {
+			val <- fit$spec[ 1 ]
+	}
+	
 	return( val )
 }
 
@@ -154,7 +173,13 @@ fneff <- function( chain ){
 	#		is Marcov chain
 	# Value:
 	#	is number needed
-	val <- length( chain ) * var( chain ) / fspec0( chain )
+	tried <- try ( fspec0val <- fspec0( chain ) , silent = TRUE )
+	if ( inherits ( tried , "try-error" ) ) {
+			val <- NA
+	} else {
+			val <- length( chain ) * var( chain ) / fspec0val
+	}
+	
 	return( val )
 }
 
