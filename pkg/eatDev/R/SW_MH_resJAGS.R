@@ -45,8 +45,16 @@ resJAGS <- function ( JAGS.object , burnin = 1000 , retList = TRUE ) {
 								 d         <- density( chain, from = min( chain ), to = max( chain ) )
 								 MAP       <- d$x[ which( d$y  == max( d$y ) ) ][1]### maximum a posteriori (MAP)
 								 EAP       <- mean(chain)                       ### expected a posteriori (EAP)
+								 
+								 # MH 27.06.2013, standard error des Mittelwerts
+								 chainlength <- length ( chain )
+								 if ( chainlength < 2 ) chainlength <- NA
+								 if ( !is.na ( chainlength ) ) EAP.se <- EAP / sqrt ( chainlength ) else EAP.se <- NA
+								 
+								 # MH 27.06.2013, effektives N
+								 neff <- ceiling ( fneff ( chain ) )
+								 
 								 sortChain <- sort( chain )                     ### Hier wird highest posterior density interval (HPD) bestimmt, auf einem 90, 95 und 99% Niveau
-							 
 								 HPD       <- lapply( c ( .90, .95, .99 ), FUN = function ( ki ) {
 											  index     <- floor( ki * length( sortChain ) )
 												num       <- length( sortChain ) - index
@@ -61,7 +69,8 @@ resJAGS <- function ( JAGS.object , burnin = 1000 , retList = TRUE ) {
 											  if(all(chain == chain[1]))  {ETI <- rep(NA,3)} else {ETI <-  c(ETI, diff(ETI))}
 											  names(ETI) <- paste( paste(   ki*100,"%.ETI",sep=""),   c("lb", "ub", "diff"),sep="_")
 											  return(ETI)})
-								 ret       <- data.frame( MAP = MAP, EAP = EAP, se = se, t(unlist(HPD)), t(unlist(ETI)), stringsAsFactors = FALSE )
+								 
+								 ret       <- data.frame( MAP = MAP, EAP = EAP, EAP.se = EAP.se, neff = neff , se = se, t(unlist(HPD)), t(unlist(ETI)), stringsAsFactors = FALSE )
 								 ind       <- grep("^X[[:digit:]]{2}", names(ret))
 								 names(ret)[ind] <- gsub("\\.\\.", "%.", substring(names(ret)[ind],2))
 								 
@@ -125,3 +134,28 @@ plotJAGS <- function ( JAGS.object , burnin = 1000 , folder = NULL) {
 		return ( pl )
 }
 
+fspec0 <- function( chain ){
+	# Returns spectral density at frequency zero (SPEC0)
+	# Argument:
+	#	chain
+	#		is Marcov chain
+	# Value:
+	#	is SPEC0
+	fit <- spec.ar( chain , plot = FALSE )
+	val <- fit$spec[ 1 ]
+	return( val )
+}
+
+fneff <- function( chain ){
+	# Returns number INdependent iterations needed to get same SE of mean
+	# as from the N (dependent) iterations
+	# Argument:
+	#	chain
+	#		is Marcov chain
+	# Value:
+	#	is number needed
+	val <- length( chain ) * var( chain ) / fspec0( chain )
+	return( val )
+}
+
+	
