@@ -116,7 +116,7 @@ automateConquestModel <- function ( dat, ID, regression=NULL, DIF=NULL, group.va
     if(is.null(model.statement))     {model.statement <- "item"}
     if(is.null(equivalence.table))     {equivalence.table <- "wle"}
     if(is.null(use.letters))     {use.letters <- FALSE}
-    if(is.null(pathConquest))     {pathConquest <- get.file.from.dir(dr=file.path(.Library,"eat/winexe/conquest"), ext="exe", vers="newest", crit.level="stop" )}
+    if(is.null(pathConquest))     {pathConquest <- get.file.from.dir(dr=file.path(.Library,"eatRest/winexe/conquest"), ext="exe", vers="newest", crit.level="stop" )}
     if(is.null(checkLink))     {checkLink <- FALSE }
     if(is.null(compute.fit))     {compute.fit <- TRUE}
 	  if(is.null(allowAllScoresEverywhere))   {allowAllScoresEverywhere <- FALSE}
