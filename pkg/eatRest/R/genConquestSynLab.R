@@ -479,8 +479,8 @@ fromMinToMax <- function(dat, score.matrix, qmatrix, allowAllScoresEverywhere, u
                     score.matrix$score[i] <- minMaxRawdata[i]
                     targetColumns         <- intersect ( grep("Var",colnames(score.matrix)), which(as.numeric(score.matrix[i,]) != 0 ) )
                     stopifnot(length(targetColumns) > 0 )
-                    score.matrix[i,targetColumns]  <- paste( "(", paste(as.numeric(score.matrix[i,targetColumns]) * na.omit(as.numeric(unlist(strsplit(scoring[i]," ")))), collapse = " "), ")")
-                    nonTargetColumns      <- intersect ( grep("Var",colnames(score.matrix)), which(as.numeric(score.matrix[i,]) == 0 ) )
+                    score.matrix[i,targetColumns]  <- unlist(lapply(score.matrix[i,targetColumns], FUN = function ( y ) {paste( "(", paste(as.numeric(y) * na.omit(as.numeric(unlist(strsplit(scoring[i]," ")))), collapse = " "), ")")}))
+					nonTargetColumns      <- intersect ( grep("Var",colnames(score.matrix)), which(as.numeric(score.matrix[i,]) == 0 ) )
                     if ( length ( nonTargetColumns ) > 0 )    {
                        score.matrix[i,nonTargetColumns]  <- "()"
                     }
