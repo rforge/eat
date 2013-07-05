@@ -184,11 +184,11 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 					 # "group" = rep ( rep ( "items" , 2 ) , 2 ) , 
 					 # "data.cond" = c ( rep ( 1 , 2 ) , rep ( 2 , 2 ) ) ,
 					 # stringsAsFactors = FALSE )
-# est <-  data.frame ( "variable" = rep ( c ("item1","item1","item2","item2") , 2 ),
-					 # "data.cond" = c ( rep ( 1 , 4 ) , rep ( 2 , 4 ) ) ,
-					 # "value" = rnorm ( 8 , 1 , 1 ) ,
-					 # "replicates" = rep ( c ( 1 , 2 , 1 , 2 ) ) , 
-					 # "model" = c ( rep ( "m1" , 4 ) , rep ( "m2" , 4 ) ) ,
+# est <-  data.frame ( "variable" = rep ( rep ( c ("item1","item1","item2","item2") , 2 ) , 2 ),
+					 # "data.cond" = rep ( c ( rep ( 1 , 4 ) , rep ( 2 , 4 ) ) , 2 ) ,
+					 # "value" = rnorm ( 16 , 1 , 1 ) ,
+					 # "replicates" = rep ( rep ( c ( 1 , 2 , 1 , 2 ) ) , 2 ) , 
+					 # "model" = c ( rep ( "m1" , 8 ) , rep ( "m2" , 8 ) ) ,
 					 # stringsAsFactors = FALSE )
 # bias.rmse ( true , est , id.col = "variable" , val.col = "value" , group.col = "group" , repl.col = "replicates" )
 
