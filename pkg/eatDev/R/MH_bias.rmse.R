@@ -12,7 +12,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 		spl.vars <- nams [ ! nams %in% colnames ( true ) ]
 		if ( identical ( spl.vars , character(0) ) ) spl.vars <- NULL
 		
-		# wenn keine Gruppenvariable vorhanden, dann dummy mäßig setzen auf NA
+		# wenn keine Gruppenvariable vorhanden, dann dummy maesig setzen auf NA
 		if ( is.null ( group.col ) ) {
 				true$"__group__" <- NA
 				group.col <- "__group__"
@@ -23,14 +23,14 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 				true[,group.col][ is.na ( true[,group.col] ) ] <- paste0 ( "__group__" , 1:(length(which(is.na ( true[,group.col] ))) ) )
 		}
 		
-		# Liste über groups und weiteren split-vars auf true Datensatz
+		# Liste ueber groups und weiteren split-vars auf true Datensatz
 		do <- paste0 ( "true.l <- split ( true , f = list ( " , paste ( paste0 ( "true[,'",c(group.col,colnames(true)[!colnames(true) %in% c(group.col,val.col,id.col,repl.col)]),"']" ) , collapse = " , " ) , " ) , drop = TRUE ) " ) 
 		eval ( parse ( text = do ) )
 	
 		# ueber true Datensatz schleifen
 		f1 <- function ( d , e , spl.vars , id.col , val.col , group.col , repl.col ) {
 				
-				# match Variablen in true für estimates
+				# match Variablen in true fuer estimates
 				m.vars <- colnames ( d ) [ ! colnames ( d ) %in% c ( val.col , group.col ) ]
 				
 				do1 <- paste0 ( "e2 <- e[" , paste ( paste0 ( "e$" , m.vars , " %in% d[,'" , m.vars , "']" ) , collapse = " & " ) , ",,drop=FALSE]" )
@@ -56,7 +56,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 						l2 <- split ( l , f = list ( l[,repl.col] ) , drop = TRUE )
 						
 						# l2 ist jetzt auf unterster Ebene
-						# d.h. enthält Gruppenelemente (z.B. Items) in den Datensätzen der Replikationen
+						# d.h. enthaelt Gruppenelemente (z.B. Items) in den Datensaetzen der Replikationen
 						# jetzt Formeln aus Babcock/Albano 2012 anwenden
 						
 						f3 <- function ( d , val.col , id.col , group.col) {
@@ -95,7 +95,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 								val.cols <- c ( paste0 ( val.col , ".x" ) , paste0 ( val.col , ".y" ) )
 								d2 <- d[ , val.cols ]
 								
-								# Rückgabe-Datensatz
+								# Rueckgabe-Datensatz
 								res1 <- data.frame ( "bias" = bias ( d2 ) , "MSE" = MSE ( d2 ) , "RMSE" = RMSE ( d2 ) , stringsAsFactors = FALSE )
 								
 								# alle split vars noch setzen
@@ -111,7 +111,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 						res3.l <- mapply ( f3 , l2 , MoreArgs = list ( val.col , id.col , group.col ) , SIMPLIFY = FALSE )
 						res3 <- do.call ( "rbind" , res3.l )
 
-						# Mitteln über Replicates
+						# Mitteln ueber Replicates
 						res4 <- res3[1,colnames(res3)[!colnames(res3) %in% repl.col],drop=FALSE]
 						res4$bias <- mean ( res3$bias )
 						res4$MSE <- mean ( res3$MSE )
@@ -142,7 +142,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 					 # stringsAsFactors = FALSE )
 # bias.rmse ( true , est , id.col = "variable" , val.col = "value" , group.col = "group" )	
 
-### Beispiel 2, zusätzlich 2 Replicates
+### Beispiel 2, zusaetzlich 2 Replicates
 # true <- data.frame ( "variable" = c ("item1","item2") ,
 					 # "value" = c ( 1 , 2 ) ,
 					 # "group" = rep ( "items" , 2 ) , 
@@ -153,7 +153,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 					 # stringsAsFactors = FALSE )
 # bias.rmse ( true , est , id.col = "variable" , val.col = "value" , group.col = "group" , repl.col = "replicates" )		 
 					 
-### Beispiel 3, zusätzlich 2 data conditions
+### Beispiel 3, zusaetzlich 2 data conditions
 # true <- data.frame ( "variable" = rep ( c ("item1","item2") , 2 ) ,
 					 # "value" = 1:4 ,
 					 # "group" = rep ( rep ( "items" , 2 ) , 2 ) , 
