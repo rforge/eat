@@ -83,13 +83,13 @@ get.tam.effects <- function ( tamObj , tam.seObj = NULL , tam.wleObj = NULL ) {
 						dfr7[r,'parameter'] <- 'wle'
 						dfr7[r,'value'] <- tam.wleObj[r,"theta"]
 				}
+				# WLE Rel an dfr6 (model ran)
+				dfr6[nrow(dfr6)+1,'type'] <- 'model'
+				dfr6[nrow(dfr6)+1,'parameter'] <- 'WLE.rel'
+				dfr6[nrow(dfr6)+1,'value'] <- tam.wleObj$WLE.rel[1]				
 		} else {
 				dfr7 <- NULL
 		}		
-		# WLE Rel an dfr6 (model ran)
-		dfr6[nrow(dfr6)+1,'type'] <- 'model'
-		dfr6[nrow(dfr6)+1,'parameter'] <- 'WLE.rel'
-		dfr6[nrow(dfr6)+1,'value'] <- tam.wleObj$WLE.rel[1]
 		
 		# Ergebnisdatensatz zusammenbauen
 		dfr.list <- list ( dfr1 , dfr5 , dfr2 , dfr3 , dfr4 , dfr7 , dfr6 )
