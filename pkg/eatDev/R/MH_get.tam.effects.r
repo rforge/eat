@@ -41,9 +41,7 @@ get.tam.effects <- function ( tamObj , tam.seObj = NULL , tam.wleObj = NULL ) {
 		
 		# Item Standardfehler
 		if ( ! is.null ( tam.seObj ) ) {
-				dfr5 <- data.frame ( 'Var1' = NA , 'Var2' = NA  , 'type' = NA  , 'random.group' = NA  , 'parameter' = NA  , 'value' = NA )
-				dfr5 <- dfr5[-1,,drop = FALSE]
-				for ( r in seq ( along = rownames( tam.seObj$item ) ) ) {
+				for ( r in seq ( along = rownames( tam.seObj$xsi ) ) ) {
 						dfr5[r,'Var1'] <- as.character ( tam.seObj$xsi[r,"item"] )
 						dfr5[r,'type'] <- 'fixed'
 						dfr5[r,'parameter'] <- 'se'
