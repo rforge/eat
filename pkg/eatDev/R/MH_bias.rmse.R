@@ -1,6 +1,11 @@
 
 bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.col = NULL ) {
-		
+	
+		# id.col muss (in true Datensatz) unique sein
+		if ( any ( duplicated ( true [ , id.col ] ) ) ) {
+				stop ( paste0 ( "values in id.col (" , id.col , ") in true data set are not unique" ) )
+		}
+
 		# wenn keine Replicate Spalte, dann hat alles nur ein Replicate
 		if ( is.null ( repl.col ) ) {
 				est$"__repl__" <- 1
@@ -26,10 +31,10 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 		# Liste ueber groups und weiteren split-vars auf true Datensatz
 		do <- paste0 ( "true.l <- split ( true , f = list ( " , paste ( paste0 ( "true[,'",c(group.col,colnames(true)[!colnames(true) %in% c(group.col,val.col,id.col,repl.col)]),"']" ) , collapse = " , " ) , " ) , drop = TRUE ) " ) 
 		eval ( parse ( text = do ) )
-	
+		
 		# ueber true Datensatz schleifen
 		f1 <- function ( d , e , spl.vars , id.col , val.col , group.col , repl.col ) {
-				
+
 				# match Variablen in true fuer estimates
 				m.vars <- colnames ( d ) [ ! colnames ( d ) %in% c ( val.col , group.col ) ]
 				
@@ -59,13 +64,19 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 						# d.h. enthaelt Gruppenelemente (z.B. Items) in den Datensaetzen der Replikationen
 						# jetzt Formeln aus Babcock/Albano 2012 anwenden
 						
-						f3 <- function ( d , val.col , id.col , group.col) {
-				
+						f3 <- function ( d , val.col , id.col , group.col ) {
+
 								# Check, id.col muss hier unique sein
 								# wenn nicht Warnung
 								if ( any ( duplicated ( d[,id.col] ) ) ) {
-										warning ( "values on id.col are not unique in innerst loop. check your data and function parameter settings!" )
+										cat ( paste0 ( "warning: values on id.col (" , id.col , ") are not unique in innerst loop. check your data and function parameter settings!\n" ) )
+										cat ( paste0 ( "group.col ( " , group.col , ") table: " , "\n" ) )
+										cat ( paste0 ( names ( table ( d[,group.col] ) ) , "\n" ) )
+										cat ( paste0 ( table ( d[,group.col] ) , "\n" ) )
 								}
+								
+								table ( d$d )
+								table ( d$parameter )
 								
 								### Funktionen ###
 								# Bias
@@ -74,6 +85,14 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 										q2 <- sum ( q )
 										q3 <- q2 / nrow ( d )
 										return ( q3 )
+								}	
+								# Standardabweichung ohne Bias
+								biasfree.sd <- function ( d , bias ) {
+										q <- apply ( d , 1 , function ( v , bias ) ( ( ( v[1] - v[2] ) - bias )^2 ) , bias )
+										q2 <- sum ( q )
+										q3 <- q2 / nrow ( d )
+										q4 <- sqrt ( q3 )
+										return ( q4 )
 								}	
 								# MSE
 								MSE <- function ( d ) {
@@ -96,7 +115,8 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 								d2 <- d[ , val.cols ]
 								
 								# Rueckgabe-Datensatz
-								res1 <- data.frame ( "bias" = bias ( d2 ) , "MSE" = MSE ( d2 ) , "RMSE" = RMSE ( d2 ) , stringsAsFactors = FALSE )
+								bias.val <- bias ( d2 )
+								res1 <- data.frame ( "bias" = bias.val , "biasfree.sd" = biasfree.sd ( d2 , bias.val ) ,"MSE" = MSE ( d2 ) , "RMSE" = RMSE ( d2 ) , stringsAsFactors = FALSE )
 								
 								# alle split vars noch setzen
 								nams <- colnames ( d )[ !colnames ( d ) %in% c( id.col , val.cols )]
@@ -114,6 +134,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 						# Mitteln ueber Replicates
 						res4 <- res3[1,colnames(res3)[!colnames(res3) %in% repl.col],drop=FALSE]
 						res4$bias <- mean ( res3$bias )
+						res4$biasfree.sd <- mean ( res3$biasfree.sd )
 						res4$MSE <- mean ( res3$MSE )
 						res4$RMSE <- mean ( res3$RMSE )
 						
