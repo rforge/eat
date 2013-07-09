@@ -82,9 +82,10 @@ get.tam.effects <- function ( tamObj , tam.seObj = NULL , tam.wleObj = NULL ) {
 						dfr7[r,'value'] <- tam.wleObj[r,"theta"]
 				}
 				# WLE Rel an dfr6 (model ran)
-				dfr6[nrow(dfr6)+1,'type'] <- 'model'
-				dfr6[nrow(dfr6)+1,'parameter'] <- 'WLE.rel'
-				dfr6[nrow(dfr6)+1,'value'] <- tam.wleObj$WLE.rel[1]				
+				new.line <- nrow(dfr6)+1
+				dfr6[new.line,'type'] <- 'model'
+				dfr6[new.line,'parameter'] <- 'WLE.rel'
+				dfr6[new.line,'value'] <- tam.wleObj$WLE.rel[1]				
 		} else {
 				dfr7 <- NULL
 		}		
