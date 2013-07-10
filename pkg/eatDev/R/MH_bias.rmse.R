@@ -21,6 +21,9 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 		if ( is.null ( group.col ) ) {
 				true$"__group__" <- NA
 				group.col <- "__group__"
+				rename.later <- TRUE
+		} else {
+				rename.later <- FALSE
 		}
 		
 		# NAs loswerden auf group.col
@@ -147,6 +150,11 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 		res.l <- mapply ( f1 , true.l , MoreArgs = list ( est , spl.vars , id.col , val.col , group.col , repl.col ) , SIMPLIFY = FALSE )
 		res <- do.call ( "rbind" , res.l )
 		rownames ( res ) <- seq ( along = rownames ( res ) )
+		
+		# wenn keine group.col gesetzt war, dann die künstlich erzeugt group.col nach id.col benennen
+		if ( rename.later ) {
+				colnames ( res ) [ colnames ( res ) == group.col ] <- id.col
+		}
 		
 		return ( res )
 }
