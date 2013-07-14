@@ -114,7 +114,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 								}
 								# Korrelation
 								calc.cor <- function ( d ) {
-										q <- cor (v[1] , v[2])
+										q <- q <- apply ( d , 1 , function ( v ) cor (v[1] - v[2]) )
 										return ( q )
 								}								
 								
