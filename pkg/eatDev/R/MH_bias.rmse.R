@@ -112,6 +112,11 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 										q4 <- sqrt ( q3 )
 										return ( q4 )
 								}
+								# Korrelation
+								calc.cor <- function ( d ) {
+										q <- cor (v[1] , v[2])
+										return ( q )
+								}								
 								
 								# Datensatz reduzieren auf estimate + true value
 								val.cols <- c ( paste0 ( val.col , ".x" ) , paste0 ( val.col , ".y" ) )
@@ -119,7 +124,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 								
 								# Rueckgabe-Datensatz
 								bias.val <- bias ( d2 )
-								res1 <- data.frame ( "bias" = bias.val , "biasfree.sd" = biasfree.sd ( d2 , bias.val ) ,"MSE" = MSE ( d2 ) , "RMSE" = RMSE ( d2 ) , stringsAsFactors = FALSE )
+								res1 <- data.frame ( "bias" = bias.val , "biasfree.sd" = biasfree.sd ( d2 , bias.val ) ,"MSE" = MSE ( d2 ) , "RMSE" = RMSE ( d2 ) , "cor" = calc.cor ( d2 ) , stringsAsFactors = FALSE )
 								
 								# alle split vars noch setzen
 								nams <- colnames ( d )[ !colnames ( d ) %in% c( id.col , val.cols )]
@@ -140,6 +145,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 						res4$biasfree.sd <- mean ( res3$biasfree.sd )
 						res4$MSE <- mean ( res3$MSE )
 						res4$RMSE <- mean ( res3$RMSE )
+						res4$cor <- mean ( res3$cor )
 						
 						return ( res4 )
 				}
