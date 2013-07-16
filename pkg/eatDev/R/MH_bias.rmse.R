@@ -114,8 +114,15 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 								}
 								# Korrelation
 								calc.cor <- function ( d ) {
-										q <- q <- apply ( d , 1 , function ( v ) cor (v[1] - v[2]) )
-										return ( q )
+										if ( (length( d[,1] ) > 1) & !any ( is.na( d[,1] )) & !any(is.na( d[,2] )) ) {
+												cr <- try ( cor (d[,1] , d[,2]) )
+												if ( inherits ( cr , "try-error" ) ) {
+														cr <- NA
+												}
+										} else {
+												cr <- NA
+										}
+										return ( cr )
 								}								
 								
 								# Datensatz reduzieren auf estimate + true value
