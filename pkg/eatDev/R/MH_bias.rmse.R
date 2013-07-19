@@ -1,8 +1,23 @@
 
 bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.col = NULL ) {
-	
-		# id.col muss (in true Datensatz) unique sein
-		if ( any ( duplicated ( true [ , id.col ] ) ) ) {
+		
+		# wenn group.col gesetzt, checken ob diese nur in true Datensatz
+		# und nicht auch in est Datensatz, ggf. löschen
+		if ( !is.null ( group.col ) ) {
+				if ( group.col %in% colnames ( est ) ) {
+						est <- est[,colnames(est)[!colnames(est) %in% group.col ]]
+				}
+		}
+		
+		# Spalten in true bestimmen, die "zu viel" sind
+		# das sind die zusätzlichen Split-Variablen
+		true.split <- colnames ( true ) [ !colnames ( true ) %in% c ( id.col , val.col , group.col ) ]
+		if ( identical ( true.split , character(0) ) ) {
+				true.split <- NULL
+		}
+		
+		# id.col muss (in true Datensatz) unique sein (je true.split)
+		if ( any ( duplicated ( true [ , c ( id.col , true.split ) , drop = FALSE ] ) ) ) {
 				stop ( paste0 ( "values in id.col (" , id.col , ") in true data set are not unique" ) )
 		}
 
@@ -15,6 +30,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 		# Split-Variablen im Estimates-Datensatz bestimmen
 		nams <- colnames ( est )[!colnames ( est ) %in% repl.col]
 		spl.vars <- nams [ ! nams %in% colnames ( true ) ]
+		if ( !is.null ( true.split ) ) spl.vars <- c ( spl.vars , true.split )
 		if ( identical ( spl.vars , character(0) ) ) spl.vars <- NULL
 		
 		# wenn keine Gruppenvariable vorhanden, dann dummy maesig setzen auf NA
@@ -32,18 +48,18 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 		}
 		
 		# Liste ueber groups und weiteren split-vars auf true Datensatz
-		do <- paste0 ( "true.l <- split ( true , f = list ( " , paste ( paste0 ( "true[,'",c(group.col,colnames(true)[!colnames(true) %in% c(group.col,val.col,id.col,repl.col)]),"']" ) , collapse = " , " ) , " ) , drop = TRUE ) " ) 
+		do <- paste0 ( "true.l <- split ( true , f = list ( " , paste ( paste0 ( "true[,'",c(group.col,true.split),"']" ) , collapse = " , " ) , " ) , drop = TRUE ) " )
 		eval ( parse ( text = do ) )
 		
 		# ueber true Datensatz schleifen
-		f1 <- function ( d , e , spl.vars , id.col , val.col , group.col , repl.col ) {
+		f1 <- function ( d , e , spl.vars , id.col , val.col , group.col , repl.col , true.split ) {
 
 				# match Variablen in true fuer estimates
 				m.vars <- colnames ( d ) [ ! colnames ( d ) %in% c ( val.col , group.col ) ]
 				
 				do1 <- paste0 ( "e2 <- e[" , paste ( paste0 ( "e$" , m.vars , " %in% d[,'" , m.vars , "']" ) , collapse = " & " ) , ",,drop=FALSE]" )
 				eval ( parse ( text = do1 ) )
-			
+		
 				# ranmergen true value und group.var
 				e3 <- merge ( e2 , d[,c(m.vars,val.col,group.col)] , by = m.vars )
 				
@@ -77,9 +93,6 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 										cat ( paste0 ( names ( table ( d[,group.col] ) ) , "\n" ) )
 										cat ( paste0 ( table ( d[,group.col] ) , "\n" ) )
 								}
-								
-								table ( d$d )
-								table ( d$parameter )
 								
 								### Funktionen ###
 								# Bias
@@ -160,7 +173,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 				res1 <- do.call ( "rbind" , res1.l )
 
 		}
-		res.l <- mapply ( f1 , true.l , MoreArgs = list ( est , spl.vars , id.col , val.col , group.col , repl.col ) , SIMPLIFY = FALSE )
+		res.l <- mapply ( f1 , true.l , MoreArgs = list ( est , spl.vars , id.col , val.col , group.col , repl.col , true.split ) , SIMPLIFY = FALSE )
 		res <- do.call ( "rbind" , res.l )
 		rownames ( res ) <- seq ( along = rownames ( res ) )
 		
