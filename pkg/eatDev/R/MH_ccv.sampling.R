@@ -4,7 +4,7 @@
 # optional: th [,4], auf dieser Variable wird versucht Gleichverteilung (bzgl. Anzahl gezogener Personen) herzustellen
 # col4.n: n auf das conditional upgesampled wird, wenn skalar dann für alle th gleich, oder Vektor um für jedes th zu setzen
 #         bitte nur reale th (nicht die als factor/aber 0 noch drin sind), oder am besten namen, dann ist egal
-ccv.sampling <- function ( data.long , col4.n = NULL , check = TRUE , verbose = FALSE ) {
+ccv.sampling <- function ( data.long , col4.n = NULL , col4.n.max.adj = TRUE , check = TRUE , verbose = FALSE ) {
 		
 		# umbenennen
 		d <- data.long
@@ -68,25 +68,29 @@ ccv.sampling <- function ( data.long , col4.n = NULL , check = TRUE , verbose = 
 		}
 
 		# long data noch item splitten
-		d2 <- split ( d , f = list ( d[,2] ) ) 
+		d2 <- split ( d , f = list ( d[,2] ) , drop = TRUE ) 
 		
 		if ( verbose ) {
 				msg5 <- paste0 ( "Checking variance on items, if no variance, one person is sampled to ensure variance" )
 				cat ( paste0 ( "" , msg5 , "\n" ) )
 				flush.console()
 		}
+
+		# alle values
+		vals.unique.all <- unique ( do.call ( "c" , sapply ( d2 , function ( d ) unique(d[,3]) , simplify = FALSE ) ) )
+		vals.unique.all <- sort ( vals.unique.all [ !is.na ( vals.unique.all ) ] )
 		
-		# über item Datensätze schleifen
-		loop.items <- function ( d , sel.env ) {
-		
+		# über item Item-Datensätze schleifen
+		loop.items <- function ( d , sel.env , vals.unique.all ) {
+
 				# aktuelles Item, für verbose Ausgaben
 				item.cur <- as.character ( unique(d[,2]) )
-			
+				
 				# bereits selektierte Personen
 				already.sel <- get ( "sel" , envir = sel.env )
-				
-				# Datensatz mit nur bereits selektierte Personen
-				if ( ! is.null ( already.sel ) ) {
+		
+				# Datensatz mit nur bereits selektierten Personen
+				if ( ! is.null ( already.sel ) & any ( d[,1] %in% already.sel ) ) {
 						d2 <- d[ d[,1] %in% already.sel , , drop = FALSE ]
 						vals.unique <- unique ( d2[!is.na(d2[,3]),3] )
 						vals.unique <- vals.unique [ !is.na ( vals.unique ) ]
@@ -110,8 +114,9 @@ ccv.sampling <- function ( data.long , col4.n = NULL , check = TRUE , verbose = 
 								# flush.console()
 						# }						
 				} else {
-					
+				
 						# Datensatz ohne bereits selektierte Personen (potentielle Personen)
+						# wenn noch keine Selektion dann alle
 						if ( ! is.null ( already.sel ) ) {
 								d3 <- d[ !d[,1] %in% already.sel , , drop = FALSE ]
 						} else {
@@ -120,14 +125,18 @@ ccv.sampling <- function ( data.long , col4.n = NULL , check = TRUE , verbose = 
 					
 						# potentielle Personen ermitteln
 						if ( ! cond ) {
-								
-								# wenn vals.unique NULL ist, dann egal (aus allen Personen, unabhängig vom value, ziehen)
+							
+								# wenn vals.unique NULL ist, dann sind alle Personen potentiell relevant
+								# wenn vals.unique NULL ist, dann je soll-value ( bei dichotom: 0, 1) eine Person aus allen Personen ziehen
+								# dazu mehre Sets machen (liste)
 								# wenn nicht nur andere Values samplen
-								if ( is.null ( vals.unique ) ) {
-										potential.persons <- as.character ( d3[,1] )
-								} else {
-										potential.persons <- as.character ( d3[!d3[,3] %in% vals.unique , 1 ] )
-								}								
+								vals.to.sample <- vals.unique.all[!vals.unique.all %in% vals.unique]
+								potential.persons <- sapply ( vals.to.sample , function ( x , d ) as.character ( d[d[,3] %in% x , 1 ] ) , d3 , simplify = FALSE )
+								# leere Listenelemente raus
+								potential.persons <- potential.persons [ sapply ( potential.persons , length ) > 0 ]
+								if ( identical ( potential.persons , list() ) ) {
+										potential.persons <- NULL
+								}
 								
 						} else {
 						
@@ -142,7 +151,7 @@ ccv.sampling <- function ( data.long , col4.n = NULL , check = TRUE , verbose = 
 								seed1 <- runif ( 1 , 1 , 2100000000 )
 								set.seed ( seed1 )
 								names ( seed1 ) <- item.cur
-								cond.distr.cur <- sample ( cond.distr.cur , length ( cond.distr.cur ) )
+								cond.distr.cur <- cond.distr.cur [ sample ( names ( cond.distr.cur ) , length ( cond.distr.cur ) ) ]
 								assign ( "cond.distr.seeds" , c ( get ( "cond.distr.seeds" , envir = sel.env ) , seed1 ) , envir = sel.env )
 								
 								# sortieren von klein nach groß
@@ -154,6 +163,7 @@ ccv.sampling <- function ( data.long , col4.n = NULL , check = TRUE , verbose = 
 								i.max <- length ( cond.distr.cur.sorted )
 								potential.persons <- character(0)
 								while ( !abbruch ) {
+										
 										sel.rows <- d3[,4] == names ( cond.distr.cur.sorted[i] )
 								
 										# nur bestimmtes TH selektieren
@@ -161,13 +171,21 @@ ccv.sampling <- function ( data.long , col4.n = NULL , check = TRUE , verbose = 
 										
 										# wenn vals.unique NULL ist, dann egal (aus allen Personen, unabhängig vom value, ziehen)
 										# wenn nicht nur andere Values samplen
-										if ( is.null ( vals.unique ) ) {
-												potential.persons <- as.character ( d4[,1] )
-										} else {
-												potential.persons <- as.character ( d4[!d4[,3] %in% vals.unique , 1 ] )
-										}
+										# if ( is.null ( vals.unique ) ) {
+												# potential.persons <- as.character ( d4[,1] )
+										# } else {
+												# potential.persons <- as.character ( d4[!d4[,3] %in% vals.unique , 1 ] )
+										# }
 										
-										if ( ! identical ( potential.persons , character(0) ) ) {
+										vals.to.sample <- vals.unique.all[!vals.unique.all %in% vals.unique]
+										potential.persons <- sapply ( vals.to.sample , function ( x , d ) as.character ( d[d[,3] %in% x , 1 ] ) , d4 , simplify = FALSE )
+										# leere Listenelemente raus
+										potential.persons <- potential.persons [ sapply ( potential.persons , length ) > 0 ]
+										if ( identical ( potential.persons , list() ) ) {
+												potential.persons <- NULL
+										}
+
+										if ( length ( potential.persons ) > 0 ) {
 												abbruch <- TRUE
 										} else if ( i == i.max ) {
 												abbruch <- TRUE
@@ -179,25 +197,25 @@ ccv.sampling <- function ( data.long , col4.n = NULL , check = TRUE , verbose = 
 								# Verteilung updaten
 								if ( length ( potential.persons ) > 0 ) {
 										cond.distr.cur.new <- cond.distr.cur.all
-										cond.distr.cur.new[names(cond.distr.cur.sorted[i])] <- cond.distr.cur.new[names(cond.distr.cur.sorted[i])] + 1
+										cond.distr.cur.new[names(cond.distr.cur.sorted[i])] <- cond.distr.cur.new[names(cond.distr.cur.sorted[i])] + length ( potential.persons )
 										assign( "cond.distr" , cond.distr.cur.new , envir = sel.env )
 								}
 						}
 						
 						if ( length ( potential.persons ) > 0 ) {
-								
-								# neue Person
+							
+								# eine neue (bzw. mehrere) Personen ziehen
 								seed2 <- runif ( 1 , 1 , 2100000000 )
 								set.seed ( seed2 )
 								names ( seed2 ) <- item.cur
-								new.person <- sample ( potential.persons , 1 )
+								new.person <- sapply ( potential.persons , sample , 1 )
 								assign ( "sel.seeds" , c ( get ( "sel.seeds" , envir = sel.env ) , seed2 ) , envir = sel.env )
 								
 								# neue Person in Variable sel in sel.env hinzufügen
-								assign( "sel" , c ( already.sel , new.person ) , envir = sel.env )								
+								assign ( "sel" , c ( already.sel , new.person ) , envir = sel.env )								
 						
 								# Ausgabe
-								msg3 <- paste0 ( "   " , item.cur , ": new person selected to ensure variance: " , new.person )
+								msg3 <- paste0 ( "   " , item.cur , ": new person(s) selected to ensure variance: " , paste ( new.person , collapse = ", " ) )
 								if ( verbose ) {
 										cat ( paste0 ( "" , msg3 , "\n" ) )
 										flush.console()
@@ -215,34 +233,37 @@ ccv.sampling <- function ( data.long , col4.n = NULL , check = TRUE , verbose = 
 				}
 				return ( TRUE )
 		}
-		temp <- mapply ( loop.items , d2 , MoreArgs = list ( sel.env ) , SIMPLIFY = FALSE )
-		
+		temp <- mapply ( loop.items , d2 , MoreArgs = list ( sel.env , vals.unique.all ) , SIMPLIFY = FALSE )
+
 		# Datensatz reduzieren
-		persons.selected1 <- get ( "sel" , envir = sel.env )
-		if ( !is.null ( persons.selected1 ) ) {
-				d3 <- d[ d[,1] %in% persons.selected1 , , drop=FALSE ]
+		# persons.selected1 <- get ( "sel" , envir = sel.env )
+		# if ( !is.null ( persons.selected1 ) ) {
+				# d3 <- d[ d[,1] %in% persons.selected1 , , drop=FALSE ]
 				# Ausgabe Anzahl Personen
-				if ( verbose ) {
-						msg12 <- paste0 ( "Number of persons sampled to ensure variance on all items: " , length ( persons.selected1 ) )
-						cat ( paste0 ( "" , msg12 , "\n" ) )
-						flush.console()
-				}	
-		} else {
-				d3 <- NULL
-		}
+				# if ( verbose ) {
+						# msg12 <- paste0 ( "Number of persons sampled to ensure variance on all items: " , length ( persons.selected1 ) )
+						# cat ( paste0 ( "" , msg12 , "\n" ) )
+						# flush.console()
+				# }	
+		# } else {
+				# d3 <- NULL
+		# }
 		
 		# ggf. upsampling col4.n.vec wenn gewünscht
 		if ( ! is.null ( col4.n ) ) {
-
+				
 				# Ausgabe
 				# if ( verbose ) {
 						# msg11 <- paste0 ( "Upsampling conditional on col4" )
 						# cat ( paste0 ( "" , msg11 , "\n" ) )
 				# }	
-		
+
+				# bereits selektierte Personen
+				already.sel <- get ( "sel" , envir = sel.env )
+				
 				# Datensatz ohne die bereits selektierten Personen (d.h. mit potentiellen Personen)
-				if ( !is.null ( persons.selected1 ) ) {
-						d4 <- d[ !d[,1] %in% persons.selected1 , , drop=FALSE ]
+				if ( !is.null ( already.sel ) ) {
+						d4 <- d[ !d[,1] %in% already.sel , , drop=FALSE ]
 				} else {
 						d4 <- d
 				}
@@ -256,11 +277,29 @@ ccv.sampling <- function ( data.long , col4.n = NULL , check = TRUE , verbose = 
 				ist <- data.frame ( "col4" = names ( col4.cur ) , "current" = col4.cur , stringsAsFactors = FALSE )
 				soll <- merge ( soll , ist , by = "col4" , sort = FALSE , all.x = TRUE , all.y = FALSE )
 				soll$sample.size <- soll$goal - soll$current
-				rownames ( soll ) <- seq ( along = rownames ( soll ) )
 				
-				# check ob alle sample.size > 0
-				soll.invalid <- soll[soll$sample.size<1,,drop=FALSE]
-				soll.valid <- soll[soll$sample.size>=1,,drop=FALSE]
+				# maximal
+				col4.tab.real <- table ( d[!duplicated(d[,c(1,4)]),4] )				
+				col4.tab.dfr <- data.frame ( "col4" = names ( col4.tab.real ) , "max" = unname ( as.numeric ( col4.tab.real ) ) , stringsAsFactors = FALSE )
+				soll <- merge ( soll , col4.tab.dfr , by = "col4" , sort = FALSE , all.x = TRUE , all.y = FALSE )
+				rownames ( soll ) <- seq ( along = rownames ( soll ) )
+			
+				# sample.size auf maximale sample.size adjustieren
+				if ( col4.n.max.adj ) {
+						toadj <- soll$sample.size > soll$max
+						if ( any ( toadj ) ) {
+								soll$sample.size[ toadj ] <- soll$max[ toadj ]
+								if ( verbose ) {
+										msg15 <- paste0 ( "The desired sample size for some elements was too high. That's why it was adjusted to the maximal possible sample size" )
+										cat ( paste0 ( "" , msg15 , "\n" ) )
+										print ( soll[ toadj, ] )
+								}
+						}
+				}
+				
+				# check ob alle sample.size > 0 und < myx
+				soll.invalid <- soll[soll$sample.size<1 | soll$sample.size>soll$max,,drop=FALSE]
+				soll.valid <- soll[soll$sample.size>=1 & soll$sample.size<=soll$max,,drop=FALSE]
 				
 				# Ausgabe
 				if ( nrow ( soll.invalid ) > 0 ) {
@@ -292,49 +331,55 @@ ccv.sampling <- function ( data.long , col4.n = NULL , check = TRUE , verbose = 
 				} else {
 						persons.selected2 <- NULL
 				}
-
-				# check
-				if ( ! is.null ( persons.selected2 ) ) {
-						if ( !identical ( intersect ( persons.selected1 , persons.selected2 ) , character(0) ) ) {
-								stop ( "internal error: some upsampled persons are already selected." )
-						}
-				}
-						
-				# finaler Datensatz
-				persons.selected <- c ( persons.selected1 , persons.selected2 )
-				if ( !is.null ( persons.selected ) ) {
-		
-						d6 <- d[ d[,1] %in% persons.selected , , drop=FALSE ]
-						# Ausgabe Anzahl Personen
-						if ( verbose ) {
-								msg13 <- paste0 ( "Number of persons upsampled: " , length ( persons.selected2 ) )
-								cat ( paste0 ( "" , msg13 , "\n" ) )
-								flush.console()
-						}	
-				} else {
-						d6 <- NULL
-				}				
-				
 		} else {
-				d6 <- d3
-				persons.selected <- persons.selected1
+				persons.selected2 <- NULL
 		}
-		
+
 		# Ausgabe Anzahl Personen
+		persons.selected1 <- get ( "sel" , envir = sel.env )		
 		if ( verbose ) {
-				msg8 <- paste0 ( "Final number of persons: " , length ( persons.selected ) )
-				cat ( paste0 ( "" , msg8 , "\n" ) )
+				msg12 <- paste0 ( "Number of persons sampled to ensure variance on all items: " , length ( persons.selected1 ) )
+				cat ( paste0 ( "" , msg12 , "\n" ) )
 				flush.console()
-		}	
-		
+		}
+
+		# Ausgabe Anzahl Personen
+		if ( !is.null ( persons.selected2 ) ) {
+				if ( verbose ) {
+						msg13 <- paste0 ( "Number of persons upsampled: " , length ( persons.selected2 ) )
+						cat ( paste0 ( "" , msg13 , "\n" ) )
+						flush.console()
+				}	
+		}
+
+		# alle Personen
+		persons.selected <- c ( persons.selected1 , persons.selected2 )	
+		# check
+		if ( ! is.null ( persons.selected1 ) & ! is.null ( persons.selected2 ) ) {
+				if ( !identical ( intersect ( persons.selected1 , persons.selected2 ) , character(0) ) ) {
+						stop ( "internal error: some upsampled persons are already selected." )
+				}
+		}
+		if ( !is.null ( persons.selected ) ) {
+				if ( verbose ) {
+						msg8 <- paste0 ( "Final number of persons: " , length ( persons.selected ) )
+						cat ( paste0 ( "" , msg8 , "\n" ) )
+						flush.console()
+				}	
+		}
+
+		# finaler Datensatz		
+		d6 <- d[ d[,1] %in% persons.selected , , drop=FALSE ]
+
 		# Check Item-Varianz
 		if ( check ) {
-				d7 <- split ( d3 , f = list ( d3[,2] ) ) 
-				var.ok <- all ( sapply ( d7 , function ( d ) check.var ( d[,3] ) ) )
+				d7 <- split ( d6 , f = list ( d6[,2] ) , drop = TRUE ) 
+				var.ok.items <- sapply ( d7 , function ( d ) check.var ( d[,3] ) )
+				var.ok <- all ( var.ok.items )
+
 				if ( !var.ok ) {
-						items <- unique ( as.character ( d[,2] ) )
-						items.not.var.ok <- items[!var.ok]
-						msg2 <- paste0 ( "Sampling failed (no variance) for item(s): " , paste ( items.not.var.ok , collapse = ", " ) )
+						items.not.var.ok <- names(var.ok.items[!var.ok.items])
+						msg2 <- paste0 ( "Sampling failed (no variance) for " , length ( items.not.var.ok ) , " item(s): " , paste ( items.not.var.ok , collapse = ", " ) )
 						if ( verbose ) {
 								cat ( paste0 ( "WARNING: " , msg2 , "\n" ) )
 						} else {
