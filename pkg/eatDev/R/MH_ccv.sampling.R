@@ -100,6 +100,9 @@ ccv.sampling <- function ( data.long , col4.n = NULL , col4.n.max.adj = TRUE , c
 				}
 				
 				# gibt es bereits Varianz?
+				### falls man das ausweiten würde wollen auf polytom
+				### und alle Kategorien haben will
+				### muss man hier auf nicht auf Varianz sondern, auf alle Kategorien checken!!!
 				if ( !is.null ( d2 ) ) {
 						var.ok <- check.var ( vals.unique )
 				} else {
