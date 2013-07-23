@@ -52,7 +52,7 @@ catPbc <- function(datRaw, datRec, idRaw, idRec, context.vars, values, subunits,
       context.vars <- colnames(datRaw)[context.vars]
     }
     keep.varsRaw <- setdiff(colnames(datRaw), context.vars)
-    keep.varsRec <- setdiff(colnames(datRec), context.vars)
+    keep.varsRec <- setdiff(colnames(datRec), c(context.vars, paste(context.vars, "R", sep = "")))
     
     datRaw <- datRaw[ , match(keep.varsRaw, colnames(datRaw))]
     datRec <- datRec[ , match(keep.varsRec, colnames(datRec))]
