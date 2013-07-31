@@ -1,5 +1,6 @@
 
-### benötigte Pakete
+
+### benï¿½tigte Pakete
 # library(igraph)
 
 ### Class definition of "design" ###
@@ -36,7 +37,7 @@ setClass(
 )
 
 # defineDesign
-# wrapper für define.design
+# wrapper fï¿½r define.design
 # statt den 4 "descriptives" nur 1 descriptives (for sake of simplicity)
 defineDesign <- function ( dsgn , def = data.frame() , append = FALSE , descriptives = TRUE , verbose = FALSE ) {
 					
@@ -57,7 +58,7 @@ defineDesign <- function ( dsgn , def = data.frame() , append = FALSE , descript
 					### Aufruf von defineDesign
 					ret <- define.design ( dsgn=dsgn, def=def, append=append, genStructure=descriptives, genDescriptives=descriptives, genLink=descriptives, genVarCovMatrix=descriptives, verbose=verbose )					
 					
-					# auf altes Warn-Level zürücksetzen
+					# auf altes Warn-Level zï¿½rï¿½cksetzen
 					options ( oldwarn )
 							
 					# return
@@ -164,7 +165,7 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 					old.definition <- dsgn@definition
 					if ( !empty.def ) {
 							# aus colnames "|" entfernen (d.h. mit "." ersetzen)
-							# da "|" später sonst u.U. Komplikationen
+							# da "|" spï¿½ter sonst u.U. Komplikationen
 							# (ist auch default von data.frame( "x|y" = NA )
 							colnames ( def ) <- gsub ( "|" , "." , colnames ( def ) , fixed = TRUE )
 					
@@ -205,7 +206,7 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 											# msg4a <- "remains unchanged.\n     It's current value is"
 									} else {
 
-											# 2 Fälle:
+											# 2 Fï¿½lle:
 											# wenn die Schnittmenge der colnames leer ist, dann kann merge nicht verwendet werden
 											# ansonsten macht merge mit Optionen incomparibles=NA und all=TRUE das was man -- wahrscheinlich -- will
 											
@@ -226,7 +227,7 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 													# 5   NA        NA   bl1   bo1
 													# 6   NA        NA   bl2   bo1
 
-													# fehlende Spalten ergänzen mit NA
+													# fehlende Spalten ergï¿½nzen mit NA
 													# olddef
 													do <- paste ( paste ( "if ( is.null ( olddef$\"" , els , "\" ) ) olddef$\"" , els , "\" <- rep ( NA , nrow ( olddef ) )" , sep = "" ) , collapse = "; " )
 													eval ( parse ( text = do ) )
@@ -244,7 +245,7 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 													
 											} else {
 													# mergen mit Optionen all=TRUE und incomparibles=NA
-													# für "gleichartige" Datensätze ist das "rbind"
+													# fï¿½r "gleichartige" Datensï¿½tze ist das "rbind"
 													newdef <- merge ( olddef , adddef , by = intsec , all = TRUE , incomparables = NA , sort = FALSE )
 													
 													# Spalten sortieren
@@ -315,12 +316,12 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 					
 					
 					# Checken von @definition
-					# auf data.frame checken (c3) ist wahrscheinlich überflüssig, aber trotzdem zur Sicherheit, wer weiß
+					# auf data.frame checken (c3) ist wahrscheinlich ï¿½berflï¿½ssig, aber trotzdem zur Sicherheit, wer weiï¿½
 					# c3 <- is.data.frame ( dsgn@definition )
 					# if ( c3 ) c4 <- nrow ( dsgn@definition ) > 0 && ncol ( dsgn@definition ) > 0 else c4 <- FALSE		
 					# empty.definition <- ! ( c3 && c4 )
 					
-					# neues setzen von empty.defintion, da später gebraucht
+					# neues setzen von empty.defintion, da spï¿½ter gebraucht
 					empty.definition <- identical ( dsgn@definition , data.frame() )
 					
 				
@@ -464,9 +465,9 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 					
 					# genStructure
 					# Logik:
-					# für genStructure=FALSE && new.definition = TRUE && not.empty.structure = TRUE
+					# fï¿½r genStructure=FALSE && new.definition = TRUE && not.empty.structure = TRUE
 					# muss structure troztdem neu gesetzt werden,
-					# da sich die Definition geändert hat und dadurch die bereits gesetzte Structure u.U. falsch ist
+					# da sich die Definition geï¿½ndert hat und dadurch die bereits gesetzte Structure u.U. falsch ist
 					empty.structure <- identical ( dsgn@structure , data.frame() )
 					old.structure <- dsgn@structure
 					if ( genStructure || ( !genStructure && new.definition && ! empty.structure ) ) {
@@ -477,10 +478,10 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 									s <- data.frame ( matrix ( as.character(NA) , nrow = ( n <- length ( dsgn@elements ) ) , ncol = n ) , stringsAsFactors = FALSE )
 									colnames ( s ) <- rownames ( s ) <- dsgn@elements
 
-									# für bestimmtes Paar an Elementen die Beziehung bestimmen
+									# fï¿½r bestimmtes Paar an Elementen die Beziehung bestimmen
 									getStructure <- function ( ro , co , d ) {
 											
-											# Rückgabevariable
+											# Rï¿½ckgabevariable
 											r <- as.character()
 											
 											if ( ro == co || ( any ( ! c(ro,co) %in% colnames ( d ) ) ) ) {
@@ -545,7 +546,7 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 									ro <- lowTr$row
 									co <- lowTr$col
 									
-									# für Elemente-Kombinationen die Relation holen
+									# fï¿½r Elemente-Kombinationen die Relation holen
 									st <- mapply ( getStructure , ro , co , MoreArgs = list ( dsgn@definition ) , SIMPLIFY = TRUE , USE.NAMES = FALSE )
 									
 									# setzen der Elemente des unteren Dreiecks in Ergebnismatrix
@@ -563,7 +564,7 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 									dsgn@structure <- s
 							
 							} else {
-									# wenn nur ein Element, dann noch für verbose ne Message
+									# wenn nur ein Element, dann noch fï¿½r verbose ne Message
 									if ( length ( dsgn@elements ) == 1 ) {
 											msg12b <- "     Note: There is just 1 element. That's why no there's no structure of elements.\n"
 									}
@@ -687,7 +688,7 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 										
 				
 					# genDescriptives
-					# Logik: wie für genStructure
+					# Logik: wie fï¿½r genStructure
 					empty.descriptives <- identical ( dsgn@descriptives , data.frame() )
 					old.descriptives <- dsgn@descriptives
 					if ( genDescriptives || ( !genDescriptives && new.definition && ! empty.descriptives ) ) {
@@ -699,7 +700,7 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 													  # "update the current design with   dsgn <- updateDesign( dsgn , genStructure = TRUE )\n" ,
 													  # "where 'dsgn' is your design object.\n"
 													  # , sep = "" )
-									# statt Warnung wird jetzt einfach benötigte structure besorgt
+									# statt Warnung wird jetzt einfach benï¿½tigte structure besorgt
 									# aber nicht gesetzt (um intuitive Konsistenz zu wahren)
 									dsgn2 <- update.design ( dsgn = dsgn , genStructure = TRUE , genDescriptives = FALSE , genLink = FALSE , genVarCovMatrix = FALSE , verbose = FALSE )
 							} else {
@@ -734,7 +735,7 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 											sd <- sd ( le ) 
 											
 											# sd macht NA wenn nur ein Element
-											# (wahrscheinlich) sinnvoller für den hierigen Anwendungsfall, das auch auf 0 zu setzen
+											# (wahrscheinlich) sinnvoller fï¿½r den hierigen Anwendungsfall, das auch auf 0 zu setzen
 											# damit konsistent mit wenn meherere Elemente
 											if ( is.na ( sd ) ) sd <- 0
 											
@@ -788,8 +789,8 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 					
 				
 					# erstmal linkList
-					# parametrisiert über genLink
-					# Logik: wie für genDescriptives
+					# parametrisiert ï¿½ber genLink
+					# Logik: wie fï¿½r genDescriptives
 					empty.linkList <- identical ( dsgn@linkList , list() )
 					old.linkList <- dsgn@linkList
 					if ( genLink || ( !genLink && new.definition && ! empty.linkList ) ) {
@@ -838,8 +839,8 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 											edges <- do.call ( c , edges )
 											# NULL raus
 											edges <- edges[!sapply(edges, is.null)]
-											# hier könnten jetzt auch noch unverbundene Vertices dabei sein,
-											# diese rausholen (vs) und später zum Graph hinzufügen
+											# hier kï¿½nnten jetzt auch noch unverbundene Vertices dabei sein,
+											# diese rausholen (vs) und spï¿½ter zum Graph hinzufï¿½gen
 											vl <- sapply ( edges , length ) == 1
 											if ( any ( vl ) ) {
 													vs <- edges[vl] 
@@ -858,7 +859,7 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 													ct <- NULL
 											}
 												
-											# String bauen für graph.formula
+											# String bauen fï¿½r graph.formula
 											if ( !is.null ( ct ) ) {
 													string <- paste ( names ( ct ) , collapse = "," )
 											} else {
@@ -880,10 +881,10 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 											do <- paste ( "graph.formula ( " , string , " )" , sep = "" )
 											gr <- eval ( parse ( text = do ) )
 									
-											# edges gewichten (nach Vorkommenshäufigkeit der edge (paarweiser Link))
+											# edges gewichten (nach Vorkommenshï¿½ufigkeit der edge (paarweiser Link))
 											if ( ! is.null ( ct ) ) E(gr)$weight <- unname ( ct )
 
-											# vertices gewichten (nach Vorkommenshäufigkeit der Unit)
+											# vertices gewichten (nach Vorkommenshï¿½ufigkeit der Unit)
 											els <- unname ( do.call ( c , l ) )
 											tels <- table ( els )
 											if ( ! is.null ( V(gr)$name ) ) V(gr)$weight <- tels [ V(gr)$name ]
@@ -941,7 +942,7 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 					old.adjacency <- dsgn@adjacency
 					if ( !empty.linkList ) {						
 						
-							# über linkList adjacency Matrizen erzeugen
+							# ï¿½ber linkList adjacency Matrizen erzeugen
 							makeLinkDescr <- function ( gr ) {
 									get.adjacency( gr )
 							}
@@ -992,7 +993,7 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 					old.link <- dsgn@link
 					if ( !empty.linkList & !empty.adjacency ) {
 
-							### für Zieldatensatz
+							### fï¿½r Zieldatensatz
 							if ( ! identical ( dsgn@structure , data.frame() ) ) {
 									dsgn4 <- dsgn
 							} else if ( exists ( "dsgn3" , inherits = FALSE ) && ! identical ( dsgn3@structure , data.frame() ) ) {
@@ -1015,7 +1016,7 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 									d <- d [ , c ( "element1" , "structure" , "element2" ) ]
 									rownames ( d ) <- seq ( along = rownames ( d ) )					
 							
-									# über linkList die Descriptives erzeugen
+									# ï¿½ber linkList die Descriptives erzeugen
 									makeLinkDescr <- function ( gr ) {
 									
 											ld <- list()
@@ -1035,13 +1036,13 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 									}
 									ld <- mapply ( makeLinkDescr , dsgn@linkList , SIMPLIFY = FALSE )
 	
-									### link rate 1: Anzahl paarweise verbundener Elemente an allen möglichen paarweisen Verbindungen
+									### link rate 1: Anzahl paarweise verbundener Elemente an allen mï¿½glichen paarweisen Verbindungen
 									makeLinkRate1 <- function ( adj ) {							
 							
 											if ( ! adj@Dim[1] == 0 ) {
 													# lower Triangle ohne Diagonale besorgen
 													lt <- tril ( adj , -1 )
-													# nicht 0 durchzählen
+													# nicht 0 durchzï¿½hlen
 													co <- length ( which ( lt@x > 0 ) )
 													# alle
 													# comax <- lt@Dim[1] * ( lt@Dim[1] - 1 ) / 2
@@ -1059,12 +1060,12 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 									linkrate1 <- mapply ( makeLinkRate1 , dsgn@adjacency , SIMPLIFY = FALSE )	
 									
 									
-									### link rate 2: Anzahl an realisierten Paaren an Anzahl möglicher Paare wenn completely crossed
+									### link rate 2: Anzahl an realisierten Paaren an Anzahl mï¿½glicher Paare wenn completely crossed
 									# makeLinkRate2 <- function ( na , adj , nunits ) {							
 							
 											# lower Triangle ohne Diagonale besorgen
 											# lt <- tril ( adj , -1 )
-											# 0 durchzählen
+											# 0 durchzï¿½hlen
 											# co <- length ( which ( lt@x > 0 ) )
 											# alle
 											# comax <- length ( lt@x )
@@ -1083,21 +1084,21 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 									# }
 									# linkrate2 <- mapply ( makeLinkRate2 , names ( dsgn@adjacency ) , dsgn@adjacency , MoreArgs = list ( dsgn@nunits ) , SIMPLIFY = FALSE )
 									
-									### link rate 2: Anzahl an realisierten Paaren an Anzahl möglicher Paare wenn completely crossed
+									### link rate 2: Anzahl an realisierten Paaren an Anzahl mï¿½glicher Paare wenn completely crossed
 									makeLinkRate2 <- function ( na , ld , u ) {
 
 											spl <- strsplit ( na , "|" , fixed = TRUE )
 											el1 <- sapply ( spl , "[" , 1 )
 											el2 <- sapply ( spl , "[" , 2 )
 											
-											# mögliche Paare
+											# mï¿½gliche Paare
 											le <- length ( u[[ el1 ]] ) 
 											# co <- le * ( le - 1 ) / 2
 											co <- choose ( le , 2 )
 											# mal Anzahl units der anderen Ebene
 											co2 <- co * length ( u[[ el2 ]] )
 									
-											# realisierte paarweise Links geteilt durch maximal mögliche
+											# realisierte paarweise Links geteilt durch maximal mï¿½gliche
 											if ( ! identical ( ld$eweight , integer(0) ) ) {
 													linkrate2 <- sum ( ld$eweight ) / co2
 											} else {
@@ -1121,7 +1122,7 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 									}
 									linkdispersion <- mapply ( makeLinkDispersion , ld , SIMPLIFY = FALSE )									
 									
-									# descriptives in Datensatz auffüllen
+									# descriptives in Datensatz auffï¿½llen
 									els <- paste ( d$element1 , d$element2 , sep = "|" )
 									d$linklength <- do.call ( c , mapply ( function ( ld , w ) unname(ld[[w]]) , ld , MoreArgs = list ( "linklength" ) , SIMPLIFY = FALSE )[els] )
 									d$linkrate1 <- do.call ( c , linkrate1[els] )
@@ -1184,7 +1185,7 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 									# Definition
 									def <- dsgn@definition
 									
-									# def nach numerisch (durchzählen der Elemente von 1 an)
+									# def nach numerisch (durchzï¿½hlen der Elemente von 1 an)
 									do <- paste ( sapply ( colnames ( def ) , function ( na ) paste ( "\"" , na , "\" = match ( def$\"" , na , "\", dsgn@units$\"" , na , "\" ) " , sep = "" ) ) , collapse = " , " )
 									do <- paste ( "def2 <- data.frame ( " , do , " ) " , sep = "" )
 									def2 <- eval ( parse ( text = do ) )
@@ -1235,7 +1236,7 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 					empty.varCovMatrix <- identical ( dsgn@varCovMatrix , matrix()[FALSE,FALSE] )
 					empty.designDescriptives <- identical ( dsgn@designDescriptives , list() )
 					old.designDescriptives <- dsgn@designDescriptives
-					## wenn noch mehr dazu kommt "oder" verknüpfen
+					## wenn noch mehr dazu kommt "oder" verknï¿½pfen
 					if ( !empty.varCovMatrix ) {						
 							
 							# ggf. einzeln abfangen
@@ -1299,10 +1300,10 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 					}
 					### Ende designDescriptives										
 
-					# auf altes Warn-Level zürücksetzen
+					# auf altes Warn-Level zï¿½rï¿½cksetzen
 					options ( oldwarn )
 					
-					#### Finales Design Objekt zurückgeben ####
+					#### Finales Design Objekt zurï¿½ckgeben ####
 					return( dsgn )
 }
 
@@ -1317,7 +1318,7 @@ update.design <- function ( dsgn , genStructure = TRUE , genDescriptives = TRUE 
 # "+" 
 setMethod ( f = "+" , signature = signature ( e1="design" , e2="design" ) ,
 			definition = function ( e1 , e2 ) {
-					# wenn auf einem der beiden Objekte "descriptives" o.ä. dann auch auf dem neuen
+					# wenn auf einem der beiden Objekte "descriptives" o.ï¿½. dann auch auf dem neuen
 					# ERGAENZEN
 					genStructure <- ifelse ( any ( !identical ( e1@structure , data.frame() ) , !identical ( e2@structure , data.frame() ) ) , TRUE , FALSE )
 					genDescriptives <- ifelse ( any ( !identical ( e1@descriptives , data.frame() ) , !identical ( e2@descriptives , data.frame() ) ) , TRUE , FALSE )
@@ -1335,10 +1336,10 @@ setMethod ( f = "+" , signature = signature ( e1="design" , e2="design" ) ,
 setMethod ( f = "-" , signature = signature ( e1="design" , e2="design" ) ,
 			definition = function ( e1 , e2 ) {
 					
-					# Rückgabevariable
+					# Rï¿½ckgabevariable
 					n <- new ( "design" )
 					
-					# wenn auf einem der beiden Objekte "descriptives" o.ä. dann auch auf dem neuen
+					# wenn auf einem der beiden Objekte "descriptives" o.ï¿½. dann auch auf dem neuen
 					# ERGAENZEN
 					genStructure <- ifelse ( any ( !identical ( e1@structure , data.frame() ) , !identical ( e2@structure , data.frame() ) ) , TRUE , FALSE )
 					genDescriptives <- ifelse ( any ( !identical ( e1@descriptives , data.frame() ) , !identical ( e2@descriptives , data.frame() ) ) , TRUE , FALSE )
@@ -1357,7 +1358,7 @@ setMethod ( f = "-" , signature = signature ( e1="design" , e2="design" ) ,
 							d2 <- d2[ , colnames(d1) , drop = FALSE ]
 							d <- rbind ( d1 , d2 )
 							
-							# Duplikate sind jetzt die Elemente, die entfernt werden müssen
+							# Duplikate sind jetzt die Elemente, die entfernt werden mï¿½ssen
 							dupl <- d[ duplicated ( d ) , ]
 					
 							if ( nrow ( dupl ) == 0 ) {
@@ -1421,7 +1422,7 @@ setMethod ( f = "show" , signature = signature ( object="design" ) ,
 							
 							genString <- function ( ro , co , va , einr ) {
 									
-									# Rückgabevariable
+									# Rï¿½ckgabevariable
 									st <- as.character(NA)
 
 									if ( grepl ( "crossed" , va ) ) {
@@ -1460,7 +1461,7 @@ setMethod ( f = "show" , signature = signature ( object="design" ) ,
 					### Descriptives
 					if ( ! identical ( ( d2 <- object@descriptives ) , data.frame() ) ) {
 
-							# kein Output für "nestor", "unconnected", "equivalent", da nicht so interessant
+							# kein Output fï¿½r "nestor", "unconnected", "equivalent", da nicht so interessant
 							d2 <- d2[ ! d2$structure %in% c("nestor", "unconnected", "equivalent") , , drop = FALSE ]
 							
 							if ( nrow ( d2 ) > 0 ) {
@@ -1469,7 +1470,7 @@ setMethod ( f = "show" , signature = signature ( object="design" ) ,
 									
 									genString2 <- function ( ro , co , min , max , mean , sd , median , nlstr , einr ) {
 								
-											# Rückgabevariable
+											# Rï¿½ckgabevariable
 											st <- as.character(NA)
 										
 											st <- paste ( einr , ro , " per " , co , ":  " , nlstr , sep = "" )
@@ -1501,7 +1502,7 @@ setMethod ( f = "show" , signature = signature ( object="design" ) ,
 					### Link
 					if ( ! identical ( ( d3 <- object@link ) , data.frame() ) ) {
 
-							# kein Output für "nestor", "unconnected", "equivalent", da nicht so interessant
+							# kein Output fï¿½r "nestor", "unconnected", "equivalent", da nicht so interessant
 							d3 <- d3[ ! d3$structure %in% c("nestor", "unconnected", "equivalent") , , drop = FALSE ]
 							
 							if ( nrow ( d3 ) > 0 ) {
@@ -1549,7 +1550,7 @@ setMethod ( f = "show" , signature = signature ( object="design" ) ,
 							do <- paste ( "d4$\"" , colnames ( d4 ) , "\"<-" , "formatC(d4$\"" , colnames ( d4 ) , "\", format = \"f\", digits = 2)" , sep = "" )
 							eval ( parse ( text = do ) )
 							
-							# Rownames einrücken
+							# Rownames einrï¿½cken
 							rownames ( d4 ) <- paste ( einr , rownames ( d4 ) , sep = "" )
 							
 							msgf <- paste ( msgf , dfr2text ( d4 ) , sep = "" )
@@ -1576,7 +1577,7 @@ setMethod ( f = "show" , signature = signature ( object="design" ) ,
 							names ( d5 ) [ names ( d5 ) == "Doptimality" ] <- "D-optimality index"
 							
 							### Achtung: der Einfachheit halber nen Data.frame bauen
-							# funktioniert nur wenn Länge der Listenelemente jeweils 1
+							# funktioniert nur wenn Lï¿½nge der Listenelemente jeweils 1
 							val <- paste ( paste ( "\"" , sapply ( d5 , "[" , 1 ) , "\"" , sep = "" ) , collapse = " , " )
 							do <- paste ( "dfr5 <- data.frame ( " , val , " , stringsAsFactors = FALSE )" )
 							eval ( parse ( text = do ) )
