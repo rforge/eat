@@ -8,12 +8,13 @@ update an object of class "design"
 This function can be used to update a design. This might be useful to compute descriptives on a previously created design object.
 }
 \usage{
-updateDesign ( dsgn , descriptives = TRUE , verbose = FALSE )
+updateDesign ( dsgn = new("design") , descriptives = TRUE , interactions = FALSE , verbose = FALSE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dsgn}{Object of class \code{"design"}}
   \item{descriptives}{logical, compute descriptives (can be time consuming)}
+  \item{interactions}{NOT YET IMPLEMENTED logical, compute interactions (can be time consuming)}  
   \item{verbose}{logical, print information while processing}
 }
 %% \details{}
@@ -40,8 +41,7 @@ This version is alpha. Use with care.
 \examples{
 
 # Table 7 (Frey, 2009)
-table7 <- data.frame ( "Booklet" = c(1,1,2,2,3,3) , "Position" = c(1,2,1,2,1,2) ,
-"Cluster" = c(1,2,2,3,3,1) )
+table7 <- data.frame ( "Booklet" = c(1,1,2,2,3,3) , "Position" = c(1,2,1,2,1,2) , "Cluster" = c(1,2,2,3,3,1) )
 
 # use table7 as the definition of the design
 design7 <- defineDesign ( def = table7 )

@@ -8,8 +8,7 @@ define a data structure ("design")
 This function can be used to define a design. An object of class \code{"design"} is created. Descriptives can be computed.
 }
 \usage{
-defineDesign ( def = data.frame(), dsgn = new("design") , append = FALSE , descriptives = TRUE ,
-verbose = FALSE )
+defineDesign ( def = data.frame(), dsgn = new("design") , append = FALSE , descriptives = TRUE , interactions = FALSE , verbose = FALSE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -17,6 +16,7 @@ verbose = FALSE )
   \item{dsgn}{object of class \code{"design"}}
   \item{append}{logical, append \code{def} to \code{dsgn} or overwrite}
   \item{descriptives}{logical, compute descriptives (can be time consuming)}
+  \item{interactions}{NOT YET IMPLEMENTED logical, compute interactions (can be time consuming)}
   \item{verbose}{logical, print information while processing}
 }
 %% \details{}

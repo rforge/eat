@@ -18,7 +18,9 @@ setClass(
 			adjacency = "list" ,
 			link = "data.frame" ,
 			varCovMatrix = "matrix" , 
-			designDescriptives = "list"
+			designDescriptives = "list" ,
+			interactionCells = "data.frame" ,
+			interactions = "list"
 			) ,
 	prototype = prototype ( 
 			definition = data.frame() ,
@@ -32,14 +34,16 @@ setClass(
 			adjacency = list() ,
 			link = data.frame() ,
 			varCovMatrix = matrix()[FALSE,FALSE] ,
-			designDescriptives = list()
+			designDescriptives = list() ,
+			interactionCells = data.frame() ,
+			interactions = list()
 			)
 )
 
 # defineDesign
 # wrapper fuer define.design
 # statt den 4 "descriptives" nur 1 descriptives (for sake of simplicity)
-defineDesign <- function ( def = data.frame(), dsgn = new("design") ,  append = FALSE , descriptives = TRUE , verbose = FALSE ) {
+defineDesign <- function ( def = data.frame(), dsgn = new("design") , append = FALSE , descriptives = TRUE , interactions = FALSE , verbose = FALSE ) {
 					
 					# wenn verbose, sollen Warnmeldungen sofort kommen (dazwischen gemischt werden)
 					oldwarn <- options ( "warn" )
@@ -56,7 +60,7 @@ defineDesign <- function ( def = data.frame(), dsgn = new("design") ,  append = 
 					}					
 					
 					### Aufruf von defineDesign
-					ret <- define.design ( def=def, dsgn=dsgn, append=append, genStructure=descriptives, genDescriptives=descriptives, genLink=descriptives, genVarCovMatrix=descriptives, verbose=verbose )					
+					ret <- define.design ( def=def, dsgn=dsgn, append=append, genStructure=descriptives, genDescriptives=descriptives, genLink=descriptives, genVarCovMatrix=descriptives, interactions=interactions, icell=NULL, verbose=verbose )
 					
 					# auf altes Warn-Level zuruecksetzen
 					options ( oldwarn )
@@ -65,7 +69,7 @@ defineDesign <- function ( def = data.frame(), dsgn = new("design") ,  append = 
 					return ( ret )
 }
 
-define.design <- function ( def = data.frame() , dsgn = new("design") , append = FALSE , genStructure = TRUE , genDescriptives = TRUE , genLink = TRUE , genVarCovMatrix = TRUE , verbose = FALSE ) {
+define.design <- function ( def = data.frame() , dsgn = new("design") , append = FALSE , genStructure = TRUE , genDescriptives = TRUE , genLink = TRUE , genVarCovMatrix = TRUE , interactions = FALSE , icell = NULL , verbose = FALSE ) {
 
 					# Check verbose
 					if ( !is.logical ( verbose ) ) {
@@ -789,8 +793,8 @@ define.design <- function ( def = data.frame() , dsgn = new("design") , append =
 					
 				
 					# erstmal linkList
-					# parametrisiert �ber genLink
-					# Logik: wie f�r genDescriptives
+					# parametrisiert ueber genLink
+					# Logik: wie fuer genDescriptives
 					empty.linkList <- identical ( dsgn@linkList , list() )
 					old.linkList <- dsgn@linkList
 					if ( genLink || ( !genLink && new.definition && ! empty.linkList ) ) {
@@ -839,8 +843,8 @@ define.design <- function ( def = data.frame() , dsgn = new("design") , append =
 											edges <- do.call ( c , edges )
 											# NULL raus
 											edges <- edges[!sapply(edges, is.null)]
-											# hier k�nnten jetzt auch noch unverbundene Vertices dabei sein,
-											# diese rausholen (vs) und sp�ter zum Graph hinzuf�gen
+											# hier koennten jetzt auch noch unverbundene Vertices dabei sein,
+											# diese rausholen (vs) und spaeter zum Graph hinzufuegen
 											vl <- sapply ( edges , length ) == 1
 											if ( any ( vl ) ) {
 													vs <- edges[vl] 
@@ -859,7 +863,7 @@ define.design <- function ( def = data.frame() , dsgn = new("design") , append =
 													ct <- NULL
 											}
 												
-											# String bauen f�r graph.formula
+											# String bauen fuer graph.formula
 											if ( !is.null ( ct ) ) {
 													string <- paste ( names ( ct ) , collapse = "," )
 											} else {
@@ -881,10 +885,10 @@ define.design <- function ( def = data.frame() , dsgn = new("design") , append =
 											do <- paste ( "graph.formula ( " , string , " )" , sep = "" )
 											gr <- eval ( parse ( text = do ) )
 									
-											# edges gewichten (nach Vorkommensh�ufigkeit der edge (paarweiser Link))
+											# edges gewichten (nach Vorkommenshaeufigkeit der edge (paarweiser Link))
 											if ( ! is.null ( ct ) ) E(gr)$weight <- unname ( ct )
 
-											# vertices gewichten (nach Vorkommensh�ufigkeit der Unit)
+											# vertices gewichten (nach Vorkommenshaeufigkeit der Unit)
 											els <- unname ( do.call ( c , l ) )
 											tels <- table ( els )
 											if ( ! is.null ( V(gr)$name ) ) V(gr)$weight <- tels [ V(gr)$name ]
@@ -1300,19 +1304,19 @@ define.design <- function ( def = data.frame() , dsgn = new("design") , append =
 					}
 					### Ende designDescriptives										
 
-					# auf altes Warn-Level z�r�cksetzen
+					# auf altes Warn-Level zuruecksetzen
 					options ( oldwarn )
 					
 					#### Finales Design Objekt zur�ckgeben ####
 					return( dsgn )
 }
 
-updateDesign <- function ( dsgn , descriptives = TRUE , verbose = FALSE ) {
-		dsgn2 <- defineDesign ( def = data.frame() , dsgn = dsgn , append = TRUE , descriptives = descriptives , verbose = verbose )
+updateDesign <- function ( dsgn = new("design"), descriptives = TRUE , interactions = FALSE , verbose = FALSE ) {
+		dsgn2 <- defineDesign ( def = data.frame() , dsgn = dsgn , append = TRUE , descriptives = descriptives , interactions = interactions , verbose = verbose )
 }
 
-update.design <- function ( dsgn , genStructure = TRUE , genDescriptives = TRUE , genLink = TRUE , genVarCovMatrix = TRUE , verbose = FALSE ) {
-		dsgn2 <- define.design ( def = data.frame() , dsgn = dsgn , append = TRUE , genStructure = genStructure , genDescriptives = genDescriptives , genLink = genLink , genVarCovMatrix = genVarCovMatrix , verbose = verbose )
+update.design <- function ( dsgn = new("design") , genStructure = TRUE , genDescriptives = TRUE , genLink = TRUE , genVarCovMatrix = TRUE , interactions = FALSE , verbose = FALSE ) {
+		dsgn2 <- define.design ( def = data.frame() , dsgn = dsgn , append = TRUE , genStructure = genStructure , genDescriptives = genDescriptives , genLink = genLink , genVarCovMatrix = genVarCovMatrix , interactions = interactions , verbose = verbose )
 }
 
 # "+" 
