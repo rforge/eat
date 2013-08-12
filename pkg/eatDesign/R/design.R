@@ -1,6 +1,6 @@
 
 
-### ben�tigte Pakete
+### benoetigte Pakete
 # library(igraph)
 
 ### Class definition of "design" ###
@@ -37,9 +37,9 @@ setClass(
 )
 
 # defineDesign
-# wrapper f�r define.design
+# wrapper fuer define.design
 # statt den 4 "descriptives" nur 1 descriptives (for sake of simplicity)
-defineDesign <- function ( dsgn , def = data.frame() , append = FALSE , descriptives = TRUE , verbose = FALSE ) {
+defineDesign <- function ( def = data.frame(), dsgn = new("design") ,  append = FALSE , descriptives = TRUE , verbose = FALSE ) {
 					
 					# wenn verbose, sollen Warnmeldungen sofort kommen (dazwischen gemischt werden)
 					oldwarn <- options ( "warn" )
@@ -56,16 +56,16 @@ defineDesign <- function ( dsgn , def = data.frame() , append = FALSE , descript
 					}					
 					
 					### Aufruf von defineDesign
-					ret <- define.design ( dsgn=dsgn, def=def, append=append, genStructure=descriptives, genDescriptives=descriptives, genLink=descriptives, genVarCovMatrix=descriptives, verbose=verbose )					
+					ret <- define.design ( def=def, dsgn=dsgn, append=append, genStructure=descriptives, genDescriptives=descriptives, genLink=descriptives, genVarCovMatrix=descriptives, verbose=verbose )					
 					
-					# auf altes Warn-Level z�r�cksetzen
+					# auf altes Warn-Level zuruecksetzen
 					options ( oldwarn )
 							
 					# return
 					return ( ret )
 }
 
-define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStructure = TRUE , genDescriptives = TRUE , genLink = TRUE , genVarCovMatrix = TRUE , verbose = FALSE ) {
+define.design <- function ( def = data.frame() , dsgn = new("design") , append = FALSE , genStructure = TRUE , genDescriptives = TRUE , genLink = TRUE , genVarCovMatrix = TRUE , verbose = FALSE ) {
 
 					# Check verbose
 					if ( !is.logical ( verbose ) ) {
@@ -1308,17 +1308,17 @@ define.design <- function ( dsgn , def = data.frame() , append = FALSE , genStru
 }
 
 updateDesign <- function ( dsgn , descriptives = TRUE , verbose = FALSE ) {
-		dsgn2 <- defineDesign ( dsgn , def = data.frame() , append = TRUE , descriptives = TRUE , verbose = verbose )
+		dsgn2 <- defineDesign ( def = data.frame() , dsgn = dsgn , append = TRUE , descriptives = descriptives , verbose = verbose )
 }
 
 update.design <- function ( dsgn , genStructure = TRUE , genDescriptives = TRUE , genLink = TRUE , genVarCovMatrix = TRUE , verbose = FALSE ) {
-		dsgn2 <- define.design ( dsgn , def = data.frame() , append = TRUE , genStructure = genStructure , genDescriptives = genDescriptives , genLink = genLink , genVarCovMatrix = genVarCovMatrix , verbose = verbose )
+		dsgn2 <- define.design ( def = data.frame() , dsgn = dsgn , append = TRUE , genStructure = genStructure , genDescriptives = genDescriptives , genLink = genLink , genVarCovMatrix = genVarCovMatrix , verbose = verbose )
 }
 
 # "+" 
 setMethod ( f = "+" , signature = signature ( e1="design" , e2="design" ) ,
 			definition = function ( e1 , e2 ) {
-					# wenn auf einem der beiden Objekte "descriptives" o.�. dann auch auf dem neuen
+					# wenn auf einem der beiden Objekte "descriptives" o.ae. dann auch auf dem neuen
 					# ERGAENZEN
 					genStructure <- ifelse ( any ( !identical ( e1@structure , data.frame() ) , !identical ( e2@structure , data.frame() ) ) , TRUE , FALSE )
 					genDescriptives <- ifelse ( any ( !identical ( e1@descriptives , data.frame() ) , !identical ( e2@descriptives , data.frame() ) ) , TRUE , FALSE )
@@ -1326,7 +1326,7 @@ setMethod ( f = "+" , signature = signature ( e1="design" , e2="design" ) ,
 					genVarCovMatrix <- ifelse ( any ( !identical ( e1@varCovMatrix , matrix()[FALSE,FALSE] ) , !identical ( e2@varCovMatrix , matrix()[FALSE,FALSE] ) ) , TRUE , FALSE )
 					
 					# Objekte addieren indem die Definition des 2. Objekts an das 1. appended wird
-					n <- define.design ( dsgn = e1 , def = e2@definition , append = TRUE , genStructure = genStructure , genDescriptives = genDescriptives , genLink = genLink , genVarCovMatrix = genVarCovMatrix , verbose = FALSE )
+					n <- define.design ( def = e2@definition , dsgn = e1 , append = TRUE , genStructure = genStructure , genDescriptives = genDescriptives , genLink = genLink , genVarCovMatrix = genVarCovMatrix , verbose = FALSE )
 					
 					return ( n )
 			}
@@ -1336,10 +1336,10 @@ setMethod ( f = "+" , signature = signature ( e1="design" , e2="design" ) ,
 setMethod ( f = "-" , signature = signature ( e1="design" , e2="design" ) ,
 			definition = function ( e1 , e2 ) {
 					
-					# R�ckgabevariable
+					# Rueckgabevariable
 					n <- new ( "design" )
 					
-					# wenn auf einem der beiden Objekte "descriptives" o.�. dann auch auf dem neuen
+					# wenn auf einem der beiden Objekte "descriptives" o.ae. dann auch auf dem neuen
 					# ERGAENZEN
 					genStructure <- ifelse ( any ( !identical ( e1@structure , data.frame() ) , !identical ( e2@structure , data.frame() ) ) , TRUE , FALSE )
 					genDescriptives <- ifelse ( any ( !identical ( e1@descriptives , data.frame() ) , !identical ( e2@descriptives , data.frame() ) ) , TRUE , FALSE )
@@ -1390,7 +1390,7 @@ setMethod ( f = "-" , signature = signature ( e1="design" , e2="design" ) ,
 					}
 					
 					# neues Objekt setzen
-					n <- define.design ( dsgn = n , def = d , append = FALSE , genStructure = genStructure , genDescriptives = genDescriptives , genLink = genLink , genVarCovMatrix = genVarCovMatrix , verbose = FALSE )
+					n <- define.design ( def = d , dsgn = n , append = FALSE , genStructure = genStructure , genDescriptives = genDescriptives , genLink = genLink , genVarCovMatrix = genVarCovMatrix , verbose = FALSE )
 					
 					return ( n )
 			}
@@ -1422,7 +1422,7 @@ setMethod ( f = "show" , signature = signature ( object="design" ) ,
 							
 							genString <- function ( ro , co , va , einr ) {
 									
-									# R�ckgabevariable
+									# Rueckgabevariable
 									st <- as.character(NA)
 
 									if ( grepl ( "crossed" , va ) ) {
@@ -1461,7 +1461,7 @@ setMethod ( f = "show" , signature = signature ( object="design" ) ,
 					### Descriptives
 					if ( ! identical ( ( d2 <- object@descriptives ) , data.frame() ) ) {
 
-							# kein Output f�r "nestor", "unconnected", "equivalent", da nicht so interessant
+							# kein Output fuer "nestor", "unconnected", "equivalent", da nicht so interessant
 							d2 <- d2[ ! d2$structure %in% c("nestor", "unconnected", "equivalent") , , drop = FALSE ]
 							
 							if ( nrow ( d2 ) > 0 ) {
@@ -1502,7 +1502,7 @@ setMethod ( f = "show" , signature = signature ( object="design" ) ,
 					### Link
 					if ( ! identical ( ( d3 <- object@link ) , data.frame() ) ) {
 
-							# kein Output f�r "nestor", "unconnected", "equivalent", da nicht so interessant
+							# kein Output fuer "nestor", "unconnected", "equivalent", da nicht so interessant
 							d3 <- d3[ ! d3$structure %in% c("nestor", "unconnected", "equivalent") , , drop = FALSE ]
 							
 							if ( nrow ( d3 ) > 0 ) {
@@ -1550,7 +1550,7 @@ setMethod ( f = "show" , signature = signature ( object="design" ) ,
 							do <- paste ( "d4$\"" , colnames ( d4 ) , "\"<-" , "formatC(d4$\"" , colnames ( d4 ) , "\", format = \"f\", digits = 2)" , sep = "" )
 							eval ( parse ( text = do ) )
 							
-							# Rownames einr�cken
+							# Rownames einruecken
 							rownames ( d4 ) <- paste ( einr , rownames ( d4 ) , sep = "" )
 							
 							msgf <- paste ( msgf , dfr2text ( d4 ) , sep = "" )
@@ -1577,7 +1577,7 @@ setMethod ( f = "show" , signature = signature ( object="design" ) ,
 							names ( d5 ) [ names ( d5 ) == "Doptimality" ] <- "D-optimality index"
 							
 							### Achtung: der Einfachheit halber nen Data.frame bauen
-							# funktioniert nur wenn L�nge der Listenelemente jeweils 1
+							# funktioniert nur wenn Laenge der Listenelemente jeweils 1
 							val <- paste ( paste ( "\"" , sapply ( d5 , "[" , 1 ) , "\"" , sep = "" ) , collapse = " , " )
 							do <- paste ( "dfr5 <- data.frame ( " , val , " , stringsAsFactors = FALSE )" )
 							eval ( parse ( text = do ) )

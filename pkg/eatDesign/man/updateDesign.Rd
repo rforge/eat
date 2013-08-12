@@ -28,7 +28,7 @@ Martin Hecht
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\section{Warning }{
+\section{Warning}{
 This version is alpha. Use with care.
 } 
 
@@ -43,11 +43,8 @@ This version is alpha. Use with care.
 table7 <- data.frame ( "Booklet" = c(1,1,2,2,3,3) , "Position" = c(1,2,1,2,1,2) ,
 "Cluster" = c(1,2,2,3,3,1) )
 
-# create a new design object
-( design7 <- new ( "design" ) )
-
-# use table7 as the definition of the design, do not compute descriptives
-( design7 <- defineDesign ( dsgn = design7 , def = table7 , descriptives = FALSE ) )
+# use table7 as the definition of the design
+design7 <- defineDesign ( def = table7 )
 
 # compute descriptives
 ( design7 <- updateDesign ( dsgn = design7 , descriptives = TRUE ) )
