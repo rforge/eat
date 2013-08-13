@@ -4,7 +4,7 @@
 # optional: th [,4], auf dieser Variable wird versucht Gleichverteilung (bzgl. Anzahl gezogener Personen) herzustellen
 # col4.n: n auf das conditional upgesampled wird, wenn skalar dann für alle th gleich, oder Vektor um für jedes th zu setzen
 #         bitte nur reale th (nicht die als factor/aber 0 noch drin sind), oder am besten namen, dann ist egal
-ccv.sampling <- function ( data.long , col4.n = NULL , col4.n.max.adj = TRUE , check = TRUE , verbose = FALSE ) {
+ccv.sampling <- function ( data.long , col4.n = NULL , col4.n.max.adj = TRUE , NperItem = NULL , check = TRUE , verbose = FALSE ) {
 		
 		# umbenennen
 		d <- data.long
@@ -80,7 +80,7 @@ ccv.sampling <- function ( data.long , col4.n = NULL , col4.n.max.adj = TRUE , c
 		vals.unique.all <- unique ( do.call ( "c" , sapply ( d2 , function ( d ) unique(d[,3]) , simplify = FALSE ) ) )
 		vals.unique.all <- sort ( vals.unique.all [ !is.na ( vals.unique.all ) ] )
 		
-		# über item Item-Datensätze schleifen
+		# über Item-Datensätze schleifen
 		loop.items <- function ( d , sel.env , vals.unique.all ) {
 
 				# aktuelles Item, für verbose Ausgaben
@@ -300,7 +300,7 @@ ccv.sampling <- function ( data.long , col4.n = NULL , col4.n.max.adj = TRUE , c
 						}
 				}
 				
-				# check ob alle sample.size > 0 und < myx
+				# check ob alle sample.size > 0 und < max
 				soll.invalid <- soll[soll$sample.size<1 | soll$sample.size>soll$max,,drop=FALSE]
 				soll.valid <- soll[soll$sample.size>=1 & soll$sample.size<=soll$max,,drop=FALSE]
 				
@@ -337,7 +337,7 @@ ccv.sampling <- function ( data.long , col4.n = NULL , col4.n.max.adj = TRUE , c
 		} else {
 				persons.selected2 <- NULL
 		}
-
+		
 		# Ausgabe Anzahl Personen
 		persons.selected1 <- get ( "sel" , envir = sel.env )		
 		if ( verbose ) {
@@ -371,9 +371,118 @@ ccv.sampling <- function ( data.long , col4.n = NULL , col4.n.max.adj = TRUE , c
 				}	
 		}
 
-		# finaler Datensatz		
-		d6 <- d[ d[,1] %in% persons.selected , , drop=FALSE ]
+		# Datensatz mit finalem Personensample
+		d6a <- d[ d[,1] %in% persons.selected , , drop=FALSE ]
 
+	
+		### observations raussamplen um NperItem zu gewährleisten ###
+		if ( !is.null ( NperItem ) ) {
+				
+				# Funktion NperItem
+				get.nperitem <- function ( d ) {
+						d2 <- d[ !duplicated(d[,]) , ]
+						d3 <- split ( d2 , f=d2[,2] )
+						sapply ( d3 , nrow )
+				}
+				# aktuelles N per Item
+				nperitem.list <- get.nperitem ( d6a[,c(1,2)] )
+				
+				# Ausgabe
+				cat ( paste0 ( "Before observation downsampling" , "\n" ) )
+				cat ( paste0 ( "     N per item: M=" , formatC ( mean ( nperitem.list ) , format = "f" , digits = 2 ) , " SD=" , formatC ( sd ( nperitem.list )  , format = "f" , digits = 2 ) , " min=" , min ( nperitem.list ) , " max=" , max ( nperitem.list ) , "\n" ) )
+				cat ( paste0 ( "           goal: " , NperItem , "\n" ) )
+				
+				# Soll/Ist Datensatz
+				nperitem <- data.frame ( "item" = names ( nperitem.list ) , "current" = nperitem.list , stringsAsFactors = FALSE )
+				nperitem$goal <- NperItem
+				nperitem$sample.size <- nperitem$current - nperitem$goal
+
+				# Environment für zu reduzierenden Datensatz d6
+				d6.env <- new.env()
+				assign( "d6" , d6a , envir = d6.env )
+				assign( "NperItem.seeds" , NULL , envir = d6.env )
+				
+				# Verteilung von idstud
+				# wieviele Observations gibt es je Person
+				nperperson.tab <- table ( as.character ( d6a[ !duplicated ( d6a[,c(1,2)] ) , 1 ] ) )
+				nperperson <- data.frame ( "idstud" = names ( nperperson.tab ) , "nperperson" = as.integer ( nperperson.tab ) , stringsAsFactors = FALSE )
+				assign( "nperperson" , nperperson , envir = d6.env )
+				
+				# Ausgabe
+				cat ( paste0 ( "   N per person: M=" , formatC ( mean ( nperperson$nperperson ) , format = "f" , digits = 2 ) , " SD=" , formatC ( sd ( nperperson$nperperson ) , format = "f" , digits = 2 ) , " min=" , min ( nperperson$nperperson ) , " max=" , max ( nperperson$nperperson ) , "\n" ) )
+				flush.console()
+				
+				# Observations raussamplen
+				nperitem.downsample <- function ( item , sample.size , d6.env ) {
+						# cat ( paste0 ( item , " " ) )
+						# cat ( paste0 ( "." ) )
+						# flush.console()
+						
+						if ( sample.size > 0 ) {
+								d <- get ( "d6" , envir = d6.env )
+								npp <- get ( "nperperson" , envir = d6.env )
+								
+								# aktuelles Item
+								d2 <- d[d[,2]==item , c(1,2)]
+								# zur Sicherheit
+								d3 <- d2[ !duplicated(d2[,]) , ]
+								
+								# die Personen die viele observations haben (max), haben große prob (1) rauszufliegen
+								npp$prob <- npp$nperperson/max(npp$nperperson)
+								# npp$prob[ npp$prob > 0.99 ] <- 0.99
+								# bei unter 2 observations ist die Person nicht zum Deselektieren ziehbar, da diese sonst aus dem Datensatz fliegen würde
+								npp$prob[ npp$nperperson < 2 ] <- 0
+								
+								# Seed
+								seed4 <- runif ( 1 , 1 , 2100000000 )
+								set.seed ( seed4 )
+								names ( seed4 ) <- item
+								assign ( "NperItem.seeds" , c ( get ( "NperItem.seeds" , envir = d6.env ) , seed4 ) , envir = d6.env )
+						
+								# samplen
+								x <- as.character(d3[,1])
+								probs <- npp$prob
+								names ( probs ) <- npp$idstud
+								probs <- unname ( probs[x] )
+								todelete <- sample( x , sample.size , replace = FALSE, prob = probs )
+							
+								# Observations aus Datensatz werfen
+								d4 <- d[ ! ( d[,1] %in% todelete & d[,2] == item ) , ]
+								assign( "d6" , d4 , envir = d6.env )
+								
+								# Verteilung N per person anpassen
+								npp[ npp[,1] %in% todelete, "nperperson" ] <- npp[ npp[,1] %in% todelete, "nperperson" ] - 1
+								assign( "nperperson" , npp[,c(1,2)] , envir = d6.env )
+						}
+						
+						return ( TRUE )
+				}
+				temp <- mapply ( nperitem.downsample , nperitem$item , nperitem$sample.size , MoreArgs = list ( d6.env ) , SIMPLIFY = FALSE )
+				
+				### Check nach downsampling ###
+				
+				# downgesampleter Datensatz
+				d6 <- get ( "d6" , envir = d6.env )
+				
+				# aktuelles N per Item
+				nperitem.list <- get.nperitem ( d6[,c(1,2)] )
+				
+				# Ausgabe
+				cat ( paste0 ( "After observation downsampling" , "\n" ) )
+				cat ( paste0 ( "     N per item: M=" , formatC ( mean ( nperitem.list ) , format = "f" , digits = 2 ) , " SD=" , formatC ( sd ( nperitem.list )  , format = "f" , digits = 2 ) , " min=" , min ( nperitem.list ) , " max=" , max ( nperitem.list ) , "\n" ) )
+				
+				# Verteilung von idstud
+				# wieviele Observations gibt es je Person
+				nperperson.tab <- table ( as.character ( d6[ !duplicated ( d6[,c(1,2)] ) , 1 ] ) )
+				nperperson <- data.frame ( "idstud" = names ( nperperson.tab ) , "nperperson" = as.integer ( nperperson.tab ) , stringsAsFactors = FALSE )
+				
+				# Ausgabe
+				cat ( paste0 ( "   N per person: M=" , formatC ( mean ( nperperson$nperperson ) , format = "f" , digits = 2 ) , " SD=" , formatC ( sd ( nperperson$nperperson ) , format = "f" , digits = 2 ) , " min=" , min ( nperperson$nperperson ) , " max=" , max ( nperperson$nperperson ) , "\n" ) )
+				
+		} else {
+				d6 <- d6a
+		}
+		
 		# Check Item-Varianz
 		if ( check ) {
 				d7 <- split ( d6 , f = list ( d6[,2] ) , drop = TRUE ) 
@@ -442,9 +551,11 @@ ccv.sampling <- function ( data.long , col4.n = NULL , col4.n.max.adj = TRUE , c
 		if ( cond ) ret <- c ( ret , list ( "col4.distribution" = get ( "cond.distr" , envir = sel.env ) , "seeds2" = get ( "cond.distr.seeds" , envir = sel.env ) ) )
 		if ( !is.null(col4.n) ) ret <- c ( ret , list ( "col4.distribution.upsampled" = col4.tab.real.sorted , "col4.upsampling.plan" = soll , "seeds3" = get ( "col4.n.seeds" , envir = sel.env ) ) )
 		if ( !is.null(col4.n) & check ) ret <- c ( ret , list ( "check.col4.n" = col4.distr.ok.all ) )
+		if ( !is.null(NperItem) ) ret <- c ( ret , list ( "NperItem.seeds" = get ( "NperItem.seeds" , envir = d6.env ) ) )
 		
 		# kreiertes Environment zurücksetzen
 		rm ( list = ls ( all=TRUE, envir = sel.env ), envir = sel.env )
+		if ( exists ( "d6.env" ) ) rm ( list = ls ( all=TRUE, envir = d6.env ), envir = d6.env )
 		
 		# Rückgabe
 		return ( ret )
