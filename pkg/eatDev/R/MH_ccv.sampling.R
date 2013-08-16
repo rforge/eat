@@ -4,7 +4,8 @@
 # optional: th [,4], auf dieser Variable wird versucht Gleichverteilung (bzgl. Anzahl gezogener Personen) herzustellen
 # col4.n: n auf das conditional upgesampled wird, wenn skalar dann für alle th gleich, oder Vektor um für jedes th zu setzen
 #         bitte nur reale th (nicht die als factor/aber 0 noch drin sind), oder am besten namen, dann ist egal
-ccv.sampling <- function ( data.long , col4.n = NULL , col4.n.max.adj = TRUE , NperItem = NULL , check = TRUE , verbose = FALSE ) {
+# include: character Vektor mit Personen, die inkludiert sind
+ccv.sampling <- function ( data.long , col4.n = NULL , col4.n.max.adj = TRUE , NperItem = NULL , include = NULL , check = TRUE , verbose = FALSE ) {
 		
 		# umbenennen
 		d <- data.long
@@ -18,7 +19,14 @@ ccv.sampling <- function ( data.long , col4.n = NULL , col4.n.max.adj = TRUE , N
 
 		# environment mit selektierten Personen
 		sel.env <- new.env()
-		assign( "sel" , NULL , envir = sel.env )
+		
+		# inkludieren von Personen
+		if ( !is.null ( include ) ) {
+				sel <- include
+		} else {
+				sel <- NULL
+		}
+		assign( "sel" , sel , envir = sel.env )
 		assign( "sel.seeds" , NULL , envir = sel.env )
 		
 		# col4.n Handling
@@ -43,17 +51,46 @@ ccv.sampling <- function ( data.long , col4.n = NULL , col4.n.max.adj = TRUE , N
 				} else {
 						col4.n <- NULL
 				}
+		} else {
+				col4.n <- NULL
+		}
+		if ( cond & !is.null ( col4.n ) ) {
+				# seeds initialisieren
+				assign( "col4.n.seeds" , NULL , envir = sel.env )
+				
+				# wenn bereits Personen vorselektiert sind (include),
+				# dann die Anzahl, die noch gesampled werden soll, verringern
+				if ( !is.null ( include ) ) {
+						d.incl <- d [ d[,1] %in% include , c(1,4) ]
+						d.incl2 <- d.incl [ !duplicated ( d.incl[,] ) , ]
+						thtab <- table ( d.incl2[,2] )
+
+						f1 <- function ( th , anz , thtab ) {
+								anz - thtab[th]
+						}
+						x <- mapply ( f1 , names ( col4.n.vec ) , col4.n.vec , MoreArgs = list ( thtab ) , SIMPLIFY = FALSE )
+						col4.n.vec <- do.call ( "c" , unname ( x ) )
+						
+				}
+
 				if ( verbose ) {
 						msg9 <- paste0 ( "col4.n vector:" )
 						cat ( paste0 ( "" , msg9 , "\n" ) )
 						print ( col4.n.vec )
 						flush.console()
-				}					
-		} else {
-				col4.n <- NULL
-		}
-		if ( cond & !is.null ( col4.n ) ) {
-				assign( "col4.n.seeds" , NULL , envir = sel.env )
+				}
+
+				# wenn irgendwo negativ, dann noch anpassen
+				if ( w <- any ( col4.n.vec < 0 ) ) {
+						col4.n.vec[!w] <- 0
+						
+						if ( verbose ) {
+								msg9b <- paste0 ( "col4.n vector (adjusted for negative values):" )
+								cat ( paste0 ( "" , msg9b , "\n" ) )
+								print ( col4.n.vec )
+								flush.console()
+						}
+				}
 		}
 	
 		# wenn conditional, dann die Verteilung anlegen, die dann upgedated wird
@@ -67,7 +104,7 @@ ccv.sampling <- function ( data.long , col4.n = NULL , col4.n.max.adj = TRUE , N
 				assign( "cond.distr.seeds" , NULL , envir = sel.env )
 		}
 
-		# long data noch item splitten
+		# long data nach item splitten
 		d2 <- split ( d , f = list ( d[,2] ) , drop = TRUE ) 
 		
 		if ( verbose ) {
@@ -307,7 +344,7 @@ ccv.sampling <- function ( data.long , col4.n = NULL , col4.n.max.adj = TRUE , N
 				# Ausgabe
 				if ( nrow ( soll.invalid ) > 0 ) {
 						if ( verbose ) {
-								msg10 <- paste0 ( "There are col4 elements with negative sample.size (i.e. already too many persons sampled)" )
+								msg10 <- paste0 ( "There are col4 elements with non-positive (i.e., 0 or negative) sample.size" )
 								cat ( paste0 ( "" , msg10 , "\n" ) )
 								print ( soll.invalid )
 								flush.console()
