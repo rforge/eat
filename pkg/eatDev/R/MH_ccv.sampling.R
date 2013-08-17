@@ -6,7 +6,7 @@
 #         bitte nur reale th (nicht die als factor/aber 0 noch drin sind), oder am besten namen, dann ist egal
 # include: character Vektor mit Personen, die inkludiert sind
 ccv.sampling <- function ( data.long , col4.n = NULL , col4.n.max.adj = TRUE , NperItem = NULL , include = NULL , check = TRUE , verbose = FALSE ) {
-		
+
 		# umbenennen
 		d <- data.long
 
@@ -454,7 +454,7 @@ ccv.sampling <- function ( data.long , col4.n = NULL , col4.n.max.adj = TRUE , N
 						# cat ( paste0 ( item , " " ) )
 						# cat ( paste0 ( "." ) )
 						# flush.console()
-						
+					
 						if ( sample.size > 0 ) {
 								d <- get ( "d6" , envir = d6.env )
 								npp <- get ( "nperperson" , envir = d6.env )
@@ -470,22 +470,43 @@ ccv.sampling <- function ( data.long , col4.n = NULL , col4.n.max.adj = TRUE , N
 								# bei unter 2 observations ist die Person nicht zum Deselektieren ziehbar, da diese sonst aus dem Datensatz fliegen würde
 								npp$prob[ npp$nperperson < 2 ] <- 0
 								
-								# Seed
-								seed4 <- runif ( 1 , 1 , 2100000000 )
-								set.seed ( seed4 )
-								names ( seed4 ) <- item
-								assign ( "NperItem.seeds" , c ( get ( "NperItem.seeds" , envir = d6.env ) , seed4 ) , envir = d6.env )
 						
 								# samplen
 								x <- as.character(d3[,1])
 								probs <- npp$prob
 								names ( probs ) <- npp$idstud
 								probs <- unname ( probs[x] )
-								todelete <- sample( x , sample.size , replace = FALSE, prob = probs )
-							
-								# Observations aus Datensatz werfen
-								d4 <- d[ ! ( d[,1] %in% todelete & d[,2] == item ) , ]
-								assign( "d6" , d4 , envir = d6.env )
+								
+								# samplen, aber wenns geht Varianz sicherstellen
+								# nach 10-mal aber abbrechen
+								isvar <- TRUE
+								i <- 1
+								while ( isvar & i <= (maxtries <- 11) ) {
+
+										# Seed
+										seed4 <- runif ( 1 , 1 , 2100000000 )
+										set.seed ( seed4 )
+										names ( seed4 ) <- item
+										assign ( "NperItem.seeds" , c ( get ( "NperItem.seeds" , envir = d6.env ) , seed4 ) , envir = d6.env )
+								
+										todelete <- sample( x , sample.size , replace = FALSE, prob = probs )
+									
+										# Observations aus Datensatz werfen
+										d4 <- d[ ! ( d[,1] %in% todelete & d[,2] == item ) , ]
+										assign( "d6" , d4 , envir = d6.env )
+										
+										isvar <- !check.var(d4[d4[,2]==item,"value"])
+										i <- i + 1 
+										
+										if ( isvar & verbose ) {
+												if ( i == maxtries ) {
+														addmsg <- " ...giving up" 
+												} else {
+														addmsg <- ""
+												}
+												cat ( paste0 ( "no variance (bad luck while downsampling) for item " , item , " , trying again (" , i , " of " , maxtries , " tries)" , addmsg , "\n" ) )
+										}
+								}
 								
 								# Verteilung N per person anpassen
 								npp[ npp[,1] %in% todelete, "nperperson" ] <- npp[ npp[,1] %in% todelete, "nperperson" ] - 1
@@ -495,7 +516,7 @@ ccv.sampling <- function ( data.long , col4.n = NULL , col4.n.max.adj = TRUE , N
 						return ( TRUE )
 				}
 				temp <- mapply ( nperitem.downsample , nperitem$item , nperitem$sample.size , MoreArgs = list ( d6.env ) , SIMPLIFY = FALSE )
-				
+			
 				### Check nach downsampling ###
 				
 				# downgesampleter Datensatz
