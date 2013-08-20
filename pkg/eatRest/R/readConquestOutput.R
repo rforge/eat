@@ -52,7 +52,7 @@
 # dataName <- "daten_toast.sav"
 
 
-readConquestOutput <- function (jobFolder, subFolder = NULL, item.grouping, name.analyse, p.model.name = NULL , DIF.var = NULL, group.names = NULL, dataName = NULL) {
+readConquestOutput <- function (jobFolder, dataset, id.name, subFolder = NULL, item.grouping, name.analyse, p.model.name = NULL , DIF.var = NULL, group.names = NULL, dataName = NULL) {
 	
 	funVersion <- "readConquestOutput_1.3.0"
     if (is.null(dataName)) {
@@ -97,8 +97,17 @@ readConquestOutput <- function (jobFolder, subFolder = NULL, item.grouping, name
     } else {
         IDs <- substr(readLines(file.path(jobFolder, subFolder$data, dataName)), idCols[1], idCols[2])
     }
-	
- 
+
+	### 20.08.2013 Handling von IDs mit unterschiedlicher Stelligkeit
+	# in genConquestDataset werden IDs mit weniger als maximaler Stelligkeit vorne mit "0" aufgefüllt
+	real.ids <- dataset[,id.name]
+	id.arity.problem <- !all ( min ( id.arity <- sapply ( real.ids , nchar ) ) == max ( id.arity ) )
+	if ( id.arity.problem ) {
+			# unbedingt gleiche Regel wie in genConquestDataset verwenden!!!
+			new.ids <- formatC(real.ids, width=max(as.numeric(names(table(nchar(real.ids))))))
+			new.ids <- gsub("X","0",new.ids)
+			names ( new.ids ) <- names ( id.arity )
+	}
 	
 	# read shw file
     isShw <- file.exists(shwFile)
@@ -126,7 +135,12 @@ readConquestOutput <- function (jobFolder, subFolder = NULL, item.grouping, name
     } else {
         cat(paste(funVersion, ": Found no .wle file.\n", sep = ""))
     }
-    
+    # Stelligkeitskorrektur
+	if ( id.arity.problem ) {
+			do <- paste0 ( "wle.dat$ID[wle.dat$ID=='", new.ids[real.ids] , "'] <- '" , real.ids , "'" )
+			eval ( parse ( text = do ) )
+	}
+	
 	# read pv file
 	isPv <- file.exists(pvFile)
     if (isPv == TRUE) {
@@ -140,6 +154,11 @@ readConquestOutput <- function (jobFolder, subFolder = NULL, item.grouping, name
     } else {
         cat(paste(funVersion, ": Found no .pvl file.\n", sep = ""))
     }
+	# Stelligkeitskorrektur
+	if ( id.arity.problem ) {
+			do <- paste0 ( "pv.dat$ID[pv.dat$ID=='", new.ids[real.ids] , "'] <- '" , real.ids , "'" )
+			eval ( parse ( text = do ) )
+	}
     
 	# read itn file
 	isItn <- file.exists(itnFile)

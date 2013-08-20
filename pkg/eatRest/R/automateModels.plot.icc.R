@@ -8,18 +8,20 @@ automateModels.plot.icc <- function ( results , model.specs ) {
 		fun <- function ( i , results , model.specs ) {
 
 				theta <- get.person.par ( results[i] )[,c("person","pv.1")]
+				# ggf. NA raus, sollte nicht aber naja
+				theta <- theta[ !is.na( theta[,2] ) , ]
 				
 				dat <- model.specs$dataset[[i]]
 				# if ( !is.null ( id.name <- model.specs$id.name[[i]] ) ) dat <- dat [ , - which ( colnames ( dat ) %in% id.name ) ]
 				id.name <- model.specs$id.name[[i]]
 				if ( !is.null ( cont.names <- model.specs$cont.names[[i]] ) ) dat <- dat [ , - which ( colnames ( dat ) %in% cont.names ) ]
-				dat <- set.col.type ( dat , col.type = list ( "numeric" = NULL ) )
+				dat <- set.col.type ( dat , col.type = list ( "numeric" = colnames(dat)[!colnames(dat)==id.name] ) )
+				
+				# Datensatz reduzieren nach IDs in theta
+				dat <- dat[dat[,id.name] %in% theta$person,]
 				
 				# theta sortieren wie dat
-				theta <- theta [ na.omit ( match ( dat[,id.name] , theta$person ) ) , ]
-				
-				# nur IDs aus theta auch in Datensatz
-				dat <- dat[dat[,id.name] %in% theta$person,]
+				theta <- theta [ match ( dat[,id.name] , theta$person ) , ]
 				
 				# ids droppen
 				theta <- theta$pv.1
@@ -28,11 +30,11 @@ automateModels.plot.icc <- function ( results , model.specs ) {
 				# Itemparameter
 				item.par <- get.item.par ( results[i] )
 
-				# sortieren wie in dat
-				item.par <- item.par [ na.omit ( match ( colnames(dat) , item.par$item ) ) , ]
-
 				# Datensatz nach item.par$items anpassen
-				dat <- dat[ , colnames(dat) %in% item.par$item , drop = FALSE ]				
+				dat <- dat[ , colnames(dat) %in% item.par$item , drop = FALSE ]
+				
+				# sortieren wie in dat
+				item.par <- item.par [ match ( colnames(dat) , item.par$item ) , ]
 
 				# Parameter
 				b <- item.par$b

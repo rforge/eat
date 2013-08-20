@@ -25,6 +25,8 @@
 		eatTools:::sunk ( paste ( f.n , "Results are being read ..." ) )		
 		
 		ret <- mapply ( function (  folder ,
+									dataset ,
+									id.name ,
 									item.grouping ,
 									analyse.name ,
 									p.model.name ,
@@ -54,6 +56,8 @@
 								eatTools:::sunk ( paste ( einr , "jobFolder = " , folder , sep = "" ) )
 								if ( is.null ( additionalSubfolder )) aSF_str <- "" else aSF_str <- paste ( additionalSubfolder , collapse = ", " )
 								eatTools:::sunk ( paste ( einr , "subFolder = " , aSF_str , sep = "" ) )
+								eatTools:::sunk ( paste ( einr , "dataset = " , "'data.frame': " , nrow ( dataset ) , " obs. of " , ncol ( dataset ) , " variables" , sep = "" ) )
+								eatTools:::sunk ( paste ( einr , "id.name = " , id.name , sep = "" ) )
 								eatTools:::sunk ( paste ( einr , "item.grouping = " , "'data.frame': " , nrow ( item.grouping ) , " obs. of " , ncol ( item.grouping ) , " variables" , sep = "" ) )
 								eatTools:::sunk ( paste ( einr , "name.analyse = " , analyse.name , sep = "" ) )
 								eatTools:::sunk ( paste ( einr , "p.model.name = " , p.model.name , sep = "" ) )
@@ -67,6 +71,8 @@
 
 								# readConquestOutput starten
 								ret <- readConquestOutput ( jobFolder = folder ,
+															dataset = dataset ,
+															id.name = id.name ,
 															subFolder = additionalSubfolder ,
 															item.grouping = item.grouping ,
 															name.analyse = analyse.name ,
@@ -88,6 +94,8 @@
 				return ( ret )
 		
 		} , model.specs$folder ,
+			model.specs$dataset ,
+			model.specs$id.name ,
 			model.specs$item.grouping ,
 			model.specs$analyse.name ,
 			model.specs$p.model.name ,

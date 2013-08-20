@@ -102,7 +102,7 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 				person.grouping <- .automateModels.grouping.vars.to.grouping ( dat , person.grouping.vars , person.grouping.vars.include.all , id.name )
 				eatTools:::sunk ( paste ( f.n , "Info:" , "person.grouping is" , paste ( colnames ( person.grouping )[-1] , collapse = ", " ) , ".\n" ) ) 
 		}
-	
+		
 		### Handling der Item- bzw. Person-Grouping
 		### d.h. Spalten-Reduktion von item.grouping / person.grouping anhand select.item.group / select.person.group
 		retlist <- .automateModels.handle.global.grouping ( item.grouping , person.grouping , select.item.group , select.person.group )
@@ -192,6 +192,13 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 							mis.rule=model.specs$missing.rule , folder = folder.aM , 
 							write.txt.dataset = write.txt.dataset ) 
 						
+		### 20.08.2013
+		# wenn in conquestParameters "group.var" spezifiziert ist muss diese in den Datensätzen verbleiben
+		if ( ! is.null ( ( neu <- conquestParameters$group.var ) ) ) {
+				model.specs$cont.names <- sapply ( model.specs$cont.names , function ( org , neu ) unique ( c ( org , neu ) ) , neu , simplify = FALSE )
+				model.specs$group <- sapply ( model.specs$group.names , function ( org , neu ) unique ( c ( org , neu ) ) , neu , simplify = FALSE )
+		}
+		
 		# modellspezfischen Datensatz erstellen
 		model.specs$dataset <- mapply ( genModelDataset ,
 					item.grouping = model.specs$item.grouping ,
@@ -237,7 +244,7 @@ automateModels <- function ( dat , id = NULL , context.vars = NULL , items = NUL
 		
 		# Modell-Information auf Platte schreiben
 		.automateModels.writeModelInfo ( model.specs ) 
-		
+	
 		# Modelle (Syntax/Data) auf Platte erzeugen
 		.automateModels.createModel ( model.specs , additionalSubFolder )
 	

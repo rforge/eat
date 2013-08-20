@@ -183,7 +183,7 @@
 						"export"
 						)
 				, file = file.path ( folder , paste ( analyse.name , "_autConMod_par.Rdata" , sep = "" ) ) )
-				
+			
 				# automateConquestModel aufrufen
 				#ret <- TRUE
 				ret <- automateConquestModel ( dat = dataset ,

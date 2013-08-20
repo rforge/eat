@@ -240,7 +240,7 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
 				    }                            ### var.char muß nun neu geschrieben werden, da nun alles wieder einstellig ist!
                   daten <- data.frame(ID=as.character(dat[,ID]), dat[,namen.all.hg,drop=F], daten, stringsAsFactors=F)
                   daten$ID <- formatC(daten$ID, width=max(as.numeric(names(table(nchar(daten$ID))))))
-                  daten$ID <- gsub(" ","0",daten$ID)                            ### vereinheitliche Laenge der IDs!
+                  daten$ID <- gsub("X","0",daten$ID)                            ### vereinheitliche Laenge der IDs!
                   stopifnot(length( as.numeric(names(table(nchar(daten[,"ID"])))) ) == 1)
                   #if(length(weg.dif)>0 | length(weg.hg)>0 | length(weg.variablen)>0 )
                   #  {weg.all <- unique(c(weg.dif, weg.hg, weg.weight, weg.variablen))       ### obere Zeile: Remove cases with missings on DIF variable and/or HG variables and/or items
