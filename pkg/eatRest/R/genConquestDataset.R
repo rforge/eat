@@ -33,6 +33,7 @@
 # 25.11.2011: SW 'cat' durch 'eatTools:::sunk' ersetzt
 # 12.12.2011: SW assign-befehl entfernt 
 # 10.05.2012: SW more than one DIF variable
+# 20.08.2013: SW reunstabled
 #
 ####################################################################################################################
 
@@ -131,12 +132,22 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                                     
                   ### geprueft wird: enthaelt IRGENDEIN Testitem gar keine gueltigen Werte?
                   n.werte <- lapply(daten, FUN=function(ii) {table(ii)})
+                  onlyHomogenBezeichner <- lapply(n.werte, FUN = function (zz) {
+                             zahl <- grep("[[:digit:]]", names(zz))
+                             buch <- grep("[[:alpha:]]", names(zz))
+                             ret  <- (length(zahl) == length(zz) & length(buch) == 0 ) | (length(zahl) == 0 & length(buch) == length(zz) )
+                             return(ret)})
+                  noHomogenBezeichner   <- which(onlyHomogenBezeichner == FALSE)
+                  datasetBezeichner     <- unique(unlist(lapply(n.werte, names)))
+                  zahl                  <- grep("[[:digit:]]", datasetBezeichner )
+                  buch                  <- grep("[[:alpha:]]", datasetBezeichner )
+                  ret                   <- (length(zahl) == length(datasetBezeichner) & length(buch) == 0 ) | (length(zahl) == 0 & length(buch) == length(datasetBezeichner) )
                   options(warn = -1)                                            ### zuvor: schalte Warnungen aus!
                   only.null.eins <- unlist( lapply(n.werte, FUN=function(ii) {all( names(ii) == c("0","1") ) }) )
                   options(warn = 0)                                             ### danach: schalte Warnungen wieder an!
                   n.werte <- sapply(n.werte, FUN=function(ii) {length(ii)})
                   n.mis   <- which(n.werte == 0)
-				          namen.items.weg <- NULL
+				  namen.items.weg <- NULL
                   if(length(n.mis) >0) {eatTools:::sunk(paste("genConquestDataset_",ver,": Serious warning: ",length(n.mis)," testitems(s) without any values.\n",sep=""))
                                         if(verbose == TRUE) {eatTools:::sunk(paste(colnames(daten)[which(n.werte == 0)], collapse=", ")); eatTools:::sunk("\n") }
                                         stop()										
@@ -156,12 +167,11 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
                                              eatTools:::sunk("By default, all values except for 0 and 1 are treated as sysmis.\n")
                                              if(model.statement == "item")
                                                {eatTools:::sunk("WARNING: Sure you want to use 'model statement = item' even when items are not dichotomous?\n")} }
-                  
-                  ### identifiziere Faelle mit ausschliesslich missings
-                 all.values   <- table(unique(unlist(lapply(daten, FUN=function(ii) {names(table(ii))}))))
-                  if(length(all.values)!=2) {eatTools:::sunk(paste("genConquestDataset_",ver,": Warning: Found more than two non missing codes in overall testitems. Data does not seem to fit to the Rasch model.\n",sep=""))}
-                  if(length(all.values)==2) {if(!all(names(all.values) == c("0","1"))) {eatTools:::sunk("Warning: Found codes departing from 0 and 1 in testitems. Data does not seem to fit to the Rasch model.\n")}}
-                  weg.variablen <- rowSums(is.na(daten))                        ### identifiziere Fälle mit ausschließlich missings
+                                    if(length(noHomogenBezeichner)>0) {
+                  stop(paste("Item(s) ",paste(names(noHomogenBezeichner), collapse=", ")," with mixed response identifier (numeric and string).\n",sep=""))}
+                  if(ret == FALSE ) {
+                      stop("Itemdata with inconsistant response identifier (numeric and string).\n")}
+ 				 weg.variablen <- rowSums(is.na(daten))                        ### identifiziere Fälle mit ausschließlich missings
                   weg.variablen <- which(weg.variablen == ncol(daten))
                   if(length(weg.variablen)>0) 
                     {eatTools:::sunk(paste("genConquestDataset_",ver,": Found ",length(weg.variablen)," cases with missings on all items.\n",sep=""))
