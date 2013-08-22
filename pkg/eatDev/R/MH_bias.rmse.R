@@ -74,8 +74,14 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 				}
 				
 				# jetzt ist alles auf untersten Split, bis auf Replicates
-				f2 <- function ( l , repl.col , val.col , group.col ) {
-
+				f2 <- function ( l , nam , nr , repl.col , val.col , group.col , maxnr ) {
+						
+						# Ausgabe 1/X
+						if ( verbose ) {
+								cat ( paste0 ( Sys.time() , "   " , nr , "/" , maxnr , "  " , nam ) )
+								flush.console()
+						}
+						
 						# nach Replicates splitten
 						l2 <- split ( l , f = list ( l[,repl.col] ) , drop = TRUE )
 						
@@ -83,10 +89,11 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 						# d.h. enthaelt Gruppenelemente (z.B. Items) in den Datensaetzen der Replikationen
 						# jetzt Formeln aus Babcock/Albano 2012 anwenden
 						
-						f3 <- function ( d , nam , val.col , id.col , group.col ) {
+						f3 <- function ( d , val.col , id.col , group.col ) {
 								
 								if ( verbose ) {
-										cat ( paste0 ( Sys.time() , "  " , nam , "\n" ) )
+										cat ( paste0 ( "." ) )
+										flush.console()
 								}
 								
 								# Check, id.col muss hier unique sein
@@ -160,7 +167,10 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 								return ( res2 )
 								
 						}
-						res3.l <- mapply ( f3 , l2 , names ( l2 ) , MoreArgs = list ( val.col , id.col , group.col ) , SIMPLIFY = FALSE )
+						res3.l <- mapply ( f3 , l2 , MoreArgs = list ( val.col , id.col , group.col ) , SIMPLIFY = FALSE )
+						if ( verbose ) {
+								cat ( paste0 ( "\n" ) )
+						}
 						res3 <- do.call ( "rbind" , res3.l )
 
 						# Mitteln ueber Replicates
@@ -173,7 +183,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 						
 						return ( res4 )
 				}
-				res1.l <- mapply ( f2 , e4 , MoreArgs = list ( repl.col , val.col , group.col) , SIMPLIFY = FALSE )				
+				res1.l <- mapply ( f2 , e4 , names ( e4 ) , seq ( along = e4 ) , MoreArgs = list ( repl.col , val.col , group.col , length ( e4 ) ) , SIMPLIFY = FALSE )				
 				res1 <- do.call ( "rbind" , res1.l )
 
 		}
