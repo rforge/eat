@@ -1,5 +1,5 @@
 
-bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.col = NULL ) {
+bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.col = NULL , verbose = FALSE ) {
 		
 		# wenn group.col gesetzt, checken ob diese nur in true Datensatz
 		# und nicht auch in est Datensatz, ggf. löschen
@@ -74,7 +74,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 				}
 				
 				# jetzt ist alles auf untersten Split, bis auf Replicates
-				f2 <- function ( l , repl.col , val.col , group.col) {
+				f2 <- function ( l , repl.col , val.col , group.col ) {
 
 						# nach Replicates splitten
 						l2 <- split ( l , f = list ( l[,repl.col] ) , drop = TRUE )
@@ -83,8 +83,12 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 						# d.h. enthaelt Gruppenelemente (z.B. Items) in den Datensaetzen der Replikationen
 						# jetzt Formeln aus Babcock/Albano 2012 anwenden
 						
-						f3 <- function ( d , val.col , id.col , group.col ) {
-
+						f3 <- function ( d , nam , val.col , id.col , group.col ) {
+								
+								if ( verbose ) {
+										cat ( paste0 ( Sys.time() , "  " , nam , "\n" ) )
+								}
+								
 								# Check, id.col muss hier unique sein
 								# wenn nicht Warnung
 								if ( any ( duplicated ( d[,id.col] ) ) ) {
@@ -156,7 +160,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 								return ( res2 )
 								
 						}
-						res3.l <- mapply ( f3 , l2 , MoreArgs = list ( val.col , id.col , group.col ) , SIMPLIFY = FALSE )
+						res3.l <- mapply ( f3 , l2 , names ( l2 ) , MoreArgs = list ( val.col , id.col , group.col ) , SIMPLIFY = FALSE )
 						res3 <- do.call ( "rbind" , res3.l )
 
 						# Mitteln ueber Replicates
