@@ -2,7 +2,7 @@
 bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.col = NULL , verbose = FALSE ) {
 		
 		# wenn group.col gesetzt, checken ob diese nur in true Datensatz
-		# und nicht auch in est Datensatz, ggf. löschen
+		# und nicht auch in est Datensatz, ggf. loeschen
 		if ( !is.null ( group.col ) ) {
 				if ( group.col %in% colnames ( est ) ) {
 						est <- est[,colnames(est)[!colnames(est) %in% group.col ]]
@@ -10,7 +10,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 		}
 		
 		# Spalten in true bestimmen, die "zu viel" sind
-		# das sind die zusätzlichen Split-Variablen
+		# das sind die zusaetzlichen Split-Variablen
 		true.split <- colnames ( true ) [ !colnames ( true ) %in% c ( id.col , val.col , group.col ) ]
 		if ( identical ( true.split , character(0) ) ) {
 				true.split <- NULL
@@ -181,7 +181,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 		res <- do.call ( "rbind" , res.l )
 		rownames ( res ) <- seq ( along = rownames ( res ) )
 		
-		# wenn keine group.col gesetzt war, dann die künstlich erzeugt group.col nach id.col benennen
+		# wenn keine group.col gesetzt war, dann die kuenstlich erzeugt group.col nach id.col benennen
 		if ( rename.later ) {
 				colnames ( res ) [ colnames ( res ) == group.col ] <- id.col
 		}
