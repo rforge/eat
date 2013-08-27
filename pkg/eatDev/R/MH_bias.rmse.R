@@ -75,7 +75,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 				
 				# jetzt ist alles auf untersten Split, bis auf Replicates
 				f2 <- function ( l , nam , nr , repl.col , val.col , group.col , maxnr ) {
-						
+					
 						# Ausgabe 1/X
 						if ( verbose ) {
 								cat ( paste0 ( Sys.time() , "   " , nr , "/" , maxnr , "  " , nam ) )
@@ -90,12 +90,12 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 						# jetzt Formeln aus Babcock/Albano 2012 anwenden
 						
 						f3 <- function ( d , val.col , id.col , group.col ) {
-								
+							
 								if ( verbose ) {
 										cat ( paste0 ( "." ) )
 										flush.console()
 								}
-								
+						
 								# Check, id.col muss hier unique sein
 								# wenn nicht Warnung
 								if ( any ( duplicated ( d[,id.col] ) ) ) {
@@ -108,14 +108,16 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 								### Funktionen ###
 								# Bias
 								bias <- function ( d ) {
-										q <- apply ( d , 1 , function ( v ) (v[1] - v[2]) )
+										# q <- apply ( d , 1 , function ( v ) (v[1] - v[2]) )
+										q <- d[,1] - d[,2]
 										q2 <- sum ( q )
 										q3 <- q2 / nrow ( d )
 										return ( q3 )
 								}	
 								# Standardabweichung ohne Bias
 								biasfree.sd <- function ( d , bias ) {
-										q <- apply ( d , 1 , function ( v , bias ) ( ( ( v[1] - v[2] ) - bias )^2 ) , bias )
+										# q <- apply ( d , 1 , function ( v , bias ) ( ( ( v[1] - v[2] ) - bias )^2 ) , bias )
+										q <- ( ( d[,1] - d[,2] ) - bias )^2
 										q2 <- sum ( q )
 										q3 <- q2 / nrow ( d )
 										q4 <- sqrt ( q3 )
@@ -123,14 +125,16 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 								}	
 								# MSE
 								MSE <- function ( d ) {
-										q <- apply ( d , 1 , function ( v ) (v[1] - v[2])^2 )
+										# q <- apply ( d , 1 , function ( v ) (v[1] - v[2])^2 )
+										q <- ( d[,1] - d[,2] )^2
 										q2 <- sum ( q )
 										q3 <- q2 / nrow ( d )
 										return ( q3 )
 								}
 								# RMSE
 								RMSE <- function ( d ) {
-										q <- apply ( d , 1 , function ( v ) (v[1] - v[2])^2 )
+										# q <- apply ( d , 1 , function ( v ) (v[1] - v[2])^2 )
+										q <- ( d[,1] - d[,2] )^2
 										q2 <- sum ( q )
 										q3 <- q2 / nrow ( d )
 										q4 <- sqrt ( q3 )
@@ -152,7 +156,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 								# Datensatz reduzieren auf estimate + true value
 								val.cols <- c ( paste0 ( val.col , ".x" ) , paste0 ( val.col , ".y" ) )
 								d2 <- d[ , val.cols ]
-								
+						
 								# Rueckgabe-Datensatz
 								bias.val <- bias ( d2 )
 								res1 <- data.frame ( "bias" = bias.val , "biasfree.sd" = biasfree.sd ( d2 , bias.val ) ,"MSE" = MSE ( d2 ) , "RMSE" = RMSE ( d2 ) , "cor" = calc.cor ( d2 ) , stringsAsFactors = FALSE )
