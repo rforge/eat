@@ -26,8 +26,8 @@ get.lmer.effects <- function ( lmerObj ) {
              rr       <- as(sigma(lmerObj)^2 * chol2inv(lmerObj@RX, size = lmerObj@dims['p']), "dpoMatrix")
              nms      <- colnames(lmerObj@X)                                    ### extract matrix of fixed effects
              dimnames(rr) <- list(nms, nms)
-             korTab   <- reshape2::melt(as.matrix(as(rr, "corMatrix")))
              if(nrow( as.matrix(as(rr, "corMatrix")) ) > 1 ) {
+                 korTab   <- reshape2::melt(as.matrix(as(rr, "corMatrix")))
                  wahl2    <- which(!korTab[,1] == korTab[,2])
                  recodeString <- paste("'", 1:length(fixed),"' = '", names(fixed),"'", sep = "", collapse = "; ")
                  for ( u in 1:2) {korTab[,u] <- car::recode(korTab[,u], recodeString)}
@@ -38,4 +38,37 @@ get.lmer.effects <- function ( lmerObj ) {
              deviancF <- data.frame(type = "model", parameter = c("LogLik", "df", paste("Deviance",names(lmerObj@deviance),sep="_"), "AIC", "BIC"), value = c(LogLik[[1]], attr(LogLik, "df"), lmerObj@deviance, AIC(LogLik ), BIC(LogLik)), stringsAsFactors = FALSE )
              ret      <- plyr::rbind.fill(randomF, fixedF)
              ret      <- plyr::rbind.fill(ret, deviancF)
+             class(ret) <- c("data.frame", "lmer.effects")
              return(ret)}
+
+
+get.fixef <- function ( lmer.effects, easy.to.difficult = FALSE, withCorrelation = FALSE) {
+             if(!"lmer.effects" %in% class(lmer.effects) ) {if(!"mer" %in% class(lmer.effects)) {stop("Argument 'lmer.effects' has to be of class 'lmer.effects' or 'mer'.\n")} else { lmer.effects <- get.lmer.effects(lmer.effects)} }
+             withoutCorr <- lmer.effects[intersect ( which(lmer.effects[,"type"] == "fixed"), which (lmer.effects[,"parameter"] != "correlation" ) ) ,]
+             withoutCorr <- reshape2::dcast(withoutCorr, Var1~parameter, value.var = "value")[,c("Var1", "est", "se", "z.value", "p.value")]
+             if(easy.to.difficult == TRUE) { withoutCorr[,"est"] <- -1 * withoutCorr[,"est"]}
+             if(withCorrelation == TRUE ) {
+                onlyCorr    <- lmer.effects[intersect ( which (lmer.effects[,"parameter"] == "correlation" ), which(lmer.effects[,"type"] == "fixed")) ,]
+                if(nrow(onlyCorr)>0) {
+                   onlyCorr    <- reshape2::dcast(onlyCorr, Var1~Var2, value.var = "value")
+                   colnames(onlyCorr)[-1] <- paste("corr", colnames(onlyCorr)[-1], sep="_")
+                   withoutCorr <- merge(withoutCorr, onlyCorr, by = "Var1", all = TRUE)
+                }
+             }
+             return(withoutCorr)}
+
+
+get.ranef <- function ( lmer.effects ) {
+             if(!"lmer.effects" %in% class(lmer.effects) ) {if(!"mer" %in% class(lmer.effects)) {stop("Argument 'lmer.effects' has to be of class 'lmer.effects' or 'mer'.\n")} else { lmer.effects <- get.lmer.effects(lmer.effects)} }
+             withoutCorr <- lmer.effects[lmer.effects[,"type"] == "random" & lmer.effects[,"parameter"] != "correlation",]
+             obj     <- reshape2::dcast(withoutCorr, Var1+random.group~parameter, value.var = "value")
+             match1  <- match(c("random.group", "Var1", "var", "sd"), colnames(obj))
+             obj     <- obj[,match1]
+             onlyCorr    <- lmer.effects[lmer.effects[,"type"] == "random" & lmer.effects[,"parameter"] == "correlation",]
+             if(nrow(onlyCorr)>0) {
+                obj2 <- reshape2::dcast(onlyCorr, Var1+random.group~Var2, value.var = "value")
+                obj  <- merge(obj, obj2, by = c("random.group", "Var1"), all = TRUE)
+             }
+             match2  <- na.omit(match("residual", obj[,"Var1"]))
+             if(length(match2)>0) {obj <- obj[c(setdiff(1:nrow(obj),match2),match2) ,]}
+             return(obj)}
