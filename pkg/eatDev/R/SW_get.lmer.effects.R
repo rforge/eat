@@ -1,8 +1,7 @@
 get.lmer.effects <- function ( lmerObj ) {
              if(!exists("fixef"))        {library(lme4)}
              if(!exists("rbind.fill"))   {library(plyr)}
-             if(!exists("dcast"))        {library(reshape2)}
-             if(!exists("boxCox"))       {library(car)}
+             if(class(lmerObj) != "mer") {stop("Function argument must be of class 'mer'.\n")}
              random   <- VarCorr( lmerObj )                                     ### zunaechst werden die random effects extrahiert
              fixed    <- lme4::fixef(lmerObj)
              randomF  <- do.call("rbind", lapply(names(random), FUN = function ( y ) {
