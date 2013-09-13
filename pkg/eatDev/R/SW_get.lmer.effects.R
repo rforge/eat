@@ -1,6 +1,5 @@
 get.lmer.effects <- function ( lmerObj ) {
              if(!exists("fixef"))        {library(lme4)}
-             if(!exists("rbind.fill"))   {library(plyr)}
              if(class(lmerObj) != "mer") {stop("Function argument must be of class 'mer'.\n")}
              random   <- VarCorr( lmerObj )                                     ### zunaechst werden die random effects extrahiert
              fixed    <- lme4::fixef(lmerObj)
@@ -28,8 +27,12 @@ get.lmer.effects <- function ( lmerObj ) {
              if(nrow( as.matrix(as(rr, "corMatrix")) ) > 1 ) {
                  korTab   <- reshape2::melt(as.matrix(as(rr, "corMatrix")))
                  wahl2    <- which(!korTab[,1] == korTab[,2])
-                 recodeString <- paste("'", 1:length(fixed),"' = '", names(fixed),"'", sep = "", collapse = "; ")
-                 for ( u in 1:2) {korTab[,u] <- car::recode(korTab[,u], recodeString)}
+                 namenFixed <- gsub(":", "________XX________",names(fixed))     ### That's the problem: a <- 1:3; car::recode(a, "1 = 'test'; 2 = 'mist'; 3 = 'test:mist'")
+                 recodeString <- paste("'", 1:length(fixed),"' = '", namenFixed,"'", sep = "", collapse = "; ")
+                 for ( u in 1:2) {
+                       korTab[,u] <- car::recode(korTab[,u], recodeString)
+                       korTab[,u] <- gsub("________XX________",":",korTab[,u])
+                 }
                  wahl1    <- which(!duplicated(apply(korTab, 1, FUN = function ( xx ) { paste( sort(c(xx[1], xx[2])), collapse="_") })))
                  fixedF   <- plyr::rbind.fill( fixedF, data.frame ( korTab[intersect(wahl1, wahl2),], type = "fixed", random.group = NA, parameter = "correlation", stringsAsFactors = FALSE ) )
              }
