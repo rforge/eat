@@ -1,22 +1,14 @@
 pool.means <- function (m, se, na.rm = FALSE) {
      if(!is.list(m))  { listM  <- list(m)}  else {listM  <- m }
-     if(!is.list(se)) { listSE <- list(se)} else {listSE <- se}                 ### Untere Zeile: Listeneintraege mit 0 Elementen werden geloescht
+     createSeList <- FALSE
+     if ( length(unlist(se)) == 0 ) {createSeList <- TRUE} else {  if(all(is.na(unlist(se)))) { createSeList <- TRUE}}
+     if( createSeList == FALSE) { if(!is.list(se)) { listSE <- list(se)} else {listSE <- se}  }
+     if( createSeList == TRUE ) { listSE <- lapply(listM, FUN = function ( toNA ) { toNA <- rep(NA,length(toNA))} ) }
      stopifnot(all(unlist(lapply(listM, length)) == unlist(lapply(listSE, length)) ) )
      if( length(which(unlist(lapply(listM, length)) == 0 )) > 0 ) {listM <- listM[-which(unlist(lapply(listM, length)) == 0 )]}
      if( length(which(unlist(lapply(listSE, length)) == 0 )) > 0 ) {listSE <- listSE[-which(unlist(lapply(listSE, length)) == 0 )]}
-     listM  <- data.frame(listM,  stringsAsFactors = FALSE)
-     listSE <- data.frame(listSE, stringsAsFactors = FALSE)
-    # na.m  <- lapply(listM, FUN = function ( m ) {which(is.na(m))})
-    # na.se <- lapply(listSE, FUN = function ( se ) {which(is.na(se))})
-    # if(na.rm == FALSE) {
-    #   if(!all(lapply(na.m, length) == 0 ) ) {stop("Find unexpected missings in means.\n")}
-    #   if(!all(lapply(na.se, length) == 0) ) {stop("Find unexpected missings in standard errors.\n")}
-    # }
-    # if(na.rm == TRUE) {
-    #   if(!all(unlist(lapply(na.m, length)) == unlist(lapply(na.se, length))) ) {stop("Location(s) of missings in means differ from location(s) of missings in standard errors.\n")}
-    #   listM  <- lapply(listM, FUN = function (m) {m <- na.omit(m)})
-    #   listSE <- lapply(listSE, FUN = function (se) {se <- na.omit(se)})
-    # }                                                                         ### follows from Rubin, D. B. (2003): Nested multiple imputation of NMES via partially incompatible MCMC
+     listM  <- data.frame(do.call("cbind", listM),  stringsAsFactors = FALSE)   ### Obere Zeile: Listeneintraege mit 0 Elementen werden geloescht
+     listSE <- data.frame(do.call("cbind", listSE), stringsAsFactors = FALSE)
      M        <- length(listM[[1]])
      N        <- length(listM)                                                  ### wenn nicht genestet, muss N == 1!
      Q.all    <- mean(unlist(lapply(listM, mean)))                              ### Rubin 2003b, S. 6, unterste Formel
@@ -28,11 +20,9 @@ pool.means <- function (m, se, na.rm = FALSE) {
      var.total <- U+1/N*(1+1/M)*MS.b + (1-1/N)*MS.omega                         ### Rubin 2003b, "The quantity T", S. 7, 5. Formel
      se.pooled <- sqrt(var.total)
      betweenN  <- ifelse(N>1, ( ( 1-1/N)*MS.omega / var.total )^2 * 1/(M*(N-1)), 0 )
-     # df        <- 1 / ( (1/N*(1+1/M)*MS.b / var.total)^2 * 1/(M-1) + betweenN )
-     df        <- NA
+     df        <- 1 / ( (1/N*(1+1/M)*MS.b / var.total)^2 * 1/(M-1) + betweenN )
      pooled <- list(m = listM, var = lapply(listSE, FUN = function (x) {x^2}), summary = data.frame ( m.pooled = Q.all, se.pooled = se.pooled, df = df, stringsAsFactors = FALSE ) )
      return(pooled) }
-
 
 
 ### r2         ... Vektor von R^2-Werten aus multiple imputieren Analysen
@@ -58,3 +48,19 @@ pool.R2 <- function ( r2, N, quiet = FALSE ) {
            transformed   <- ((exp(2*untransformed)-1) / (exp(2*untransformed)+1) )^2
            if(mis.N) {return(transformed[1])} else {return(transformed)} }
 
+
+jk2.pool <- function ( datLong, groupNames ) {                                  ### untere Zeile: Hotfix!
+            if( length(which(is.na(datLong[,groupNames[1]])))>0 ) {groupingVar <- "group"} else {groupingVar <- groupNames}
+            retList <- do.call("rbind", by(data = datLong, INDICES = datLong[, c(groupingVar,"parameter")], FUN = function ( u ) {
+                ### untere Zeile: falls es nicht genauso viele Standardfehler wie Estimates gibt, konnten fuer einige Estimates keine SE berechnet werden. SEs werden daher nicht gepoolt und aus den Daten entfernt.
+                if ( length(table ( table(as.character(u[,"coefficient"])))) !=1) {u <- u[u[,"coefficient"] == "est",]}
+                if(u[1,"parameter"] %in% c("R2", "R2nagel")) {
+                   getNvalid <- merge(u,datLong[datLong[,"parameter"] == "Nvalid",], by = setdiff(colnames(u),c("parameter","value")))
+                   pooled    <- t(pool.R2 ( r2 = by(getNvalid, INDICES =getNvalid[,"nesting"], FUN = function ( uu ) {uu[,"value.x"]}), N = by(getNvalid, INDICES =getNvalid[,"nesting"], FUN = function ( uu ) {uu[,"value.y"]}), quiet=TRUE))
+                } else {
+                   toPool <- by(data = u, INDICES = factor(u[,"coefficient"],levels = c("est","se")),FUN = function ( uu ) {  by(data = uu, INDICES = uu[,"nesting"], FUN = function (uuu) {uuu[,"value"]}) })
+                   pooled <- pool.means(m = toPool[[1]], se = toPool[[2]])$summary[c("m.pooled","se.pooled")]
+                }
+                ret    <- data.frame ( group = names(table(u[,"group"])), parameter = names(table(u[,"parameter"])), coefficient = c("est","se"), value = unlist(pooled), u[1,groupNames,drop=FALSE], stringsAsFactors = FALSE)
+                return(ret)}))
+            return(retList)}

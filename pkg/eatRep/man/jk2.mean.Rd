@@ -2,15 +2,16 @@
 \alias{jk2.mean}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{JK2 for mean estimates.}
-\description{Compute means, variances and standard deviations with standard errors
+\description{Compute totals, means, variances and standard deviations with standard errors
 for complex cluster designs with multiple imputed variables (e.g. plausible values) based on Jackknife (JK2)
 procedure. Conceptually, the function combines replication methods and methods for multiple imputed data. Nested imputations of the dependent variable(s) are supported as well.
 Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} functions of the \code{'survey'} package.}
 \usage{
-jk2.mean(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, group = list(),
-         group.differences.by = NULL, dependent = list(), na.rm = FALSE,
-         complete.permutation = c("nothing", "groups", "all"), forcePooling = TRUE,
-         boundary = 3)}
+jk2.mean(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = list(),
+         group.splits = length(groups), group.differences.by = NULL, group.delimiter = "_",
+         dependent = list(), na.rm = FALSE, complete.permutation = c("nothing", "groups", "all"),
+         forcePooling = TRUE, boundary = 3)}
+         
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -36,19 +37,30 @@ standard errors are computed according to a random sample.
 Optional: Variable name or column number of variable indicating replicate ID. If \code{NULL}, no cluster structure is assumed and
 standard errors are computed according to a random sample.
 }
-  \item{group}{
+  \item{groups}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Optional: List of one or more grouping variables. If grouping variable is a multiple imputed variable,
-all names concerning one variable are interpreted as its imputations. If a nesting structure in the dependent variable is implemented,
-all grouping variables are expected to have no imputations (i.e. only one variable in the data frame) or exactly as many imputations as
-nests are specified in the dependent variable. For example, if two nests are specified in the dependent variable, a statement like this may be appropriate:
-\code{group = list(gender = "sex", hisei = c("hisei1","hisei2"))}. The function will be assume that no imputation takes place for variable \code{gender} and
-two imputations for variable \code{hisei}, corresponding to the two nests. Conversely, a statement like \code{group = list(gender = "sex", hisei = c("hisei1","hisei2","hisei3"))}
+all names concerning one variable are interpreted as its imputations. If a nesting structure in the dependent variable
+is implemented, all grouping variables are expected to have no imputations (i.e. only one variable in the data frame)
+or exactly as many imputations as nests are specified in the dependent variable. For example, if two nests are specified
+in the dependent variable, a statement like this may be appropriate:
+\code{group = list(gender = "sex", hisei = c("hisei1","hisei2"))}. The function will be assume that no imputation
+takes place for variable \code{gender} and two imputations for variable \code{hisei}, corresponding to the two nests.
+Conversely, a statement like \code{group = list(gender = "sex", hisei = c("hisei1","hisei2","hisei3"))}
 would be inconsistent. Albeit the function will not crash, the corresponding standard errors may not be trustworthy.
+}
+  \item{group.splits}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: If groups are defined, \code{group.splits} optionally specifies whether analysis should be done also
+in the whole group or overlying groups. See examples for more details.
 }
   \item{group.differences.by}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Optional: Specifies variable group differences should be computed for.
+}
+  \item{group.delimiter}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Character string which separates the group names in the output frame.
 }
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -99,7 +111,8 @@ Numerical: Defines the maximum number of missing values in standard errors to co
 %%  ~~ If necessary, more details than the description above ~~
 Function first creates replicate weights based on JKZone and JKrep variables according to JK2 procedure
 implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
-The function afterwards serves as a wrapper for \code{svymean()} called by \code{svyby()} implemented in the 'survey' package.
+The function afterwards serves as a wrapper for \code{svymean()} called by \code{svyby()} implemented in
+the 'survey' package.
 The results of the several analyses are then pooled according to Rubin's rule.
 }
 \value{
@@ -108,9 +121,9 @@ The results of the several analyses are then pooled according to Rubin's rule.
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-A list of data frames, one for each dependent variable. Each data frame contains means, variances, standard deviations and
-standard errors for all of them. If group differences were estimated, they occur as attributes of each data frame. See
-examples for further details.
+A data frame in the long format. For each subpopulation denoted by the \code{groups} statement, each
+dependent variable, each parameter (i.e., mean, variance, or group differences) and each coefficient (i.e., the estimate
+and the corresponding standard error) the corresponding value is given.
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -131,7 +144,7 @@ Sebastian Weirich
 data(reading_writing)
 ### First example: only means, SD and variances for each country
 means  <- jk2.mean(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
-          JKrep = "JKrep", group = list(country = "country"),
+          JKrep = "JKrep", groups = list(country = "country"),
           dependent = list(reading = paste("reading_score",1:3,sep=""),
                            writing = paste("writing_score",1:3,sep="") ),
           complete.permutation = "all" )
@@ -139,27 +152,28 @@ means  <- jk2.mean(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone
 ### Second example: Sex differences by country. Assume equally weighted cases by omitting
 ### 'wgt' argument.
 means  <- jk2.mean(dat = reading_writing, ID = "idstud", JKZone = "JKZone",JKrep = "JKrep",
-          group = list(country = "country", GENDER = "sex"), group.differences.by = "GENDER",
+          groups = list(country = "country", GENDER = "sex"), group.differences.by = "GENDER",
           dependent = list(reading = paste("reading_score",1:3,sep=""),
                            writing = paste("writing_score",1:3,sep="") ),
           complete.permutation = "all" )
-attr(means[[1]], "difference")
 
 ### Third example: Nested imputations of dependent variable
 ### First split the income in above and below 2000
-reading_writing[,"income1"] <- ifelse(reading_writing[,"income1"]>2000,1,0)
-reading_writing[,"income2"] <- ifelse(reading_writing[,"income2"]>2000,1,0)
+reading_writing[,"incomeS1"] <- ifelse(reading_writing[,"income1"]>2000,1,0)
+reading_writing[,"incomeS2"] <- ifelse(reading_writing[,"income2"]>2000,1,0)
 ### Assuming 2 nests (i.e. variable "income" with 2 imputations), and one common dependent variable
 ### of reading and writing. Note that complete.permutation should be set to FALSE
 means  <- jk2.mean(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
-          JKrep = "JKrep", group = list(country = "country", INCOME = c("income1","income2")),
+          JKrep = "JKrep", groups = list(country = "country", INCOME = c("incomeS1","incomeS2")),
           dependent = list(ability = list(nest1 = paste("reading_score",1:3,sep=""),
                                           nest2 = paste("writing_score",1:3,sep="") )),
           complete.permutation = "no" )
 
-### Fourth example: Assume a completely random sample (e.g. no cluster structure and no weights)
+### Fourth example: Assume a completely random sample (e.g. no cluster structure and no weights),
+### and give descriptives for subpopulations and the overlying populations
 means  <- jk2.mean(dat = reading_writing, ID = "idstud",
-          group = list(country = "country", GENDER = "sex"),
+          groups = list(country = "country", GENDER = "sex"),
+          group.splits = c(0:2),
           dependent = list(reading = paste("reading_score",1:3,sep=""),
                            writing = paste("writing_score",1:3,sep="") ),
           complete.permutation = "all" )

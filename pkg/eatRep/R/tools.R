@@ -1,7 +1,3 @@
-crop <- function ( x , char = " " ) {
-	if ( char %in% c ( "\\" , "+" , "*" , "." , "(" , ")" , "[" , "]" , "{" , "}" , "|" , "^" , "$" ) ) {char <- paste ( "\\" , char , sep = "" ) }
-	gsub ( paste ( "^" , char , "+|" , char , "+$" , sep = "" ) , "" , x ) }
-	
 .existsBackgroundVariables <- function(dat, variable )  {
                              if(!is.null(variable))  {
             								 if(is.character(variable))  {
@@ -10,11 +6,29 @@ crop <- function ( x , char = " " ) {
             									 cat(paste(misVariable,collapse=", ")); cat("\n"); stop()}
             									 varColumn <- match(variable, colnames(dat))
             								 }
-            								 if(is.numeric(variable))   {varColumn <- variable}
-                                             return(colnames(dat)[varColumn])
+            								 if(is.numeric(variable))   {
+                                if(ncol(dat) < variable ) {stop("Designated column number exceeds number of columns in dataset.\n")}
+                                varColumn <- variable
+                             }
+                           return(colnames(dat)[varColumn])
             							 }
                              if(is.null(variable)) {return(NULL)}
-                             } 
+                             }
+
+
+facToChar <- function ( dataFrame ) {
+             if(!"data.frame" %in% class(dataFrame)) {stop()}
+             classes <- which( unlist(lapply(dataFrame,class)) == "factor")
+             if(length(classes)>0) {
+                for (u in classes) {
+                     dataFrame[,u] <- as.character(dataFrame[,u]) }}
+             return(dataFrame)}
+
+
+crop <- function ( x , char = " " ) {
+	if ( char %in% c ( "\\" , "+" , "*" , "." , "(" , ")" , "[" , "]" , "{" , "}" , "|" , "^" , "$" ) ) {char <- paste ( "\\" , char , sep = "" ) }
+	gsub ( paste ( "^" , char , "+|" , char , "+$" , sep = "" ) , "" , x ) }
+
 							 
 halve.string <- function (string, pattern, first = TRUE )  {
     # if(!exists("str_split"))   {library(stringr)}
@@ -34,7 +48,7 @@ halve.string <- function (string, pattern, first = TRUE )  {
     }
     else {
         locations <- stringr:::str_locate_all(string, pattern)
-        do.call("rbind", llply(seq_along(locations), function(i) {
+        do.call("rbind", plyr::llply(seq_along(locations), function(i) {
             location <- locations[[i]]
             string <- string[i]
             pieces <- 1
@@ -47,17 +61,18 @@ halve.string <- function (string, pattern, first = TRUE )  {
         }))
     } }
 
-table.unlist <- function(dataFrame)   {
-                # if(!exists("rbind.fill.matrix"))  {library(reshape)}
+### Hilfsfunktion, ersetzt table(unlist( ... ))
+table.unlist <- function(dataFrame, verbose = TRUE)   {
+                # if(!exists("rbind.fill.matrix"))  {library(plyr)}
                 # if(class(dataFrame) != "data.frame" ) {stop("Argument of 'table.unlist' has to be of class 'data.frame'.\n")}
                 if(class(dataFrame) != "data.frame" ) {
-                   cat(paste("Warning! Argument of 'table.unlist' has to be of class 'data.frame'. Object will be converted to data.frame.\n",sep=""))
+                   if(verbose == TRUE ) {cat(paste("Warning! Argument of 'table.unlist' has to be of class 'data.frame'. Object will be converted to data.frame.\n",sep=""))}
                    dataFrame <- data.frame(dataFrame, stringsAsFactors=FALSE)
                 }
                 column.by.column   <- do.call("rbind.fill.matrix", lapply(dataFrame, FUN=function(ii) {t(table(ii))}) )
                 freq.table         <- colSums(column.by.column,na.rm=TRUE)
                 return(freq.table)}
-                
+
 wo.sind <- function(a,b,quiet=FALSE)
            {b <- data.frame(1:length(b),b,stringsAsFactors=FALSE)               ### zusätzliche Syntaxbefehle sind notwendig, damit die Funktion mit missing values umgehen kann.
             if(sum(which(is.na(a)))>0)     {cat("a contains missing values. \n")}
@@ -74,36 +89,8 @@ wo.sind <- function(a,b,quiet=FALSE)
                              if(quiet==FALSE) { cat(paste("Found",length(reihe),"elements.")); cat("\n") }}
             if(length(a)==0) {cat("No valid values in a.\n")}
             return(reihe)}
-            
-            
-desk <- function(variable,na=NA, p.weights = NULL, na.rm = FALSE) {
-         variable <- data.frame(as.matrix(variable),stringsAsFactors = FALSE)
-         if(!is.null(p.weights)) {
-             Mis.weight <- FALSE
-             stopifnot( length(p.weights) == nrow(variable) )
-          #   if(!exists("wtd.mean"))      {library(Hmisc)}
-             } else { Mis.weight <- TRUE}
-         onlyMis  <- sapply(variable, FUN = function ( y ) { all( is.na(y) ) } )
-         if(sum(onlyMis)>0) {
-            cat("Folgende Variablen wurden aufgrund durchgehend fehlender oder nicht-numerischer Werte ausgeschlossen: \n")
-            cat(paste(colnames(variable)[which(onlyMis)], collapse = ", ")); cat("\n")
-            variable <- variable[, -which(onlyMis), drop = FALSE ]
-         }
-         ret      <- do.call("rbind", lapply(variable, FUN = function ( y ) {
-                     if(Mis.weight == TRUE ) {
-                        Summe      <- sum(y, na.rm = na.rm)
-                        Mittelwert <- mean(y, na.rm = na.rm)
-                        Varianz    <- var(y, na.rm = na.rm) }
-                     if(Mis.weight == FALSE ) {
-                        Summe <- sum( y * p.weights )
-                        Mittelwert <- Hmisc::wtd.mean(x = y, weights = p.weights, na.rm = na.rm)
-                        Varianz    <- Hmisc::wtd.var(y, na.rm = na.rm)}
-                     dataFrame <- data.frame ( N = length(y), N.valid = length(na.omit(y)), Missing = length(y) - length(na.omit(y)), Minimum = min(y, na.rm = na.rm), Maximum = max(y, na.rm = na.rm), Summe = Summe, Mittelwert = Mittelwert, std.err = sd(y, na.rm = na.rm) / sqrt(length(na.omit(y))), sig = t.test(x = y)$p.value, Median = median(y, na.rm = na.rm), Streuung = sqrt(Varianz), Varianz = Varianz , stringsAsFactors = FALSE )
-                     return(dataFrame)}))
-         rownames(ret) <- colnames(variable)
-         return(ret)}
 
-         
+
 as.numeric.if.possible <- function(dataFrame, set.numeric=TRUE, transform.factors=FALSE, maintain.factor.scores = TRUE, verbose=TRUE)   {
             originWarnLevel <- getOption("warn")
             wasInputVector  <- FALSE
@@ -160,7 +147,8 @@ as.numeric.if.possible <- function(dataFrame, set.numeric=TRUE, transform.factor
               return(dataFrame)
            }
          }
-         
+
+
 make.indikator <- function(variable, name.var = "ind", force.indicators = NULL, separate.missing.indikator = c("no","ifany", "always"), sep = "_" )  {
                   separate.missing.indikator <- match.arg(separate.missing.indikator)
                   t.var <- table(variable, useNA = separate.missing.indikator )
@@ -172,7 +160,7 @@ make.indikator <- function(variable, name.var = "ind", force.indicators = NULL, 
                         t.var      <- c(t.var, add)
                      }
                   }
-                  ind.i <- data.frame( variable, sapply(names(t.var), FUN = function(iii) {
+                  ind.i <- data.frame( variable, lapply(names(t.var), FUN = function(iii) {
                            if(!is.na(iii)) {ind.iii  <- which(variable == iii)}
                            if(is.na(iii))  {ind.iii  <- which(is.na(variable))}
                            ret      <- rep(0, length(variable) )
@@ -185,9 +173,7 @@ make.indikator <- function(variable, name.var = "ind", force.indicators = NULL, 
                            return(ret)}), stringsAsFactors = FALSE )
                   colnames(ind.i)[-1] <- paste(name.var, names(t.var), sep=sep)
                   return(ind.i)}
-                  
-### as.numeric(remove.non.numeric) gives "NA" instead of empty "" in case of no numbers in n-th string
-### Bsp.: remove.non.numeric(c("5","  h89 kj.9","2-4h","aags"))
+
 remove.non.numeric <- function(string)
                       {if(!is.null(dim(string))) {dimension <- dim(string)}
                        splitt <- strsplit(string,"")
@@ -196,9 +182,25 @@ remove.non.numeric <- function(string)
                        options(warn = 0)                                        ### warnungen wieder an
                        if(!is.null(dim(string))) {splitt <- matrix(splitt,dimension[1],dimension[2],byrow = FALSE)}
                        return(splitt)}
-					   
+
+### entfernt bestimmtes Pattern aus einem String
 remove.pattern     <- function ( string, pattern ) {
                       splitt <- strsplit(string, pattern)
                       ret    <- unlist(lapply(splitt, FUN = function ( y ) { paste(y, collapse="")}))
-                      return(ret)}					   
-                  
+                      return(ret)}
+
+remove.numeric <- function(string)
+                      {if(!is.null(dim(string))) {dimension <- dim(string)}
+                       splitt <- strsplit(string,"")
+                       options(warn = -1)                                       ### warnungen aus
+                       splitt <- lapply(splitt, FUN=function(ii) {
+                                 a         <- as.numeric(ii)
+                                 change    <- which(!is.na(a))
+                                 if(length(change)>0) {ii[change] <- ""}
+                                 ii        <- paste(ii, collapse="")
+                                 return(ii)
+                       })
+                       options(warn = 0)                                        ### warnungen wieder an
+                       splitt <- unlist(splitt)
+                       if(!is.null(dim(string))) {splitt <- matrix(splitt,dimension[1],dimension[2],byrow = FALSE)}
+                       return(splitt)}

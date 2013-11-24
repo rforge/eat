@@ -2,7 +2,7 @@
 \alias{eatRep-package}
 \docType{package}
 \title{
-	Statistical analyses in complex survey designs with multiple imputed data and multicore processing.
+	Statistical analyses in complex survey designs with multiple imputed data.
 }
 \description{
   Computes some basic statistic operations (means, standard deviations, frequency tables,
@@ -27,9 +27,8 @@
   The process is often similar: Each \code{'eatRep'} function first create replicate weights based on JKzone and JKrep
   variables according to the JK2 procedure. According to multiple imputed data sets, a workbook with several analyses
   is created. Without multiple imputations, the workbook only contains one analysis. For each entry in the workbook,
-  a design object is created and the appropriate \code{'survey'} function is called. If desired, the
-  several analyses in the workbook may distributed to several logical processors automatically to accelerate the procedure.
-  If multiple imputed or nested imputed data are analyzed, the results of the workbook analyses are pooled according to
+  a design object is created and the appropriate \code{'survey'} function is called. If multiple imputed or nested
+  imputed data are analyzed, the results of the workbook analyses are pooled according to
   Rubin (1987) or Rubin (2003).
 
 }
@@ -37,8 +36,8 @@
 \tabular{ll}{
 Package: \tab eatRep\cr
 Type: \tab Package\cr
-Version: \tab 0.3.10\cr
-Date: \tab 2013-06-26\cr
+Version: \tab 0.4.0\cr
+Date: \tab 2013-11-24\cr
 License: \tab GPL(>=2)
 }
 }

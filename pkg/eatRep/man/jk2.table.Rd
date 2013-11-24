@@ -10,10 +10,11 @@ Conceptually, the function combines replication and imputation methods. Technica
 for the svymean() function of the survey package.
 }
 \usage{
-jk2.table(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, group = list(),
-          dependent = list(), separate.missing.indikator = FALSE,
-          expected.values = list(),
-          complete.permutation = c("nothing", "groups", "all")) }
+jk2.table(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = list(),
+          group.splits = length(groups), group.delimiter = "_", dependent = list(),
+          separate.missing.indikator = FALSE, expected.values = list(),
+          complete.permutation = c("nothing", "groups", "all") )}
+          
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -39,10 +40,19 @@ standard errors are computed according to a random sample.
 Optional: Variable name or column number of variable indicating replicate ID. If \code{NULL}, no cluster structure is assumed and
 standard errors are computed according to a random sample.
 }
-  \item{group}{
+  \item{groups}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Optional: List of one or more grouping variables. If grouping variable is a multiple imputed variable,
 all names concerning one variable are interpreted as its imputations. See details for more information.
+}
+  \item{group.splits}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: If groups are defined, \code{group.splits} optionally specifies whether analysis should be done also
+in the whole group or overlying groups. See examples for more details.
+}
+  \item{group.delimiter}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Character string which separates the group names in the output frame.
 }
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -88,9 +98,9 @@ which is adapted for nested imputations if the \code{dependent} argument implies
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-A list of data frames, one for each dependent variable. Each data frame contains columns for group variables (if specified),
-a columns called \code{"suffix"} which indicates the value of the corresponding categorie, the frequency of this categorie and
-it's standard error.
+A data frame in the long format. For each subpopulation denoted by the \code{groups} statement, each
+dependent variable, each parameter (i.e., the values of the corresponding categories of the dependent variable)
+and each coefficient (i.e., the estimate and the corresponding standard error) the corresponding value is given.
 }
 \references{
   Rubin, D.B. (2003): Nested multiple imputation of NMES
@@ -115,7 +125,7 @@ data(reading_writing)
 ### groups of passed and failed with respect to reading score
 freq.tab  <- jk2.table(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD",
              JKZone = "JKZone", JKrep = "JKrep",
-             group = list(country = "country",
+             groups = list(country = "country",
                           passed.reading = paste("passed_reading",1:3,sep="" )),
              dependent = list(hisei = paste("zehisei", 1:5, sep = "") ) ,
              complete.permutation = "no" )
@@ -125,7 +135,7 @@ freq.tab  <- jk2.table(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD",
 ### but a nested imputation structure. 'complete.permutation' is recommended to set
 ### to 'nothing'.
 freq.tab  <- jk2.table(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD",
-             group = list(country = "country",
+             groups = list(country = "country",
                           passed.reading = paste("passed_reading",1:2,sep="" )),
              dependent = list(hisei = list(nest1 = paste("zehisei", 1:2, sep = "") ,
                                            nest2 = paste("zehisei", 3:4, sep = "") )),

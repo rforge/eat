@@ -7,10 +7,11 @@ Conceptually, the function combines replication methods and methods for multiple
 of the \code{'survey'} package.
 }
 \usage{
-jk2.glm(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, group = list(),
-        independent = list(), reg.statement = NULL, dependent = list(),
+jk2.glm(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = list(),
+        group.splits = length(groups), group.delimiter = "_", independent = list(),
+        reg.statement = NULL, dependent = list(),
         complete.permutation = c("nothing", "groups", "independent", "all") ,
-        glm.family, forceSingularityTreatment = FALSE) }
+        glm.family, forceSingularityTreatment = FALSE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -36,11 +37,20 @@ standard errors are computed according to a random sample.
 Variable name or column number of variable indicating replicate ID. If \code{NULL}, no cluster structure is assumed and
 standard errors are computed according to a random sample.
 }
-  \item{group}{
+  \item{groups}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Optional: List of one or more grouping variables. If grouping variable is a multiple imputed variable,
 all names concerning one variable are interpreted as its imputations. See example 1, where two group variables are used: One group variable
 is multiple imputed, the other is not.
+}
+  \item{group.splits}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: If groups are defined, \code{group.splits} optionally specifies whether analysis should be done also
+in the whole group or overlying groups. See examples for more details.
+}
+  \item{group.delimiter}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Character string which separates the group names in the output frame.
 }
   \item{independent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -104,11 +114,8 @@ The results of the several analyses are then pooled according to Rubin's rule, w
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-A list of data frames, one for each dependent variable. Each data frame contains columns for group variables (if specified),
-regression weights, standard errors and r squared. Each row in the data frame corresponds to one parameter (specified in column \code{"reg"})
-in one group (specified in the column which name refers to the group name) for one dependent variable (specified in the name of the
-corresponding list element). Please not the r squared and Nagelkerkes r squared are computed each time. You should refer to common r squared in
-a linear regression, and to Nagelkerkes r squared in a logistic regression.
+A data frame in the long format. For each subpopulation denoted by the \code{groups} statement, each
+dependent variable, each parameter and each coefficient the corresponding value is given.
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -131,7 +138,7 @@ data(reading_writing)
 ### country and each hisei. This serves as an example for two group variables, where one
 ### group variable is a multiple imputed one.
 mod1  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
-         JKrep = "JKrep", group = list(country = "country", hisei = paste("zehisei", 1:5, sep = "")),
+         JKrep = "JKrep", groups = list(country = "country", hisei = paste("zehisei", 1:5, sep = "")),
          dependent = list(reading = paste("reading_score", 1:3, sep = ""),
                           writing = paste("writing_score", 1:3, sep = "")),
          independent = list(gender = "sex"),
@@ -139,7 +146,7 @@ mod1  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone =
 ### Example 2: Computes log linear regression from pass/fail on hisei and gender
 ### separately for each country
 mod2  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
-         JKrep = "JKrep", group = list(country = "country"),
+         JKrep = "JKrep", groups = list(country = "country"),
          dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""),
                           writing.pass = paste("passed_writing", 1:3, sep = "")),
          independent = list(hisei = paste("zehisei", 1:5, sep = ""), gender = "sex"),
@@ -158,7 +165,7 @@ mod2  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone =
 ### imputations (according to the two nests), whereas the second independent variable also has
 ### no imputations.
 mod3  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
-         JKrep = "JKrep", group = list(country = "country"),
+         JKrep = "JKrep", groups = list(country = "country"),
          dependent = list(ability = list ( nest1 = paste("passed_reading", 1:3, sep = ""),
                                            nest2 = paste("passed_writing", 1:3, sep = ""))),
          independent = list(hisei = paste("zehisei", 1:2, sep = ""), gender = "sex"),

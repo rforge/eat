@@ -8,9 +8,11 @@ replication methods and methods for multiple imputed data. Technically, this is 
 the \code{svyquantile()} function of the survey package.
 }
 \usage{
-jk2.quantile(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, group = list(),
-            dependent = list(), probs = seq(0, 1, 0.25),
-            complete.permutation = c("nothing", "groups", "all")) }
+jk2.quantile(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = list(),
+            group.splits = length(groups), group.delimiter = "_", dependent = list(),
+            probs = seq(0, 1, 0.25),  na.rm = FALSE,
+            complete.permutation = c("nothing", "groups", "all"), nBoot = NULL,
+            bootMethod = c("wSampling","wQuantiles"))}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -36,10 +38,19 @@ standard errors are computed according to a random sample.
 Variable name or column number of variable indicating replicate ID. If \code{NULL}, no cluster structure is assumed and
 standard errors are computed according to a random sample.
 }
-  \item{group}{
+  \item{groups}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Optional: List of one or more grouping variables. If grouping variable is a multiple imputed variable,
 all names concerning one variable are interpreted as its imputations. See details for more information.
+}
+  \item{group.splits}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: If groups are defined, \code{group.splits} optionally specifies whether analysis should be done also
+in the whole group or overlying groups. See examples for more details.
+}
+  \item{group.delimiter}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Character string which separates the group names in the output frame.
 }
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -51,6 +62,10 @@ as its imputations. See details for more information.
 %%     ~~Describe \code{sig.dif.bound} here~~
 Numeric vector with probabilities for which to compute quantiles.
 }
+  \item{na.rm}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Logical: Should cases with missing values be dropped?
+}
   \item{complete.permutation}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Argument defines the number of multiple imputed data sets. In general, the number is defined by the number of imputations
@@ -60,13 +75,27 @@ permutation, e.g. 5 plausible values and 3 imputations of one group variable res
 data sets will be used, no matter whether the larger number of imputations is a whole multiple of the smaller number of imputations. If \code{"groups"},
 only the number of imputations of more than one grouping variable will be permutated.
 }
+  \item{nBoot}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: Without replicates, standard error cannot be computed in a weighted sample. Alternatively, standard errors may
+be computed using the \code{boot} package. \code{nBoot} therefore specifies the number of bootstrap samples. If not specified,
+no standard errors will be given. In analyses containing replicates or samples without specifying person weights,
+\code{nBoot} will be ignored.
+}
+  \item{bootMethod}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: If standard error are computed in a bootstrap, two possible methods may be applied.
+\code{'wSampling'} requests the function to draw \code{nBoot} weighted bootstrap samples for which unweighted quantiles
+are computed. \code{'wQuantiles'} requests the function to draw \code{nBoot} unweighted bootstrap samples for which
+weighted quantiles are computed.
+}
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 Function first creates replicate weights based on JKZone and JKrep variables according to JK2 procedure
 implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
 The function afterwards serves as a wrapper for \code{svyquantile()} called by \code{svyby()} implemented in the 'survey' package.
-The results of the several analyses are then pooled according to Rubin's rule, which is adapted for nested imputations if the \code{dependent} argument implies a nested structure.
+The results of the several analyses are then pooled according to Rubins rule, which is adapted for nested imputations if the \code{dependent} argument implies a nested structure.
 }
 \value{
 %%  ~Describe the value returned
@@ -93,12 +122,20 @@ Sebastian Weirich
 }
 \examples{
 data(reading_writing)
-### Computes percentile for reading and writing scores conditionally on country
+### First example: Computes percentile for reading and writing scores conditionally on country
 perzent   <- jk2.quantile(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD",
-             JKZone = "JKZone", JKrep = "JKrep", group = list(country = "country"),
+             JKZone = "JKZone", JKrep = "JKrep", groups = list(country = "country"),
              dependent = list(reading = paste("reading_score", 1:3, sep = ""),
                               writing = paste("writing_score", 1:3, sep = "")  ) ,
              probs = seq(0.1,0.9,0.2), complete.permutation = "no" )
+
+### Second example: Computes percentile for reading and writing scores conditionally on country,
+### use 100 bootstrap samples
+perzent   <- jk2.quantile(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD",
+             groups = list(country = "country"),
+             dependent = list(reading = paste("reading_score", 1:3, sep = ""),
+                              writing = paste("writing_score", 1:3, sep = "")  ) ,
+             probs = seq(0.1,0.9,0.2), complete.permutation = "no", nBoot = 100 )
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
