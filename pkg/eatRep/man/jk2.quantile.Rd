@@ -12,7 +12,7 @@ jk2.quantile(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = list(),
             group.splits = length(groups), group.delimiter = "_", dependent = list(),
             probs = seq(0, 1, 0.25),  na.rm = FALSE,
             complete.permutation = c("nothing", "groups", "all"), nBoot = NULL,
-            bootMethod = c("wSampling","wQuantiles"))}
+            bootMethod = c("wSampling","wQuantiles"), doCheck = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -89,6 +89,10 @@ Optional: If standard error are computed in a bootstrap, two possible methods ma
 are computed. \code{'wQuantiles'} requests the function to draw \code{nBoot} unweighted bootstrap samples for which
 weighted quantiles are computed.
 }
+  \item{doCheck}{
+Logical: Check the data for consistency before analysis? If \code{TRUE} groups with insufficient data are excluded from
+analysis to prevent subsequent functions from crashing.
+}
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
@@ -114,9 +118,7 @@ Sebastian Weirich
 \note{
 %%  ~~further notes~~
 }
-
 %% ~Make other sections like Warning with \section{Warning }{....} ~
-
 \seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }

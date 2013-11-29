@@ -13,7 +13,7 @@ for the svymean() function of the survey package.
 jk2.table(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = list(),
           group.splits = length(groups), group.delimiter = "_", dependent = list(),
           separate.missing.indikator = FALSE, expected.values = list(),
-          complete.permutation = c("nothing", "groups", "all") )}
+          complete.permutation = c("nothing", "groups", "all"), doCheck = TRUE )}
           
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -81,6 +81,10 @@ differs from the number of imputations used for group variable(s). If \code{"all
 permutation, e.g. 5 plausible values and 3 imputations of one group variable results in 3x5=15 imputed data sets. If \code{"nothing"}, only 5 imputed
 data sets will be used, no matter whether the larger number of imputations is a whole multiple of the smaller number of imputations. If \code{"groups"},
 only the number of imputations of more than one grouping variable will be permutated.
+}
+  \item{doCheck}{
+Logical: Check the data for consistency before analysis? If \code{TRUE} groups with insufficient data are excluded from
+analysis to prevent subsequent functions from crashing.
 }
 }
 \details{

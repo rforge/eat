@@ -10,7 +10,7 @@ Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} func
 jk2.mean(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = list(),
          group.splits = length(groups), group.differences.by = NULL, group.delimiter = "_",
          dependent = list(), na.rm = FALSE, complete.permutation = c("nothing", "groups", "all"),
-         forcePooling = TRUE, boundary = 3)}
+         forcePooling = TRUE, boundary = 3, doCheck = TRUE)}
          
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -105,6 +105,10 @@ advised not to trust in starndard errors then.
 }
   \item{boundary}{
 Numerical: Defines the maximum number of missing values in standard errors to continue pooling when \code{forcePooling == TRUE}.
+}
+  \item{doCheck}{
+Logical: Check the data for consistency before analysis? If \code{TRUE} groups with insufficient data are excluded from
+analysis to prevent subsequent functions from crashing.
 }
 }
 \details{

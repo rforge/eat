@@ -11,7 +11,7 @@ jk2.glm(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = list(),
         group.splits = length(groups), group.delimiter = "_", independent = list(),
         reg.statement = NULL, dependent = list(),
         complete.permutation = c("nothing", "groups", "independent", "all") ,
-        glm.family, forceSingularityTreatment = FALSE)}
+        glm.family, forceSingularityTreatment = FALSE, doCheck = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -99,6 +99,10 @@ Argument of class \code{"family"}, specifying the link function. See help file o
   \item{forceSingularityTreatment}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Logical: Forces the function to use the workaround to handle singularities in regression models.
+}
+  \item{doCheck}{
+Logical: Check the data for consistency before analysis? If \code{TRUE} groups with insufficient data are excluded from
+analysis to prevent subsequent functions from crashing.
 }
 }
 \details{
