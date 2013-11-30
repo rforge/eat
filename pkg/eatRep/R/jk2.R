@@ -143,7 +143,7 @@ jk2.mean <- function(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = 
 			      class(allAnalyses) <- c("data.frame", "jk2.mean")
             return(allAnalyses)}
 
-summary.jk2.mean <- function ( object, omitTerms = c("mean","sd","var", "Ncases","NcasesValid", "meanGroupDiff", "se","est") ) {
+dM <- function ( object, omitTerms = c("mean","sd","var", "Ncases","NcasesValid", "meanGroupDiff", "se","est") ) {
              groupCols <- setdiff(colnames(object), c("group", "depVar", "modus", "parameter", "coefficient", "value"))
              origOmit  <- c("mean","sd","var", "Ncases","NcasesValid", "meanGroupDiff", "se","est")
              if(length(omitTerms) == length(origOmit)) { if ( all (omitTerms == origOmit )) { omitTerms <- NULL } }
@@ -321,7 +321,7 @@ jk2.table <- function(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups =
        class ( allAnalyses) <- c("data.frame", "jk2.table")
 			 return (allAnalyses) }
 
-summary.jk2.table <- function ( object, reshapeFormula = depVar + group ~ parameter + coefficient, seOmit = FALSE) {
+dT <- function ( object, reshapeFormula = depVar + group ~ parameter + coefficient, seOmit = FALSE) {
              groupCols <- setdiff(colnames(object), c("group", "depVar", "modus", "parameter", "coefficient", "value"))
              if (seOmit == TRUE) { object <- object[-grep("se", object[,"coefficient"]),]}
              ret <- merge ( reshape2::dcast(data = object, formula = reshapeFormula, value.var = "value"), object[,c("group",groupCols)], by = "group", all.x = TRUE, all.y = FALSE)
@@ -413,7 +413,7 @@ jk2.quantile <- function(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, group
              class(allAnalyses) <- c("data.frame", "jk2.quantile")
              return (allAnalyses) }
 
-summary.jk2.quantile <- function ( object, seOmit = FALSE) {
+dQ <- function ( object, seOmit = FALSE) {
              groupCols <- setdiff(colnames(object), c("group", "depVar", "modus", "parameter", "coefficient", "value"))
              if (seOmit == TRUE) { object <- object[-grep("se", object[,"coefficient"]),]}
              ret <- merge ( reshape2::dcast(data = object, formula = depVar + group ~ parameter + coefficient, value.var = "value"), object[,c("group",groupCols)], by = "group", all.x = TRUE, all.y = FALSE)
@@ -515,7 +515,7 @@ jk2.glm <- function(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = l
             return(allAnalyses)}
 
 
-summary.jk2.glm <- function ( object , analyses = NULL ) {
+dG <- function ( object , analyses = NULL ) {
             splitData <- by ( data = object, INDICES = object[,c("group", "depVar")], FUN = function ( spl ) {return(spl)})
 			      if(is.null(analyses)) {analyses <- 1:length(splitData)}
             for ( i in analyses) {
