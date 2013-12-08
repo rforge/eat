@@ -11,7 +11,7 @@ jk2.glm(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = list(),
         group.splits = length(groups), group.delimiter = "_", independent = list(),
         reg.statement = NULL, dependent = list(),
         complete.permutation = c("nothing", "groups", "independent", "all") ,
-        glm.family, forceSingularityTreatment = FALSE, doCheck = TRUE)}
+        glm.family, forceSingularityTreatment = FALSE, doCheck = TRUE, na.rm = FALSE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -103,6 +103,9 @@ Logical: Forces the function to use the workaround to handle singularities in re
   \item{doCheck}{
 Logical: Check the data for consistency before analysis? If \code{TRUE} groups with insufficient data are excluded from
 analysis to prevent subsequent functions from crashing.
+}
+  \item{na.rm}{
+Logical: Should cases with missing values be dropped?
 }
 }
 \details{

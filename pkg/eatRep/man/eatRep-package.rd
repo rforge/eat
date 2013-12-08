@@ -6,14 +6,14 @@
 }
 \description{
   Computes some basic statistic operations (means, standard deviations, frequency tables,
-  percentiles and generalized linear models) in complex survey designs which deserve special
-  procedures at least in estimating standard errors.
+  percentiles and generalized linear models) in complex survey designs comprising multiple imputed variables
+  and/or a clustered sampling structure which both deserve special procedures at least in estimating standard errors.
 
   For example, computing standard errors for the mean of a multiple imputed variable (e.g. plausible values) involves the
   formulas provided by Rubin (1987). Computing standard errors for the mean of a nested imputed variable
   involves the formulas provided by Rubin (2003). Both methods are implemented in the package.
 
-  Moreover, computing standard errors for the mean of a variable which stems from a clustered design involves
+  Moreover, computing standard errors for the mean of a variable which stems from a clustered design may involve
   replication methods like balanced repeated replicate (BRR), bootstrap or Jackknife methods.
   See Weststat (2000), Foy, Galia & Li, 2008, and Wolter, 1985 for details. To date, only the Jackknife-2
   procedure (JK2) is supported.
@@ -36,8 +36,8 @@
 \tabular{ll}{
 Package: \tab eatRep\cr
 Type: \tab Package\cr
-Version: \tab 0.4.2\cr
-Date: \tab 2013-11-29\cr
+Version: \tab 0.4.3\cr
+Date: \tab 2013-12-08\cr
 License: \tab GPL(>=2)
 }
 }

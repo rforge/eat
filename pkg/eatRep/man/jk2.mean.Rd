@@ -8,8 +8,9 @@ procedure. Conceptually, the function combines replication methods and methods f
 Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} functions of the \code{'survey'} package.}
 \usage{
 jk2.mean(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = list(),
-         group.splits = length(groups), group.differences.by = NULL, group.delimiter = "_",
-         dependent = list(), na.rm = FALSE, complete.permutation = c("nothing", "groups", "all"),
+         group.splits = length(groups), group.differences.by = NULL,
+         group.delimiter = "_", dependent = list(), na.rm = FALSE,
+         complete.permutation = c("nothing", "groups", "all"),
          forcePooling = TRUE, boundary = 3, doCheck = TRUE)}
          
 %- maybe also 'usage' for other objects documented here.
@@ -82,7 +83,6 @@ is to define which variables belong to which nest, whereas all variables belong 
 See details and examples for more information.
 }
   \item{na.rm}{
-%%     ~~Describe \code{sig.dif.bound} here~~
 Logical: Should cases with missing values be dropped?
 }
   \item{complete.permutation}{

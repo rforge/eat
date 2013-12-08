@@ -205,10 +205,11 @@ dependent variable (here: only the reading competence), each parameter (we reque
 sample size or population size) and each coefficient (i.e., the estimate and the corresponding standard error) the 
 corresponding value is given. To display the results in the more common wide format, use the \code{reshape2} package. 
 A possible call would be \code{reshape2::dcast(means, group ~ parameter+coefficient, value.var = "value")}. Alternatively, 
-an abbreviated display of the results is provided by the \code{summary} function. Note that the \code{summary} method 
-implemented in \code{eatRep} is \emph{not} intended for saving results or further processing as the results are displayed
-in an abbreviated (i.e., rounded) matter to offer clear arrangement on console. The \code{summary} function has an 
-additional argument to omit displaying parameters or coefficients you are not interested at the moment. \\
+an abbreviated display of the results is provided by the \code{dM} function (whereas dM stands for "display means").
+You may think of \code{dM} as a simple summary function which is not intended for saving results or further processing
+as the results are displayed in an abbreviated (i.e., rounded) manner to offer clear arrangement on console.
+The \code{dM} function has an additional argument to omit displaying parameters or coefficients you are
+not interested at the moment. \\
 
 <<readingMeansByCountryResultsdefSummary>>=
 dM(means, omitTerms = c("var", "Ncases","NcasesValid", "meanGroupDiff") )
@@ -252,7 +253,7 @@ federal state. The grouping variable for which mean differences should be comput
 the \code{group.differences.by} argument. For a grouping variable with $K$ levels, all $K!/(2!*(K-2)!)$ comparisons
 are computed. It is important that the group defined in \code{group.differences.by} also has to occur in the \code{groups} 
 statement, otherwise \code{group.differences.by} will be ignored. To estimate gender differences \emph{within each 
-federal state}, gender and federal state has to be part of the \code{groups} statement, whereas only gender has to be 
+federal state}, gender and federal state have to be part of the \code{groups} statement, whereas only gender has to be
 used in the \code{group.differences.by} argument. Both features are illustrated in the following example:\\
 
 <<readingMeansByCountry4def>>=
@@ -267,9 +268,9 @@ population and the 6 subpopulations. Consequently, two analyses are conducted. T
 applies for the second analysis, as the gender group is not considered relating to the whole population analysis. 
 Please note that you have to use the name of the group variable, not the group variable itself: 
 \code{group.differences.by = "gender"} instead of \code{group.differences.by = "sex"}! To estimate gender differences 
-\emph{across each federal state}, only gender has to be part of the \code{group} statement, and only gender has to be 
+\emph{across all federal states}, only gender has to be part of the \code{group} statement, and only gender has to be
 used in the \code{group.differences.by} argument. The output of the analysis is nearly the same as we would have omitted 
-the \code{group.differences.by} argument, but now, some additional lines have joined. Again, we may use the \code{summary} 
+the \code{group.differences.by} argument, but now, some additional lines have joined. Again, we may use the \code{dM}
 function to display the part of the results we are interested in---note that now we do \emph{not} 
 exclude \code{meanGroupDiff} from the results to summarize:\\
 
@@ -311,8 +312,9 @@ freqs <- jk2.table(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD",
 dT(freqs)
 @
 
-The output is a single data frame in the long format. Again we use the \code{summary} function to make the output more
-pleasing to the eye. For each gender group in each country, the relative frequency
+The output is a single data frame in the long format. To make the output more
+pleasing to the eye, a short summary function \code{dT} is just waiting to do her job, to summarize the results.
+For each gender group in each country, the relative frequency
 of each Hisei category is given with its standard error. The first column refers to the dependent variable for which we 
 want to compute frequencies. The next two columns refer to the groups specified in the analysis 
 (in our example: \code{federalState} and \code{gender}). The ``labels'' of the dependent variable
@@ -384,21 +386,25 @@ mod1  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone =
                           writing = paste("writing_score", 1:3, sep = "")),
          independent = list(gender = "sex", INCOME = c("income1", "income2")),
          complete.permutation = "no", glm.family = gaussian(link="identity") )
-dG(mod1, analyses = 1:2)
 @
 
 As we might have expected, the outcome is a single data frame in the long format. And long really means long!
-For our purpose, it may be sufficient to content ourself with the summary. First let us consider how many regression 
-analyses are conducted. The message on the console speaks of about "2 analyses overall" according to two dependent variables,
-reading and writing. But strictly speaking, we have estimated \emph{six} regression analyses, as the model is fitted in each
-group separately! As we specified one group variable dividing the data into three distinct groups, for which we instruct
+For our purpose, it may be sufficient to content ourself with the summary provided by \code{dG}. But beforehand let us 
+consider how many regression analyses are conducted and how many results we expect to find. The message on the console 
+speaks of about "2 analyses overall" according to two dependent variables, reading and writing. But strictly speaking, 
+we have estimated six regression analyses, as the model is fitted in each
+group separately. As we specified one group variable dividing the data into three distinct groups, for which we instruct
 \code{jk2.glm()} to fit the regression model separately, we find results of the three models for each of the two dependent 
 variables in the results. More specifically, for each country, an intercept and two regression coefficients according 
-to \code{gender} and \code{INCOME} are estimated. The \code{summary} function allows us to have a look only 
-at a specific result out of the 6. \code{analyses = 1:2} advises the function to display the results of the first and second
-analysis. First we should consider that the each single analyses is characterized by two variables, the group for 
-which the model is fitted, and the dependent variable. In the heading we find information about both. The actual 
-regression results are displayed underneath. \\
+to \code{gender} and \code{INCOME} are estimated. The \code{dG} function allows us to have a look only
+at a specific result out of the 6 analyses. \code{analyses = 1:2} advises the function to display the results of the 
+first and second analysis. First we should consider that each single analyses is characterized by two variables, 
+the group for which the model is fitted, and the dependent variable. In the heading we find information about both. 
+The actual regression results are displayed underneath. \\
+
+<<regression1defResults1>>=
+dG(mod1, analyses = 1:2)
+@
 
 Remember what was said about factors in the chapter about frequency tables: The gender variable now
 has to be defined explicitly to be of class factor! Otherwise, albeit gender variable may be coded as 0/1, it would be treated to be a
