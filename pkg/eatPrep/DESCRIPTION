@@ -3,7 +3,7 @@ Type: Package
 Title: eatPrep
 Version: 0.1.5
 Depends: R (>= 2.14.0), eatTools, xlsx, car, foreign, reshape 
-Date: 2013-02-21
+Date: 2013-12-16
 Author: eat authors <eat-commits@lists.r-forge.r-project.org>
 Maintainer: eat authors <eat-commits@lists.r-forge.r-project.org>
 Description: preparing data for IRT modeling
