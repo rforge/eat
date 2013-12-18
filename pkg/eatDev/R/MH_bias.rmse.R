@@ -103,7 +103,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 							
 								# Ausgabe 1/X
 								if ( verbose ) {
-										cat ( paste0 ( Sys.time() , "   " , nr , "/" , maxnr , "  " , nam ) )
+										cat ( paste0 ( Sys.time() , "   " , nr , "/" , maxnr , "  " , nam , "  " ) )
 										flush.console()
 								}
 								
@@ -112,21 +112,33 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 										# nach Replicates splitten
 										# d.h. Kennwerte werden über group innerhalb jedes replicate berechnet
 										l2 <- split ( l , f = list ( l[,repl.col] ) , drop = TRUE )
+										if ( verbose ) {
+												cat ( paste0 ( "aggregating over variable groups per replicate\n" ) )
+												flush.console()
+										}
 								} else {
 										# method == "repl"
 										# nach variable splitten
 										# d.h. Kennwerte werden über replicates innerhalb jedes Parameters berechnet
 										l2 <- split ( l , f = list ( l[,id.col] ) , drop = TRUE )
+										if ( verbose ) {
+												cat ( paste0 ( "aggregating over replicates per variable\n" ) )
+												flush.console()
+										}								
 								}
 								
 								# l2 ist jetzt auf unterster Ebene
 								# d.h. enthaelt Gruppenelemente (z.B. Items) in den Datensaetzen der Replikationen
 								# jetzt Formeln aus Babcock/Albano 2012 anwenden
 								
-								f3 <- function ( d , val.col , id.col , group.col , method ) {
-								
+								f3 <- function ( d , val.col , id.col , group.col , repl.col , method ) {
+
 										if ( verbose ) {
-												cat ( paste0 ( "." ) )
+												if ( method == "group" ) {
+														cat ( paste0 ( "replicate " , d[1,repl.col] , " group " , d[1,group.col] , " Nvar=" , nrow ( d ) , "\n" ) )
+												} else {
+														cat ( paste0 ( d[1,id.col] , " Nrepl=" , nrow ( d ) , "\n" ) )
+												}
 												flush.console()
 										}
 										
@@ -218,12 +230,16 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 										return ( res2 )
 										
 								}
-								res3.l <- mapply ( f3 , l2 , MoreArgs = list ( val.col , id.col , group.col , method ) , SIMPLIFY = FALSE )
-								if ( verbose ) {
-										cat ( paste0 ( "\n" ) )
-								}
+								res3.l <- mapply ( f3 , l2 , MoreArgs = list ( val.col , id.col , group.col , repl.col , method ) , SIMPLIFY = FALSE )
+								# if ( verbose ) { 
+										# cat ( paste0 ( "\n" ) )
+								# }
 								res3 <- do.call ( "rbind" , res3.l )
 
+								if ( verbose ) {
+										cat ( paste0 ( "Meaning over " , nrow ( res3 ) , " rows" , "\n\n" ) )
+								}
+								
 								# Mitteln
 								res4 <- res3[1,,drop=FALSE]
 								res4$bias <- mean ( res3$bias )
@@ -263,7 +279,8 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 # est <-  data.frame ( "variable" = c ("item1","item2") ,
 					 # "value" = rnorm ( 2 , 1 , 1 ) ,
 					 # stringsAsFactors = FALSE )
-# bias.rmse ( true , est , id.col = "variable" , val.col = "value" , group.col = "group" )	
+# bias.rmse ( true , est , id.col = "variable" , val.col = "value" , group.col = "group" , verbose = TRUE )	
+
 
 ### Beispiel 2, zusaetzlich 2 Replicates
 # true <- data.frame ( "variable" = c ("item1","item2") ,
@@ -275,10 +292,9 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 					 # "replicates" = c ( 1 , 2 , 1 , 2 ) , 					 
 					 # stringsAsFactors = FALSE )
 
-# bias.rmse ( true , est , id.col = "variable" , val.col = "value" , group.col = "group" , repl.col = "replicates" , method = "group" )		 
-# bias.rmse ( true , est , id.col = "variable" , val.col = "value" , group.col = "group" , repl.col = "replicates" , method = "repl" )		 
-# bias.rmse ( true , est , id.col = "variable" , val.col = "value" , group.col = "group" , repl.col = "replicates" )		 
-
+# bias.rmse ( true , est , id.col = "variable" , val.col = "value" , group.col = "group" , repl.col = "replicates" , method = "group" , verbose = TRUE)		 
+# bias.rmse ( true , est , id.col = "variable" , val.col = "value" , group.col = "group" , repl.col = "replicates" , method = "repl" , verbose = TRUE)		 
+# bias.rmse ( true , est , id.col = "variable" , val.col = "value" , group.col = "group" , repl.col = "replicates" , verbose = TRUE)		 
 
 					 
 ### Beispiel 3, zusaetzlich 2 data conditions
@@ -292,7 +308,8 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 					 # "replicates" = rep ( c ( 1 , 2 , 1 , 2 ) ) , 
 					 # "data.cond" = c ( rep ( 1 , 4 ) , rep ( 2 , 4 ) ) ,
 					 # stringsAsFactors = FALSE )
-# bias.rmse ( true , est , id.col = "variable" , val.col = "value" , group.col = "group" , repl.col = "replicates" )		 
+# bias.rmse ( true , est , id.col = "variable" , val.col = "value" , group.col = "group" , repl.col = "replicates" , verbose = TRUE )		 
+	
 	
 ### Beispiel 4, 2 models
 # true <- data.frame ( "variable" = c ("item1","item2") ,
@@ -304,7 +321,8 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 					 # "replicates" = rep ( c ( 1 , 2 , 1 , 2 ) ) , 
 					 # "model" = c ( rep ( "m1" , 4 ) , rep ( "m2" , 4 ) ) ,
 					 # stringsAsFactors = FALSE )
-# bias.rmse ( true , est , id.col = "variable" , val.col = "value" , group.col = "group" , repl.col = "replicates" )		 
+# bias.rmse ( true , est , id.col = "variable" , val.col = "value" , group.col = "group" , repl.col = "replicates" , verbose = TRUE )		 
+
 
 ### Beispiel 5, 2 data conditions und 2 models
 # true <- data.frame ( "variable" = rep ( c ("item1","item2") , 2 ) ,
@@ -318,7 +336,8 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 					 # "replicates" = rep ( rep ( c ( 1 , 2 , 1 , 2 ) ) , 2 ) , 
 					 # "model" = c ( rep ( "m1" , 8 ) , rep ( "m2" , 8 ) ) ,
 					 # stringsAsFactors = FALSE )
-# bias.rmse ( true , est , id.col = "variable" , val.col = "value" , group.col = "group" , repl.col = "replicates" )
+# bias.rmse ( true , est , id.col = "variable" , val.col = "value" , group.col = "group" , repl.col = "replicates" , verbose = TRUE )
+
 
 ### Beispiel 6, mehrere groups
 # true <- data.frame ( "variable" = c ("item1","item2","person1","person2","randeff1") ,
@@ -328,7 +347,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 # est <-  data.frame ( "variable" = c ("item1","item2","person1","person2","randeff1") ,
 					 # "value" = rnorm ( 5 , 1 , 1 ) ,
 					 # stringsAsFactors = FALSE )
-# bias.rmse ( true , est , id.col = "variable" , val.col = "value" , group.col = "group" )	
+# bias.rmse ( true , est , id.col = "variable" , val.col = "value" , group.col = "group" , verbose = TRUE )	
 
 
 
