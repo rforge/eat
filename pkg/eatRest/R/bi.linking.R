@@ -454,9 +454,9 @@ bi.linking <- function ( results , folder=NULL , file.name=NULL , method = NULL 
 
 		a <- expand.grid (v,v,stringsAsFactors=FALSE) 
 		d <- cbind (a,"value"=v)
-		e <- cast ( d , Var1 ~ Var2 , value = "value" )
+		e <- reshape2::dcast ( d , Var1 ~ Var2 , value.var = "value" )
 		if ( lower ) f <- lower.tri ( e ) else f <- upper.tri ( e )
-		g <- melt ( f )
+		g <- reshape2::melt ( f )
 		h <- a [ g[,3] , ]
 	
 }
@@ -464,7 +464,7 @@ bi.linking <- function ( results , folder=NULL , file.name=NULL , method = NULL 
 #( .expand.grid.triangle ( c ( 1,2,3 ) , lower = FALSE ) )
 
 .cast.matrix.long <- function ( matrix.long , cast.val , matrix.sorted ) {
-		matrix.cast <- as.data.frame ( cast ( matrix.long , Var1 ~ Var2 , value = cast.val ) )
+		matrix.cast <- as.data.frame ( reshape2::dcast ( matrix.long , Var1 ~ Var2 , value.var = cast.val ) )
 		rownames ( matrix.cast ) <- matrix.cast [ , 1 ]
 		matrix.unsorted <- matrix.cast[,-1,drop=FALSE]
 	

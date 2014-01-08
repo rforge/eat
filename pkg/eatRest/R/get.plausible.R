@@ -68,8 +68,8 @@ get.plausible <- function (file, verbose = FALSE) {
                        is.na.ID        <- TRUE                                  ### Die ID wird später wieder gelöscht. Um das machen zu können, wird Indikatorvariable erzeugt, die sagt, ob ID fehlend war.
                        input.sel$ID    <- rep( 1: n.person, each = pv.pro.person)
                     }
-                    input.melt      <- melt(input.sel, id = c("ID", "PV.Nr") , stringsAsFactors = FALSE)
-                    input.wide      <- data.frame( case = gsub(" ", "0",formatC(as.character(1:n.person),width = nchar(n.person))) , cast(input.melt, ... ~ variable + PV.Nr) , stringsAsFactors = FALSE)
+                    input.melt      <- reshape2::melt(input.sel, id.vars = c("ID", "PV.Nr") , stringsAsFactors = FALSE)
+                    input.wide      <- data.frame( case = gsub(" ", "0",formatC(as.character(1:n.person),width = nchar(n.person))) , reshape2::dcast(input.melt, ... ~ variable + PV.Nr) , stringsAsFactors = FALSE)
                     colnames(input.wide)[-c(1:2)] <- paste("pv.", rep(dimNames, each = pv.pro.person), "_", rep(1:pv.pro.person, n.dim), sep="")
                     weg.eap         <- (1:n.person)*(pv.pro.person+3) - (pv.pro.person+2)
                     input.eap    <- input[setdiff(weg,weg.eap),]                ### nimm EAPs und deren Standardfehler und hänge sie an Datensatz - all rows that have not been used before
