@@ -58,6 +58,7 @@ adjustDependentForNested <- function ( dependent, complete.permutation, group ) 
 ###                       Bsp.: group = list(BL = c("bl1", "bl2", "bl3", "bl4", "bl5"), geschlecht = "sex"), group.differences.by = "geschlecht". Hier werden in jedem BL Geschlechtsunterschiede bestimmt.
 ### complete.permutation  Wenn Anzahl der Imputationen von unabhängiger und abhängiger Variable variiert
 jk2.mean <- function(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = list(), group.splits = length(groups), group.differences.by = NULL, group.delimiter = "_", dependent = list(), na.rm = FALSE, complete.permutation = c("nothing", "groups", "all"), forcePooling = TRUE, boundary = 3, doCheck = TRUE)    {
+            checkForReshape()
             complete.permutation <- match.arg ( complete.permutation )
             if(length(groups)>0) {
                toLapply <- superSplitter(group = groups, group.splits = group.splits, group.differences.by = group.differences.by, group.delimiter = group.delimiter , dependent=dependent )
@@ -204,11 +205,18 @@ checkData <- function ( dat, ID, wgt, JKZone, JKrep, group, independent = NULL, 
              return(data.frame(ret[,ID,drop=FALSE], allCheck = as.character( rowSums(ret[,-1,drop=FALSE])==(ncol(ret)-1) ), stringsAsFactors = FALSE))}
 
 
+checkForReshape <- function () {
+        if("package:reshape" %in% search() ) {
+           cat("Warning: Package 'reshape' is attached. Functions in package 'eatRep' depend on 'reshape2'. 'reshape' and 'reshape2' conflict in some way.\n  'reshape' therefore will be detached now. \n")
+           detach(package:reshape) } }
+
+
 ### separate.missing.indikator ... Soll eine separate Kategorie für missings definiert werden?
 ### expected.values            ... optional (und empfohlen): Vorgabe für erwartete Werte, vgl. "table.muster"
 ###                                kann entweder eine benannte Liste sein, mit Namen wie in "dependent", oder ein einfacher character Vektor, dann werden diese Vorgaben für alle abhängigen Variablen übernommen
 ###                                bleibt "expected.values" leer, dann wird es automatisch mit den Werten der Variablen in ihrer Gesamtheit belegt!
 jk2.table <- function(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = list(), group.splits = length(groups), group.delimiter = "_", dependent = list(), separate.missing.indikator = FALSE, expected.values = list(), complete.permutation = c("nothing", "groups", "all"), doCheck = TRUE )    {
+             checkForReshape()
              complete.permutation <- match.arg ( complete.permutation )
              if(length(groups)>0) {
                 toLapply <- superSplitter(group = groups, group.splits = group.splits, group.delimiter = group.delimiter , dependent=dependent )
@@ -332,6 +340,7 @@ dT <- function ( object, reshapeFormula = depVar + group ~ parameter + coefficie
 
 
 jk2.quantile <- function(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = list(), group.splits = length(groups), group.delimiter = "_", dependent = list(), probs = seq(0, 1, 0.25),  na.rm = FALSE, complete.permutation = c("nothing", "groups", "all"), nBoot = NULL, bootMethod = c("wSampling","wQuantiles") , doCheck = TRUE)    {
+            checkForReshape()
             bootMethod           <- match.arg ( bootMethod )
             complete.permutation <- match.arg ( complete.permutation )
             if(length(groups)>0) {
@@ -424,6 +433,7 @@ dQ <- function ( object, seOmit = FALSE) {
 
 
 jk2.glm <- function(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = list(), group.splits = length(groups), group.delimiter = "_", independent = list(), reg.statement = NULL, dependent = list(), complete.permutation = c("nothing", "groups", "independent", "all") , glm.family, forceSingularityTreatment = FALSE, doCheck = TRUE, na.rm = FALSE )    {
+            checkForReshape()
             complete.permutation <- match.arg ( complete.permutation )
             if(length(groups)>0) {
                toLapply <- superSplitter(group = groups, group.splits = group.splits, group.delimiter = group.delimiter , dependent=dependent )
