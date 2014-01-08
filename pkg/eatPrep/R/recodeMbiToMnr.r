@@ -75,7 +75,7 @@ recodeMbiToMnr <- function (dat, id, rotation.id = NULL, booklets, blocks, rotat
     booklets <- booklets [ - which(booklets$booklet %in% bookletsWithoutPersons) , ]
   }
   
-  booklet.long <- melt(booklets, id.var = "booklet", na.rm = T)
+  booklet.long <- reshape2::melt(booklets, id.var = "booklet", na.rm = TRUE)
   colnames(booklet.long) <- c("booklet", "blockPosition", "block")
   booklet.long <- booklet.long[ booklet.long$block != "", ]
   booklet.long$block <- paste(booklet.long$block)

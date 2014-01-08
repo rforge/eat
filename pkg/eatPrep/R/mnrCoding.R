@@ -78,7 +78,7 @@ mnrCoding <- function ( dat , pid , rotation.id , blocks , booklets , breaks , s
 				blocks$subunitBlockPosition <- as.integer ( blocks$subunitBlockPosition )
 
 				# booklet long
-				bookl.long <- melt (booklets, id.vars = "booklet", na.rm = FALSE ) 
+				bookl.long <- reshape2::melt (booklets, id.vars = "booklet", na.rm = FALSE ) 
 				colnames(bookl.long) <- c("booklet","block.wide.name","block")
 				bookl.long$booklet <- as.character ( bookl.long$booklet )
 				bookl.long$block.wide.name <- as.character ( bookl.long$block.wide.name )
