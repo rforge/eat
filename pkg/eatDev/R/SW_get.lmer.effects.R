@@ -1,7 +1,13 @@
+checkForReshape <- function () {
+        if("package:reshape" %in% search() ) {
+           cat("Warning: Package 'reshape' is attached. Functions in package 'eatRep' depend on 'reshape2'. 'reshape' and 'reshape2' conflict in some way.\n  'reshape' therefore will be detached now. \n")
+           detach(package:reshape) } }
+
 ### 10.02.2014
 ### Funktion identifiziert lme4-Version und variiert das Auslesen je nachdem ob Version < 1 oder > 1
 get.lmer.effects <- function ( lmerObj , saveData = TRUE) {
-             if(!exists("fixef"))        {library(lme4)}
+             checkForReshape()
+			 if(!exists("fixef"))        {library(lme4)}
              lme4Ver  <- installed.packages()
              lme4Ver  <- substr(lme4Ver[lme4Ver[,"Package"] == "lme4","Version"],1,1)
              random   <- VarCorr( lmerObj ) 
@@ -69,7 +75,8 @@ get.lmer.effects <- function ( lmerObj , saveData = TRUE) {
 
 
 get.fixef <- function ( lmer.effects, easy.to.difficult = FALSE, withCorrelation = FALSE) {
-             if(!"lmer.effects" %in% class(lmer.effects) ) {lmer.effects <- get.lmer.effects(lmer.effects)}
+             checkForReshape()
+			 if(!"lmer.effects" %in% class(lmer.effects) ) {lmer.effects <- get.lmer.effects(lmer.effects)}
              withoutCorr <- lmer.effects[intersect ( which(lmer.effects[,"type"] == "fixed"), which (lmer.effects[,"parameter"] != "correlation" ) ) ,]
              withoutCorr <- reshape2::dcast(withoutCorr, Var1~parameter, value.var = "value")[,c("Var1", "est", "se", "z.value", "p.value")]
              if(easy.to.difficult == TRUE) { withoutCorr[,"est"] <- -1 * withoutCorr[,"est"]}
@@ -85,6 +92,7 @@ get.fixef <- function ( lmer.effects, easy.to.difficult = FALSE, withCorrelation
              
 
 get.ranef <- function ( lmer.effects ) {
+		     checkForReshape()
              if(!"lmer.effects" %in% class(lmer.effects) ) {lmer.effects <- get.lmer.effects(lmer.effects)}
              withoutCorr <- lmer.effects[lmer.effects[,"type"] == "random" & lmer.effects[,"parameter"] != "correlation",]
              obj     <- reshape2::dcast(withoutCorr, Var1+random.group~parameter, value.var = "value")
