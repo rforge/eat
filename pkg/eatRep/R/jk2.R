@@ -99,6 +99,11 @@ jk2.mean <- function(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = 
                     kritisch    <- unique(setdiff(kritisch, c("numeric", "integer")))
                     if(length(kritisch)>0) {cat(paste("WARNING: Found non-numeric variable classes in dependent variables: ",paste(unique(kritisch),collapse = ", "),". Analysis may fail.\n",sep=""))}
                     cat(paste("Found ",length(nam[["groupSet"]])," grouping variable(s).\n",sep=""), file=catPrms$file, append=catPrms$append)
+                    ### ID Variable muss unique sein!
+                    doppelt <- which(duplicated(dat.i[, all.Names[["ID"]] ]))
+                    if(length(doppelt)>0)  {
+                       stop(paste( length(doppelt) , " duplicate IDs found!",sep=""))
+                    }
                     .checkGroupConsistency(dat = dat, group = nam[["groupSet"]])
                     cat(paste("Run ",length(dependent)," analyses overall.\n", sep = ""), file=catPrms$file, append=catPrms$append)
                     if ( complete.permutation == "groups" ) {group <- as.list(expand.grid(nam[["groupSet"]], stringsAsFactors = FALSE))} else { group <- nam[["groupSet"]]}
@@ -249,6 +254,11 @@ jk2.table <- function(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups =
                       kritisch    <- setdiff( names(missings[missings!=0]) , unlist(dependent ) )
                       if(length(kritisch)>0) {stop(paste("Found NAs in variable(s) ",paste(kritisch, collapse = ", "), "\n",sep = "") )}
                       cat(paste("Found ",length(nam[["groupSet"]])," grouping variable(s).\n",sep=""), file=catPrms$file, append=catPrms$append)
+                      ### ID Variable muss unique sein!
+                      doppelt <- which(duplicated(dat.i[, all.Names[["ID"]] ]))
+                      if(length(doppelt)>0)  {
+                         stop(paste( length(doppelt) , " duplicate IDs found!",sep=""))
+                      }
                       .checkGroupConsistency(dat = dat, group = nam[["groupSet"]])
                       cat(paste("Run ",length(dependent)," analyses overall.\n", sep = ""), file=catPrms$file, append=catPrms$append)
                       flush.console()
@@ -373,6 +383,11 @@ jk2.quantile <- function(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, group
                       missings    <- sapply(dat.i, FUN = function (uu) {length(which(is.na(uu)))})
                       if(na.rm == FALSE ) { if(!all(missings == 0)) {stop(paste("Found NAs in variable(s) ",paste(names(missings[missings!=0]), collapse = ", "), "\n",sep = "") )} }
                       cat(paste("Found ",length(nam[["groupSet"]])," grouping variable(s).\n",sep=""),file=catPrms$file, append=catPrms$append)
+                      ### ID Variable muss unique sein!
+                      doppelt <- which(duplicated(dat.i[, all.Names[["ID"]] ]))
+                      if(length(doppelt)>0)  {
+                         stop(paste( length(doppelt) , " duplicate IDs found!",sep=""))
+                      }
                       .checkGroupConsistency(dat = dat, group = nam[["groupSet"]])
                       groupsize   <- sapply(nam[["groupSet"]], FUN = function (iii ) {length(iii)})
                       cat(paste("Run ",length(dependent)," analyses overall.\n", sep = ""),file=catPrms$file, append=catPrms$append)
@@ -477,6 +492,11 @@ jk2.glm <- function(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = l
                     missings    <- sapply(dat.i, FUN = function (uu) {length(which(is.na(uu)))})
                     if(na.rm == FALSE ) {if(!all(missings == 0)) {stop(paste("Found NAs in variable(s) ",paste(names(missings[missings!=0]), collapse = ", "), "\n",sep = "") )}}
                     cat(paste("Found ",length(nam[["groupSet"]])," grouping variable(s).\n",sep=""),file=catPrms$file, append=catPrms$append)
+                    ### ID Variable muss unique sein!
+                    doppelt <- which(duplicated(dat.i[, all.Names[["ID"]] ]))
+                    if(length(doppelt)>0)  {
+                       stop(paste( length(doppelt) , " duplicate IDs found!",sep=""))
+                    }
                     .checkGroupConsistency(dat = dat, group = nam[["groupSet"]])
                     cat(paste("Run ",length(dependent)," analyses overall.\n", sep = ""))
                     if ( complete.permutation == "groups" )      {group       <- as.list(expand.grid(nam[["groupSet"]], stringsAsFactors = FALSE))} else { group <- nam[["groupSet"]]}

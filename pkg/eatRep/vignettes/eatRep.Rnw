@@ -188,7 +188,7 @@ that the subsequent analysis has to be repeated 81 times \emph{for each imputati
 one unit (e.g. school) of a certain jackknifing zone is missing and the weights of the other unit of the same zone are 
 doubled. The data in all other zones remain unchanged. Each analysis revealed slighty different results. This variation is used
 to estimate the sampling variance. But why it is talking about 3 replications overall? This refers to the "imputation replicates",
-because because we have defined three plausible values of the dependent variable. Whereas we only change the weights in the
+because we have defined three plausible values of the dependent variable. Whereas we only change the weights in the
 "cluster replicates" and work with identical variables, we change the variables (e.g. the imputations) between the "imputation
 replicates". To sum up, for each of the three imputations, 81 analyses are executed, which results in $3\times 81=243$ 
 analyses overall. The little dots continuously appearing on the console therefore refer to "imputation replicates" and are 
