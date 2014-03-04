@@ -17,11 +17,11 @@ jk2.mean(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = list(),
 \arguments{
   \item{dat}{
 %%     ~~Describe \code{file} here~~
-Data frame containing all variables for analysis.
+Data frame in wide format (i.e. each line represents one ID unit) containing all variables for analysis.
 }
   \item{ID}{
 %%     ~~Describe \code{dif.term} here~~
-Variable name or column number of ID variable.
+Variable name or column number of unique identifier (ID) variable. ID variable must not contain any missing values. 
 }
   \item{wgt}{
 %%     ~~Describe \code{split.dif} here~~
