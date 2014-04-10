@@ -1,0 +1,13 @@
+Package: eatGet
+Type: Package
+Title: eatGet
+Version: 0.0.1
+Depends: R (>= 3.0.3), lme4 (>=1.1-5)
+Imports: 
+Date: 2014-04-10
+Author: Sebastian Weirich, Karoline Sachse and Martin Hecht
+Maintainer: Sebastian Weirich <sebastian.weirich@iqb.hu-berlin.de>
+Description: extractor functions for model results
+License: GPL (>= 2)
+LazyLoad: yes
+LazyData: yes
