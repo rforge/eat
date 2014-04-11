@@ -1,0 +1,4 @@
+export(get.lmer.effects)
+importFrom(car,recode)
+importFrom(plyr,rbind.fill)
+importFrom(reshape2,melt,dcast)

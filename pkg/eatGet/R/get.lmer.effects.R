@@ -12,15 +12,15 @@ get.lmer.effects <- function ( lmerObj , bootMerObj = NULL, conf = .95, saveData
                          ret <- data.frame(Var1 = colnames(random[[y]]), Var2 = NA, type = "random", random.group = y, parameter = "var", value = diag(random[[y]]), stringsAsFactors = FALSE )
                          ret <- rbind(ret, data.frame(Var1 = colnames(random[[y]]), Var2 = NA, type = "random", random.group = y, parameter = "sd", value = sqrt(diag(random[[y]])), stringsAsFactors = FALSE ))
                          if(nrow(attr(random[[y]], "correlation")) > 1)  {      ### Gibt es Korrelationen?
-                            korTab   <- reshape2::melt(attr(random[[y]], "correlation"))
+                            korTab   <- melt(attr(random[[y]], "correlation"))
                             wahl2    <- which(!korTab[,1] == korTab[,2])
                             for (u in 1:2) {korTab[,u] <- as.character(korTab[,u])}
                             wahl1    <- which(!duplicated(apply(korTab, 1, FUN = function ( xx ) { paste( sort(c(xx[1], xx[2])), collapse="_") })))
-                            ret      <- plyr::rbind.fill( ret, data.frame ( korTab[intersect(wahl1, wahl2),], type = "random", random.group = y, parameter = "correlation", stringsAsFactors = FALSE ) )
+                            ret      <- rbind.fill( ret, data.frame ( korTab[intersect(wahl1, wahl2),], type = "random", random.group = y, parameter = "correlation", stringsAsFactors = FALSE ) )
                          }
                          return(ret)}))
              if ( !is.na(attr(random, "sc"))) {                                 ### vergleichen zwischen Versionen!
-                  randomF  <- plyr::rbind.fill ( randomF, rbind ( data.frame ( Var1 = "residual", type = "random", parameter = "var", value = attr(random, "sc")^2, stringsAsFactors = FALSE ), data.frame ( Var1 = "residual", type = "random", parameter = "sd", value = attr(random, "sc"), stringsAsFactors = FALSE )))
+                  randomF  <- rbind.fill ( randomF, rbind ( data.frame ( Var1 = "residual", type = "random", parameter = "var", value = attr(random, "sc")^2, stringsAsFactors = FALSE ), data.frame ( Var1 = "residual", type = "random", parameter = "sd", value = attr(random, "sc"), stringsAsFactors = FALSE )))
              }                                                                  ### jetzt kommen die fixed effects
              fixedF   <- data.frame ( Var1 = names(fixed), Var2 = NA, type = "fixed", random.group = NA, parameter = "est", value = as.numeric(fixed), stringsAsFactors = FALSE )
              fixedF   <- rbind(fixedF, data.frame ( Var1 = names(fixed), Var2 = NA, type = "fixed", random.group = NA, parameter = "se", value = sqrt(diag(vcov(lmerObj))), stringsAsFactors = FALSE ))
@@ -37,22 +37,22 @@ get.lmer.effects <- function ( lmerObj , bootMerObj = NULL, conf = .95, saveData
              if(is.null(nms)) {dimnames(rr) <- list(names(fixed), names(fixed))}
              korMat <- as.matrix(as(rr, "corMatrix"))	
              if(nrow( korMat ) > 1 ) {
-                 korTab   <- reshape2::melt(korMat)
+                 korTab   <- melt(korMat)
                  wahl2    <- which(!korTab[,1] == korTab[,2])
-                 namenFixed <- gsub(":", "________XX________",names(fixed))     ### That's the problem: a <- 1:3; car::recode(a, "1 = 'test'; 2 = 'mist'; 3 = 'test:mist'")
+                 namenFixed <- gsub(":", "________XX________",names(fixed))     ### That's the problem: a <- 1:3; recode(a, "1 = 'test'; 2 = 'mist'; 3 = 'test:mist'")
                  recodeString <- paste("'", 1:length(fixed),"' = '", namenFixed,"'", sep = "", collapse = "; ")
                  for ( u in 1:2) {
-                       korTab[,u] <- car::recode(korTab[,u], recodeString)
+                       korTab[,u] <- recode(korTab[,u], recodeString)
                        korTab[,u] <- gsub("________XX________",":",korTab[,u])
                  }
                  wahl1    <- which(!duplicated(apply(korTab, 1, FUN = function ( xx ) { paste( sort(c(xx[1], xx[2])), collapse="_") })))
-                 fixedF   <- plyr::rbind.fill( fixedF, data.frame ( korTab[intersect(wahl1, wahl2),], type = "fixed", random.group = NA, parameter = "correlation", stringsAsFactors = FALSE ) )
+                 fixedF   <- rbind.fill( fixedF, data.frame ( korTab[intersect(wahl1, wahl2),], type = "fixed", random.group = NA, parameter = "correlation", stringsAsFactors = FALSE ) )
              }
              LogLik   <- logLik(lmerObj)                                        ### nun kommen die deviance measures
              if(lme4Ver == "0"){ deviancF <- data.frame(type = "model", parameter = c("LogLik", "df", paste("Deviance",names(lmerObj@deviance),sep="_"), "AIC", "BIC"), value = c(LogLik[[1]], attr(LogLik, "df"), lmerObj@deviance, AIC(LogLik ), BIC(LogLik)), stringsAsFactors = FALSE ) 
                         } else { deviancF <- data.frame(type = "model", parameter = c("LogLik", "df", paste("Deviance",names(lmerObj@devcomp$cmp),sep="_"), "AIC", "BIC"), value = c(LogLik[[1]], attr(LogLik, "df"), lmerObj@devcomp$cmp, AIC(LogLik ), BIC(LogLik)), stringsAsFactors = FALSE )  }
-             ret      <- plyr::rbind.fill(randomF, fixedF)
-             ret      <- plyr::rbind.fill(ret, deviancF)
+             ret      <- rbind.fill(randomF, fixedF)
+             ret      <- rbind.fill(ret, deviancF)
              groups   <- lapply(names(table(randomF[,"random.group"])), FUN = function ( rg ) {
                          checkVar <- rg %in% colnames(lmerObj@frame)
                          if(checkVar == TRUE) {return(length(unique(lmerObj@frame[,rg])))} else { return(NULL)} })
