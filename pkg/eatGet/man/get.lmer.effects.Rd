@@ -37,5 +37,8 @@ This version is alpha. Use with care.
 \code{\link{eatGot-class}}
 }
 
-%% \examples{
-%% }
+\examples{
+library ( lme4 )
+fmVA <- glmer( r2 ~ Anger + Gender + btype + situ + (1|id) + (1|item), family = binomial, data = VerbAgg)
+( results <- get.lmer.effects ( fmVA ) )
+}

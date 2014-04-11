@@ -1,5 +1,5 @@
 
-get.lmer.effects.forBootMer <- function ( lmerObj ) {get.lmer.effects ( lmerObj=lmerObj , saveData = FALSE)[,"value"]}
+get.lmer.effects.forBootMer <- function ( lmerObj ) {get.lmer.effects ( lmerObj=lmerObj , saveData = FALSE)@results[,"value"]}
 
 get.lmer.effects <- function ( lmerObj , bootMerObj = NULL, conf = .95, saveData = FALSE) {
              checkForReshape()
