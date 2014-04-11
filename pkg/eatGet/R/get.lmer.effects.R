@@ -92,3 +92,8 @@ get.lmer.effects <- function ( lmerObj , bootMerObj = NULL, conf = .95, saveData
 			 retObj@results <- ret
 			 
 			 return(retObj) }
+			 
+checkForReshape <- function () {
+        if("package:reshape" %in% search() ) {
+           cat("Warning: Package 'reshape' is attached. Functions in package 'eatRep' depend on 'reshape2'. 'reshape' and 'reshape2' conflict in some way.\n  'reshape' therefore will be detached now. \n")
+           detach(package:reshape) } }			 
