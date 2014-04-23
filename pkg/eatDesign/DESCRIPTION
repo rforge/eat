@@ -4,7 +4,7 @@ Title: eatDesign
 Version: 0.0.4
 Depends: R (>= 2.14.0), methods, igraph
 Imports: Matrix
-Date: 2013-12-14
+Date: 2014-04-23
 Author: Martin Hecht, Nicole Haag, Karoline Sachse, Thilo Siegle and Sebastian Weirich
 Maintainer: Martin Hecht <martin.hecht@iqb.hu-berlin.de>
 Description: compute descriptives of data structures ("designs")
