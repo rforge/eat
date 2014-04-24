@@ -2,8 +2,8 @@ Package: eatGet
 Type: Package
 Title: eatGet
 Version: 0.0.1
-Depends: R (>= 3.1.0), lme4 (>=1.1-6)
-Imports: reshape2, car, plyr
+Depends: R (>= 3.0.1), lme4 
+Imports: reshape2, car, plyr, boot, stats
 Date: 2014-04-23
 Author: Sebastian Weirich, Karoline Sachse and Martin Hecht
 Maintainer: Sebastian Weirich <sebastian.weirich@iqb.hu-berlin.de>
