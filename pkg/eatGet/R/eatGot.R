@@ -13,10 +13,14 @@ setClass(
 # show
 setMethod ( f = "show" , signature = signature ( object="eatGot" ) ,
 			definition = function ( object ) {
-
+			
+					testO <- function(O) {
+						exists(as.character(substitute(O)))
+					}
+					
 					# Definitionen
 					einr <- "     "
-					if (!inherits(try( "model" %in% names(object@results))	, "try-error")) {
+					if (testO(names(object@results))) {
 						if ( "model" %in% names(object@results) ) {
 							modls <- unique(object@results["model"])	
 						} 
@@ -27,12 +31,18 @@ setMethod ( f = "show" , signature = signature ( object="eatGot" ) ,
 					if ( identical ( object@results , data.frame() ) ) {
 							msg <- "Results object is empty\n"
 					} else {
+						if(testO(modls)) {
 							msg <- paste0 (
 									"Results contain:\n\n" ,
 									paste(dim(modls)[1], "models:", paste(modls[[1]][1:(dim(modls)[1])], collapse = ", ")),
 									"\n\n",
 									" === u.v.m. ;) === " ,
 									"\n" )
+						} else {
+							msg <- paste0 ("\n\n",
+									" === TODO === " ,
+									"\n" )
+						}
 					}
 				
 					# raushauen
