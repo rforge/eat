@@ -1,8 +1,9 @@
 export(get.lmer.effects)
+import(lme4)
+importMethodsFrom("Matrix",diag)
+importFrom("methods", show)
+importFrom("stats",vcov)
 importFrom("car",recode)
 importFrom("plyr",rbind.fill)
 importFrom("reshape2",melt,dcast)
 importFrom("boot",boot.ci)
-importFrom("stats", anova, coef, confint, deviance, 
-           fitted, formula, logLik,vcov)
-

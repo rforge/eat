@@ -35,13 +35,12 @@ Objects can be created by calls of the form \code{new("eatGot")}.
 This version is alpha. Use with care.
 }
 
-\seealso{
+%%\seealso{
 %%  ~~objects to See Also as \code{\link{~~fun~~}}, ~~~
 %%  ~~or \code{\linkS4class{CLASSNAME}} for links to other classes ~~~
 %% \code{\link{defineDesign}}
+%%}
 
-
-}
 \examples{
 showClass("eatGot")
 }
