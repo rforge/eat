@@ -34,7 +34,7 @@ setMethod ( f = "show" , signature = signature ( object="eatGot" ) ,
 						if(testO(modls)) {
 							msg <- paste0 (
 									"Results contain:\n\n" ,
-									paste(dim(modls)[1], "models:", paste(modls[[1]][1:(dim(modls)[1])], collapse = ", ")),
+									paste(dim(modls)[1], "model(s):", paste(modls[[1]][1:(dim(modls)[1])], collapse = ", ")),
 									"\n\n",
 									" === u.v.m. ;) === " ,
 									"\n" )
