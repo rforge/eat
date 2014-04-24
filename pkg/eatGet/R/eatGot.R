@@ -16,6 +16,12 @@ setMethod ( f = "show" , signature = signature ( object="eatGot" ) ,
 
 					# Definitionen
 					einr <- "     "
+					if (!inherits(try( "model" %in% names(object@results))	, "try-error")) {
+						if ( "model" %in% names(object@results) ) {
+							modls <- unique(object@results["model"])	
+						} 
+					}
+										
 					
 					# Ausgabe-String
 					if ( identical ( object@results , data.frame() ) ) {
@@ -23,7 +29,9 @@ setMethod ( f = "show" , signature = signature ( object="eatGot" ) ,
 					} else {
 							msg <- paste0 (
 									"Results contain:\n\n" ,
-									" ===TODO=== " ,
+									paste(dim(modls)[1], "models:", paste(modls[[1]][1:(dim(modls)[1])], collapse = ", ")),
+									"\n\n",
+									" === u.v.m. ;) === " ,
 									"\n" )
 					}
 				
