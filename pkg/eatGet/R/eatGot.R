@@ -41,7 +41,9 @@ setMethod ( f = "show" , signature = signature ( object="eatGot" ) ,
 									for(i in seq(along=1:dim(modls)[1])) {
 										cat(paste0(modls[[1]][i], ": "))
 										cat(length(na.omit(subset(object@results, object@results$model == modls[[1]][i])$value)), "parameter estimates ")
-										cat(paste0("(source[s]: ", paste0( unlist(srcs[[i]]), collapse=", " ), ")"),"\n")
+										if(testO(srcs)) {
+											cat(paste0("(source[s]: ", paste0( unlist(srcs[[i]]), collapse=", " ), ")"),"\n")
+										}
 									}		
 						} else {
 							cat("Results contain no model names column\n" )
