@@ -23,30 +23,30 @@ setMethod ( f = "show" , signature = signature ( object="eatGot" ) ,
 					if (testO(names(object@results))) {
 						if ( "model" %in% names(object@results) ) {
 							modls <- unique(object@results["model"])	
+							if ( "source" %in% names(object@results) ) {
+								srcs <- lapply(modls[[1]], function(k) {
+										unique(subset(object@results, object@results == k)["source"])
+									})								
+							} 
 						} 
 					}
 										
 					
 					# Ausgabe-String
 					if ( identical ( object@results , data.frame() ) ) {
-							msg <- "Results object is empty\n"
+							cat("Results object is empty\n")
 					} else {
 						if(testO(modls)) {
-							msg <- paste0 (
-									"Results contain:\n\n" ,
-									paste(dim(modls)[1], "model(s):", paste(modls[[1]][1:(dim(modls)[1])], collapse = ", ")),
-									"\n\n",
-									" === u.v.m. ;) === " ,
-									"\n" )
+							cat("Results contain", paste(dim(modls)[1], "model(s):\n" ))							
+									for(i in seq(along=1:dim(modls)[1])) {
+										cat(paste0(modls[[1]][i], ": "))
+										cat(length(na.omit(subset(object@results, object@results$model == modls[[1]][i])$value)), "parameter estimates ")
+										cat(paste0("(source[s]: ", paste0( unlist(srcs[[i]]), collapse=", " ), ")"),"\n")
+									}		
 						} else {
-							msg <- paste0 ("\n\n",
-									" === TODO === " ,
-									"\n" )
+							cat("Results contain no model names column\n" )
 						}
-					}
-				
-					# raushauen
-					cat ( msg )
+					}				
 			}
 )
 
