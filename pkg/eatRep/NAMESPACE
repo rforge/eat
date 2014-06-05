@@ -1,4 +1,5 @@
 importFrom(fmsb, NagelkerkeR2)
+importFrom(mice, pool.scalar)
 export(jk2.mean)
 export(jk2.table)
 export(jk2.quantile)

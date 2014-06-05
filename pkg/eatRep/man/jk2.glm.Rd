@@ -2,14 +2,15 @@
 \alias{jk2.glm}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{JK2 for linear regression models.}
-\description{Compute generalized linear models for complex cluster designs with multiple imputed variables based on Jackknife (JK2) procedure.
-Conceptually, the function combines replication methods and methods for multiple imputed data. Technically, this is a wrapper for the \code{svyglm()} function
+\description{Compute generalized linear models for complex cluster designs with multiple imputed variables based 
+on the Jackknife (JK2) or balanced repeated replicates (BRR) procedure. Conceptually, the function combines replication 
+methods and methods for multiple imputed data. Technically, this is a wrapper for the \code{svyglm()} function
 of the \code{'survey'} package.
 }
 \usage{
-jk2.glm(dat, ID, wgt = NULL, JKZone = NULL, JKrep = NULL, groups = list(),
-        group.splits = length(groups), group.delimiter = "_", independent = list(),
-        reg.statement = NULL, dependent = list(),
+jk2.glm(dat, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, repInd = NULL, 
+        groups = list(), group.splits = length(groups), group.delimiter = "_", 
+        independent = list(), reg.statement = NULL, dependent = list(),
         complete.permutation = c("nothing", "groups", "independent", "all") ,
         glm.family, forceSingularityTreatment = FALSE, doCheck = TRUE, na.rm = FALSE)}
 %- maybe also 'usage' for other objects documented here.
@@ -27,15 +28,20 @@ Variable name or column number of unique identifier (ID) variable. ID variable m
 Optional: Variable name or column number of weighting variable. If no weighting variable is specified,
 all cases will be equally weighted.
 }
-  \item{JKZone}{
+  \item{type}{
 %%     ~~Describe \code{abs.dif.bound} here~~
-Variable name or column number of variable indicating Jackknifing Zone. If \code{NULL}, no cluster structure is assumed and
+Defines the replication method which is to be applied. 
+}
+  \item{PSU}{
+%%     ~~Describe \code{abs.dif.bound} here~~
+Variable name or column number of variable indicating the primary sampling unit (PSU). When a jackknife procedure is applied, 
+the PSU is the jackknife zone variable. If \code{NULL}, no cluster structure is assumed and
 standard errors are computed according to a random sample.
 }
-  \item{JKrep}{
+  \item{repInd}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Variable name or column number of variable indicating replicate ID. If \code{NULL}, no cluster structure is assumed and
-standard errors are computed according to a random sample.
+Variable name or column number of variable indicating replicate ID. In a jackknife procedure, this is the jackknife replicate 
+variable. If \code{NULL}, no cluster structure is assumed and standard errors are computed according to a random sample.
 }
   \item{groups}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -87,7 +93,7 @@ Argument defines the number of multiple imputed data sets. In general, the numbe
 of a variable. Therefore, this argument only becomes relevant, if the number of imputation of one variable
 (e.g. the number of plausible values of the dependent variable) differs from the number of imputations used for independent variable(s).
 If \code{"all"}, number of datasets are determined through permutation, e.g. 5 plausible values and 3 imputations of the independent variable
-results in 3x5=15 imputed data sets. If \code{"nothing"}, only 5 imputed data sets will be used, no matter whether the larger number of imputations
+results in \eqn{3 \times 5=15} imputed data sets. If \code{"nothing"}, only 5 imputed data sets will be used, no matter whether the larger number of imputations
 is a whole multiple of the smaller number of imputations. If \code{"groups"}, only the number of imputations of more than one grouping variable will be permutated.
 If \code{"independent"}, only the number of imputations of more than one independent variable will be permutated. Note: Within the logic of nested imputations, \code{complete.permutation}
 should be set to \code{FALSE}. See examples for further details.
@@ -110,10 +116,11 @@ Logical: Should cases with missing values be dropped?
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
-Function first creates replicate weights based on \code{JKZone} and \code{JKrep} variables according to JK2 procedure
-implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
+Function first creates replicate weights based on \code{PSU} and \code{repInd} variables according to JK2 or 
+BRR procedure. According to multiple imputed data sets, a workbook with several analyses is created.
 The function afterwards serves as a wrapper for \code{svyglm()} implemented in the \code{'survey'} package.
-The results of the several analyses are then pooled according to Rubin's rule, which is adapted for nested imputations if the \code{dependent} argument implies a nested structure.
+The results of the several analyses are then pooled according to Rubin's rule, which is adapted for nested 
+imputations if the \code{dependent} argument implies a nested structure.
 }
 \value{
 %%  ~Describe the value returned
@@ -121,8 +128,21 @@ The results of the several analyses are then pooled according to Rubin's rule, w
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-A data frame in the long format. For each subpopulation denoted by the \code{groups} statement, each
-dependent variable, each parameter and each coefficient the corresponding value is given.
+A data frame in the long format with at least six columns. For each subpopulation denoted by the \code{groups} 
+statement, each dependent variable, each parameter and each coefficient the corresponding value is given. 
+\item{group}{Denotes the group an analysis belongs to. If no groups were specified and/or analysis for the 
+whole sample were requested, the value of 'group' is 'wholeGroup'.}
+\item{depVar}{Denotes the name of the dependent variable in the analysis. }
+\item{modus}{Denotes the mode of the analysis. For example, if a JK2 analysis without sampling weights was 
+conducted, 'modus' takes the value 'jk2.unweighted'. If a analysis without any replicates but with sampling
+weights was conducted, 'modus' takes the value 'weighted'.}
+\item{parameter}{Denotes the parameter of the regression model for which the corresponding value is given
+further. Amongst others, the 'parameter' column takes the values '(Intercept)' and 'gendermale' if 'gender' 
+was the dependent variable, for instance. See example 1 for further details.}
+\item{coefficient}{Denotes the coefficient for which the corresponding value is given further. Takes the 
+values 'est' (estimate) and 'se' (standard error of the estimate).}
+\item{value}{The value of the parameter estimate in the corresponding group.}
+If groups were specified, further columns which are denoted by the group names are added to the data frame. 
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -144,16 +164,17 @@ data(reading_writing)
 ### Example 1: Computes linear regression from reading score on gender separately for each
 ### country and each hisei. This serves as an example for two group variables, where one
 ### group variable is a multiple imputed one.
-mod1  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
-         JKrep = "JKrep", groups = list(country = "country", hisei = paste("zehisei", 1:5, sep = "")),
+mod1  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
+         PSU = "JKZone", repInd = "JKrep", 
+         groups = list(country = "country", hisei = paste("zehisei", 1:5, sep = "")),
          dependent = list(reading = paste("reading_score", 1:3, sep = ""),
                           writing = paste("writing_score", 1:3, sep = "")),
          independent = list(gender = "sex"),
          complete.permutation = "no", glm.family = gaussian(link="identity") )
 ### Example 2: Computes log linear regression from pass/fail on hisei and gender
 ### separately for each country
-mod2  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
-         JKrep = "JKrep", groups = list(country = "country"),
+mod2  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
+         PSU = "JKZone", repInd = "JKrep", groups = list(country = "country"),
          dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""),
                           writing.pass = paste("passed_writing", 1:3, sep = "")),
          independent = list(hisei = paste("zehisei", 1:5, sep = ""), gender = "sex"),
@@ -162,7 +183,7 @@ mod2  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone =
 ### separately for each country. The regression statement has to be defined manually. Note that,
 ### despite "hisei" occurs as a multiple imputed variable, only one statement has to be defined.
 ### Specifically, write "hisei*gender" instead of "zehisei1*sex" in the reg.statement argument.
-### Moreover, the dependent variable herien is defined as a nested imputed variable with two nests
+### Moreover, the dependent variable herein is defined as a nested imputed variable with two nests
 ### and 3 imputations in each nest. The group and independent variable(s) have to correspond to
 ### the nested structure, i.e. they have to be specified as a single variable (i.e. without any
 ### imputations), or they also may be imputed in two nests with 3 imputations in each nest, or
@@ -171,8 +192,8 @@ mod2  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone =
 ### In example 3, group variable has no imputations, and the first independent variable has 2
 ### imputations (according to the two nests), whereas the second independent variable also has
 ### no imputations.
-mod3  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", JKZone = "JKZone",
-         JKrep = "JKrep", groups = list(country = "country"),
+mod3  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
+         PSU = "JKZone", repInd = "JKrep", groups = list(country = "country"),
          dependent = list(ability = list ( nest1 = paste("passed_reading", 1:3, sep = ""),
                                            nest2 = paste("passed_writing", 1:3, sep = ""))),
          independent = list(hisei = paste("zehisei", 1:2, sep = ""), gender = "sex"),

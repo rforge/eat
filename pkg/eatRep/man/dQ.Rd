@@ -13,7 +13,7 @@ A results object created by jk2.quantile().
 }
   \item{seOmit}{
 %%     ~~Describe \code{dif.term} here~~
-Optionally: omit displaying stand errors?
+Optionally: omit displaying standard errors?
 }
 }
 \details{

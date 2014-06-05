@@ -1,28 +1,22 @@
 pool.means <- function (m, se, na.rm = FALSE) {
-     if(!is.list(m))  { listM  <- list(m)}  else {listM  <- m }
-     createSeList <- FALSE
-     if ( length(unlist(se)) == 0 ) {createSeList <- TRUE} else {  if(all(is.na(unlist(se)))) { createSeList <- TRUE}}
-     if( createSeList == FALSE) { if(!is.list(se)) { listSE <- list(se)} else {listSE <- se}  }
-     if( createSeList == TRUE ) { listSE <- lapply(listM, FUN = function ( toNA ) { toNA <- rep(NA,length(toNA))} ) }
-     stopifnot(all(unlist(lapply(listM, length)) == unlist(lapply(listSE, length)) ) )
-     if( length(which(unlist(lapply(listM, length)) == 0 )) > 0 ) {listM <- listM[-which(unlist(lapply(listM, length)) == 0 )]}
-     if( length(which(unlist(lapply(listSE, length)) == 0 )) > 0 ) {listSE <- listSE[-which(unlist(lapply(listSE, length)) == 0 )]}
-     listM  <- data.frame(do.call("cbind", listM),  stringsAsFactors = FALSE)   ### Obere Zeile: Listeneintraege mit 0 Elementen werden geloescht
-     listSE <- data.frame(do.call("cbind", listSE), stringsAsFactors = FALSE)
-     M        <- length(listM[[1]])
-     N        <- length(listM)                                                  ### wenn nicht genestet, muss N == 1!
-     Q.all    <- mean(unlist(lapply(listM, mean)))                              ### Rubin 2003b, S. 6, unterste Formel
-     Q.m      <- apply(listM, 1, mean)                                          ### Rubin 2003b, S. 7, 1. Formel. hier muss immer ein Vektor stehen, egal ob nested oder nicht!
-     U        <- mean(unlist(lapply(listSE, FUN = function ( se ) {mean(se^2)})))## Rubin 2003b, S. 7, 2. Formel
-     MS.b     <- N/(M-1) * sum((unlist(Q.m) - Q.all)^2)
-     MS.omega <- 1/(M*(N-1)) *  sum((listM - Q.m)^2)                            ### Rubin 2003b, S. 7, 4. Formel
-     if(all(is.na(MS.omega))) {MS.omega <- 0}                                   ### wenn keine nestung vorliegt, wird within-nest SQ zu Null
-     var.total <- U+1/N*(1+1/M)*MS.b + (1-1/N)*MS.omega                         ### Rubin 2003b, "The quantity T", S. 7, 5. Formel
-     se.pooled <- sqrt(var.total)
-     betweenN  <- ifelse(N>1, ( ( 1-1/N)*MS.omega / var.total )^2 * 1/(M*(N-1)), 0 )
-     df        <- 1 / ( (1/N*(1+1/M)*MS.b / var.total)^2 * 1/(M-1) + betweenN )
-     pooled <- list(m = listM, var = lapply(listSE, FUN = function (x) {x^2}), summary = data.frame ( m.pooled = Q.all, se.pooled = se.pooled, df = df, stringsAsFactors = FALSE ) )
-     return(pooled) }
+     if(is.list(m))   {if(length(m) == 1)  { stopifnot(length(se)==1); m <- unlist(m); se <- unlist(se)}}
+     if(!is.list(m))  {                                                         ### keine genestete Struktur: wird an pool.scalar aus "mice" uebergeben
+        pooled <- mice::pool.scalar(Q=m, U=se^2)
+        pooled <- data.frame ( m.pooled = pooled$qbar, se.pooled = sqrt(pooled$t), df = pooled$df, stringsAsFactors = FALSE)
+     }  else  {                                                                 ### genestete Struktur
+        stopifnot(all(unlist(lapply(m, length)) == unlist(lapply(se, length)) ) )## keine missings erlaubt 
+        M      <- length(m)
+        N      <- length(m[[1]])
+        Q.m    <- lapply(m,mean)                                                ### Rubin 2003b, S. 7, 1. Formel. 
+        Qbar   <- mean(unlist(Q.m))                                             ### Rubin 2003b, S. 6, unterste Formel
+        U      <- mean(unlist(lapply(se, FUN = function ( x ) { mean(x^2) } ))) ### Rubin 2003b, S. 7, 2. Formel
+        MS.b   <- N/(M-1) * sum((unlist(Q.m) - Qbar)^2)                         ### untere Zeile: Rubin 2003b, S. 7, 4. Formel
+        MS.omeg<- 1/(M*(N-1)) *  sum(unlist(lapply(m, FUN = function ( x ) { sum((x-mean(x))^2) })))
+        varT   <- U+1/N*(1+1/M)*MS.b + (1-1/N)*MS.omeg                          ### Rubin 2003b, "The quantity T", S. 7, 5. Formel
+        dfN    <- 1 / ( (1/N*(1+1/M)*MS.b / varT)^2 * 1/(M-1) + (  ((1-1/N)*MS.omeg )/varT)^2 * 1/ (M * (N-1)) )
+        pooled <- data.frame ( m.pooled = Qbar, se.pooled = sqrt(varT), df = dfN, stringsAsFactors = FALSE)
+     }
+     return(list(summary=pooled))}
 
 
 ### r2         ... Vektor von R^2-Werten aus multiple imputieren Analysen
@@ -56,7 +50,9 @@ jk2.pool <- function ( datLong, groupNames ) {                                  
                 if ( length(table ( table(as.character(u[,"coefficient"])))) !=1) {u <- u[u[,"coefficient"] == "est",]}
                 if(u[1,"parameter"] %in% c("R2", "R2nagel")) {
                    getNvalid <- merge(u,datLong[datLong[,"parameter"] == "Nvalid",], by = setdiff(colnames(u),c("parameter","value")))
+                   ### Standardfehler des R^2 wird vorerst nicht berichtet, obskure Werte 
                    pooled    <- t(pool.R2 ( r2 = by(getNvalid, INDICES =getNvalid[,"nesting"], FUN = function ( uu ) {uu[,"value.x"]}), N = by(getNvalid, INDICES =getNvalid[,"nesting"], FUN = function ( uu ) {uu[,"value.y"]}), quiet=TRUE))
+                   # pooled    <- t(pool.R2 ( r2 = by(getNvalid, INDICES =getNvalid[,"nesting"], FUN = function ( uu ) {uu[,"value.x"]}), quiet=TRUE))
                 } else {
                    toPool <- by(data = u, INDICES = factor(u[,"coefficient"],levels = c("est","se")),FUN = function ( uu ) {  by(data = uu, INDICES = uu[,"nesting"], FUN = function (uuu) {uuu[,"value"]}) })
                    pooled <- pool.means(m = toPool[[1]], se = toPool[[2]])$summary[c("m.pooled","se.pooled")]
