@@ -6,8 +6,12 @@ dfr2text <- function ( dfr , blankRowNames = FALSE ) {
 		dfo <- dfr
 		
 		# alles auf Character
-		do <- paste ( paste ( "if ( !is.character ( dfr$\"" , colnames ( dfr )  , "\" ) ) dfr$\"" , colnames ( dfr ) , "\" <- as.character ( dfr$\"" , colnames ( dfr ) , "\" )" , sep = "" ) , collapse = "; " )
-		eval ( parse ( text = do ) )
+		# (nur für nicht "" colnames)
+		cona <- colnames ( dfr )[!colnames ( dfr ) %in% ""]
+		if ( length ( cona ) > 0 ) {
+				do <- paste ( paste ( "if ( !is.character ( dfr$\"" , cona  , "\" ) ) dfr$\"" , cona , "\" <- as.character ( dfr$\"" , cona , "\" )" , sep = "" ) , collapse = "; " )
+				eval ( parse ( text = do ) )
+		}
 	
 		# nicht numerisch NAs auf <NA>, andere NA
 		dfr[ is.na(dfr) & !is.numeric(dfo) ] <- "<NA>"
