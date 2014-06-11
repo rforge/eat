@@ -49,7 +49,7 @@ par="<name of original parameter>"; derived.par="Iteration<no>" (e.g. "Iteration
 
 [4] parameters derived from bootstrap procedure
 
-derived.par="<name of derived parameter>" (e.g. "lb.90" for lower bound of 90% confidence interval, "bootSE" for bootstrapped standard error)
+derived.par="<name of derived parameter>" (e.g. "lb.90" for lower bound of 90\% confidence interval, "bootSE" for bootstrapped standard error)
 
 }
 \section{Objects from the Class}{
