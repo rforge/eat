@@ -1,7 +1,7 @@
 export(get.lmer.effects)
 import(lme4)
 importMethodsFrom("Matrix",diag)
-importFrom("methods", show)
+importFrom("methods",show)
 importFrom("stats",vcov)
 importFrom("car",recode)
 importFrom("plyr",rbind.fill)
