@@ -23,7 +23,7 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, verbos
 		if (length(na.omit(dat[, newID])) != length(na.omit (unique(dat[, newID])))) { 
 			doppelt <- na.omit(unique(dat[,newID][ duplicated(dat[,newID])]))
 			cat(paste("mergeData_", versNr, ": Multiple ID(s) in dataset ", i, " in " ,length(doppelt), " case(s). \n",sep=""))
-			stop(cat(paste("Multiple ID(s): ",paste(doppelt, collapse = ", "), "\n" )))}
+			warning(cat(paste("Multiple ID(s): ",paste(doppelt, collapse = ", "), "\n" )))}
 		return(dat)
 	}, datList, oldIDs, seq(along=datList))
 	
@@ -34,6 +34,7 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, verbos
 			datLong <- rbind(datLong, datList[[i]])
 		}
 	}
+	datLong <- set.col.type(datLong, col.type=list("character" = names(datLong)))
 	
 	datLong <- datLong[-which(is.na(datLong$value)),]
 
@@ -44,12 +45,15 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, verbos
 		if(any(duplicated(paste(datLong[,newID], datLong$variable)))) {
 			doppi <- unique(c(which(duplicated(paste(datLong[,newID], datLong$variable))), which(duplicated(paste(datLong[,newID], datLong$variable), fromLast=TRUE))))
 			doppi <- doppi[order(doppi)]
-			warning(paste("mergeData_", versNr, ": Multiple different valid codes in variable: ", unique(datLong$variable[doppi]), ", ID: ", unique(datLong[,1][doppi]), ", Codes: ", paste(datLong$value[doppi], collapse = ", "), " \n The first value will be kept.\n", sep = ""))
-			datLong <- datLong[-doppi[-1],]
+			tt <- NULL
+			for(ll in unique(datLong$variable[doppi])) {
+				warning(paste("mergeData_", versNr, ": Multiple different valid codes in variable: ", ll, ", ID: ", unique(datLong[doppi,][which(datLong$variable[doppi] %in% ll),1]), ", Codes: ", paste(unique(datLong[doppi,][which(datLong$variable[doppi] %in% ll),3]), collapse = ", "), " \n The first value will be kept.\n", sep = ""))
+				tt <- c(tt, which(paste(datLong[,1], datLong[,2], datLong[,3]) %in% paste(datLong[doppi,][which(datLong$variable[doppi] %in% ll),][-1,], collapse=" ")))
+			}	
+			datLong <- datLong[-tt,]
 		}
 	}
 
-	datLong <- set.col.type(datLong, col.type=list("character" = names(datLong)))
 	mReturn <- reshape:::cast(datLong, add.missing =TRUE)
 	mReturn <- set.col.type(mReturn, col.type=list("character" = names(mReturn)))
 	
