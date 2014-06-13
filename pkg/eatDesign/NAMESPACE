@@ -1,4 +1,6 @@
 export(defineDesign)
 export(updateDesign)
 # importFrom(igraph,graph.formula,V,E,get.adjacency,average.path.length,degree)
+import(igraph)
+import(methods)
 importFrom(Matrix,tril)
