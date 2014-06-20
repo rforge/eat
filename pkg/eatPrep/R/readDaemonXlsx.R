@@ -77,7 +77,7 @@ readDaemonXlsx <- function(filename) {
 	names(inL)[which(names(inL) == "params")] <- "newID"
 	names(inL)[which(names(inL) == "aggregate-missings")] <- "aggrMiss"
 	names(inL)[which(names(inL) == "unitrecoding")] <- "unitRecodings"
-	cat("(Sheets savFiles, newID, aggrMiss, unitRecodings eventually renamed due to naming standards). \n")
+	#cat("(Sheets savFiles, newID, aggrMiss, unitRecodings were renamed due to naming standards). \n")
 
 	return(inL)
 }

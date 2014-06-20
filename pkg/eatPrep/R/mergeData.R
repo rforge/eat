@@ -56,7 +56,7 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, verbos
 
 	mReturn <- reshape:::cast(datLong, add.missing =TRUE)
 	mReturn <- set.col.type(mReturn, col.type=list("character" = names(mReturn)))
-	
+	mReturn <- data.frame(mReturn)
 	if(addMbd) {mReturn[is.na(mReturn)] <- "mbd"}
 		
 	} else {    
