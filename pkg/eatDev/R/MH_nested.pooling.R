@@ -31,7 +31,7 @@ nested.pooling <- function ( d.long , Value.varname = colnames(d.long)[1] , N.va
 		
 		### genestetes Pooling
 		if ( nestedPooling ) {
-		
+	
 				# Vektoren aus Datensatz extrahieren
 				M.vec <- eval ( parse ( text = paste0 ( "d.long$" , M.varname ) ) )
 				N.vec <- eval ( parse ( text = paste0 ( "d.long$" , N.varname ) ) )
@@ -43,11 +43,11 @@ nested.pooling <- function ( d.long , Value.varname = colnames(d.long)[1] , N.va
 				Qmn <- data.frame ( tapply ( Value.vec , list ( N.vec , M.vec ) , FUN ) )
 				Umn <- data.frame ( tapply ( Value.vec , list ( N.vec , M.vec ) , SE2 ) )
 
-				Q_ <- 1/(M*N) * sum ( sapply ( Qmn , mean ) )
+				Q_ <- 1/(M*N) * sum ( sapply ( Qmn , sum ) )
 
-				Qm_ <- 1/N * sapply ( Qmn , mean )
+				Qm_ <- 1/N * sapply ( Qmn , sum )
 
-				U_ <- 1/(M*N) * sum ( sapply ( Umn , mean ) )
+				U_ <- 1/(M*N) * sum ( sapply ( Umn , sum ) )
 
 				MSb <- N / ( M - 1 ) * sum ( (Qm_ - Q_)^2 )
 
