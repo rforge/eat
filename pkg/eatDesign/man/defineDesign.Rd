@@ -54,8 +54,8 @@ design7 <- defineDesign ( def = table7 )
 design7
 
 # add some more cases, using option 'append' in 'defineDesign'
-add <- data.frame ( "Booklet" = c(4,4) , "Position" = c(3,4) , "Cluster" = c(4,5) )
-( design8 <- defineDesign ( def = add , dsgn = design7 , append = TRUE ) )
+# add <- data.frame ( "Booklet" = c(4,4) , "Position" = c(3,4) , "Cluster" = c(4,5) )
+# ( design8 <- defineDesign ( def = add , dsgn = design7 , append = TRUE ) )
 
 # add even more cases, this time using '+' operator on 2 designs
 # (results are the same, but one of either method might be more convenient)
