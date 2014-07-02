@@ -59,14 +59,14 @@ design7
 
 # add even more cases, this time using '+' operator on 2 designs
 # (results are the same, but one of either method might be more convenient)
-add2 <- data.frame ( "Booklet" = c(5,5,6,6) , "Position" = c(5,6,5,6) , "Cluster" = c(6,7,7,8) )
-( design2 <- defineDesign ( def = add2 ) )
-( design9 <- design7 + design2 )
+# add2 <- data.frame ( "Booklet" = c(5,5,6,6) , "Position" = c(5,6,5,6) , "Cluster" = c(6,7,7,8) )
+# ( design2 <- defineDesign ( def = add2 ) )
+# ( design9 <- design7 + design2 )
 
 # add items that are nested within clusters
-add3 <- data.frame ( "Item" = paste ( "item" , 1:12 , sep = "" ) ,
-"Cluster" = as.vector ( sapply ( 1:3 , rep , 4 ) ) )
-( design3 <- defineDesign ( def = add3 ) )
-( design10 <- design3 + design7 )
+# add3 <- data.frame ( "Item" = paste ( "item" , 1:12 , sep = "" ) ,
+# "Cluster" = as.vector ( sapply ( 1:3 , rep , 4 ) ) )
+# ( design3 <- defineDesign ( def = add3 ) )
+# ( design10 <- design3 + design7 )
 
 }
