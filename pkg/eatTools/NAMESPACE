@@ -1,3 +1,4 @@
+import(eatData)
 importFrom(car, recode)
 importFrom(plyr, rbind.fill.matrix)
 importFrom(psych,dummy.code)
