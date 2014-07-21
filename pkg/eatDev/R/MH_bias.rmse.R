@@ -181,7 +181,7 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 												q3 <- q2 / nrow ( d )
 												q4 <- sqrt ( q3 )
 												return ( q4 )
-										}	
+										}
 										# MSE
 										MSE <- function ( d ) {
 												# q <- apply ( d , 1 , function ( v ) (v[1] - v[2])^2 )
@@ -218,7 +218,17 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 								
 										# Rueckgabe-Datensatz
 										bias.val <- bias ( d2 )
-										res1 <- data.frame ( "bias" = bias.val , "biasfree.sd" = biasfree.sd ( d2 , bias.val ) ,"MSE" = MSE ( d2 ) , "RMSE" = RMSE ( d2 ) , "cor" = calc.cor ( d2 ) , stringsAsFactors = FALSE )
+										res1 <- data.frame ( "bias" = bias.val , "biasAbs" = abs ( bias.val ) , "biasfree.sd" = biasfree.sd ( d2 , bias.val ) ,"MSE" = MSE ( d2 ) , "RMSE" = RMSE ( d2 ) , "cor" = calc.cor ( d2 ) , stringsAsFactors = FALSE )
+										
+										### wenn method=repl, dann noch MAP, EAP, SE(=SD) für die estimates berechnen
+										res1b <- data.frame ( "EAP" = as.numeric ( NA ) , "EAPse" = as.numeric ( NA ) , "SD" = as.numeric ( NA ) , stringsAsFactors = FALSE )
+										if ( method %in% "repl" ) {
+												Mse <- function(x) sd(x)/sqrt(length(x))
+												res1b$EAP <- mean ( d2$value.x )
+												res1b$EAPse <- Mse ( d2$value.x )
+												res1b$SD <- sd ( d2$value.x )
+										}
+										res1 <- cbind ( res1 , res1b )
 										
 										# alle split vars noch setzen
 										nams <- colnames ( d )[ !colnames ( d ) %in% c( id.col , val.cols )]
