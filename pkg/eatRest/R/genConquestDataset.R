@@ -253,7 +253,7 @@ genConquestDataset <- function(dat, variablen, ID, DIF.var=NULL, HG.var=NULL, gr
 .checkContextVars <- function(x, varname, type, itemdaten)   {
                      if(missing(varname))  {varname <- "ohne Namen"}
                      if(class(x) != "numeric")  {                               ### ist Variable numerisch?
-                        if (type == "weight") {stop(paste(type, " variable has to be 'numeric' necessarily. Automatic transformation is not recommended. Please transform by yourself.\n",sep=""))}
+                       # if (type == "weight") {stop(paste(type, " variable has to be 'numeric' necessarily. Automatic transformation is not recommended. Please transform by yourself.\n",sep=""))}
                         eatTools:::sunk(paste(type, " variable has to be 'numeric'. Variable '",varname,"' of class '",class(x),"' will be transformed to 'numeric'.\n",sep=""))
                         x <- unlist(asNumericIfPossible(dat = data.frame(x, stringsAsFactors = FALSE), transform.factors = TRUE, maintain.factor.scores = FALSE, verbose=FALSE))
                         if(class(x) != "numeric")  {                            ### erst wenn asNumericIfPossible fehlschlägt, wird mit Gewalt numerisch gemacht, denn für Conquest MUSS es numerisch sein
