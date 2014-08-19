@@ -8,20 +8,20 @@ methods and methods for multiple imputed data. Technically, this is a wrapper fo
 of the \code{'survey'} package.
 }
 \usage{
-jk2.glm(dat, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, repInd = NULL, 
-        groups = list(), group.splits = length(groups), group.delimiter = "_", 
-        independent = list(), reg.statement = NULL, dependent = list(),
-        complete.permutation = c("nothing", "groups", "independent", "all") ,
-        glm.family, forceSingularityTreatment = FALSE, doCheck = TRUE, na.rm = FALSE)}
+jk2.glm(datL, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, repInd = NULL, 
+        nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), 
+        group.delimiter = "_", formula, family=gaussian, 
+        forceSingularityTreatment = FALSE, doCheck = TRUE, na.rm = FALSE )}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{dat}{
+  \item{datL}{
 %%     ~~Describe \code{file} here~~
-Data frame in wide format (i.e. each line represents one ID unit) containing all variables for analysis.
+Data frame in the long format (i.e. each line represents one ID unit in one imputation of one nest) containing all 
+variables for analysis.
 }
   \item{ID}{
 %%     ~~Describe \code{dif.term} here~~
-Variable name or column number of unique identifier (ID) variable. ID variable must not contain any missing values. 
+Variable name or column number of student identifier (ID) variable. ID variable must not contain any missing values. 
 }
   \item{wgt}{
 %%     ~~Describe \code{split.dif} here~~
@@ -30,7 +30,8 @@ all cases will be equally weighted.
 }
   \item{type}{
 %%     ~~Describe \code{abs.dif.bound} here~~
-Defines the replication method which is to be applied. 
+Defines the replication method for cluster replicates which is to be applied. Without cluster replicates (i.e., if \code{PSU} 
+and/or \code{repInd} is NULL, \code{type} will be ignored.
 }
   \item{PSU}{
 %%     ~~Describe \code{abs.dif.bound} here~~
@@ -43,11 +44,13 @@ standard errors are computed according to a random sample.
 Variable name or column number of variable indicating replicate ID. In a jackknife procedure, this is the jackknife replicate 
 variable. If \code{NULL}, no cluster structure is assumed and standard errors are computed according to a random sample.
 }
+  \item{nest}{Optional: name or column number of the nesting variable. Only applies in nested multiple imputed data sets.  
+}
+  \item{imp}{Optional: name or column number of the imputation variable. Only applies in multiple imputed data sets.  
+}
   \item{groups}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Optional: List of one or more grouping variables. If grouping variable is a multiple imputed variable,
-all names concerning one variable are interpreted as its imputations. See example 1, where two group variables are used: One group variable
-is multiple imputed, the other is not.
+Optional: vector of names or column numbers of one or more grouping variables. 
 }
   \item{group.splits}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -58,49 +61,13 @@ in the whole group or overlying groups. See examples for more details.
 %%     ~~Describe \code{sig.dif.bound} here~~
 Character string which separates the group names in the output frame.
 }
-  \item{independent}{
+  \item{formula}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-List of one or more independent variables. If independent variable is a multiple imputed variable, all names concerning one variable are interpreted
-as its imputations. See details and example 2 for more information.
+Model formula, see help page of \code{glm} for details. 
 }
- \item{reg.statement}{
-Optional: By default, the regression formula is created automatically  by the independent variables connected by a \code{"+"} symbol. However, when interaction terms should
-be defined, the regression has to be specified by the user. The right side of the regression formula has to defined in \code{"reg.statement"} as a string, whereas the
-names of the independent variables occurring in the \code{"independent"} argument have to be used. This is due to various names of one variable in multiple imputed data
-sets. See example 3 for further details.
-}
-  \item{dependent}{
+  \item{family}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-List of one or more dependent variables. Each dependent variable will result in a separate analysis.
-If dependent variable is a multiple imputed variable, all names concerning one variable are interpreted
-as its imputations. See details and example 1 for more information. If dependent variable is a nested imputed variable, the nesting structure has to be specified
-in an appropriate listing structure. This structure has to be in agreement with the grouping variable and the independent variable if necessary. If nested imputed
-variables are included in the analysis, \code{complete.permutation} is strongly recommended to set to \code{FALSE}. If you are interested in one single dependent variable
-which may be labeled as \code{"reading_competence_plausible_value"} in the data file,
-type \code{dependent = list(reading = "reading_competence_plausible_value")}. This statement does not imply any imputation structure, therefore standard errors will not be pooled after
-the analysis. If your dependent variable is a multiple imputed one whereas the imputations are labeled as \code{"r_PV1"}, \code{"r_PV2"}, \code{"r_PV3"} and so on,
-type \code{dependent = list(reading = c("r_PV1", "r_PV2", "r_PV3"))}. This is to define three imputations
-belonging to one common scale which you can label arbitrarily. The results afterwards will be pooled according to Rubin (1987). If you are interested in one multiple imputed
-dependent variable with a nesting structure, where you have \emph{N} = 2 nests and \emph{M} = 3 imputations in each nest, your
-corresponding variables may be labeled as \code{"PV1_1"}, \code{"PV1_2"}, \code{"PV1_3"}, \code{"PV2_1"}, \code{"PV2_2"}, \code{"PV2_3"}. In that case the nesting structure has to
-be reproduced in an appropriate list structur. Therefore type \code{dependent = list(reading = list(nest1 = c("PV1_1","PV1_2","PV1_3"), nest2 = c("PV2_1","PV2_2","PV2_3"))) }. This
-is to define which variables belong to which nest, whereas all variables belong to one common scale. The results afterwards will be pooled according to Rubin (2003).
-Example 3 gives a short introduction to this concept.
-}
-  \item{complete.permutation}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Argument defines the number of multiple imputed data sets. In general, the number is defined by the number of imputations
-of a variable. Therefore, this argument only becomes relevant, if the number of imputation of one variable
-(e.g. the number of plausible values of the dependent variable) differs from the number of imputations used for independent variable(s).
-If \code{"all"}, number of datasets are determined through permutation, e.g. 5 plausible values and 3 imputations of the independent variable
-results in \eqn{3 \times 5=15} imputed data sets. If \code{"nothing"}, only 5 imputed data sets will be used, no matter whether the larger number of imputations
-is a whole multiple of the smaller number of imputations. If \code{"groups"}, only the number of imputations of more than one grouping variable will be permutated.
-If \code{"independent"}, only the number of imputations of more than one independent variable will be permutated. Note: Within the logic of nested imputations, \code{complete.permutation}
-should be set to \code{FALSE}. See examples for further details.
-}
-  \item{glm.family}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Argument of class \code{"family"}, specifying the link function. See help file of \code{"glm()"} function for details.
+A description of the error distribution and link function to be used in the model. See help page of \code{glm} for details. 
 }
   \item{forceSingularityTreatment}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -160,45 +127,21 @@ Sebastian Weirich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-data(reading_writing)
+data(reading)
 ### Example 1: Computes linear regression from reading score on gender separately for each
-### country and each hisei. This serves as an example for two group variables, where one
-### group variable is a multiple imputed one.
-mod1  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
-         PSU = "JKZone", repInd = "JKrep", 
-         groups = list(country = "country", hisei = paste("zehisei", 1:5, sep = "")),
-         dependent = list(reading = paste("reading_score", 1:3, sep = ""),
-                          writing = paste("writing_score", 1:3, sep = "")),
-         independent = list(gender = "sex"),
-         complete.permutation = "no", glm.family = gaussian(link="identity") )
+### country. Assume no nested structure. 
+readingNest1 <- reading[which(reading[,"nest"] == 1),]
+mod1  <- jk2.glm(datL = readingNest1, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
+         PSU = "JKZone", repInd = "JKrep", imp = "imputation", 
+         groups = "country",  formula = score~sex)
+dG(mod1)         
+
 ### Example 2: Computes log linear regression from pass/fail on hisei and gender
-### separately for each country
-mod2  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
-         PSU = "JKZone", repInd = "JKrep", groups = list(country = "country"),
-         dependent = list(reading.pass = paste("passed_reading", 1:3, sep = ""),
-                          writing.pass = paste("passed_writing", 1:3, sep = "")),
-         independent = list(hisei = paste("zehisei", 1:5, sep = ""), gender = "sex"),
-         complete.permutation = "no", glm.family = binomial(link="logit") )
-### Example 3: Computes linear regression from pass/fail on hisei and gender (and its' interaction)
-### separately for each country. The regression statement has to be defined manually. Note that,
-### despite "hisei" occurs as a multiple imputed variable, only one statement has to be defined.
-### Specifically, write "hisei*gender" instead of "zehisei1*sex" in the reg.statement argument.
-### Moreover, the dependent variable herein is defined as a nested imputed variable with two nests
-### and 3 imputations in each nest. The group and independent variable(s) have to correspond to
-### the nested structure, i.e. they have to be specified as a single variable (i.e. without any
-### imputations), or they also may be imputed in two nests with 3 imputations in each nest, or
-### they may be imputed with two imputations (according to the number of nests in the dependent
-### variable.
-### In example 3, group variable has no imputations, and the first independent variable has 2
-### imputations (according to the two nests), whereas the second independent variable also has
-### no imputations.
-mod3  <- jk2.glm(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
-         PSU = "JKZone", repInd = "JKrep", groups = list(country = "country"),
-         dependent = list(ability = list ( nest1 = paste("passed_reading", 1:3, sep = ""),
-                                           nest2 = paste("passed_writing", 1:3, sep = ""))),
-         independent = list(hisei = paste("zehisei", 1:2, sep = ""), gender = "sex"),
-         reg.statement = "hisei*gender",
-         complete.permutation = "no", glm.family = binomial(link="logit") )
+### separately for each country in a nested structure
+mod1  <- jk2.glm(datL = reading, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
+         PSU = "JKZone", repInd = "JKrep", imp = "imputation", nest="nest", 
+         groups = "country",  formula = passed~sex*income, family = binomial(link="logit"))
+dG(mod1)         
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

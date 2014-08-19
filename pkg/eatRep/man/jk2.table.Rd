@@ -10,20 +10,20 @@ Conceptually, the function combines replication and imputation methods. Technica
 for the svymean() function of the survey package.
 }
 \usage{
-jk2.table(dat, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, repInd = NULL, 
-          groups = list(), group.splits = length(groups), group.delimiter = "_", 
-          dependent = list(), separate.missing.indikator = FALSE, expected.values = list(),
-          complete.permutation = c("nothing", "groups", "all"), doCheck = TRUE )}
-          
+jk2.table(datL, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, repInd = NULL, 
+          nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), 
+          group.delimiter = "_", dependent , separate.missing.indicator = FALSE, 
+          na.rm=FALSE, expected.values = NULL, doCheck = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{dat}{
+  \item{datL}{
 %%     ~~Describe \code{file} here~~
-Data frame in wide format (i.e. each line represents one ID unit) containing all variables for analysis.
+Data frame in the long format (i.e. each line represents one ID unit in one imputation of one nest) containing all 
+variables for analysis.
 }
   \item{ID}{
 %%     ~~Describe \code{dif.term} here~~
-Variable name or column number of unique identifier (ID) variable. ID variable must not contain any missing values. 
+Variable name or column number of student identifier (ID) variable. ID variable must not contain any missing values. 
 }
   \item{wgt}{
 %%     ~~Describe \code{split.dif} here~~
@@ -32,7 +32,8 @@ all cases will be equally weighted.
 }
   \item{type}{
 %%     ~~Describe \code{abs.dif.bound} here~~
-Defines the replication method which is to be applied. 
+Defines the replication method for cluster replicates which is to be applied. Without cluster replicates (i.e., if \code{PSU} 
+and/or \code{repInd} is NULL, \code{type} will be ignored.
 }
   \item{PSU}{
 %%     ~~Describe \code{abs.dif.bound} here~~
@@ -45,10 +46,13 @@ standard errors are computed according to a random sample.
 Variable name or column number of variable indicating replicate ID. In a jackknife procedure, this is the jackknife replicate 
 variable. If \code{NULL}, no cluster structure is assumed and standard errors are computed according to a random sample.
 }
+  \item{nest}{Optional: name or column number of the nesting variable. Only applies in nested multiple imputed data sets.  
+}
+  \item{imp}{Optional: name or column number of the imputation variable. Only applies in multiple imputed data sets.  
+}
   \item{groups}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Optional: List of one or more grouping variables. If grouping variable is a multiple imputed variable,
-all names concerning one variable are interpreted as its imputations. See details for more information.
+Optional: vector of names or column numbers of one or more grouping variables. 
 }
   \item{group.splits}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -61,31 +65,19 @@ Character string which separates the group names in the output frame.
 }
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-List of one or more dependent variables, which have to be dichotomous or polytomous. (In R, variables of this kind
-are often represented as factors. However, dependent variable may also be of class numeric or character.)
-Each dependent variable will result in a separate analysis.
-If dependent variable is a multiple imputed variable, all names concerning one variable are interpreted
-as its imputations. If dependent variable is a nested imputed variable, the nesting structure has to be specified
-in an appropriate listing structure. This structure has to be in agreement with the grouping variable if necessary. If nested imputed
-variables are included in the analysis, \code{complete.permutation} is strongly recommended to set to \code{FALSE}.
+Variable name or column number of the dependent variable.
 }
-  \item{separate.missing.indikator}{
+  \item{separate.missing.indicator}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Logical. Should frequencies of missings in dependent variable be integrated? Note: That is only useful if missing occur as \code{NA}. If the dependent variable
 is coded as character, for example \code{'male', 'female', 'missing'}, separate missing indicator is not necessary.
 }
+  \item{na.rm}{
+Logical: Should cases with missing values be dropped?
+}
   \item{expected.values}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Optional. A vector auf values expected in dependent variable. Recommend to left this argument empty.
-}
-  \item{complete.permutation}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Argument defines the number of multiple imputed data sets. In general, the number is defined by the number of imputations
-of a variable. Therefore, this argument only becomes relevant, if the number of imputations of one variable (e.g. dependent variable)
-differs from the number of imputations used for group variable(s). If \code{"all"}, number of datasets are determined through
-permutation, e.g. 5 plausible values and 3 imputations of one group variable results in \eqn{3 \times 5=15} imputed data sets. If \code{"nothing"}, only 5 imputed
-data sets will be used, no matter whether the larger number of imputations is a whole multiple of the smaller number of imputations. If \code{"groups"},
-only the number of imputations of more than one grouping variable will be permutated.
 }
   \item{doCheck}{
 Logical: Check the data for consistency before analysis? If \code{TRUE} groups with insufficient data are excluded from
@@ -142,26 +134,16 @@ Sebastian Weirich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-data(reading_writing)
-### First example: Computes frequencies of the hisei group conditionally on the
-### groups of passed and failed with respect to reading score
-freq.tab  <- jk2.table(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD",
-             type = "JK2", PSU = "JKZone", repInd = "JKrep",
-             groups = list(country = "country",
-                          passed.reading = paste("passed_reading",1:3,sep="" )),
-             dependent = list(hisei = paste("zehisei", 1:5, sep = "") ) ,
-             complete.permutation = "no" )
+data(hisei)
+### First example: Computes frequencies of the hisei group conditionally on country
+freq.tab  <- jk2.table(datL = hisei, ID = "idstud", wgt = "wgtSTUD",
+             imp="imputation", type = "JK2", PSU = "JKZone", repInd = "JKrep",
+             groups = "country", dependent = "hisei")
 
-### Second example: Computes frequencies of the hisei group conditionally on the
-### groups of passed and failed with respect to reading score. Assuming no cluster
-### but a nested imputation structure. 'complete.permutation' is recommended to set
-### to 'nothing'.
-freq.tab  <- jk2.table(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD",
-             groups = list(country = "country",
-                          passed.reading = paste("passed_reading",1:2,sep="" )),
-             dependent = list(hisei = list(nest1 = paste("zehisei", 1:2, sep = "") ,
-                                           nest2 = paste("zehisei", 3:4, sep = "") )),
-             complete.permutation = "no" )
+### Second example: Computes frequencies of passed and failed conditionally on the
+### groups of sex and country. Assuming no cluster but a nested imputation structure. 
+freq.tab  <- jk2.table(datL = reading, ID = "idstud", wgt = "wgtSTUD",
+             nest="nest", imp="imputation", groups = c("country","sex"), dependent = "passed")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

@@ -43,20 +43,16 @@ pool.R2 <- function ( r2, N, quiet = FALSE ) {
            if(mis.N) {return(transformed[1])} else {return(transformed)} }
 
 
-jk2.pool <- function ( datLong, groupNames ) {                                  ### untere Zeile: Hotfix!
-            if( length(which(is.na(datLong[,groupNames[1]])))>0 ) {groupingVar <- "group"} else {groupingVar <- groupNames}
-            retList <- do.call("rbind", by(data = datLong, INDICES = datLong[, c(groupingVar,"parameter")], FUN = function ( u ) {
-                ### untere Zeile: falls es nicht genauso viele Standardfehler wie Estimates gibt, konnten fuer einige Estimates keine SE berechnet werden. SEs werden daher nicht gepoolt und aus den Daten entfernt.
-                if ( length(table ( table(as.character(u[,"coefficient"])))) !=1) {u <- u[u[,"coefficient"] == "est",]}
-                if(u[1,"parameter"] %in% c("R2", "R2nagel")) {
-                   getNvalid <- merge(u,datLong[datLong[,"parameter"] == "Nvalid",], by = setdiff(colnames(u),c("parameter","value")))
-                   ### Standardfehler des R^2 wird vorerst nicht berichtet, obskure Werte 
-                   pooled    <- t(pool.R2 ( r2 = by(getNvalid, INDICES =getNvalid[,"nesting"], FUN = function ( uu ) {uu[,"value.x"]}), N = by(getNvalid, INDICES =getNvalid[,"nesting"], FUN = function ( uu ) {uu[,"value.y"]}), quiet=TRUE))
-                   # pooled    <- t(pool.R2 ( r2 = by(getNvalid, INDICES =getNvalid[,"nesting"], FUN = function ( uu ) {uu[,"value.x"]}), quiet=TRUE))
-                } else {
-                   toPool <- by(data = u, INDICES = factor(u[,"coefficient"],levels = c("est","se")),FUN = function ( uu ) {  by(data = uu, INDICES = uu[,"nesting"], FUN = function (uuu) {uuu[,"value"]}) })
-                   pooled <- pool.means(m = toPool[[1]], se = toPool[[2]])$summary[c("m.pooled","se.pooled")]
-                }
-                ret    <- data.frame ( group = names(table(u[,"group"])), parameter = names(table(u[,"parameter"])), coefficient = c("est","se"), value = unlist(pooled), u[1,groupNames,drop=FALSE], stringsAsFactors = FALSE)
-                return(ret)}))
-            return(retList)}
+jk2.pool <- function ( datLong, allNam ) {                                    
+            retList <- do.call("rbind", by(data = datLong, INDICES = datLong[, c("group","parameter")], FUN = function ( u ) {
+               uM   <- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "est"),"value"]})
+               uSE  <- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "se"),"value"]})
+               if(u[1,"parameter"] %in% c("R2", "R2nagel")) {    
+                  getNvalid <- datLong[ intersect( intersect(  which(datLong[,"group"] == u[1,"group"]), which( datLong[,"parameter"] == "Nvalid")), which( datLong[,"coefficient"] == "est") ) ,]
+                  pooled    <- t(pool.R2(r2 = u[,"value"], N = getNvalid[,"value"]))
+               } else {
+                  pooled <- pool.means(m = uM, se = uSE)$summary[c("m.pooled","se.pooled")]
+               }
+               ret    <- data.frame ( group = names(table(u[,"group"])), depVar = allNam[["dependent"]], modus="noch_leer", parameter = names(table(u[,"parameter"])), coefficient = c("est","se"), value = unlist(pooled), u[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
+               return(ret)}))
+           return(retList)}

@@ -44,7 +44,7 @@ Sebastian Weirich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-### see examples in the vignette.
+### see examples in the vignette and in the help page of jk2.glm()
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

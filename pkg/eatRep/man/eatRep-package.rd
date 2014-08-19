@@ -20,7 +20,7 @@
   See Weststat (2000), Foy, Galia & Li (2008), Rust and Rao (1996), and Wolter (1985) for details. 
   To date, only the Jackknife-2 (JK2) and the Balanced Repeated Replicates (BRR) procedures are supported.
 
-  The package \code{eatRep} is designed to combine both methods which is necessary if (multiple) imputed
+  The package \code{eatRep} is designed to combine both methods which is necessary if (nested) multiple imputed
   data are used in clustered designs. Considering the structure is relevant especially for the estimation of
   standard errors.
 
@@ -33,9 +33,9 @@
   
   For each imputed data set, i.e. in the inner loop, the \code{eatRep} function first creates replicate weights 
   based on the primary sampling unit (PSU) variable and the replication indicator variable. In the jackknife procedure, 
-  the first one is often referred to as \dQuote{Jackknife Zone} or \dQuote{JKZone}, whereas the second one is often referred to 
-  as \dQuote{Jackknife Replicate} or \dQuote{JKrep}. The number of distinct units in the PSU variable define the number of replications
-  which are nacessary due to the clustered structure. A design object is created and the appropriate \code{survey} 
+  the first one is often referred to as \dQuote{Jackknife Zone}, whereas the second one is often referred to 
+  as \dQuote{Jackknife Replicate}. The number of distinct units in the PSU variable define the number of replications
+  which are necessary due to the clustered structure. A design object is created and the appropriate \code{survey} 
   function is called. The process is repeated for each imputed dataset and the results of the analyses are pooled 
   according to Rubin (1987) or Rubin (2003).
   
@@ -63,7 +63,7 @@ License: \tab GPL(>=2)
   \emph{TIMSS 2007 Technical Report} (S. 225--280). Chestnut Hill, MA: TIMSS & PIRLS
   International Study Center, Lynch School of Education, Boston College.
   
-  Harel, O. (2009): The estimation of $R^2$ and adjusted $R^2$ in incomplete data 
+  Harel, O. (2009): The estimation of \eqn{R^2} and adjusted \eqn{R^2} in incomplete data 
   sets using multiple imputation. \emph{Journal of Applied Statistics.} \bold{36, 10}, 1109--1118.
 
   Lumley, T. (2004). Analysis of complex survey samples. \emph{Journal of Statistical Software} \bold{9(1)}: 1--19

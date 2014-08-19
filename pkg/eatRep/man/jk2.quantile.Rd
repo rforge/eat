@@ -8,20 +8,20 @@ replication methods and methods for multiple imputed data. Technically, this is 
 the \code{svyquantile()} function of the survey package.
 }
 \usage{
-jk2.quantile(dat, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, repInd = NULL, 
-            groups = list(), group.splits = length(groups), group.delimiter = "_", 
-            dependent = list(), probs = seq(0, 1, 0.25),  na.rm = FALSE,
-            complete.permutation = c("nothing", "groups", "all"), nBoot = NULL,
-            bootMethod = c("wSampling","wQuantiles"), doCheck = TRUE)}
+jk2.quantile(datL, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, repInd = NULL, 
+            nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
+            group.delimiter = "_", dependent, probs = seq(0, 1, 0.25),  na.rm = FALSE,
+            nBoot = NULL, bootMethod = c("wSampling","wQuantiles") , doCheck = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{dat}{
+  \item{datL}{
 %%     ~~Describe \code{file} here~~
-Data frame in wide format (i.e. each line represents one ID unit) containing all variables for analysis.
+Data frame in the long format (i.e. each line represents one ID unit in one imputation of one nest) containing all 
+variables for analysis.
 }
   \item{ID}{
 %%     ~~Describe \code{dif.term} here~~
-Variable name or column number of unique identifier (ID) variable. ID variable must not contain any missing values. 
+Variable name or column number of student identifier (ID) variable. ID variable must not contain any missing values. 
 }
   \item{wgt}{
 %%     ~~Describe \code{split.dif} here~~
@@ -30,7 +30,8 @@ all cases will be equally weighted.
 }
   \item{type}{
 %%     ~~Describe \code{abs.dif.bound} here~~
-Defines the replication method which is to be applied. 
+Defines the replication method for cluster replicates which is to be applied. Without cluster replicates (i.e., if \code{PSU} 
+and/or \code{repInd} is NULL, \code{type} will be ignored.
 }
   \item{PSU}{
 %%     ~~Describe \code{abs.dif.bound} here~~
@@ -43,10 +44,13 @@ standard errors are computed according to a random sample.
 Variable name or column number of variable indicating replicate ID. In a jackknife procedure, this is the jackknife replicate 
 variable. If \code{NULL}, no cluster structure is assumed and standard errors are computed according to a random sample.
 }
+  \item{nest}{Optional: name or column number of the nesting variable. Only applies in nested multiple imputed data sets.  
+}
+  \item{imp}{Optional: name or column number of the imputation variable. Only applies in multiple imputed data sets.  
+}
   \item{groups}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-Optional: List of one or more grouping variables. If grouping variable is a multiple imputed variable,
-all names concerning one variable are interpreted as its imputations. See details for more information.
+Optional: vector of names or column numbers of one or more grouping variables. 
 }
   \item{group.splits}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -59,9 +63,7 @@ Character string which separates the group names in the output frame.
 }
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
-List of one or more grouping variables. Each dependent variable will result in a separate analysis.
-If grouping variable is a multiple imputed variable, all names concerning one variable are interpreted
-as its imputations. See details for more information.
+Variable name or column number of the dependent variable.
 }
   \item{probs}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -70,15 +72,6 @@ Numeric vector with probabilities for which to compute quantiles.
   \item{na.rm}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Logical: Should cases with missing values be dropped?
-}
-  \item{complete.permutation}{
-%%     ~~Describe \code{sig.dif.bound} here~~
-Argument defines the number of multiple imputed data sets. In general, the number is defined by the number of imputations
-of a variable. Therefore, this argument only becomes relevant, if the number of imputations of one variable (e.g. number of plausible values of the dependent variable)
-differs from the number of imputations used for group variable(s). If \code{"all"}, number of datasets are determined through
-permutation, e.g. 5 plausible values and 3 imputations of one group variable results in \eqn{3 \times 5=15} imputed data sets. If \code{"nothing"}, only 5 imputed
-data sets will be used, no matter whether the larger number of imputations is a whole multiple of the smaller number of imputations. If \code{"groups"},
-only the number of imputations of more than one grouping variable will be permutated.
 }
   \item{nBoot}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -143,22 +136,20 @@ Sebastian Weirich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-data(reading_writing)
-### First example: Computes percentile for reading and writing scores conditionally on country
-perzent   <- jk2.quantile(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD",
-             type = "JK2", PSU = "JKZone", repInd = "JKrep", 
-             groups = list(country = "country"),
-             dependent = list(reading = paste("reading_score", 1:3, sep = ""),
-                              writing = paste("writing_score", 1:3, sep = "")  ) ,
-             probs = seq(0.1,0.9,0.2), complete.permutation = "no" )
+data(reading)
+### First example: Computes percentile in a nested data structure for reading 
+### scores conditionally on country and for the whole group 
+perzent   <- jk2.quantile(datL = reading, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
+             PSU = "JKZone", repInd = "JKrep", imp = "imputation", nest="nest", 
+             groups = "country", group.splits = c(0:1), dependent = "score", 
+             probs = seq(0.1,0.9,0.2) )
 
-### Second example: Computes percentile for reading and writing scores conditionally on country,
-### use 100 bootstrap samples
-perzent   <- jk2.quantile(dat = reading_writing, ID = "idstud", wgt = "wgtSTUD",
-             groups = list(country = "country"),
-             dependent = list(reading = paste("reading_score", 1:3, sep = ""),
-                              writing = paste("writing_score", 1:3, sep = "")  ) ,
-             probs = seq(0.1,0.9,0.2), complete.permutation = "no", nBoot = 100 )
+### Second example: Computes percentile for reading scores conditionally on country,
+### use 100 bootstrap samples, assume no nested structure 
+readingNest1 <- reading[which(reading[,"nest"] == 1),]
+perzent   <- jk2.quantile(datL = readingNest1, ID = "idstud", wgt = "wgtSTUD",
+             imp = "imputation", groups = "country", dependent = "score", 
+             probs = seq(0.1,0.9,0.2), nBoot = 100 )
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

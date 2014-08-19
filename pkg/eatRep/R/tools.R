@@ -16,12 +16,11 @@
                              }
 
 
-facToChar <- function ( dataFrame ) {
+facToChar <- function ( dataFrame, from = "factor", to = "character" ) {
              if(!"data.frame" %in% class(dataFrame)) {stop()}
-             classes <- which( unlist(lapply(dataFrame,class)) == "factor")
+             classes <- which( unlist(lapply(dataFrame,class)) == from)
              if(length(classes)>0) {
-                for (u in classes) {
-                     dataFrame[,u] <- as.character(dataFrame[,u]) }}
+                for (u in classes) { eval(parse(text=paste("dataFrame[,u] <- as.",to,"(dataFrame[,u])",sep="") )) }}
              return(dataFrame)}
 
 
@@ -30,65 +29,21 @@ crop <- function ( x , char = " " ) {
 	gsub ( paste ( "^" , char , "+|" , char , "+$" , sep = "" ) , "" , x ) }
 
 							 
-halve.string <- function (string, pattern, first = TRUE )  {
-    # if(!exists("str_split"))   {library(stringr)}
-    n <- 2
-    if (length(string) == 0)
-        return(matrix(character(), nrow = n, ncol = 1))
-    string <- stringr:::check_string(string)
-    pattern <- stringr:::check_pattern(pattern, string)
-    if (!is.numeric(n) || length(n) != 1) {
-        stop("n should be a numeric vector of length 1")
-    }
-    if (n == Inf) {
-        stop("n must be finite", call. = FALSE)
-    }
-    else if (n == 1) {
-        matrix(string, ncol = 1)
-    }
-    else {
-        locations <- stringr:::str_locate_all(string, pattern)
-        do.call("rbind", plyr::llply(seq_along(locations), function(i) {
-            location <- locations[[i]]
-            string <- string[i]
-            pieces <- 1
-            if ( first == TRUE)  {
-                  cut <- t(as.matrix(location[1,]))
-            } else {cut <- t(as.matrix(location[nrow(location),])) }
-            keep <- invert_match(cut)
-            padding <- rep("", n - pieces - 1)
-            c(str_sub(string, keep[, 1], keep[, 2]), padding)
-        }))
-    } }
-
 ### Hilfsfunktion, ersetzt table(unlist( ... ))
-table.unlist <- function(dataFrame, verbose = TRUE)   {
+table.unlist <- function(dataFrame, verbose = TRUE, useNA = c("no","ifany", "always"))   {
+                useNA  <- match.arg(useNA)
                 # if(!exists("rbind.fill.matrix"))  {library(plyr)}
                 # if(class(dataFrame) != "data.frame" ) {stop("Argument of 'table.unlist' has to be of class 'data.frame'.\n")}
                 if(class(dataFrame) != "data.frame" ) {
                    if(verbose == TRUE ) {cat(paste("Warning! Argument of 'table.unlist' has to be of class 'data.frame'. Object will be converted to data.frame.\n",sep=""))}
                    dataFrame <- data.frame(dataFrame, stringsAsFactors=FALSE)
                 }
-                column.by.column   <- do.call("rbind.fill.matrix", lapply(dataFrame, FUN=function(ii) {t(table(ii))}) )
+                column.by.column   <- do.call("rbind.fill.matrix", lapply(dataFrame, FUN=function(ii) {
+                                      tab        <- table(ii, useNA = useNA)
+                                      names(tab) <- car::recode(names(tab), "NA='NA'")
+                                      return(t(tab))}))
                 freq.table         <- colSums(column.by.column,na.rm=TRUE)
                 return(freq.table)}
-
-wo.sind <- function(a,b,quiet=FALSE)
-           {b <- data.frame(1:length(b),b,stringsAsFactors=FALSE)               ### zusätzliche Syntaxbefehle sind notwendig, damit die Funktion mit missing values umgehen kann.
-            if(sum(which(is.na(a)))>0)     {cat("a contains missing values. \n")}
-            if(sum(which(is.na(b[,2])))>0) {cat("b contains missing values. \n")}
-            if(length(na.omit(a)) > length(unique(na.omit(a))))     {cat("a contains duplicate elements. \n")}
-            if(length(intersect(a,b[,2])) == 0) {cat("No common elements in a and b. \n")}
-            if(quiet==FALSE) { if(length(intersect(a,b[,2])) > 0) {if(length(setdiff(a,b[,2]))>0)      {cat("Not all Elemente of a included in b. \n")} } }
-            a <- unique(a)
-            if(sum(which(is.na(a)))>0)     {a <- a[-which(is.na(a))]}           ### Sofern vorhanden, werden missing values aus a entfernt
-            b <- na.omit(b)                                                     ### Sofern vorhanden, werden missing values aus b entfernt; aber: Rangplatz der
-            reihe <- NULL                                                       ### der nicht fehlenden Elemente in b bleibt erhalten
-            if(length(a)>0) {for (i in 1:length(a))
-                                 {reihe <- c(reihe,b[,1][a[i]==b[,2]])}
-                             if(quiet==FALSE) { cat(paste("Found",length(reihe),"elements.")); cat("\n") }}
-            if(length(a)==0) {cat("No valid values in a.\n")}
-            return(reihe)}
 
 
 as.numeric.if.possible <- function(dataFrame, set.numeric=TRUE, transform.factors=FALSE, maintain.factor.scores = TRUE, verbose=TRUE)   {
