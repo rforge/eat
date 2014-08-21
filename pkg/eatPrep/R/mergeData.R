@@ -27,7 +27,7 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, verbos
 		return(dat)
 	}, datList, oldIDs, seq(along=datList))
 	
-	datList <- lapply(datList, reshape2:::melt, id=newID)
+	datList <- lapply(datList, reshape2::melt, id=newID)
 	
 	for(i in seq(along=datList)) {
 		if(i==1) {datLong <- datList[[i]]} else {
@@ -54,7 +54,7 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, verbos
 		}
 	}
 
-	mReturn <- reshape:::cast(datLong, add.missing =TRUE)
+	mReturn <- reshape2::dcast(datLong, add.missing =TRUE)
 	mReturn <- set.col.type(mReturn, col.type=list("character" = names(mReturn)))
 	mReturn <- data.frame(mReturn)
 	if(addMbd) {mReturn[is.na(mReturn)] <- "mbd"}

@@ -71,7 +71,7 @@ writeSpss <- function (dat, values, subunits, units, filedat = "mydata.txt", fil
   }
   
   # treat missings
-  dat <- eatTools:::collapseMissings(dat, missing.rule, items=colnames(dat))
+  dat <- eatTools::collapseMissings(dat, missing.rule, items=colnames(dat))
     
   zkdWriteForeignSPSS(dat, varinfo, datafile = filedat, codefile = filesps, 
            missing.rule = list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 ),
@@ -91,7 +91,7 @@ zkdWriteForeignSPSS <- function(dat, varinfo, datafile, codefile,
   funVersion <- "writeSpss: "
   
   # make vars numeric (if possible)
-  dat <- data.frame(eatTools:::asNumericIfPossible(dat, verbose = FALSE))
+  dat <- data.frame(eatTools::asNumericIfPossible(dat, verbose = FALSE))
   eol <- paste(sep, "\n", sep = "")
   
   # write dataset

@@ -7,9 +7,9 @@ checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="ID", s
 	if (is.na(match(id, colnames(dat)))) {
 		stop(paste(funVersion, " ID variable '", id, "' not found in dataset.", sep = "")) }
 
-	blocks <- eatTools:::set.col.type(blocks, col.type = list ( "character" = names(blocks) ))
-	booklets <- eatTools:::set.col.type(booklets, col.type = list ( "character" = names(booklets) ))
-	rotation <- eatTools:::set.col.type(rotation, col.type = list ( "character" = names(rotation) ))
+	blocks <- eatTools::set.col.type(blocks, col.type = list ( "character" = names(blocks) ))
+	booklets <- eatTools::set.col.type(booklets, col.type = list ( "character" = names(booklets) ))
+	rotation <- eatTools::set.col.type(rotation, col.type = list ( "character" = names(rotation) ))
 
 
 	# MH 10.01.13: diese section hab ich in recodeMbiToMnr überarbeitet/"verschlimmbessert"
