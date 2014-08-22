@@ -2,7 +2,7 @@
 \alias{runModel}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Run IRT model specified by 'defineModel' using Conquest or TAM}
-\description{First the IRt model should be defined using \code{defineModel}. Afterwards,
+\description{First the IRT model should be defined using \code{defineModel}. Afterwards,
 call \code{runModel} with the argument returned by \code{defineModel} to start the estimation.}
 \usage{
 runModel(defineModelObj, show.output.on.console = FALSE, show.dos.console = TRUE,

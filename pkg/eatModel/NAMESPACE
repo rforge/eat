@@ -1,3 +1,12 @@
 export(defineModel)
 export(runModel)
 export(getResults)
+export(get.plausible)
+export(get.wle)
+export(get.prm)
+export(get.itn)
+export(get.shw)
+export(get.dsc)
+
+
+
