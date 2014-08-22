@@ -98,16 +98,16 @@ imputations if the \code{dependent} argument implies a nested structure.
 A data frame in the long format with at least six columns. For each subpopulation denoted by the \code{groups} 
 statement, each dependent variable, each parameter and each coefficient the corresponding value is given. 
 \item{group}{Denotes the group an analysis belongs to. If no groups were specified and/or analysis for the 
-whole sample were requested, the value of 'group' is 'wholeGroup'.}
+whole sample were requested, the value of \sQuote{group} is \sQuote{wholeGroup}.}
 \item{depVar}{Denotes the name of the dependent variable in the analysis. }
 \item{modus}{Denotes the mode of the analysis. For example, if a JK2 analysis without sampling weights was 
-conducted, 'modus' takes the value 'jk2.unweighted'. If a analysis without any replicates but with sampling
-weights was conducted, 'modus' takes the value 'weighted'.}
+conducted, \sQuote{modus} takes the value \sQuote{jk2.unweighted}. If a analysis without any replicates but with sampling
+weights was conducted, \sQuote{modus} takes the value \sQuote{weighted}.}
 \item{parameter}{Denotes the parameter of the regression model for which the corresponding value is given
-further. Amongst others, the 'parameter' column takes the values '(Intercept)' and 'gendermale' if 'gender' 
+further. Amongst others, the \sQuote{parameter} column takes the values \sQuote{(Intercept)} and \sQuote{gendermale} if \sQuote{gender} 
 was the dependent variable, for instance. See example 1 for further details.}
 \item{coefficient}{Denotes the coefficient for which the corresponding value is given further. Takes the 
-values 'est' (estimate) and 'se' (standard error of the estimate).}
+values \sQuote{est} (estimate) and \sQuote{se} (standard error of the estimate).}
 \item{value}{The value of the parameter estimate in the corresponding group.}
 If groups were specified, further columns which are denoted by the group names are added to the data frame. 
 }

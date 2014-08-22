@@ -26,10 +26,10 @@
 
   Technically, \code{eatRep} is a wrapper for the \code{survey} package (Lumley, 2004). Each function in
   \code{eatRep} corresponds to a specific function in \code{survey} which is called repeatedly during the analysis.
-  Here a nested loop is used. We use \dQuote{imputation replicates} in the outer loop to account for multiple imputed data, 
-  and \dQuote{cluster replicates} in the inner loop to account for the clustered sampling structure. While the functional 
-  principle of \code{survey} is based on replication of standard analyses, \code{eatRep} is based on replication of 
-  \code{survey} analyses to take multiple imputed data into account. 
+  Hence, a nested loop is used. We use \dQuote{imputation replicates} in the outer loop to account for multiple imputed 
+  data, and \dQuote{cluster replicates} in the inner loop to account for the clustered sampling structure. While the 
+  functional principle of \code{survey} is based on replication of standard analyses, \code{eatRep} is based on 
+  replication of \code{survey} analyses to take multiple imputed data into account. 
   
   For each imputed data set, i.e. in the inner loop, the \code{eatRep} function first creates replicate weights 
   based on the primary sampling unit (PSU) variable and the replication indicator variable. In the jackknife procedure, 
@@ -39,18 +39,18 @@
   function is called. The process is repeated for each imputed dataset and the results of the analyses are pooled 
   according to Rubin (1987) or Rubin (2003).
   
-  Without multiple imputations, the outer loop only has one cycle. Without a clustered sampling structure (i.e, in a 
+  Without multiple imputations, the outer loop has only one cycle. Without a clustered sampling structure (i.e, in a 
   random sample), the inner loop has only one cycle. Without both, no replication is performed at all. To compute 
   simple mean estimates, for example, \code{eatRep} then simply calls \code{mean} instead of \code{svymean} from 
-  the code{survey} package. A special case occurs with nested multiple imputation. We then have three loops in a 
+  the \code{survey} package. A special case occurs with nested multiple imputation. We then have three loops in a 
   nested structure. Hence, the corresponding analyses may take considerably computational effort. 
 }
 \details{
 \tabular{ll}{
 Package: \tab eatRep\cr
 Type: \tab Package\cr
-Version: \tab 0.5.0\cr
-Date: \tab 2014-06-03\cr
+Version: \tab 0.6.1\cr
+Date: \tab 2014-08-22\cr
 License: \tab GPL(>=2)
 }
 }

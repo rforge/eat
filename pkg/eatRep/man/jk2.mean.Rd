@@ -83,7 +83,7 @@ analysis to prevent subsequent functions from crashing.
 Function first creates replicate weights based on PSU and repInd variables (if defined) according to JK2 or BRR procedure
 as implemented in WesVar. According to multiple imputed data sets, a workbook with several analyses is created.
 The function afterwards serves as a wrapper for \code{svymean()} called by \code{svyby()} implemented in
-the 'survey' package. The results of the several analyses are then pooled according to Rubin's rule.
+the \sQuote{survey} package. The results of the several analyses are then pooled according to Rubin's rule.
 }
 \value{
 %%  ~Describe the value returned
@@ -95,16 +95,16 @@ A data frame in the long format with at least six columns. For each subpopulatio
 statement, each parameter (i.e., mean, variance, or group differences) and each coefficient (i.e., the estimate 
 and the corresponding standard error) the corresponding value is given.
 \item{group}{Denotes the group an analysis belongs to. If no groups were specified and/or analysis for the 
-whole sample were requested, the value of 'group' is 'wholeGroup'.}
+whole sample were requested, the value of \sQuote{group} is \sQuote{wholeGroup}.}
 \item{depVar}{Denotes the name of the dependent variable in the analysis. }
 \item{modus}{Denotes the mode of the analysis. For example, if a JK2 analysis without sampling weights was 
-conducted, 'modus' takes the value 'jk2.unweighted'. If a analysis without any replicates but with sampling
-weights was conducted, 'modus' takes the value 'weighted'.}
+conducted, \sQuote{modus} takes the value \sQuote{jk2.unweighted}. If a analysis without any replicates but with sampling
+weights was conducted, \sQuote{modus} takes the value \sQuote{weighted}.}
 \item{parameter}{Denotes the parameter of the regression model for which the corresponding value is given
-further. Amongst others, the 'parameter' column takes the values 'mean', 'sd', 'var' and 'meanGroupDiff' if 
+further. Amongst others, the \sQuote{parameter} column takes the values \sQuote{mean}, \sQuote{sd}, \sQuote{var} and \sQuote{meanGroupDiff} if 
 group differences were requested.}
 \item{coefficient}{Denotes the coefficient for which the corresponding value is given further. Takes the 
-values 'est' (estimate) and 'se' (standard error of the estimate).}
+values \sQuote{est} (estimate) and \sQuote{se} (standard error of the estimate).}
 \item{value}{The value of the parameter estimate in the corresponding group.}
 If groups were specified, further columns which are denoted by the group names are added to the data frame. 
 }

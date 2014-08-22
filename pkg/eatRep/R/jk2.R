@@ -100,6 +100,9 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, re
           }  else  { cat("\nAssume unnested structure with ",length(table(datL[,allNam[["imp"]]]))," imputations.\n",sep="")}
           datL[,"isClear"] <- TRUE
           if( is.null(allNam[["nest"]]) ) { datL[,"nest"]  <- 1; allNam[["nest"]]  <- "nest" }
+          if(!is.null(allNam[["group"]])) {                                     ### untere Zeile: das, damit leere Gruppen nicht ueber by() mit geschleift werden, wie es passiert, wenn Gruppen als Faktoren definiert sind
+              for ( jj in allNam[["group"]] )  { datL[,jj] <- as.character(datL[,jj]) } 
+          }
     ### check: abhaengige Var. numerisch?
           if(toCall %in% c("mean", "quantile", "glm")) {
              if(!class(datL[,allNam[["dependent"]]]) %in% c("integer", "numeric")) { cat(paste("Warning: Dependent variable has to be of class 'integer' or 'numeric'.\n"))}
@@ -138,24 +141,26 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, re
                               nJkZones <- length(table(as.character(sub.dat[,allNam[["PSU"]]])))
                               if(nJkZones<2)  { 
                                  cat("Warning! Found group with less than 2 PSUs. Please check your data!\n"); flush.console()
-                                 datL[,"isClear"] <- FALSE 
+                                 sub.dat[,"isClear"] <- FALSE 
                               }
                           }                                                     ### untere Zeile: prueft; es darf GAR KEINE Missings geben 
                           if( (toCall == "table" & separate.missing.indicator == FALSE) | (toCall %in% c("mean", "quantile", "glm") & na.rm==FALSE ) )  {    
                               nObserved <- length(which(is.na(sub.dat[, allNam[["dependent"]]])))
                               if(nObserved>0) { 
                                  cat("Warning! Found unexpected missing data in dependent variable for at least one group. Please check your data!\n"); flush.console()
-                                 datL[,"isClear"] <- FALSE 
+                                 sub.dat[,"isClear"] <- FALSE 
                               }
                           }                                                     ### untere Zeile: prueft; es darf NICHT ALLES missing sein
                           if ( toCall %in% c("mean", "quantile", "glm") & na.rm==TRUE) { 
                               nMissing <- length(which(is.na(sub.dat[, allNam[["dependent"]]])))
                               if(nMissing == nrow(sub.dat))  { 
                                  cat("Warning! Some groups without any observed data. Please check your data!\n"); flush.console()
-                                 datL[,"isClear"] <- FALSE 
+                                 sub.dat[,"isClear"] <- FALSE 
                               }
                           }
-                          return(sub.dat)}))    
+                          return(sub.dat)}))   
+                 ok    <- table(datL[,"isClear"])
+                 if(length(ok) > 1 ) { cat ( paste( ok[which(names(ok)=="FALSE")] , " of ", nrow(datL), " cases removed from analysis due to inconsistent data.\n",sep="")) }
               }
     ### nur fuer jk2.table(): "expected.values" aufbereiten ... 
               if(toCall=="table") {
@@ -210,12 +215,13 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, re
                         }  else  { retList <- ana[,-match(c(allNam[["nest"]], allNam[["imp"]]), colnames(ana))] }
     ### hier die dummy-Ergebnisstruktur erzeugen (noch nicht schoen)
                      }  else  {                                                 
-                        prms    <- c("mean", "Ncases", "NcasesValid", "sd", "var") ### dafuer ist es wichtig, die Parameter zu finden, fuer die NAs ausgegeben werden sollen (sind je aufgerufener Funktion - mean, table, glm - verschieden)
-                        komb    <- unique(datL1[,allNam[["group"]], drop=FALSE])                     
-                        komb    <- data.frame ( komb, group = apply(komb, 1, FUN = function ( y ) { paste(y, sep=group.delimiter)}), stringsAsFactors = FALSE)
-                        retList <- expand.grid(grp, prms, c("est","se"))
-                        colnames(retList) <- c("group", "parameter", "coefficient")
-                        retList <- data.frame ( merge(retList, komb, by="group", all=TRUE), value=NA, stringsAsFactors = FALSE)
+                        retList <- NULL
+#                        prms    <- c("mean", "Ncases", "NcasesValid", "sd", "var") ### dafuer ist es wichtig, die Parameter zu finden, fuer die NAs ausgegeben werden sollen (sind je aufgerufener Funktion - mean, table, glm - verschieden)
+#                        komb    <- unique(datL1[,allNam[["group"]], drop=FALSE])                     
+#                        komb    <- data.frame ( komb, group = apply(komb, 1, FUN = function ( y ) { paste(y, sep=group.delimiter)}), stringsAsFactors = FALSE)
+#                        retList <- expand.grid(grp, prms, c("est","se"))
+#                        colnames(retList) <- c("group", "parameter", "coefficient")
+#                        retList <- data.frame ( merge(retList, komb, by="group", all=TRUE), value=NA, stringsAsFactors = FALSE)
                      }
                      return(retList)}))
               if( "dummyGroup" %in% colnames(anaA) )  { anaA <- anaA[,-match("dummyGroup", colnames(anaA))] }
@@ -320,13 +326,18 @@ conv.mean      <- function (dat.i , allNam, na.rm, group.delimiter) {
                       kontraste      <- data.frame ( lapply(kontraste, FUN = function ( x ) {car::recode(x, recodeString)}), stringsAsFactors = FALSE )
                       difs           <- do.call("rbind", by(data = m, INDICES = m[,res.group], FUN = function (iii)   {
                                         ret <- do.call("rbind", apply(kontraste, 1, FUN = function ( k ) {
-                                               vgl.iii   <- iii[iii[,allNam[["group.differences.by"]]] %in% k ,]
-                                               true.diff <- diff(vgl.iii[,"mean"])
-                                               scumm     <- sapply(vgl.iii[,res.group,drop = FALSE], as.character)
-                                               group     <- paste( paste( colnames(scumm), scumm[1,], sep="="), sep="", collapse = ", ")
-                                               dif.iii   <- data.frame(group = paste(group, paste(k, collapse = ".vs."),sep="____"), parameter = "meanGroupDiff", coefficient = c("est","se"), value = c(true.diff, sqrt( sum(vgl.iii[,"sd"]^2 / vgl.iii[,"nValidUnweighted"]) )) , stringsAsFactors = FALSE )
-                                               return(dif.iii)}))               ### siehe http://www.vassarstats.net/dist2.html
-                                        return(ret)})) }                        ### http://onlinestatbook.com/2/tests_of_means/difference_means.html
+                                               if ( sum ( k %in% iii[,allNam[["group.differences.by"]]]) != length(k) ) { 
+                                                  cat(paste("Warning: cannot compute contrasts for 'group.differences.by = ",allNam[["group.differences.by"]],"'.\n",sep="")); flush.console()
+                                                  return(NULL)
+                                               }  else  {   
+                                                  vgl.iii   <- iii[iii[,allNam[["group.differences.by"]]] %in% k ,]
+                                                  true.diff <- diff(vgl.iii[,"mean"])
+                                                  scumm     <- sapply(vgl.iii[,res.group,drop = FALSE], as.character)
+                                                  group     <- paste( paste( colnames(scumm), scumm[1,], sep="="), sep="", collapse = ", ")
+                                                  dif.iii   <- data.frame(group = paste(group, paste(k, collapse = ".vs."),sep="____"), parameter = "meanGroupDiff", coefficient = c("est","se"), value = c(true.diff, sqrt( sum(vgl.iii[,"sd"]^2 / vgl.iii[,"nValidUnweighted"]) )) , stringsAsFactors = FALSE )
+                                                  return(dif.iii)               ### siehe http://www.vassarstats.net/dist2.html
+                                               } }))                            ### http://onlinestatbook.com/2/tests_of_means/difference_means.html
+                                        return(ret)})) }                        
                   deskrR   <- reshape2::melt(data = deskr, id.vars = allNam[["group"]], measure.vars = setdiff(colnames(deskr), c("nValidUnweighted",allNam[["group"]]) ), na.rm=TRUE)
                   deskrR[,"coefficient"] <- car::recode(deskrR[,"variable"], "'se.mean'='se';else='est'")
                   deskrR[,"parameter"]   <- gsub("se.mean","mean",deskrR[,"variable"])
@@ -340,7 +351,7 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA) 
           dat.i[,"N_weightedValid"] <- 1
           if( length(which(is.na(dat.i[,allNam[["dependent"]]]))) ) { dat.i[which(is.na(dat.i[,allNam[["dependent"]]])), "N_weightedValid" ] <- 0 }
           typeS<- car::recode(type, "'JK2'='JKn'")
-     #     if(!exists("svrepdesign"))      {library(survey)}
+       #   if(!exists("svrepdesign"))      {library(survey)}
           repl <- repA[ match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]]),]
           des  <- survey::svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]], "N_weighted", "N_weightedValid")], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, mse = TRUE)
           rets <- data.frame ( target = c("Ncases", "NcasesValid", "mean", "var"), FunctionToCall = c("svytotal","svytotal","svymean","svyvar"), formelToCall = c("paste(\"~ \", \"N_weighted\",sep=\"\")","paste(\"~ \", \"N_weightedValid\",sep=\"\")","paste(\"~ \",allNam[[\"dependent\"]], sep = \"\")","paste(\"~ \",allNam[[\"dependent\"]], sep = \"\")"), naAction = c("FALSE","TRUE","na.rm","na.rm"), stringsAsFactors = FALSE)
@@ -379,14 +390,19 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA) 
              kontraste      <- data.frame ( lapply(kontraste, FUN = function ( x ) {car::recode(x, recodeString)}), stringsAsFactors = FALSE )
              difs           <- do.call("rbind", by(data = m, INDICES = m[,res.group], FUN = function (iii)   {
                                ret <- do.call("rbind", apply(kontraste, 1, FUN = function ( k ) {
-                                      vgl.iii   <- iii[iii[,allNam[["group.differences.by"]]] %in% k ,]
-                                      true.diff <- diff(vgl.iii[,which(colnames(vgl.iii) %in% allNam[["dependent"]])])
-                                      cols      <- grep("^X[[:digit:]]{1,3}$", colnames(vgl.iii) )
-                                      other.diffs <- apply(vgl.iii[,cols], 2, diff)
-                                      scumm     <- sapply(vgl.iii[,res.group,drop = FALSE], as.character)
-                                      group     <- paste( paste( colnames(scumm), scumm[1,], sep="="), sep="", collapse = ", ")
-                                      dif.iii   <- data.frame(group = group, vgl = paste(k, collapse = ".vs."), dif = true.diff, se =  sqrt(sum((true.diff - other.diffs)^2)), stringsAsFactors = FALSE )
-                                      return(dif.iii)}))
+                                      if ( sum ( k %in% iii[,allNam[["group.differences.by"]]]) != length(k) ) { 
+                                           cat(paste("Warning: cannot compute contrasts for 'group.differences.by = ",allNam[["group.differences.by"]],"'.\n",sep="")); flush.console()
+                                           return(NULL)
+                                      } else {      
+                                           vgl.iii   <- iii[iii[,allNam[["group.differences.by"]]] %in% k ,]
+                                           true.diff <- diff(vgl.iii[,which(colnames(vgl.iii) %in% allNam[["dependent"]])])
+                                           cols      <- grep("^X[[:digit:]]{1,3}$", colnames(vgl.iii) )
+                                           other.diffs <- apply(vgl.iii[,cols], 2, diff)
+                                           scumm     <- sapply(vgl.iii[,res.group,drop = FALSE], as.character)
+                                           group     <- paste( paste( colnames(scumm), scumm[1,], sep="="), sep="", collapse = ", ")
+                                           dif.iii   <- data.frame(group = group, vgl = paste(k, collapse = ".vs."), dif = true.diff, se =  sqrt(sum((true.diff - other.diffs)^2)), stringsAsFactors = FALSE )
+                                           return(dif.iii)
+                                      } }))
                                return(ret)}))
              difsL<- data.frame ( reshape2::melt(data = difs, measure.vars = c("dif", "se") , variable.name = "coefficient" , na.rm=TRUE), parameter = "meanGroupDiff", stringsAsFactors = FALSE)
              difsL[,"coefficient"] <- car::recode(difsL[,"coefficient"], "'se'='se'; else = 'est'")
