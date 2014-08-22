@@ -1,3 +1,7 @@
+importFrom("car", recode)
+importFrom("gdata", write.fwf)
+importFrom("plyr", rbind.fill, rbind.fill.matrix, alply)
+importFrom("date", as.date)
 export(defineModel)
 export(runModel)
 export(getResults)
@@ -7,6 +11,8 @@ export(get.prm)
 export(get.itn)
 export(get.shw)
 export(get.dsc)
+export(get.equ)
+
 
 
 

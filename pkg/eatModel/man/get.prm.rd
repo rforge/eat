@@ -9,7 +9,7 @@ get.prm(file)}
 \arguments{
   \item{file}{
 %%     ~~Describe \code{file} here~~
-Character string with the name of the ConQuest prm file (This file is requested using the \code{export par"}
+Character string with the name of the ConQuest prm file (This file is requested using the \code{"export par"}
 statement in the conquest synax file).
 }
 }

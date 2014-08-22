@@ -8,21 +8,22 @@ corresponding TAM call for a single model specified by several arguments in R. F
 R object is created which contain the required input for Conquest or TAM. To start the estimation,
 call \code{runModel} with the argument returned by \code{defineModel}.}
 \usage{
-defineModel (dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
-             qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL,
-             anchor = NULL, check.for.linking = TRUE, remove.no.answers = TRUE,
-             remove.missing.items = TRUE, remove.constant.items = TRUE, verbose=TRUE,
-             software = c("conquest","tam"), dir = NULL, analysis.name,
-             model.statement = "item",  compute.fit = TRUE, n.plausible=5,
-             seed = NULL, conquest.folder=NULL,constraints=c("cases","none","items"),
-             std.err=c("quick","full","none"), distribution=c("normal","discrete"),
-             method=c("gauss", "quadrature", "montecarlo"), n.iterations=2000,
-             nodes=NULL, p.nodes=2000, f.nodes=2000,converge=0.001,deviancechange=0.0001,
-             equivalence.table=c("wle","mle","NULL"), use.letters=FALSE,
-             allowAllScoresEverywhere = TRUE, guessMat = NULL, est.slopegroups = NULL,
-             progress = FALSE, increment.factor=1 , fac.oldxsi=0,
-             export = list(logfile = TRUE, systemfile = FALSE, history = TRUE,
-             covariance = TRUE, reg_coefficients = TRUE, designmatrix = FALSE)}
+defineModel (dat, items, id, 
+   irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
+   qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL,
+   anchor = NULL, check.for.linking = TRUE, remove.no.answers = TRUE,
+   remove.missing.items = TRUE, remove.constant.items = TRUE, verbose=TRUE,
+   software = c("conquest","tam"), dir = NULL, analysis.name,
+   model.statement = "item",  compute.fit = TRUE, n.plausible=5,
+   seed = NULL, conquest.folder=NULL,constraints=c("cases","none","items"),
+   std.err=c("quick","full","none"), distribution=c("normal","discrete"),
+   method=c("gauss", "quadrature", "montecarlo"), n.iterations=2000,
+   nodes=NULL, p.nodes=2000, f.nodes=2000,converge=0.001,deviancechange=0.0001,
+   equivalence.table=c("wle","mle","NULL"), use.letters=FALSE,
+   allowAllScoresEverywhere = TRUE, guessMat = NULL, est.slopegroups = NULL,
+   progress = FALSE, increment.factor=1 , fac.oldxsi=0,
+   export = list(logfile = TRUE, systemfile = FALSE, history = TRUE,
+   covariance = TRUE, reg_coefficients = TRUE, designmatrix = FALSE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
@@ -278,7 +279,7 @@ Sebastian Weirich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-## Not run:
+\dontrun{
 # load example data
 # (these are simulated achievement test data)
 data(sciences)
@@ -335,7 +336,7 @@ mod2T2<- defineModel(dat=datW, items= qMat[,1], id="id", analysis.name = "twodim
 run2T2<- runModel(mod2T2)
 plotDevianceTAM(run2T2)
 # get the results (does not work actually for tam)
-## End(Not run)
+}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
