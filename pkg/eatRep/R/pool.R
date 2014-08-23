@@ -1,7 +1,7 @@
 pool.means <- function (m, se, na.rm = FALSE) {
      if(is.list(m))   {if(length(m) == 1)  { stopifnot(length(se)==1); m <- unlist(m); se <- unlist(se)}}
      if(!is.list(m))  {                                                         ### keine genestete Struktur: wird an pool.scalar aus "mice" uebergeben
-        pooled <- mice::pool.scalar(Q=m, U=se^2)
+        pooled <- pool.scalar(Q=m, U=se^2)
         pooled <- data.frame ( m.pooled = pooled$qbar, se.pooled = sqrt(pooled$t), df = pooled$df, stringsAsFactors = FALSE)
      }  else  {                                                                 ### genestete Struktur
         stopifnot(all(unlist(lapply(m, length)) == unlist(lapply(se, length)) ) )## keine missings erlaubt 

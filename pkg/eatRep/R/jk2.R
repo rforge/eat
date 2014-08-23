@@ -427,7 +427,7 @@ jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, n
                                 }
                             }
                             r.squared      <- data.frame ( r.squared = var(glm.ii$fitted.values)/var(glm.ii$y) , N = nrow(sub.dat) , N.valid = length(glm.ii$fitted.values) )
-                            r.nagelkerke   <- fmsb::NagelkerkeR2(glm.ii)
+                            r.nagelkerke   <- NagelkerkeR2(glm.ii)
                             summaryGlm     <- summary(glm.ii)
                             res.bl         <- data.frame ( group=paste(sub.dat[1,allNam[["group"]]], collapse=group.delimiter), depVar =allNam[["dependent"]],modus = "noch_leer", parameter = c(rep(c("Ncases","Nvalid",names(glm.ii$coefficients)),2),"R2","R2nagel"),
                                               coefficient = c(rep(c("est","se"),each=2+length(names(glm.ii$coefficients))),"est","est"),
@@ -544,7 +544,7 @@ dG <- function ( object , analyses = NULL ) {
 ### Hilfsfunktion fuer jk2.glm() wenn Regression singulaere Terme enthaelt
 getOutputIfSingular <- function ( glmRes ) {
                        coefs <- na.omit(coef(glmRes))
-                       coefs <- c(coefs, var(glmRes$fitted.values)/var(glmRes$y), unlist(fmsb::NagelkerkeR2(glmRes)))
+                       coefs <- c(coefs, var(glmRes$fitted.values)/var(glmRes$y), unlist(NagelkerkeR2(glmRes)))
                        return(coefs)}
 
 desk <- function(variable,na=NA, p.weights = NULL, na.rm = FALSE) {
