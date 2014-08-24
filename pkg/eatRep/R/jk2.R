@@ -78,6 +78,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, re
              independent<- intersect(independent, colnames(datL))
              .GlobalEnv$glm.family <- family                                    ### Hotfix!
           }  else { independent <- NULL}
+          if(is.null(groups))  {groups <- "wholeGroup"; datL[,"wholeGroup"] <- 1}## Hotfix 2 
           allVar<- list(ID = ID, wgt = wgt, PSU = PSU, repInd = repInd, nest=nest, imp=imp, group = groups, group.differences.by=group.differences.by, dependent = dependent, independent=independent)
           allNam<- lapply(allVar, FUN=function(ii) {.existsBackgroundVariables(dat = datL, variable=ii)})
           if( length( setdiff ( allNam[["group.differences.by"]],allNam[["group"]])) != 0) {stop("Variable in 'group.differences.by' must be included in 'groups'.\n")}
@@ -94,9 +95,12 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, re
           toAppl<- superSplitter(group = allNam[["group"]], group.splits = group.splits, group.differences.by = allNam[["group.differences.by"]], group.delimiter = group.delimiter , dependent=allNam[["dependent"]] )
           cat(paste(length(toAppl)," analyse(s) overall according to: 'group.splits = ",paste(group.splits, collapse = " ") ,"'.", sep=""))
     ### Achtung: wenn keine Gruppen und/oder Nests und/oder Imputationen spezifiziert sind, erzeuge Variablen mit Werten gleich 1, damit by() funktioniert!
-          if( is.null(allNam[["imp"]]) )  { datL[,"imp"]        <- 1            ; allNam[["imp"]]   <- "imp" }
-          if( is.null(allNam[["wgt"]]) )  { datL[,"wgtOne"]     <- 1            ; allNam[["wgt"]]   <- "wgtOne" }
-          if(!is.null(allNam[["nest"]]))  { cat(paste("\nAssume nested structure with ", length(table(datL[,allNam[["nest"]]]))," nests and ",length(table(datL[,allNam[["imp"]]]))," imputations in each nest. This will result in ",length(table(datL[,allNam[["nest"]]]))," x ",length(table(datL[,allNam[["imp"]]]))," = ",length(table(datL[,allNam[["nest"]]]))*length(table(datL[,allNam[["imp"]]]))," imputation replicates.\n",sep=""))
+          if( is.null(allNam[["imp"]]) )  { datL[,"imp"] <- 1; allNam[["imp"]] <- "imp" } else { stopifnot(length(allNam[["imp"]]) == 1 ); datL[,allNam[["imp"]]] <- as.character(datL[,allNam[["imp"]]])}
+          if( is.null(allNam[["wgt"]]) )  { datL[,"wgtOne"] <- 1; allNam[["wgt"]] <- "wgtOne" } else { stopifnot(length(allNam[["wgt"]]) == 1 ) }
+          if(!is.null(allNam[["nest"]]))  { 
+              stopifnot(length(allNam[["nest"]]) == 1 ) 
+              datL[,allNam[["nest"]]] <- as.character(datL[,allNam[["nest"]]])
+              cat(paste("\nAssume nested structure with ", length(table(datL[,allNam[["nest"]]]))," nests and ",length(table(datL[,allNam[["imp"]]]))," imputations in each nest. This will result in ",length(table(datL[,allNam[["nest"]]]))," x ",length(table(datL[,allNam[["imp"]]]))," = ",length(table(datL[,allNam[["nest"]]]))*length(table(datL[,allNam[["imp"]]]))," imputation replicates.\n",sep=""))
           }  else  { cat("\nAssume unnested structure with ",length(table(datL[,allNam[["imp"]]]))," imputations.\n",sep="")}
           datL[,"isClear"] <- TRUE
           if( is.null(allNam[["nest"]]) ) { datL[,"nest"]  <- 1; allNam[["nest"]]  <- "nest" }
@@ -473,22 +477,21 @@ dM <- function ( object, omitTerms = c("mean","sd","var", "Ncases","NcasesValid"
 
 
 superSplitter <- function ( group=NULL, group.splits = length(group), group.differences.by = NULL, group.delimiter = "_" , dependent )  {
-            group        <- as.list(group); names(group) <- unlist(group)
-            if(max(group.splits)> length(group)) {group.splits[which(group.splits>length(group))] <- length(group)}
-            group.splits <- unique(group.splits)
-            superSplitti <- unlist(lapply(group.splits, FUN = function ( x ) {
-                            spl <- combinat::combn(names(group),x)
-                            if(class(spl) == "matrix") { spl <- as.list(data.frame(spl))} else {spl <- list(spl)}
-                            spl <- unlist(lapply(spl, FUN = function ( y ) { paste(as.character(unlist(y)), collapse="________")}))
-                            return(spl)}))
-            superSplitti <- strsplit(superSplitti, "________")
-            namen        <- unlist(lapply(superSplitti, FUN = function ( y ) { paste(y, collapse=group.delimiter)}))
-            superSplitti <- lapply(superSplitti, FUN = function ( y ) {
-                            if(!is.null(group.differences.by)) {if( group.differences.by %in% y ) { attr(y,"group.differences.by") <- group.differences.by}}
-                            return(y)})
-            names(superSplitti) <- namen
-            return(superSplitti)}
-
+             group        <- as.list(group); names(group) <- unlist(group)
+             if(max(group.splits)> length(group)) {group.splits[which(group.splits>length(group))] <- length(group)}
+             group.splits <- unique(group.splits)
+             superSplitti <- unlist(lapply(group.splits, FUN = function ( x ) {
+                             spl <- combinat::combn(names(group),x)
+                             if(class(spl) == "matrix") { spl <- as.list(data.frame(spl))} else {spl <- list(spl)}
+                             spl <- unlist(lapply(spl, FUN = function ( y ) { paste(as.character(unlist(y)), collapse="________")}))
+                             return(spl)}))
+             superSplitti <- strsplit(superSplitti, "________")
+             namen        <- unlist(lapply(superSplitti, FUN = function ( y ) { paste(y, collapse=group.delimiter)}))
+             superSplitti <- lapply(superSplitti, FUN = function ( y ) {
+                             if(!is.null(group.differences.by)) {if( group.differences.by %in% y ) { attr(y,"group.differences.by") <- group.differences.by}}
+                             return(y)})
+             names(superSplitti) <- namen
+             return(superSplitti)}
 
 
 checkForReshape <- function () {
