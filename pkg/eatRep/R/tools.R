@@ -40,7 +40,7 @@ table.unlist <- function(dataFrame, verbose = TRUE, useNA = c("no","ifany", "alw
                 }
                 column.by.column   <- do.call("rbind.fill.matrix", lapply(dataFrame, FUN=function(ii) {
                                       tab        <- table(ii, useNA = useNA)
-                                      names(tab) <- car::recode(names(tab), "NA='NA'")
+                                      names(tab) <- recode(names(tab), "NA='NA'")
                                       return(t(tab))}))
                 freq.table         <- colSums(column.by.column,na.rm=TRUE)
                 return(freq.table)}
