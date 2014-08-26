@@ -236,24 +236,24 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, re
 conv.quantile      <- function ( dat.i , allNam, na.rm, group.delimiter, type, repA, probs, nBoot,bootMethod  ) {
                       ret  <- do.call("rbind", by(data = dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( sub.dat) {
                               if( all(sub.dat[,allNam[["wgt"]]] == 1) )  {      ### alle Gewichte sind 1 bzw. gleich
-                                 ret   <- Hmisc::hdquantile(x = sub.dat[,allNam[["dependent"]]], se = TRUE, probs = probs,na.rm=na.rm )
+                                 ret   <- hdquantile(x = sub.dat[,allNam[["dependent"]]], se = TRUE, probs = probs,na.rm=na.rm )
                                  ret   <- data.frame (group = paste(sub.dat[1,allNam[["group"]],drop=FALSE], collapse=group.delimiter), depVar = allNam[["group"]], modus = "noch_leer", parameter = rep(names(ret),2), coefficient = rep(c("est","se"),each=length(ret)),value = c(ret,attr(ret,"se")),sub.dat[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
                               } else {                                          ### wenn Gewichte gefordert, koennen SEs ueber Bootstrap bestimmt werden
                                  if(!is.null(nBoot)) {
                                      if(nBoot<5) {nBoot <- 5}
                                      if(bootMethod == "wQuantiles") {           ### Variante 1
                                          x     <- sub.dat[,allNam[["dependent"]]]
-                                         ret   <- boot::boot(data = x, statistic = function ( x, i) {Hmisc::wtd.quantile(x = x[i], weights = sub.dat[,allNam[["wgt"]]], probs = probs,na.rm=na.rm )}, R=nBoot)
+                                         ret   <- boot(data = x, statistic = function ( x, i) {wtd.quantile(x = x[i], weights = sub.dat[,allNam[["wgt"]]], probs = probs,na.rm=na.rm )}, R=nBoot)
                                          ret   <- data.frame (group = paste(sub.dat[1,allNam[["group"]],drop=FALSE], collapse=group.delimiter), depVar = allNam[["group"]], modus = "noch_leer", parameter = rep(as.character(probs),2), coefficient = rep(c("est","se"),each=length(probs)), value = c(ret$t0, sapply(data.frame(ret$t), sd)), sub.dat[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
                                      } else {                                   ### Variante 2
                                          ret   <- do.call("rbind", lapply(1:nBoot, FUN = function (b){
                                                   y   <- sample(x = sub.dat[,allNam[["dependent"]]], size = length(sub.dat[,allNam[["dependent"]]]), replace = TRUE, prob = sub.dat[,allNam[["wgt"]]]/sum(sub.dat[,allNam[["wgt"]]]))
-                                                  ret <- Hmisc::hdquantile(x = y, se = FALSE, probs = probs,na.rm=na.rm )
+                                                  ret <- hdquantile(x = y, se = FALSE, probs = probs,na.rm=na.rm )
                                                   return(ret)}))
-                                         ret   <- data.frame (group = paste(sub.dat[1,allNam[["group"]],drop=FALSE], collapse=group.delimiter), depVar = allNam[["group"]], modus = "noch_leer", parameter = rep(as.character(probs),2), coefficient = rep(c("est","se"),each=length(probs)), value = c(Hmisc::wtd.quantile(x = sub.dat[,allNam[["dependent"]]], weights = sub.dat[,allNam[["wgt"]]], probs = probs,na.rm=na.rm ), sapply(data.frame(ret),sd)) , sub.dat[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
+                                         ret   <- data.frame (group = paste(sub.dat[1,allNam[["group"]],drop=FALSE], collapse=group.delimiter), depVar = allNam[["group"]], modus = "noch_leer", parameter = rep(as.character(probs),2), coefficient = rep(c("est","se"),each=length(probs)), value = c(wtd.quantile(x = sub.dat[,allNam[["dependent"]]], weights = sub.dat[,allNam[["wgt"]]], probs = probs,na.rm=na.rm ), sapply(data.frame(ret),sd)) , sub.dat[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
                                      }
                                  } else {
-                                     ret   <- Hmisc::wtd.quantile(x = sub.dat[,allNam[["dependent"]]], weights = sub.dat[,allNam[["wgt"]]], probs = probs,na.rm=na.rm )
+                                     ret   <- wtd.quantile(x = sub.dat[,allNam[["dependent"]]], weights = sub.dat[,allNam[["wgt"]]], probs = probs,na.rm=na.rm )
                                      ret   <- data.frame (group = paste(sub.dat[1,allNam[["group"]],drop=FALSE], collapse=group.delimiter), depVar = allNam[["group"]], modus = "noch_leer", parameter = rep(as.character(probs),2), coefficient = rep(c("est","se"),each=length(probs)), value = c(ret, rep(NA, length(probs))) , sub.dat[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
                                  }
                               }
@@ -264,15 +264,15 @@ conv.quantile      <- function ( dat.i , allNam, na.rm, group.delimiter, type, r
 jackknife.quantile <- function ( dat.i , allNam, na.rm, type, repA, probs, group.delimiter) {
                       cat("."); flush.console()
                 #      if(!exists("svrepdesign"))      {library(survey)}
-                      typeS          <- car::recode(type, "'JK2'='JKn'")        ### typeS steht fuer type_Survey
-                      design         <- survey::svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, mse = TRUE)
+                      typeS          <- recode(type, "'JK2'='JKn'")        ### typeS steht fuer type_Survey
+                      design         <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, mse = TRUE)
                       formel         <- as.formula(paste("~ ",allNam[["dependent"]], sep = "") )
-                      quantile.imp   <- survey::svyby(formula = formel, by = as.formula(paste("~", paste(allNam[["group"]], collapse = " + "))), design = design, FUN = svyquantile, quantiles = probs, return.replicates = TRUE, na.rm = na.rm)
-                      molt           <- reshape2::melt(data=quantile.imp, id.vars=allNam[["group"]], na.rm=TRUE)
+                      quantile.imp   <- svyby(formula = formel, by = as.formula(paste("~", paste(allNam[["group"]], collapse = " + "))), design = design, FUN = svyquantile, quantiles = probs, return.replicates = TRUE, na.rm = na.rm)
+                      molt           <- melt(data=quantile.imp, id.vars=allNam[["group"]], na.rm=TRUE)
                       molt[,"parameter"]   <- remove.non.numeric(as.character(molt[,"variable"]))
                       recString      <- paste("'",names(table(molt[,"parameter"])) , "' = '" , as.character(probs), "'" ,sep = "", collapse="; ")
-                      molt[,"parameter"]   <- car::recode(molt[,"parameter"], recString)
-                      molt[,"coefficient"] <- car::recode(remove.numeric(as.character(molt[,"variable"])), "'V'='est'")
+                      molt[,"parameter"]   <- recode(molt[,"parameter"], recString)
+                      molt[,"coefficient"] <- recode(remove.numeric(as.character(molt[,"variable"])), "'V'='est'")
                       return(facToChar(data.frame ( group = apply(molt[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["group"]], modus = "noch_leer", molt[,c("parameter", "coefficient", "value", allNam[["group"]])], stringsAsFactors = FALSE))) }
 
 
@@ -284,8 +284,8 @@ conv.table      <- function ( dat.i , allNam, na.rm, group.delimiter, type, sepa
                                  } else { ret    <- data.frame ( prefix , desk(foo[,-1, drop = FALSE], p.weights = sub.dat[,allNam[["wgt"]]],na.rm=TRUE)[,c("Mittelwert", "std.err")], stringsAsFactors = FALSE )}
                                  ret[,"parameter"] <- substring(rownames(ret),5)
                                  return(ret)}) )
-                   ret        <- reshape2::melt(table.cast, measure.vars = c("Mittelwert", "std.err"), na.rm=TRUE)
-                   ret[,"coefficient"] <- car::recode(ret[,"variable"], "'Mittelwert'='est'; 'std.err'='se'")
+                   ret        <- melt(table.cast, measure.vars = c("Mittelwert", "std.err"), na.rm=TRUE)
+                   ret[,"coefficient"] <- recode(ret[,"variable"], "'Mittelwert'='est'; 'std.err'='se'")
                    ret        <- facToChar ( data.frame ( group = apply(ret[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["group"]], modus = "noch_leer", ret[,c("coefficient", "parameter")], value = ret[,"value"], ret[,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE) )
                    return(ret)}
 
@@ -294,16 +294,16 @@ jackknife.table <- function ( dat.i , allNam, na.rm, group.delimiter, type, repA
                    cat("."); flush.console()
                    dat.i[,allNam[["dependent"]]] <- factor(dat.i[,allNam[["dependent"]]], levels = expected.values)
         #           if(!exists("svrepdesign"))      {library(survey)}
-                   typeS     <- car::recode(type, "'JK2'='JKn'")
-                   design    <- survey::svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]])], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, mse = TRUE)
+                   typeS     <- recode(type, "'JK2'='JKn'")
+                   design    <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]])], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, mse = TRUE)
                    formel    <- as.formula(paste("~factor(",allNam[["dependent"]],", levels = expected.values)",sep=""))
-                   means     <- survey::svyby(formula = formel, by = as.formula(paste("~", paste(as.character(allNam[["group"]]), collapse = " + "))), design = design, FUN = svymean, deff = FALSE, return.replicates = TRUE)
+                   means     <- svyby(formula = formel, by = as.formula(paste("~", paste(as.character(allNam[["group"]]), collapse = " + "))), design = design, FUN = svymean, deff = FALSE, return.replicates = TRUE)
                    cols      <- match(paste("factor(",allNam[["dependent"]],", levels = expected.values)",expected.values,sep=""), colnames(means))
                    colnames(means)[cols] <- paste("est",expected.values, sep="____________")
                    cols.se   <- grep("^se[[:digit:]]{1,5}$", colnames(means) )
                    stopifnot(length(cols) == length(cols.se))
                    colnames(means)[cols.se] <- paste("se____________", expected.values, sep="")
-                   molt      <- reshape2::melt(data=means, id.vars=allNam[["group"]], na.rm=TRUE)
+                   molt      <- melt(data=means, id.vars=allNam[["group"]], na.rm=TRUE)
                    splits    <- data.frame ( do.call("rbind", strsplit(as.character(molt[,"variable"]),"____________")), stringsAsFactors = FALSE)
                    colnames(splits) <- c("coefficient", "parameter")
                    ret       <- facToChar( data.frame ( group = apply(molt[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["dependent"]], modus = "noch_leer", splits, value = molt[,"value"], molt[,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE) )
@@ -327,7 +327,7 @@ conv.mean      <- function (dat.i , allNam, na.rm, group.delimiter) {
                       weg            <- which(apply(kontraste, 1, FUN = function ( x ) {x[1] >= x[2]}))
                       kontraste      <- kontraste[-weg,]
                       recodeString   <- paste("'", 1:length(table(m[,allNam[["group.differences.by"]]])),"' = '", names(table(m[,allNam[["group.differences.by"]]])),"'", sep = "", collapse = "; ")
-                      kontraste      <- data.frame ( lapply(kontraste, FUN = function ( x ) {car::recode(x, recodeString)}), stringsAsFactors = FALSE )
+                      kontraste      <- data.frame ( lapply(kontraste, FUN = function ( x ) {recode(x, recodeString)}), stringsAsFactors = FALSE )
                       difs           <- do.call("rbind", by(data = m, INDICES = m[,res.group], FUN = function (iii)   {
                                         ret <- do.call("rbind", apply(kontraste, 1, FUN = function ( k ) {
                                                if ( sum ( k %in% iii[,allNam[["group.differences.by"]]]) != length(k) ) { 
@@ -342,11 +342,11 @@ conv.mean      <- function (dat.i , allNam, na.rm, group.delimiter) {
                                                   return(dif.iii)               ### siehe http://www.vassarstats.net/dist2.html
                                                } }))                            ### http://onlinestatbook.com/2/tests_of_means/difference_means.html
                                         return(ret)})) }                        
-                  deskrR   <- reshape2::melt(data = deskr, id.vars = allNam[["group"]], measure.vars = setdiff(colnames(deskr), c("nValidUnweighted",allNam[["group"]]) ), na.rm=TRUE)
-                  deskrR[,"coefficient"] <- car::recode(deskrR[,"variable"], "'se.mean'='se';else='est'")
+                  deskrR   <- melt(data = deskr, id.vars = allNam[["group"]], measure.vars = setdiff(colnames(deskr), c("nValidUnweighted",allNam[["group"]]) ), na.rm=TRUE)
+                  deskrR[,"coefficient"] <- recode(deskrR[,"variable"], "'se.mean'='se';else='est'")
                   deskrR[,"parameter"]   <- gsub("se.mean","mean",deskrR[,"variable"])
                   deskrR   <- data.frame ( group = apply(deskrR[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["dependent"]], deskrR[,c( "parameter", "coefficient", "value", allNam[["group"]])], stringsAsFactors = FALSE)
-                  if(!is.null(allNam[["group.differences.by"]]))   {return(facToChar(plyr::rbind.fill(deskrR,difs)))} else {return(facToChar(deskrR))}}
+                  if(!is.null(allNam[["group.differences.by"]]))   {return(facToChar(rbind.fill(deskrR,difs)))} else {return(facToChar(deskrR))}}
 
 
 jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA) {
@@ -354,28 +354,28 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA) 
           dat.i[,"N_weighted"]      <- 1
           dat.i[,"N_weightedValid"] <- 1
           if( length(which(is.na(dat.i[,allNam[["dependent"]]]))) ) { dat.i[which(is.na(dat.i[,allNam[["dependent"]]])), "N_weightedValid" ] <- 0 }
-          typeS<- car::recode(type, "'JK2'='JKn'")
+          typeS<- recode(type, "'JK2'='JKn'")
        #   if(!exists("svrepdesign"))      {library(survey)}
           repl <- repA[ match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]]),]
-          des  <- survey::svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]], "N_weighted", "N_weightedValid")], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, mse = TRUE)
+          des  <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]], "N_weighted", "N_weightedValid")], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, mse = TRUE)
           rets <- data.frame ( target = c("Ncases", "NcasesValid", "mean", "var"), FunctionToCall = c("svytotal","svytotal","svymean","svyvar"), formelToCall = c("paste(\"~ \", \"N_weighted\",sep=\"\")","paste(\"~ \", \"N_weightedValid\",sep=\"\")","paste(\"~ \",allNam[[\"dependent\"]], sep = \"\")","paste(\"~ \",allNam[[\"dependent\"]], sep = \"\")"), naAction = c("FALSE","TRUE","na.rm","na.rm"), stringsAsFactors = FALSE)
           ret  <- apply(rets, 1, FUN = function ( toCall ) {                    ### svyby wird dreimal aufgerufen ...
-                  do   <- paste(" res <- survey::svyby(formula = as.formula(",toCall[["formelToCall"]],"), by = as.formula(paste(\"~\", paste(allNam[[\"group\"]], collapse = \" + \"))), design = des, FUN = ",toCall[["FunctionToCall"]],",na.rm=",toCall[["naAction"]],", deff = FALSE, return.replicates = TRUE)",sep="")
+                  do   <- paste(" res <- svyby(formula = as.formula(",toCall[["formelToCall"]],"), by = as.formula(paste(\"~\", paste(allNam[[\"group\"]], collapse = \" + \"))), design = des, FUN = ",toCall[["FunctionToCall"]],",na.rm=",toCall[["naAction"]],", deff = FALSE, return.replicates = TRUE)",sep="")
                   eval(parse(text=do))
-                  resL <- reshape2::melt( data = res, id.vars = allNam[["group"]], variable.name = "coefficient" , na.rm=TRUE)
+                  resL <- melt( data = res, id.vars = allNam[["group"]], variable.name = "coefficient" , na.rm=TRUE)
                   stopifnot(length(table(resL[,"coefficient"])) == 2)
-                  resL[,"coefficient"] <- car::recode(resL[,"coefficient"], "'se'='se'; else ='est'")
+                  resL[,"coefficient"] <- recode(resL[,"coefficient"], "'se'='se'; else ='est'")
                   resL[,"parameter"]   <- toCall[["target"]]
                   attr(resL, "original") <- res
                   return(resL)})
           sds  <- do.call("rbind", by(data = dat.i, INDICES =  dat.i[,allNam[["group"]]], FUN = function (uu) {
                   namen   <- uu[1, allNam[["group"]], drop=FALSE]
                   sub.rep <- repl[ match(uu[,allNam[["ID"]]], repl[,allNam[["ID"]]] ) ,  ]
-                  des.uu  <- survey::svrepdesign(data = uu[,c(allNam[["group"]], allNam[["dependent"]])], weights = uu[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = sub.rep[,-1, drop = FALSE], combined.weights = TRUE, mse = TRUE)
-                  var.uu  <- survey::svyvar(x = as.formula(paste("~",allNam[["dependent"]],sep="")), design = des.uu, deff = FALSE, return.replicates = TRUE, na.rm = na.rm)
+                  des.uu  <- svrepdesign(data = uu[,c(allNam[["group"]], allNam[["dependent"]])], weights = uu[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = sub.rep[,-1, drop = FALSE], combined.weights = TRUE, mse = TRUE)
+                  var.uu  <- svyvar(x = as.formula(paste("~",allNam[["dependent"]],sep="")), design = des.uu, deff = FALSE, return.replicates = TRUE, na.rm = na.rm)
                   ret     <- data.frame(namen, est = as.numeric(sqrt(coef(var.uu))), se =  as.numeric(sqrt(vcov(var.uu)/(4*coef(var.uu)))), stringsAsFactors = FALSE )
                   return(ret)}) )
-          sds  <- data.frame ( reshape2::melt(data = sds, id.vars = allNam[["group"]], variable.name = "coefficient" , na.rm=TRUE), parameter = "sd", stringsAsFactors = FALSE)
+          sds  <- data.frame ( melt(data = sds, id.vars = allNam[["group"]], variable.name = "coefficient" , na.rm=TRUE), parameter = "sd", stringsAsFactors = FALSE)
           resAl<- rbind(do.call("rbind",ret), sds)
           resAl<- data.frame ( group = apply(resAl[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["dependent"]], resAl[,c("parameter","coefficient","value",allNam[["group"]])] , stringsAsFactors = FALSE)
           if(!is.null(allNam[["group.differences.by"]]))   {
@@ -391,7 +391,7 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA) 
              weg            <- which(apply(kontraste, 1, FUN = function ( x ) {x[1] >= x[2]}))
              kontraste      <- kontraste[-weg,]
              recodeString   <- paste("'", 1:length(table(m[,allNam[["group.differences.by"]]])),"' = '", names(table(m[,allNam[["group.differences.by"]]])),"'", sep = "", collapse = "; ")
-             kontraste      <- data.frame ( lapply(kontraste, FUN = function ( x ) {car::recode(x, recodeString)}), stringsAsFactors = FALSE )
+             kontraste      <- data.frame ( lapply(kontraste, FUN = function ( x ) {recode(x, recodeString)}), stringsAsFactors = FALSE )
              difs           <- do.call("rbind", by(data = m, INDICES = m[,res.group], FUN = function (iii)   {
                                ret <- do.call("rbind", apply(kontraste, 1, FUN = function ( k ) {
                                       if ( sum ( k %in% iii[,allNam[["group.differences.by"]]]) != length(k) ) { 
@@ -408,8 +408,8 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA) 
                                            return(dif.iii)
                                       } }))
                                return(ret)}))
-             difsL<- data.frame ( reshape2::melt(data = difs, measure.vars = c("dif", "se") , variable.name = "coefficient" , na.rm=TRUE), parameter = "meanGroupDiff", stringsAsFactors = FALSE)
-             difsL[,"coefficient"] <- car::recode(difsL[,"coefficient"], "'se'='se'; else = 'est'")
+             difsL<- data.frame ( melt(data = difs, measure.vars = c("dif", "se") , variable.name = "coefficient" , na.rm=TRUE), parameter = "meanGroupDiff", stringsAsFactors = FALSE)
+             difsL[,"coefficient"] <- recode(difsL[,"coefficient"], "'se'='se'; else = 'est'")
              dummy<- dat.i[1,allNam[["group"]], drop=FALSE]
              dummy<- data.frame ( lapply(dummy, FUN = function ( x ) {NA}))
              difsL<- data.frame ( group = apply(difsL[,c("group","vgl")],1,FUN = function (z) {paste(z,collapse="____")}), depVar = allNam[["dependent"]], difsL[,c("parameter","coefficient", "value")], dummy, stringsAsFactors = FALSE)
@@ -424,10 +424,10 @@ jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, n
                             singular       <- names(glm.ii$coefficients)[which(is.na(glm.ii$coefficients))]
                             if(!is.null(repA)) {
                          #       if(!exists("svrepdesign"))      {library(survey)}
-                                typeS          <- car::recode(type, "'JK2'='JKn'")
-                                design         <- survey::svrepdesign(data = sub.dat[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = sub.dat[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repA[match(sub.dat[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, mse = TRUE)
+                                typeS          <- recode(type, "'JK2'='JKn'")
+                                design         <- svrepdesign(data = sub.dat[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = sub.dat[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repA[match(sub.dat[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, mse = TRUE)
                                 if(length(singular) == 0 & forceSingularityTreatment == FALSE ) {
-                                   glm.ii      <- survey::svyglm(formula = formula, design = design, return.replicates = FALSE, family = glm.family)
+                                   glm.ii      <- svyglm(formula = formula, design = design, return.replicates = FALSE, family = glm.family)
                                 }
                             }
                             r.squared      <- data.frame ( r.squared = var(glm.ii$fitted.values)/var(glm.ii$y) , N = nrow(sub.dat) , N.valid = length(glm.ii$fitted.values) )
@@ -470,7 +470,7 @@ dM <- function ( object, omitTerms = c("mean","sd","var", "Ncases","NcasesValid"
                  wegC   <- unique(unlist(lapply(object[,c("parameter", "coefficient")], FUN = function ( x ) { which(x %in% weg)})))
                  if(length(wegC)>0) { object <- object[-wegC,]}
              }
-             ret <- merge ( reshape2::dcast(object, depVar + group ~ parameter + coefficient, value.var = "value"), object[ !duplicated(object[,c("group",groupCols), drop=FALSE]),c("group",groupCols), drop=FALSE], by = "group", all.x = TRUE, all.y = FALSE)
+             ret <- merge ( dcast(object, depVar + group ~ parameter + coefficient, value.var = "value"), object[ !duplicated(object[,c("group",groupCols), drop=FALSE]),c("group",groupCols), drop=FALSE], by = "group", all.x = TRUE, all.y = FALSE)
              whichIsNumeric <- as.numeric(which ( sapply(ret, class) == "numeric"))
              if(length(whichIsNumeric)>0) {  for ( i in whichIsNumeric) {ret[,i] <- round(ret[,i], digits = 3)}}
              return(ret)}
@@ -481,7 +481,7 @@ superSplitter <- function ( group=NULL, group.splits = length(group), group.diff
              if(max(group.splits)> length(group)) {group.splits[which(group.splits>length(group))] <- length(group)}
              group.splits <- unique(group.splits)
              superSplitti <- unlist(lapply(group.splits, FUN = function ( x ) {
-                             spl <- combinat::combn(names(group),x)
+                             spl <- combn(names(group),x)
                              if(class(spl) == "matrix") { spl <- as.list(data.frame(spl))} else {spl <- list(spl)}
                              spl <- unlist(lapply(spl, FUN = function ( y ) { paste(as.character(unlist(y)), collapse="________")}))
                              return(spl)}))
@@ -503,7 +503,7 @@ checkForReshape <- function () {
 dT <- function ( object, reshapeFormula = depVar + group ~ parameter + coefficient, seOmit = FALSE) {
              groupCols <- setdiff(colnames(object), c("group", "depVar", "modus", "parameter", "coefficient", "value"))
              if (seOmit == TRUE) { object <- object[-grep("se", object[,"coefficient"]),]}
-             ret <- merge ( reshape2::dcast(data = object, formula = reshapeFormula, value.var = "value"), object[ !duplicated(object[,c("group",groupCols), drop=FALSE]) ,c("group",groupCols), drop=FALSE], by = "group", all.x = TRUE, all.y = FALSE)
+             ret <- merge ( dcast(data = object, formula = reshapeFormula, value.var = "value"), object[ !duplicated(object[,c("group",groupCols), drop=FALSE]) ,c("group",groupCols), drop=FALSE], by = "group", all.x = TRUE, all.y = FALSE)
              whichIsNumeric <- as.numeric(which ( sapply(ret, class) == "numeric"))
              if(length(whichIsNumeric)>0) {  for ( i in whichIsNumeric) {ret[,i] <- round(ret[,i], digits = 3)}}
              return(ret)}
@@ -513,7 +513,7 @@ dT <- function ( object, reshapeFormula = depVar + group ~ parameter + coefficie
 dQ <- function ( object, seOmit = FALSE) {
              groupCols <- setdiff(colnames(object), c("group", "depVar", "modus", "parameter", "coefficient", "value"))
              if (seOmit == TRUE) { object <- object[-grep("se", object[,"coefficient"]),]}
-             ret <- merge ( reshape2::dcast(data = object, formula = depVar + group ~ parameter + coefficient, value.var = "value"), object[,c("group",groupCols)], by = "group", all.x = TRUE, all.y = FALSE)
+             ret <- merge ( dcast(data = object, formula = depVar + group ~ parameter + coefficient, value.var = "value"), object[,c("group",groupCols)], by = "group", all.x = TRUE, all.y = FALSE)
              ret <- ret[!duplicated(ret[,"group"]),c("depVar",groupCols, setdiff(colnames(ret), c("depVar","group", groupCols)))]
              whichIsNumeric <- as.numeric(which ( sapply(ret, class) == "numeric"))
              if(length(whichIsNumeric)>0) {  for ( i in whichIsNumeric) {ret[,i] <- round(ret[,i], digits = 3)}}
@@ -525,7 +525,7 @@ dG <- function ( object , analyses = NULL ) {
             for ( i in analyses) {
                  spl    <- splitData[[i]]
                  split2 <- spl[,"parameter"] %in% c("Ncases","Nvalid","R2","R2nagel")
-                 ret    <- reshape2::dcast(spl[!split2,], parameter~coefficient)
+                 ret    <- dcast(spl[!split2,], parameter~coefficient)
                  ret[,"t.value"] <- ret[,"est"] / ret[,"se"]
                  df     <- spl[ spl[,"parameter"] == "Nvalid" & spl[,"coefficient"] == "est"  ,"value"] - nrow(ret)
                  ret[,"p.value"] <- 2*(1-pt( q = abs(ret[,"t.value"]), df = df ))
@@ -577,8 +577,8 @@ desk <- function(variable,na=NA, p.weights = NULL, na.rm = FALSE) {
                         N.valid    <- length(na.omit(y)) }
                      if(Mis.weight == FALSE ) {
                         Summe <- sum( y * p.weights )
-                        Mittelwert <- Hmisc::wtd.mean(x = y, weights = p.weights, na.rm = na.rm)
-                        Varianz    <- Hmisc::wtd.var(y, na.rm = na.rm)
+                        Mittelwert <- wtd.mean(x = y, weights = p.weights, na.rm = na.rm)
+                        Varianz    <- wtd.var(y, na.rm = na.rm)
                         N          <- sum(p.weights)
                         N.valid    <- sum(p.weights[which(!is.na(y))]) }
                      dataFrame <- data.frame ( N = N, N.valid = N.valid, Missing = length(y) - length(na.omit(y)), Minimum = min(y, na.rm = na.rm), Maximum = max(y, na.rm = na.rm), Summe = Summe, Mittelwert = Mittelwert, std.err = sd(y, na.rm = na.rm) / sqrt(length(na.omit(y))), sig = ifelse(length(table(y))==1, NA, t.test(x = y)$p.value), Median = median(y, na.rm = na.rm), Streuung = sqrt(Varianz), Varianz = Varianz , stringsAsFactors = FALSE )

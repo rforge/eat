@@ -1,14 +1,10 @@
-!!
-Achtung: dependencies besser machen, nicht mehr alles blind laden, sondern Importe definieren 
-
-
 Package: eatRep
 Type: Package
 Title: eatRep
-Version: 0.6.3
-Depends: R (>= 2.14.0), survey, reshape2, stringr, Hmisc, car, boot, combinat, plyr
-Imports: fmsb, mice
-Date: 2014-08-24
+Version: 0.6.5
+Depends: R (>= 2.14.0), survey, stringr 
+Imports: Hmisc, fmsb, mice, boot, car, reshape2, plyr, combinat
+Date: 2014-08-26
 Author: Sebastian Weirich, Martin Hecht
 Maintainer: Sebastian Weirich <sebastian.weirich@iqb.hu-berlin.de>
 Description: Compute descriptives and regression models for complex survey designs with multiple imputed data
