@@ -135,6 +135,9 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, re
                  }    
     ### check: sind fuer jede Gruppe alle Faktorstufen in allen nests und allen imputationen vorhanden? z.B. nicht in einer Imputation nur Jungen
                  impNes<- by(data = datL, INDICES = datL[, c(allNam[["nest"]], allNam[["imp"]]) ], FUN = function ( x ) {
+                          if(length(x[,allNam[["ID"]]]) != length(unique(x[,allNam[["ID"]]])))  { 
+                             cat(paste(" W A R N I N G !  '",allNam[["ID"]],"' variable is not unique within nests and imputations. Analysis will be most likely biased!\n",sep=""))
+                          }   
                           if( length(toAppl[[gr]])>0) { ret <- lapply( toAppl[[gr]], FUN = function ( y ) {table(x[,y])}) } else {ret <- 1}
                           return(ret) })
                  impNes<- data.frame ( do.call("rbind", lapply(impNes, FUN = function ( x ) { unlist(lapply(x, FUN = length)) })) )
