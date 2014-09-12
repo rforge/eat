@@ -1235,74 +1235,87 @@ define.design <- function ( def = data.frame() , dsgn = new("design") , append =
 					}
 					### Ende varCovMatrix					
 					
-					# designDescriptives
+					##### designDescriptives #####
 					# einfach zusammensammeln was da ist
 					empty.varCovMatrix <- identical ( dsgn@varCovMatrix , matrix()[FALSE,FALSE] )
 					empty.designDescriptives <- identical ( dsgn@designDescriptives , list() )
 					old.designDescriptives <- dsgn@designDescriptives
-					## wenn noch mehr dazu kommt "oder" verkn�pfen
+					
+					### D-Optimality ###
 					if ( !empty.varCovMatrix ) {						
-							
-							# ggf. einzeln abfangen
-							if ( !empty.varCovMatrix ) {
 						
-									# Doptimality berechnen
-									solved <- try ( solve ( dsgn@varCovMatrix ) , silent = TRUE )
-									if ( ! inherits ( solved , "try-error" ) ) {
-											Doptimality <- try ( det ( dsgn@varCovMatrix*solved ) , silent = TRUE )
-											if ( inherits ( Doptimality , "try-error" ) ) {
-													Doptimality <- as.numeric(NA)
-											}
-									} else {
+							# Doptimality berechnen
+							solved <- try ( solve ( dsgn@varCovMatrix ) , silent = TRUE )
+							if ( ! inherits ( solved , "try-error" ) ) {
+									Doptimality <- try ( det ( dsgn@varCovMatrix*solved ) , silent = TRUE )
+									if ( inherits ( Doptimality , "try-error" ) ) {
 											Doptimality <- as.numeric(NA)
 									}
-									if ( is.na ( Doptimality ) ) {
-											msg20b <- "     D-optimality index could not be computed due to not solvable design matrix.\n"
-									}
 							} else {
-									### Message im Prinzip sinnlos da nie eintreten kann, da !empty.varCovMatrix
-									# msg20c <- paste ( "     D-optimality index could not be computed because slot @varCovMatrix is empty.\n" , 
-									#				    "     run updateDesign ( dsgn = <yourdesignobject> , genVarCovMatrix = TRUE ) to update your design.\n" , sep = "" )
 									Doptimality <- as.numeric(NA)
 							}
-							
-							### Datensatz bauen
-							# do1 <- "\"Doptimality\" = Doptimality"
-							# do <- paste ( "d <- data.frame ( " , paste ( do1 , collapse = "," ) , " , stringsAsFactors = FALSE ) " , sep = "" )
-							# eval ( parse ( text = do ) )
-							
-							### Liste bauen
-							do1 <- "\"Doptimality\" = Doptimality"
-							do <- paste ( "l <- list ( " , paste ( do1 , collapse = "," ) , " ) " , sep = "" )
-							eval ( parse ( text = do ) )
-							
-							# setzen
-							dsgn@designDescriptives <- l
-							
-							# message
-							# if ( empty.designDescriptives ) {
-									# msg20a <- "is set to"
-							# } else {
-									# if ( ! identical ( dsgn@designDescriptives , old.designDescriptives ) ) {
-											# msg20a <- "is updated to"
-									# } else {
-											# msg20a <- "remains unchanged.\n     It's current value is"
-									# }
-							# }
-
+							if ( is.na ( Doptimality ) ) {
+									msg20b <- "     D-optimality index could not be computed due to not solvable design matrix.\n"
+							}
 					} else {
-							# msg20a <- "remains unchanged.\n     It's current value is"
+							Doptimality <- as.numeric(NA)
 					}
+					
+					### Position balance / Cluster pair balance ###
+				
+					# diese Kennwerte werden nur berechnet, wenn klar ist, was cluster/positionen/booklets sind
+					positionBalance <- NA
+					clusterPairBalance <- NA
+					empty.def <- identical ( def , data.frame() )
+					if ( !empty.def ) {
+							nams <- colnames ( dsgn@definition )
+							# klein machen
+							nams <- tolower ( nams )
+							
+							# alle units da?
+							namsl <- sapply ( c("booklet","cluster","position") , "%in%" , nams , simplify = TRUE )
+							
+							if ( all ( namsl ) ) {
+									
+									nams2 <- colnames ( dsgn@definition ) [ sapply ( c("booklet","cluster","position") , grep , nams , simplify = TRUE ) ]
+									names ( nams2 ) <- names ( namsl )
+									
+									# check ob Datenstruktur gegeben
+									# in jedem Booklet alle Positionen
+									check1 <- dsgn@structure[nams2["booklet"],nams2["position"]] %in% "crossedcompletely"
+									
+									# position balance
+									if ( !empty.varCovMatrix ) {
+											PositionBalance <- dsgn@varCovMatrix[nams2["position"],nams2["cluster"]]
+											PositionBalance <- ( 1 - PositionBalance ) * 100
+									}
+									
+									# cluster pair balance
+									empty.link <- identical ( dsgn@link , data.frame() )
+									if ( !empty.link ) {
+											ClusterPairBalance <- dsgn@link[dsgn@link$element1 %in% nams2["cluster"] & dsgn@link$element2 %in% nams2["booklet"] , "linkrate1" ] * 100
+									}
+							}
+					}
+
+					### Liste bauen ###
+					do1 <- "\"Doptimality\" = Doptimality"
+					if ( !is.na ( PositionBalance ) & !is.na ( ClusterPairBalance ) ) {
+							do2 <- c ( "\"PositionBalance\" = PositionBalance" , "\"ClusterPairBalance\" = ClusterPairBalance" )
+					} else {
+							do2 <- NULL
+					}
+					do <- paste ( "l <- list ( " , paste ( c ( do1 , do2 ) , collapse = "," ) , " ) " , sep = "" )
+					eval ( parse ( text = do ) )
+					
+					# setzen
+					dsgn@designDescriptives <- l
+					
 					if ( verbose ) {
 							catmsg ( "designDescriptives" , empty.designDescriptives , old.designDescriptives , dsgn@designDescriptives ) 
-							# designDescriptives.string <- paste ( "a data frame with " , ncol ( dsgn@designDescriptives ) , " columns and " , nrow ( dsgn@designDescriptives ) , " rows" , sep = "" )
-							# msg20 <- paste ( "Slot @designDescriptives " , msg20a , " " , designDescriptives.string , ".\n" , sep = "" )
-							
-							# cat ( msg20 )
 							if ( exists ( "msg20b" , inherits = FALSE ) ) cat ( msg20b )
-							# if ( exists ( "msg20c" , inherits = FALSE ) ) cat ( msg20c )
 					}
-					### Ende designDescriptives										
+					### Ende designDescriptives	###							
 
 					# auf altes Warn-Level zuruecksetzen
 					options ( oldwarn )
@@ -1579,14 +1592,22 @@ setMethod ( f = "show" , signature = signature ( object="design" ) ,
 									d5$Doptimality <- formatC ( d5$Doptimality, format = "f", digits = 2 )
 							}
 							names ( d5 ) [ names ( d5 ) == "Doptimality" ] <- "D-optimality index"
+						
+							d5$PositionBalance <- formatC ( d5$PositionBalance, format = "f", digits = 0 )
+							d5$ClusterPairBalance <- formatC ( d5$ClusterPairBalance, format = "f", digits = 0 )
+							
 							
 							### Achtung: der Einfachheit halber nen Data.frame bauen
 							# funktioniert nur wenn Laenge der Listenelemente jeweils 1
-							val <- paste ( paste ( "\"" , sapply ( d5 , "[" , 1 ) , "\"" , sep = "" ) , collapse = " , " )
-							do <- paste ( "dfr5 <- data.frame ( " , val , " , stringsAsFactors = FALSE )" )
-							eval ( parse ( text = do ) )
-							colnames ( dfr5 ) <- rep ( "" , length ( val ) )
-							rownames ( dfr5 ) <- paste ( einr , names ( d5 ) , ": " , sep = "" )
+							# val <- paste ( paste ( "\"" , sapply ( d5 , "[" , 1 ) , "\"" , sep = "" ) , collapse = " , " )
+							# do <- paste ( "dfr5 <- data.frame ( " , val , " , stringsAsFactors = FALSE )" )
+							# eval ( parse ( text = do ) )
+							# colnames ( dfr5 ) <- rep ( "" , length ( d5 ) )
+							# rownames ( dfr5 ) <- paste ( einr , names ( d5 ) , ": " , sep = "" )
+							
+							dfr5 <- data.frame ( unname ( sapply ( d5 , "[" ) ) , stringsAsFactors = FALSE )
+							colnames ( dfr5 ) <- ""
+							rownames ( dfr5 ) <- paste0 ( einr , names ( d5 ) )
 							
 							msgg <- paste ( msgg , dfr2text ( dfr5 , blankRowNames = FALSE ) , sep = "" )
 
