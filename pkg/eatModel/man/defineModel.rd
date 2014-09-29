@@ -2,8 +2,8 @@
 \alias{defineModel}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Prepares IRT analysis for Conquest and TAM}
-\description{Facilitates data analysis using the software ConQuest and/or TAM. It automatically
-checks data for IRT consistency, generates ConQuest syntax, label, anchor and data files or
+\description{Facilitates data analysis using the software Conquest and/or TAM. It automatically
+checks data for IRT consistency, generates Conquest syntax, label, anchor and data files or
 corresponding TAM call for a single model specified by several arguments in R. Finally, an
 R object is created which contain the required input for Conquest or TAM. To start the estimation,
 call \code{runModel} with the argument returned by \code{defineModel}.}
@@ -11,7 +11,7 @@ call \code{runModel} with the argument returned by \code{defineModel}.}
 defineModel (dat, items, id, 
    irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
    qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL,
-   anchor = NULL, check.for.linking = TRUE, remove.no.answers = TRUE,
+   anchor = NULL, check.for.linking = TRUE, boundary = 6, remove.no.answers = TRUE,
    remove.missing.items = TRUE, remove.constant.items = TRUE, verbose=TRUE,
    software = c("conquest","tam"), dir = NULL, analysis.name,
    model.statement = "item",  compute.fit = TRUE, n.plausible=5,
@@ -82,6 +82,11 @@ items in the dataset and vice versa.
 A logical value indicating whether the items in dataset are checked for being
 connected with each other via design.
 }
+  \item{boundary}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Numerical: A message is printed on console if a subject has answered less than the number of items 
+defined in boundary. 
+}
   \item{remove.no.answers}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Logical: Should persons without any item responses being removed prior to analysis?
@@ -117,7 +122,7 @@ with respect to the defined model.
 }
   \item{compute.fit}{
 %%     ~~Describe \code{dif.term} here~~
-Applies only if \code{software = "conquest"}. Compute item fir statistics?
+Applies only if \code{software = "conquest"}. Compute item fit statistics?
 }
   \item{n.plausible}{
 %%     ~~Describe \code{dif.term} here~~
@@ -224,12 +229,13 @@ zero, the guessing parameter is fixed to zero.
 }
   \item{est.slopegroups}{
 %%     ~~Describe \code{dif.term} here~~
-Applies only if \code{software = "tam"} for 2PL models. A named data frame
+Applies only if \code{software = "tam"} for 2PL models. Optionally, a named data frame
 with two columns indicating for which items a common discrimination parameter should
 be estimated. The first column contains the names of all items in the analysis
 and should be named "item". The second column is numerical (integer values
 recommended) and allocates the items to groups. For each group of items, a
-separate discrimination parameter is estimated.
+separate discrimination parameter is estimated. Without specifying \code{est.slopegroups}, 
+a discrimination parameter for each item is estimated.
 }
   \item{progress}{
 %%     ~~Describe \code{dif.term} here~~

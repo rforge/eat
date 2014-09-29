@@ -79,7 +79,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
 
 defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
                qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL, anchor = NULL, check.for.linking = TRUE,
-               remove.no.answers = TRUE, remove.missing.items = TRUE, remove.constant.items = TRUE, verbose=TRUE,
+               boundary = 6, remove.no.answers = TRUE, remove.missing.items = TRUE, remove.constant.items = TRUE, verbose=TRUE,
                software = c("conquest","lme4", "tam"), dir = NULL, analysis.name, model.statement = "item",  compute.fit = TRUE,
                n.plausible=5, seed = NULL, conquest.folder=NULL,constraints=c("cases","none","items"),std.err=c("quick","full","none"),
                distribution=c("normal","discrete"), method=c("gauss", "quadrature", "montecarlo"), n.iterations=2000,nodes=NULL, p.nodes=2000,
@@ -229,8 +229,20 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                      cat(paste("Found ",length(weg)," cases with missings on all items.\n",sep=""))
                      if( remove.no.answers == TRUE)  {cat("Cases with missings on all items will be deleted.\n"); dat <- dat[-match(weg,dat[,all.Names[["ID"]]] ) ,]  }
                      if( remove.no.answers == FALSE) {cat("Cases with missings on all items will be kept.\n")}}
+     ### Sektion 'Summenscores fuer Personen pruefen' ###
+                  datW  <- reshape2::dcast(datL, variable~ID1, value.var = "value")
+                  nValid<- sapply(datW[,-1], FUN = function ( x ) { length(x) - length(which(is.na(x)))})
+                  inval <- which(nValid<boundary)
+                  if(length(inval)>0) { cat(paste( length(inval), " subject(s) with less than 6 valid item responses: ", paste(names(inval),nValid[inval],sep=": ", collapse="; "),"\n",sep=""))}
+                  means <- colMeans(datW[,-1], na.rm=TRUE)
+                  allFal<- which(means == 0 ) 
+                  if(length(allFal)>0) { cat(paste( length(allFal), " subject(s) do not solve any item: ", paste(names(allFal), collapse=", "),"\n",sep=""))}
+                  if(all(names( table ( datL[,"value"])) == c("0", "1"))) { 
+                     allTru <- which(means == 1 ) 
+                     if(length(allTru)>0) { cat(paste( length(allTru), " subject(s) solved each item: ", paste(names(allTru), collapse=", "),"\n",sep=""))}
+                  }   
      ### Sektion 'Verlinkung pruefen' ###
-                  if(check.for.linking == TRUE) {                               ### Dies geschieht auf dem nutzrspezifisch reduzierten/selektierten Datensatz
+                  if(check.for.linking == TRUE) {                               ### Dies geschieht auf dem nutzerspezifisch reduzierten/selektierten Datensatz
                      linkNaKeep <- checkLink(dataFrame = dat[,all.Names[["variablen"]], drop = FALSE], remove.non.responser = FALSE, verbose = FALSE )
                      linkNaOmit <- checkLink(dataFrame = dat[,all.Names[["variablen"]], drop = FALSE], remove.non.responser = TRUE, verbose = FALSE )
                      if(linkNaKeep == FALSE & linkNaOmit == FALSE ) {cat("WARNING! Dataset is NOT completely linked (even if cases with missings on all items are removed).\n")}
