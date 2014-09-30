@@ -230,7 +230,7 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                      if( remove.no.answers == TRUE)  {cat("Cases with missings on all items will be deleted.\n"); dat <- dat[-match(weg,dat[,all.Names[["ID"]]] ) ,]  }
                      if( remove.no.answers == FALSE) {cat("Cases with missings on all items will be kept.\n")}}
      ### Sektion 'Summenscores fuer Personen pruefen' ###
-                  datW  <- reshape2::dcast(datL, variable~ID1, value.var = "value")
+                  datW  <- reshape2::dcast(datL, as.formula(paste("variable~",all.Names[["ID"]],sep="")), value.var = "value")
                   nValid<- sapply(datW[,-1], FUN = function ( x ) { length(x) - length(which(is.na(x)))})
                   inval <- which(nValid<boundary)
                   if(length(inval)>0) { cat(paste( length(inval), " subject(s) with less than 6 valid item responses: ", paste(names(inval),nValid[inval],sep=": ", collapse="; "),"\n",sep=""))}
