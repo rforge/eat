@@ -12,8 +12,8 @@ defineModel (dat, items, id,
    irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
    qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL,
    anchor = NULL, check.for.linking = TRUE, boundary = 6, remove.no.answers = TRUE,
-   remove.missing.items = TRUE, remove.constant.items = TRUE, verbose=TRUE,
-   software = c("conquest","tam"), dir = NULL, analysis.name,
+   remove.missing.items = TRUE, remove.constant.items = TRUE, remove.failures = FALSE, 
+   verbose=TRUE, software = c("conquest","tam"), dir = NULL, analysis.name,
    model.statement = "item",  compute.fit = TRUE, n.plausible=5,
    seed = NULL, conquest.folder=NULL,constraints=c("cases","none","items"),
    std.err=c("quick","full","none"), distribution=c("normal","discrete"),
@@ -97,6 +97,10 @@ Logical: Should items without any item responses being removed prior to analysis
 }
   \item{remove.constant.items}{
 Logical: Should items without variance being removed prior to analysis?
+}
+  \item{remove.failures}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Logical: Should persons without any correct item response (i.e., only \dQuote{0} responses) being removed prior to analysis?
 }
   \item{verbose}{
 A logical value indicating whether messages are printed on the R console.
