@@ -1,5 +1,5 @@
 mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, verbose=FALSE) {
-  versNr <- "0.7.0"
+  versNr <- "0.8.0"
   mReturn <- NULL
   stopifnot (is.list (datList))
   if(is.null(oldIDs)) {oldIDs <- rep(newID, length(datList))}
@@ -27,7 +27,9 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, verbos
 		return(dat)
 	}, datList, oldIDs, seq(along=datList))
 	
-	datList <- lapply(datList, reshape2::melt, id=newID)
+### SW, 1. Oktober 2014:
+### datList <- lapply(datList, reshape2::melt, id=newID)
+	datList <- lapply(datList, FUN = function ( l ) { reshape2::melt( data = l, id.vars = newID) })
 	
 	for(i in seq(along=datList)) {
 		if(i==1) {datLong <- datList[[i]]} else {
@@ -53,8 +55,9 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, verbos
 			datLong <- datLong[-tt,]
 		}
 	}
-
-	mReturn <- reshape2::dcast(datLong, add.missing =TRUE)
+### SW, 1. Oktober 2014:
+### mReturn <- reshape2::dcast(datLong, add.missing =TRUE)
+	mReturn <- reshape2::dcast(datLong, as.formula(paste( newID,"~variable",sep="")), value.var = "value")
 	mReturn <- set.col.type(mReturn, col.type=list("character" = names(mReturn)))
 	mReturn <- data.frame(mReturn)
 	if(addMbd) {mReturn[is.na(mReturn)] <- "mbd"}
