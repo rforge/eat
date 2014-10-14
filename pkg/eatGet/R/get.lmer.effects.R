@@ -1,32 +1,31 @@
-
-get.lmer.effects.forBootMer <- function ( lmerObj ) {get.lmer.effects ( lmerObj=lmerObj , saveData = FALSE)@results[,"value"]}
+get.lmer.effects.forBootMer <- function ( lmerObj) {get.lmer.effects ( lmerObj=lmerObj , saveData = FALSE)[,"value"]}
 
 get.lmer.effects <- function ( lmerObj , bootMerObj = NULL, conf = .95, saveData = FALSE) {
              model    <- as.character(substitute(lmerObj))                      ### implementieren wie in p:\ZKD\07_Code\dev\get.lmer.effects\get.lmer.effects_Konzept.xlsx
              checkForReshape()                                                  ### Beispiel in c:\diskdrv\Winword\Psycho\IQB\Dropbox\Literatur\R_help\Bates_2010_lme4_book.rsy
-            # if(!exists("fixef"))        {library(lme4)}
-             lme4Ver  <- "1"
-            # lme4Ver  <- substr(lme4Ver[lme4Ver[,"Package"] == "lme4","Version"],1,1)
+             # if(!exists("fixef"))        {library(lme4)}
+             lme4Ver  <- installed.packages()
+             lme4Ver  <- substr(lme4Ver[lme4Ver[,"Package"] == "lme4","Version"],1,1)
              random   <- VarCorr( lmerObj ) 
-             fixed    <- fixef(lmerObj)                                   ### zunaechst werden die random effects extrahiert
+             fixed    <- lme4::fixef(lmerObj)                                   ### zunaechst werden die random effects extrahiert
              randomF  <- do.call("rbind", lapply(names(random), FUN = function ( y ) {
-                         ret <- data.frame(model = model, Var1 = colnames(random[[y]]), Var2 = NA, type = "random", random.group = y, par = "var", derived.par = NA, value = diag(random[[y]]), stringsAsFactors = FALSE )
-                         ret <- rbind(ret, data.frame(model = model, Var1 = colnames(random[[y]]), Var2 = NA, type = "random", random.group = y, par = "sd", derived.par = NA, value = sqrt(diag(random[[y]])), stringsAsFactors = FALSE ))
+                         ret <- data.frame(model = model, Var1 = colnames(random[[y]]), Var2 = NA, type = "random", group = y, par = "var", derived.par = NA, value = diag(random[[y]]), stringsAsFactors = FALSE )
+                         ret <- rbind(ret, data.frame(model = model, Var1 = colnames(random[[y]]), Var2 = NA, type = "random", group = y, par = "sd", derived.par = NA, value = sqrt(diag(random[[y]])), stringsAsFactors = FALSE ))
                          if(nrow(attr(random[[y]], "correlation")) > 1)  {      ### Gibt es Korrelationen?
                             korTab   <- melt(attr(random[[y]], "correlation"))
                             wahl2    <- which(!korTab[,1] == korTab[,2])
                             for (u in 1:2) {korTab[,u] <- as.character(korTab[,u])}
                             wahl1    <- which(!duplicated(apply(korTab, 1, FUN = function ( xx ) { paste( sort(c(xx[1], xx[2])), collapse="_") })))
-                            ret      <- rbind.fill( ret, data.frame ( model=model, korTab[intersect(wahl1, wahl2),], type = "random", random.group = y, par = "correlation", derived.par = NA, stringsAsFactors = FALSE ) )
+                            ret      <- rbind.fill( ret, data.frame ( model=model, korTab[intersect(wahl1, wahl2),], type = "random", group = y, par = "correlation", derived.par = NA, stringsAsFactors = FALSE ) )
                          }
                          return(ret)}))
              if ( !is.na(attr(random, "sc"))) {                                 ### vergleichen zwischen Versionen!
                   randomF  <- rbind.fill ( randomF, rbind ( data.frame ( model=model, Var1 = "residual", type = "random", par = "var", derived.par = NA, value = attr(random, "sc")^2, stringsAsFactors = FALSE ), data.frame ( model=model, Var1 = "residual", type = "random", par = "sd", derived.par = NA, value = attr(random, "sc"), stringsAsFactors = FALSE )))
              }                                                                  ### jetzt kommen die fixed effects
-             fixedF   <- data.frame ( model=model, Var1 = names(fixed), Var2 = NA, type = "fixed", random.group = NA, par = "est", derived.par = NA, value = as.numeric(fixed), stringsAsFactors = FALSE )
-             fixedF   <- rbind(fixedF, data.frame ( model=model, Var1 = names(fixed), Var2 = NA, type = "fixed", random.group = NA, par = "se", derived.par = NA, value = sqrt(diag(vcov(lmerObj))), stringsAsFactors = FALSE ))
-             fixedF   <- rbind(fixedF, data.frame ( model=model, Var1 = names(fixed), Var2 = NA, type = "fixed", random.group = NA, par = "z.value", derived.par = NA, value = fixedF[fixedF[,"par"] == "est","value"] / fixedF[fixedF[,"par"] == "se","value"], stringsAsFactors = FALSE ))
-             fixedF   <- rbind(fixedF, data.frame ( model=model, Var1 = names(fixed), Var2 = NA, type = "fixed", random.group = NA, par = "p.value", derived.par = NA, value = 2*(1-pnorm(abs(fixedF[fixedF[,"par"] == "z.value","value"]))), stringsAsFactors = FALSE ))
+             fixedF   <- data.frame ( model=model, Var1 = names(fixed), Var2 = NA, type = "fixed", group = NA, par = "est", derived.par = NA, value = as.numeric(fixed), stringsAsFactors = FALSE )
+             fixedF   <- rbind(fixedF, data.frame ( model=model, Var1 = names(fixed), Var2 = NA, type = "fixed", group = NA, par = "se", derived.par = NA, value = sqrt(diag(vcov(lmerObj))), stringsAsFactors = FALSE ))
+             fixedF   <- rbind(fixedF, data.frame ( model=model, Var1 = names(fixed), Var2 = NA, type = "fixed", group = NA, par = "z.value", derived.par = NA, value = fixedF[fixedF[,"par"] == "est","value"] / fixedF[fixedF[,"par"] == "se","value"], stringsAsFactors = FALSE ))
+             fixedF   <- rbind(fixedF, data.frame ( model=model, Var1 = names(fixed), Var2 = NA, type = "fixed", group = NA, par = "p.value", derived.par = NA, value = 2*(1-pnorm(abs(fixedF[fixedF[,"par"] == "z.value","value"]))), stringsAsFactors = FALSE ))
              if(lme4Ver == "0"){
                  rr       <- as(sigma(lmerObj)^2 * chol2inv(lmerObj@RX, size = lmerObj@dims['p']), "dpoMatrix")
                  nms      <- colnames(lmerObj@X)                                ### extract matrix of fixed effects, for lme4 version < 1 
@@ -47,18 +46,18 @@ get.lmer.effects <- function ( lmerObj , bootMerObj = NULL, conf = .95, saveData
                        korTab[,u] <- gsub("________XX________",":",korTab[,u])
                  }
                  wahl1    <- which(!duplicated(apply(korTab, 1, FUN = function ( xx ) { paste( sort(c(xx[1], xx[2])), collapse="_") })))
-                 fixedF   <- rbind.fill( fixedF, data.frame ( model=model, korTab[intersect(wahl1, wahl2),], type = "fixed", random.group = NA, par = "correlation", derived.par=NA, stringsAsFactors = FALSE ) )
+                 fixedF   <- rbind.fill( fixedF, data.frame ( model=model, korTab[intersect(wahl1, wahl2),], type = "fixed", group = NA, par = "correlation", derived.par=NA, stringsAsFactors = FALSE ) )
              }
              LogLik   <- logLik(lmerObj)                                        ### nun kommen die deviance measures
              if(lme4Ver == "0"){ deviancF <- data.frame(model=model, type = "model", par = c("LogLik", "df", paste("Deviance",names(lmerObj@deviance),sep="_"), "AIC", "BIC"), value = c(LogLik[[1]], attr(LogLik, "df"), lmerObj@deviance, AIC(LogLik ), BIC(LogLik)), stringsAsFactors = FALSE ) 
                         } else { deviancF <- data.frame(model=model, type = "model", par = c("LogLik", "df", paste("Deviance",names(lmerObj@devcomp$cmp),sep="_"), "AIC", "BIC"), value = c(LogLik[[1]], attr(LogLik, "df"), lmerObj@devcomp$cmp, AIC(LogLik ), BIC(LogLik)), stringsAsFactors = FALSE )  }
              ret      <- rbind.fill(randomF, fixedF)
              ret      <- rbind.fill(ret, deviancF)
-             groups   <- lapply(names(table(randomF[,"random.group"])), FUN = function ( rg ) {
+             groups   <- lapply(names(table(randomF[,"group"])), FUN = function ( rg ) {
                          checkVar <- rg %in% colnames(lmerObj@frame)
                          if(checkVar == TRUE) {return(length(unique(lmerObj@frame[,rg])))} else { return(NULL)} })
              groups   <- groups[ which ( unlist(lapply(groups, is.null)) == FALSE)]
-             names(groups) <- names(table(randomF[,"random.group"])) [ which(unlist ( lapply(names(table(randomF[,"random.group"])), FUN = function ( rg ) {
+             names(groups) <- names(table(randomF[,"group"])) [ which(unlist ( lapply(names(table(randomF[,"group"])), FUN = function ( rg ) {
                               checkVar <- rg %in% colnames(lmerObj@frame)
                               if(checkVar == TRUE) {return(TRUE)} else { return(FALSE)} })))]
              groups$obs    <- nrow(lmerObj@frame)
@@ -89,12 +88,162 @@ get.lmer.effects <- function ( lmerObj , bootMerObj = NULL, conf = .95, saveData
                 ret <- rbind(ret, ci)
              }   
              colnames(ret) <- tolower(colnames(ret))
-			 # return-Object der Klasse eatGot
-			 retObj <- new ( "eatGot" )
-			 retObj@results <- ret
-			 return(retObj) }
+             return(ret) } 
+
+get.fixef <- function ( lmer.effects, easy.to.difficult = FALSE, withCorrelation = FALSE) {
+             checkForReshape()
+             if(!"lmer.effects" %in% class(lmer.effects) ) {lmer.effects <- get.lmer.effects(lmer.effects)}
+             withoutCorr <- lmer.effects[intersect ( which(lmer.effects[,"type"] == "fixed"), which (lmer.effects[,"parameter"] != "correlation" ) ) ,]
+             withoutCorr <- dcast(withoutCorr, Var1~parameter, value.var = "value")[,c("Var1", "est", "se", "z.value", "p.value")]
+             if(easy.to.difficult == TRUE) { withoutCorr[,"est"] <- -1 * withoutCorr[,"est"]}
+             if(withCorrelation == TRUE ) {
+                onlyCorr    <- lmer.effects[intersect ( which (lmer.effects[,"parameter"] == "correlation" ), which(lmer.effects[,"type"] == "fixed")) ,]
+                if(nrow(onlyCorr)>0) {
+                   onlyCorr    <- dcast(onlyCorr, Var1~Var2, value.var = "value")
+                   colnames(onlyCorr)[-1] <- paste("corr", colnames(onlyCorr)[-1], sep="_")
+                   withoutCorr <- merge(withoutCorr, onlyCorr, by = "Var1", all = TRUE)
+                }
+             }
+             return(withoutCorr)}
+             
+
+get.ranef <- function ( lmer.effects ) {
+             checkForReshape()
+             if(!"lmer.effects" %in% class(lmer.effects) ) {lmer.effects <- get.lmer.effects(lmer.effects)}
+             withoutCorr <- lmer.effects[lmer.effects[,"type"] == "random" & lmer.effects[,"parameter"] != "correlation",]
+             obj     <- dcast(withoutCorr, Var1+group~parameter, value.var = "value")
+             match1  <- match(c("group", "Var1", "var", "sd"), colnames(obj))
+             obj     <- obj[,match1]
+             onlyCor <- lmer.effects[lmer.effects[,"type"] == "random" & lmer.effects[,"parameter"] == "correlation",]
+             if(nrow(onlyCor)>0) {
+                obj2 <- dcast(onlyCor, Var1+group~Var2, value.var = "value")
+                obj  <- merge(obj, obj2, by = c("group", "Var1"), all = TRUE)
+             }
+             match2  <- na.omit(match("residual", obj[,"Var1"]))
+             if(length(match2)>0) {obj <- obj[c(setdiff(1:nrow(obj),match2),match2) ,]}
+             return(obj)}
+
+
+lmerAnova <- function ( lmer.effects1, lmer.effects2, verbose = TRUE ) {
+             chisQuare <- abs ( (-2)*lmer.effects1[lmer.effects1[,"par"] == "LogLik","value"] - (-2)*lmer.effects2[lmer.effects2[,"par"] == "LogLik","value"] )
+             deltaDF   <- abs ( lmer.effects1[lmer.effects1[,"par"] == "df","value"] - lmer.effects2[lmer.effects2[,"par"] == "df","value"] )
+             ret       <- data.frame ( chisQuare = chisQuare, deltaDF = deltaDF, p.value = 1-pchisq(chisQuare, deltaDF), stringsAsFactors = FALSE )
+             return(ret)}
+             
+save.lmer.effects <- function ( lmerObj, lmerObjRestrict = NULL, fileName, scipen=6) {    
+           orSci <- options()$scipen                                            ### lmerObj und lmerObjRestrict muessen zueinander genestet sein!
+           if(scipen != orSci ) { options(scipen=scipen) }
+           sink(file = paste0(fileName,".txt"))                                 
+           if(!is.null(lmerObjRestrict)) { cat("H1 model:\n\n")}
+           print(summary(lmerObj), correlation=TRUE)
+           if(!is.null(lmerObjRestrict)) { 
+               cat("\n\nH0 model:\n\n")
+               print(summary(lmerObjRestrict)); cat("\n\nModel comparison:\n\n")
+               print(anova(lmerObj, lmerObjRestrict))
+           }    
+           sink()
+           ret     <- get.lmer.effects(lmerObj, saveData = FALSE)
+           save(ret, file = paste0(fileName,".rda")) 
+           if(!is.null(lmerObjRestrict)) { 
+               retR    <- get.lmer.effects(lmerObjRestrict, saveData = FALSE)
+               save(retR, file = paste0(fileName,"_Restrict.rda")) }  
+           if(scipen != orSci ) {options(scipen=orSci)}   }                     ### scipen-Option wieder zuruecksetzen
+
+
+checkForReshape <- function () {
+        if("package:reshape" %in% search() ) {
+           cat("Warning: Package 'reshape' is attached. Functions in package 'eatRep' depend on 'reshape2'. 'reshape' and 'reshape2' conflict in some way.\n  'reshape' therefore will be detached now. \n")
+           detach(package:reshape) } }
 			 
 checkForReshape <- function () {
         if("package:reshape" %in% search() ) {
            cat("Warning: Package 'reshape' is attached. Functions in package 'eatRep' depend on 'reshape2'. 'reshape' and 'reshape2' conflict in some way.\n  'reshape' therefore will be detached now. \n")
            detach(package:reshape) } }			 
+
+
+### Class definition of "eatGot" ###
+setClass(
+	"eatGot" ,
+	representation = representation ( 
+			results = "data.frame"
+			) ,
+	prototype = prototype ( 
+			results = data.frame()
+			)
+)
+
+
+## show
+#setMethod ( f = "show" , signature = signature ( object="eatGot" ) ,
+#			definition = function ( object ) {
+#			
+#					testO <- function(O) {
+#						exists(as.character(substitute(O)))
+#					}
+#					
+#					# Definitionen
+#					einr <- "     "
+#					if (testO(names(object@results))) {
+#						if ( "model" %in% names(object@results) ) {
+#							modls <- unique(object@results["model"])	
+#							if ( "source" %in% names(object@results) ) {
+#								srcs <- lapply(modls[[1]], function(k) {
+#										unique(subset(object@results, object@results == k)["source"])
+#									})								
+#							} 
+#						} 
+#					}
+#										
+#					
+#					# Ausgabe-String
+#					if ( identical ( object@results , data.frame() ) ) {
+#							cat("Results object is empty\n")
+#					} else {
+#						if(testO(modls)) {
+#							cat("Results contain", paste(dim(modls)[1], "model(s):\n" ))							
+#									for(i in seq(along=1:dim(modls)[1])) {
+#										cat(paste0(modls[[1]][i], ": "))
+#										cat(length(na.omit(subset(object@results, object@results$model == modls[[1]][i])$value)), "parameter estimates ")
+#										if(testO(srcs)) {
+#											cat(paste0("(source[s]: ", paste0( unlist(srcs[[i]]), collapse=", " ), ")"),"\n")
+#										}
+#									}		
+#						} else {
+#							cat("Results contain no model names column\n" )
+#						}
+#					}				
+#			}
+#)
+#
+
+## fixef for eatGot
+#setMethod ( f = "fixef" , signature = signature ( object="eatGot" ) ,
+#			definition = function ( object ) {
+#
+#					#get.fixef <- function ( lmer.effects, easy.to.difficult = FALSE, withCorrelation = FALSE) {
+#					
+#					# temporaer
+#					easy.to.difficult = FALSE
+#					withCorrelation = FALSE
+#					
+#					checkForReshape()
+#					
+#					withoutCorr <- object@results[intersect ( which(object@results[,"type"] == "fixed"), which (object@results[,"parameter"] != "correlation" ) ) ,]
+#					withoutCorr <- dcast(withoutCorr, Var1~parameter, value.var = "value")[,c("Var1", "est", "se", "z.value", "p.value")]
+#					if(easy.to.difficult == TRUE) { withoutCorr[,"est"] <- -1 * withoutCorr[,"est"]}
+#					if(withCorrelation == TRUE ) {
+#						onlyCorr    <- object@results[intersect ( which (object@results[,"parameter"] == "correlation" ), which(object@results[,"type"] == "fixed")) ,]
+#						if(nrow(onlyCorr)>0) {
+#						   onlyCorr    <- dcast(onlyCorr, Var1~Var2, value.var = "value")
+#						   colnames(onlyCorr)[-1] <- paste("corr", colnames(onlyCorr)[-1], sep="_")
+#						   withoutCorr <- merge(withoutCorr, onlyCorr, by = "Var1", all = TRUE)
+#						}
+#					}
+#					return(withoutCorr)
+#					
+#			}
+#)
+
+
+
+
