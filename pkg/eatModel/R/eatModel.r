@@ -79,7 +79,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
 
 defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
                qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL, anchor = NULL, check.for.linking = TRUE,
-               boundary = 6, remove.no.answers = TRUE, remove.missing.items = TRUE, remove.constant.items = TRUE, remove.failures = FALSE, verbose=TRUE,
+               boundary = 6, remove.boundary = FALSE, remove.no.answers = TRUE, remove.missing.items = TRUE, remove.constant.items = TRUE, remove.failures = FALSE, verbose=TRUE,
                software = c("conquest","lme4", "tam"), dir = NULL, analysis.name, model.statement = "item",  compute.fit = TRUE,
                n.plausible=5, seed = NULL, conquest.folder=NULL,constraints=c("cases","none","items"),std.err=c("quick","full","none"),
                distribution=c("normal","discrete"), method=c("gauss", "quadrature", "montecarlo"), n.iterations=2000,nodes=NULL, p.nodes=2000,
@@ -233,15 +233,22 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                   datW  <- reshape2::dcast(datL, as.formula(paste("variable~",all.Names[["ID"]],sep="")), value.var = "value")
                   nValid<- sapply(datW[,-1], FUN = function ( x ) { length(x) - length(which(is.na(x)))})
                   inval <- which(nValid<boundary)
-                  if(length(inval)>0) { cat(paste( length(inval), " subject(s) with less than 6 valid item responses: ", paste(names(inval),nValid[inval],sep=": ", collapse="; "),"\n",sep=""))}
+                  if(length(inval)>0) { 
+                     cat(paste( length(inval), " subject(s) with less than ",boundary," valid item responses: ", paste(names(inval),nValid[inval],sep=": ", collapse="; "),"\n",sep=""))
+                     if(remove.boundary==TRUE) { 
+                        cat(paste("subjects with less than ",boundary," valid responses will be removed.\n",sep="") )
+                        weg <- match(names(inval), dat[,all.Names[["ID"]]])
+                        stopifnot(length(which(is.na(weg))) == 0 ) ; flush.console()
+                        dat <- dat[-weg,]
+                     }
+                  }                    
                   means <- colMeans(datW[,-1], na.rm=TRUE)
                   allFal<- which(means == 0 ) 
                   if(length(allFal)>0) { 
                      cat(paste( length(allFal), " subject(s) do not solve any item: ", paste(names(allFal), " (0/",nValid[allFal],")",sep="",collapse=", "),"\n",sep=""))
                      if (remove.failures == TRUE)  { 
                          cat("   Remove subjects without any correct response.\n"); flush.console()
-                         weg <- match(names(allFal), dat[,all.Names[["ID"]]])
-                         stopifnot( length(which(is.na(weg))) == 0 )
+                         weg <- na.rm(match(names(allFal), dat[,all.Names[["ID"]]]))
                          dat <- dat[-weg,] } 
                   }
                   if(all(names( table ( datL[,"value"])) == c("0", "1"))) { 

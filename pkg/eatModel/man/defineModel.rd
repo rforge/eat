@@ -10,8 +10,8 @@ call \code{runModel} with the argument returned by \code{defineModel}.}
 \usage{
 defineModel (dat, items, id, 
    irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
-   qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL,
-   anchor = NULL, check.for.linking = TRUE, boundary = 6, remove.no.answers = TRUE,
+   qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL, anchor = NULL, 
+   check.for.linking = TRUE, boundary = 6, remove.boundary = FALSE, remove.no.answers = TRUE,
    remove.missing.items = TRUE, remove.constant.items = TRUE, remove.failures = FALSE, 
    verbose=TRUE, software = c("conquest","tam"), dir = NULL, analysis.name,
    model.statement = "item",  compute.fit = TRUE, n.plausible=5,
@@ -86,6 +86,10 @@ connected with each other via design.
 %%     ~~Describe \code{sig.dif.bound} here~~
 Numerical: A message is printed on console if a subject has answered less than the number of items 
 defined in boundary. 
+}
+  \item{remove.boundary}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Logical: Remove subjects who have answered less items than defined in the \code{boundary} argument?
 }
   \item{remove.no.answers}{
 %%     ~~Describe \code{sig.dif.bound} here~~
