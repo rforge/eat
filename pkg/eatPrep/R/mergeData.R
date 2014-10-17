@@ -57,7 +57,7 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, verbos
 	}
 ### SW, 1. Oktober 2014:
 ### mReturn <- reshape2::dcast(datLong, add.missing =TRUE)
-	mReturn <- reshape2::dcast(datLong, as.formula(paste( newID,"~variable",sep="")), value.var = "value")
+	mReturn <- dcast(datLong, as.formula(paste( newID,"~variable",sep="")), value.var = "value")
 	mReturn <- set.col.type(mReturn, col.type=list("character" = names(mReturn)))
 	mReturn <- data.frame(mReturn)
 	if(addMbd) {mReturn[is.na(mReturn)] <- "mbd"}
