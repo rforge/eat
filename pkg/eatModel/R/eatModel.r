@@ -248,7 +248,7 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                      cat(paste( length(allFal), " subject(s) do not solve any item: ", paste(names(allFal), " (0/",nValid[allFal],")",sep="",collapse=", "),"\n",sep=""))
                      if (remove.failures == TRUE)  { 
                          cat("   Remove subjects without any correct response.\n"); flush.console()
-                         weg <- na.rm(match(names(allFal), dat[,all.Names[["ID"]]]))
+                         weg <- na.omit(match(names(allFal), dat[,all.Names[["ID"]]]))
                          dat <- dat[-weg,] } 
                   }
                   if(all(names( table ( datL[,"value"])) == c("0", "1"))) { 
