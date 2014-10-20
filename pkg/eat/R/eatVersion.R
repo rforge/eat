@@ -6,7 +6,7 @@ eatVersion <- function ( dep = FALSE ) {
 		p <- grepl ( "^eat" , ip )
 		
 		if ( dep ) {
-				deps <- c ( "MASS", "car", "date", "foreign", "gdata", "reshape", "sendmailR", "xlsx", "plyr", "R.utils", "parallel", "psych", "ggplot2", "igraph", "Matrix", "methods", "survey", "fsmb", "mice" )
+				deps <- c ( "reshape2" , "igraph", "survey", "Hmisc", "combinat", "fmsb", "psych", "xlsx", "date", "gdata", "sendmailR" , "stringr" , "ggplot2" , "R.utils" , "lme4" , "car" , "mice" )
 				p <- p | ( ip %in% deps )
 		}
 		
