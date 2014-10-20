@@ -1,9 +1,9 @@
 Package: eatRest
 Type: Package
 Title: eatRest
-Version: 0.0.9
-Depends: R (>= 2.14.0), eatTools, eatData, MASS, car, date, foreign, gdata, reshape2, sendmailR, xlsx, plyr, R.utils, parallel, psych, ggplot2
-Date: 2014-01-08
+Version: 0.0.10
+Depends: R (>= 2.14.0), eatTools, MASS, car, date, foreign, gdata, reshape2, sendmailR, xlsx, plyr, R.utils, parallel, psych, ggplot2
+Date: 2014-10-20
 Author: eat authors <eat-commits@lists.r-forge.r-project.org>
 Maintainer: eat authors <eat-commits@lists.r-forge.r-project.org>
 Description: remaining package formerly known as "eat"
