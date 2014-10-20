@@ -1,5 +1,4 @@
 
-
 ### benoetigte Pakete
 # library(igraph)
 
@@ -1271,9 +1270,12 @@ define.design <- function ( def = data.frame() , dsgn = new("design") , append =
 							nams <- colnames ( dsgn@definition )
 							# klein machen
 							nams <- tolower ( nams )
-							
+
 							# alle units da?
-							namsl <- sapply ( c("booklet","cluster","position") , "%in%" , nams , simplify = TRUE )
+							sollnamen <- c("booklet","cluster","position")
+							namsl1 <- sapply ( paste0 ( "^" , sollnamen ) , "grepl" , nams , simplify = FALSE )
+							namsl <- sapply ( namsl1 , function ( x ) any ( x %in% TRUE ) )
+							names ( namsl ) <- sollnamen
 							
 							if ( all ( namsl ) ) {
 									
@@ -1286,22 +1288,22 @@ define.design <- function ( def = data.frame() , dsgn = new("design") , append =
 									
 									# position balance
 									if ( !empty.varCovMatrix ) {
-											PositionBalance <- dsgn@varCovMatrix[nams2["position"],nams2["cluster"]]
-											PositionBalance <- ( 1 - PositionBalance ) * 100
+											positionBalance <- dsgn@varCovMatrix[nams2["position"],nams2["cluster"]]
+											positionBalance <- ( 1 - positionBalance ) * 100
 									}
 									
 									# cluster pair balance
 									empty.link <- identical ( dsgn@link , data.frame() )
 									if ( !empty.link ) {
-											ClusterPairBalance <- dsgn@link[dsgn@link$element1 %in% nams2["cluster"] & dsgn@link$element2 %in% nams2["booklet"] , "linkrate1" ] * 100
+											clusterPairBalance <- dsgn@link[dsgn@link$element1 %in% nams2["cluster"] & dsgn@link$element2 %in% nams2["booklet"] , "linkrate1" ] * 100
 									}
 							}
 					}
 
 					### Liste bauen ###
 					do1 <- "\"Doptimality\" = Doptimality"
-					if ( !is.na ( PositionBalance ) & !is.na ( ClusterPairBalance ) ) {
-							do2 <- c ( "\"PositionBalance\" = PositionBalance" , "\"ClusterPairBalance\" = ClusterPairBalance" )
+					if ( !is.na ( positionBalance ) & !is.na ( clusterPairBalance ) ) {
+							do2 <- c ( "\"positionBalance\" = positionBalance" , "\"clusterPairBalance\" = clusterPairBalance" )
 					} else {
 							do2 <- NULL
 					}
@@ -1593,9 +1595,13 @@ setMethod ( f = "show" , signature = signature ( object="design" ) ,
 							}
 							names ( d5 ) [ names ( d5 ) == "Doptimality" ] <- "D-optimality index"
 						
-							d5$PositionBalance <- formatC ( d5$PositionBalance, format = "f", digits = 0 )
-							d5$ClusterPairBalance <- formatC ( d5$ClusterPairBalance, format = "f", digits = 0 )
-							
+							# postion/clusterPairBalance formatieren (d5 ist hier eine Liste)
+							if ( ! is.null ( d5$positionBalance ) ) {
+									d5$positionBalance <- formatC ( d5$positionBalance, format = "f", digits = 0 )
+							} 
+							if ( ! is.null ( d5$clusterPairBalance ) ) {
+									d5$clusterPairBalance <- formatC ( d5$clusterPairBalance, format = "f", digits = 0 )
+							}
 							
 							### Achtung: der Einfachheit halber nen Data.frame bauen
 							# funktioniert nur wenn Laenge der Listenelemente jeweils 1
