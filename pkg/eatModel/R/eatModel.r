@@ -275,8 +275,8 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                          var.char <- rep(1,length(all.Names[["variablen"]]))}   ### var.char muss nun neu geschrieben werden, da nun alles wieder einstellig ist!
                   }
                   daten    <- data.frame(ID=as.character(dat[,all.Names[["ID"]]]), dat[,namen.all.hg, drop = FALSE], dat[,all.Names[["variablen"]], drop = FALSE], stringsAsFactors = FALSE)
-                  daten$ID <- gsub ( " ", "0", formatC(daten$ID, width=max(as.numeric(names(table(nchar(daten$ID)))))) )
                   if ( software == "conquest" )   {
+                      daten$ID <- gsub ( " ", "0", formatC(daten$ID, width=max(as.numeric(names(table(nchar(daten$ID)))))) )
                       fixed.width <- c(as.numeric(names(table(nchar(daten[,"ID"])))), all.hg.char, rep(max(var.char),length(var.char)))
                       write.fwf(daten , file.path(dir,paste(analysis.name,".dat",sep="")), colnames = FALSE,rownames = FALSE, sep="",quote = FALSE,na=".", width=fixed.width)
                       test <- readLines(paste(dir,"/",analysis.name,".dat",sep=""))
@@ -1059,7 +1059,7 @@ gen.syntax     <- function(Name,daten, all.Names, namen.all.hg = NULL, all.hg.ch
                    syntax    <- gsub("####hier.distribution.einfuegen####",match.arg(distribution),syntax)
                    syntax    <- gsub("####hier.equivalence.table.einfuegen####",match.arg(equivalence.table),syntax)
                    syntax    <- gsub("####hier.model.statement.einfuegen####",tolower(model.statement),syntax)
-                   erlaubte.codes <- paste(gsub("_","",sort(gsub(" ","_",formatC(names(table.unlist(daten[, all.Names[["variablen"]] ])),width=var.char)),decreasing=TRUE)),collapse=",")
+                   erlaubte.codes <- paste(gsub("_","",sort(gsub(" ","_",formatC(names(table.unlist(daten[, all.Names[["variablen"]], drop = FALSE ])),width=var.char)),decreasing=TRUE)),collapse=",")
                    syntax    <- gsub("####hier.erlaubte.codes.einfuegen####",erlaubte.codes, syntax )
                    ind       <- grep("Format pid",syntax)
                    beginn    <- NULL                                            ### setze "beginn" auf NULL. Wenn DIF-Variablen spezifiziert sind, wird "beginn" bereits
@@ -1206,7 +1206,7 @@ facToChar <- function ( dataFrame, from = "factor", to = "character" ) {
                  
                  
 .writeScoreStatementMultidim <- function(data, itemCols, qmatrix, columnItemNames = 1 ,columnsDimensions = -1, use.letters=use.letters , allowAllScoresEverywhere) {
-            n.dim      <- (1:ncol(qmatrix) )[-columnItemNames]                  ### wieviele Dimensionen? untere Zeile: Items, die auf keiner Dimension laden, werden bereits in prep.conquest entfernt. hier nur check
+            n.dim      <- (1:ncol(qmatrix) )[-columnItemNames]                  ### diese Spalten bezeichnen Dimensionen. untere Zeile: Items, die auf keiner Dimension laden, werden bereits in prep.conquest entfernt. hier nur check
             stopifnot(length( which( rowSums(qmatrix[,n.dim,drop = FALSE]) == 0))==0)
       	    if(length(setdiff(names(table.unlist(qmatrix[,-1, drop = FALSE])), c("0","1"))) > 0 )  {
                cat("Found unequal factor loadings for at least one dimension. This will result in a 2PL model.\n")
@@ -1217,8 +1217,8 @@ facToChar <- function ( dataFrame, from = "factor", to = "character" ) {
             stopifnot(length(setdiff(colnames(data[,itemCols]),  qmatrix[,columnItemNames]) )==0)
             unique.patter <- qmatrix[which(!duplicated(do.call("paste", qmatrix[,-1, drop = FALSE] ))), -1, drop = FALSE]
             colnames(unique.patter) <- paste("Var",1:ncol(unique.patter), sep="")## obere Zeile: Finde alle uniquen Pattern in qmatrix! Jedes unique Pattern muss in Conquest einzeln adressiert werden!
-            score.matrix <- data.frame(score=1, unique.patter, matrix(NA, nrow= nrow(unique.patter), ncol=length(itemCols)),stringsAsFactors = FALSE)
-            scoreColumns <- grep("Var",colnames(score.matrix))
+            score.matrix  <- data.frame(score=1, unique.patter, matrix(NA, nrow= nrow(unique.patter), ncol=length(itemCols), dimnames=list(NULL, paste("X",1:length(itemCols),sep=""))),stringsAsFactors = FALSE)
+            scoreColumns <- grep("^Var",colnames(score.matrix))
             for (i in 1:length(itemCols))  {                                    ### gebe alle Items auf den jeweiligen Dimensionen
                qmatrix.i    <- qmatrix[qmatrix[,columnItemNames] == itemCols[i],]## auf welcher Dimension laedt Variable i? Untere Zeile: in diese Zeile von score.matrix muß ich variable i eintragen
                matchRow     <- which(sapply ( 1:nrow(score.matrix) , function(ii) {all ( as.numeric(qmatrix.i[,n.dim]) == as.numeric(score.matrix[ii,scoreColumns])) }))
