@@ -11,14 +11,15 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
             if(defineModelObj$software == "conquest") {
                oldPfad <- getwd()
                setwd(defineModelObj$dir)
-               system(paste(defineModelObj$conquest.folder," ",defineModelObj$input,sep=""),invisible=!show.dos.console,show.output.on.console=show.output.on.console, wait=wait)
+               system(paste(defineModelObj$conquest.folder," ",defineModelObj$input,sep=""),invisible=!show.dos.console,show.output.on.console=show.output.on.console, wait=wait) 
                setwd(oldPfad)                                                   ### untere Zeile: Rueckgabeobjekt definieren: Conquest
                return ( defineModelObj )
             }
-            if(defineModelObj$software == "tam") {                              ### exportiere alle Objekte aus defineModelObj in environment
-               for ( i in names( defineModelObj )) { assign(i, defineModelObj[[i]]) }
-       #       if(!exists("tam.mml"))       {library(TAM, quietly = TRUE)}      ### March, 2, 2013: fuer's erste ohne DIF, ohne polytome Items, ohne mehrgruppenanalyse, ohne 2PL
-               if(!is.null(anchor)) {
+            if(defineModelObj$software == "tam") {                              ### exportiere alle Objekte aus defineModelObj in environment 
+               for ( i in names( defineModelObj )) { assign(i, defineModelObj[[i]]) } 
+               if ( show.output.on.console == TRUE ) { control$progress <- TRUE } 
+    #          if(!exists("tam.mml"))       {library(TAM, quietly = TRUE)}      ### March, 2, 2013: fuer's erste ohne DIF, ohne polytome Items, ohne mehrgruppenanalyse, ohne 2PL
+               if(!is.null(anchor)) { 
                    stopifnot(ncol(anchor) == 2 )                                ### Untere Zeile: Wichtig! Sicherstellen, dass Reihenfolge der Items in Anker-Statement
                    notInData   <- setdiff(anchor[,1], all.Names[["variablen"]])
                    if(length(notInData)>0)  {
@@ -34,7 +35,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                stopifnot(all(qMatrix[,1] == all.Names[["variablen"]]))
                if(length(all.Names[["DIF.var"]]) == 0 ) {
                   if( irtmodel %in% c("1PL", "PCM", "PCM2", "RSM") ) {
-                      mod     <- tam.mml(resp = daten[,all.Names[["variablen"]]], pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, irtmodel = irtmodel, pweights = wgt, control = list(progress = progress, maxiter = n.iterations, increment.factor=increment.factor , fac.oldxsi=fac.oldxsi))
+                      mod     <- tam.mml(resp = daten[,all.Names[["variablen"]]], pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, irtmodel = irtmodel, pweights = wgt, control = control)
                   }
                   if( irtmodel %in% c("2PL", "GPCM", "2PL.groups", "GPCM.design", "3PL") )  {
                       if(!is.null(est.slopegroups))  {
@@ -64,15 +65,15 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                           }
                           gues <- guessMat[ match( all.Names[["variablen"]], guessMat[,1]) , "guessingGroup"]
                           gues[which(is.na(gues))] <- 0
-                          mod  <- tam.mml.3pl(resp = daten[,all.Names[["variablen"]]], pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, pweights = wgt, est.guess =gues, control = list(progress = progress, maxiter = n.iterations, increment.factor=increment.factor , fac.oldxsi=fac.oldxsi))
-                      }  else { mod     <- tam.mml.2pl(resp = daten[,all.Names[["variablen"]]], pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, irtmodel = irtmodel, est.slopegroups=est.slopegroups,pweights = wgt, control = list(progress = progress, maxiter = n.iterations, increment.factor=increment.factor , fac.oldxsi=fac.oldxsi)) }
+                          mod  <- tam.mml.3pl(resp = daten[,all.Names[["variablen"]]], pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, pweights = wgt, est.guess =gues, control = control)
+                      }  else { mod     <- tam.mml.2pl(resp = daten[,all.Names[["variablen"]]], pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, irtmodel = irtmodel, est.slopegroups=est.slopegroups,pweights = wgt, control = control) }
                   }
                } else {
                  assign(paste("DIF_",all.Names[["DIF.var"]],sep="") , as.data.frame (daten[,all.Names[["DIF.var"]]]) )
                  formel   <- as.formula(paste("~item - ",paste("DIF_",all.Names[["DIF.var"]],sep="")," + item * ",paste("DIF_",all.Names[["DIF.var"]],sep=""),sep=""))
                  facetten <- as.data.frame (daten[,all.Names[["DIF.var"]]])
                  colnames(facetten) <- paste("DIF_",all.Names[["DIF.var"]],sep="")
-                 mod      <- tam.mml.mfr(resp = daten[,all.Names[["variablen"]]], facets = facetten, formulaA = formel, pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, irtmodel = irtmodel, pweights = wgt, control = list(progress = progress, maxiter = n.iterations, increment.factor=increment.factor , fac.oldxsi=fac.oldxsi))
+                 mod      <- tam.mml.mfr(resp = daten[,all.Names[["variablen"]]], facets = facetten, formulaA = formel, pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, irtmodel = irtmodel, pweights = wgt, control = control)
                }
                return(mod)  }  }
 
@@ -89,6 +90,7 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                   if(!"data.frame" %in% class(dat) ) { cat("Convert 'dat' to a data.frame.\n"); dat <- data.frame ( dat, stringsAsFactors = FALSE)}
                   irtmodel <- match.arg(irtmodel)
                   software <- match.arg(software)
+                  method   <- match.arg(method)
                   if(software == "conquest") {
                      original.options <- options("scipen")                      ### lese Option fuer Anzahl der Nachkommastellen
                      options(scipen = 20)                                       ### setze Option fuer Anzahl der Nachkommastellen
@@ -295,8 +297,9 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                       return ( list ( software = software, input = paste("\"", file.path(dir, paste(analysis.name,"cqc",sep=".")), "\"", sep=""), conquest.folder = paste("\"", conquest.folder, "\"", sep=""), dir=dir, analysis.name=analysis.name, model.name = analysis.name, qMatrix=qMatrix ) )  }
      ### Sektion 'Rueckgabeobjekt fuer tam'
                   if ( software == "tam" )   {
-                      return ( list ( software = software, qMatrix=qMatrix, anchor=anchor,  all.Names=all.Names, daten=daten, irtmodel=irtmodel, progress = progress, n.iterations = n.iterations, increment.factor=increment.factor , fac.oldxsi=fac.oldxsi ,
-                                est.slopegroups = est.slopegroups, guessMat=guessMat))    }
+                      control <- list ( nodes = seq(-6,6,len=21) , snodes = 0 , QMC=TRUE, convD = .001 ,conv = .0001 , convM = .0001 , Msteps = 4 , maxiter = n.iterations, max.increment = 1 , 
+                                 min.variance = .001 , progress = progress , ridge=0 , seed = NULL , xsi.start0=FALSE,  increment.factor=increment.factor , fac.oldxsi= fac.oldxsi) 
+                      return ( list ( software = software, qMatrix=qMatrix, anchor=anchor,  all.Names=all.Names, daten=daten, irtmodel=irtmodel, est.slopegroups = est.slopegroups, guessMat=guessMat, control = control))    } 
    }
 
 
@@ -1035,7 +1038,6 @@ gen.syntax     <- function(Name,daten, all.Names, namen.all.hg = NULL, all.hg.ch
                    syntax    <- gsub("####hier.constraints.einfuegen####",match.arg(constraints),syntax)
                    compute.fit  <- if(compute.fit == TRUE ) compute.fit <- "yes" else compute.fit <- "no"
                    syntax    <- gsub("####hier.fitberechnen.einfuegen####",compute.fit,syntax)
-                   method    <- match.arg(method)
                    if(method == "montecarlo")  {
                      if(is.null(nodes) )   {
                         cat(paste("'",method,"' has been chosen for estimation method. Number of nodes was not explicitly specified. Set nodes to 1000.\n",sep=""))
