@@ -167,19 +167,25 @@ See ConQuest manual pp.167 for details on population distributions.
 }
   \item{method}{
 %%     ~~Describe \code{dif.term} here~~
-Applies only if \code{software = "conquest"}. A character string indicating which
-method should be used for analysis. Possible options are "gauss" (default),
-"quadrature" and "montecarlo". See ConQuest manual pp.225 for details on these methods.
+A character string indicating which method should be used for analysis. Possible 
+options are "gauss" (default), "quadrature" and "montecarlo". See ConQuest manual 
+pp.225 for details on these methods. When using \code{software = "tam"}, "gauss" and 
+"quadrature" essentially leads to calling TAM with \code{QMC = FALSE}, "montecarlo"
+leads to calling TAM with \code{QMC = TRUE}.
 }
   \item{n.iterations}{
 %%     ~~Describe \code{dif.term} here~~
 An integer value specifying the maximum number of iterations for which estimation
-will proceed without improvement in the deviance.
+will proceed without improvement in the deviance. 
 }
   \item{nodes}{
 %%     ~~Describe \code{dif.term} here~~
 An integer value specifying the number of nodes to be used in the analysis. The
-default value is 15.
+default value is 15. When using \code{software = "tam"}, the value specified here
+leads to calling TAM with \code{nodes = 15} AND \code{snodes = 0} if "gauss" or 
+"quadrature" was used in the \code{method} argument. If "montecarlo" was used in 
+the \code{method} argument, the value specified here leads to calling TAM with 
+\code{snodes = 15} AND \code{nodes = 0}.
 }
   \item{p.nodes}{
 %%     ~~Describe \code{dif.term} here~~
@@ -199,7 +205,7 @@ in the calculation of fit statistics. The default value is 2000.
 An integer value specifiying the convergence criterion for parameter estimates.
 The estimation will terminate when the largest change in any parameter estimate
 between successive iterations of the EM algorithm is less than converge. The
-default value is 0.0001.
+default value is 0.001.
 }
   \item{deviancechange}{
 %%     ~~Describe \code{dif.term} here~~

@@ -265,6 +265,29 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                      if(linkNaKeep == FALSE & linkNaOmit == TRUE )  {cat("Note: Dataset is not completely linked. This is probably only due to missings on all cases.\n")}
                      if(linkNaKeep == TRUE )                        {cat("Dataset is completely linked.\n")}
                   }
+     ### Sektion 'Anpassung der Methode (gauss, monte carlo) und der Nodes'             
+                  if(method == "montecarlo")  {
+                    if(is.null(nodes) )   {
+                      cat(paste("'",method,"' has been chosen for estimation method. Number of nodes was not explicitly specified. Set nodes to 1000.\n",sep=""))
+				              if(software == "conquest") {nodes <- 1000}
+  		                if(software == "tam" )     {nodes <- 0; snodes <- 1000; QMC <- TRUE}
+				            }  else  { if(software == "tam" )     {nodes <- 0; snodes <- snodes; QMC <- TRUE} } 
+                    if(nodes < 100 ) {
+				              cat(paste("Warning: Due to user specification, only ",nodes," nodes are used for '",method,"' estimation. Please note or re-specify your analysis.\n",sep=""))
+				            }
+			           }
+			           if(method != "montecarlo") {
+                    if ( is.null(nodes) )   {
+                         cat(paste("Number of nodes was not explicitly specified. Set nodes to 20 for method '",method,"'.\n",sep=""))
+				                 if ( software == "conquest" ) { nodes <- 20 } 
+				                 if ( software == "tam" )      { nodes <- seq(-6,6,len=20); snodes <- 0; QMC <- FALSE } 
+				            }  else { 
+ 				                 if ( software == "tam" )      { nodes <- seq(-6,6,len=nodes); snodes <- 0; QMC <- FALSE }
+                    }       
+				            if ( !is.null(seed)) {
+                          if ( software == "conquest" ) {  cat("Warning! 'seed'-Parameter is appropriate only in Monte Carlo estimation method. (see conquest manual, p. 225) Recommend to set 'seed' to NULL.\n") }
+                    }
+			           }
      ### Sektion 'Datensaetze softwarespezifisch aufbereiten: Conquest' ###
                   if ( software == "conquest" )   {                             ### untere Zeile: wieviele character muss ich fuer jedes Item reservieren?
                       var.char <- sapply(dat[,all.Names[["variablen"]], drop = FALSE], FUN=function(ii) {max(nchar(as.character(na.omit(ii))))})
@@ -297,8 +320,8 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                       return ( list ( software = software, input = paste("\"", file.path(dir, paste(analysis.name,"cqc",sep=".")), "\"", sep=""), conquest.folder = paste("\"", conquest.folder, "\"", sep=""), dir=dir, analysis.name=analysis.name, model.name = analysis.name, qMatrix=qMatrix ) )  }
      ### Sektion 'Rueckgabeobjekt fuer tam'
                   if ( software == "tam" )   {
-                      control <- list ( nodes = seq(-6,6,len=21) , snodes = 0 , QMC=TRUE, convD = .001 ,conv = .0001 , convM = .0001 , Msteps = 4 , maxiter = n.iterations, max.increment = 1 , 
-                                 min.variance = .001 , progress = progress , ridge=0 , seed = NULL , xsi.start0=FALSE,  increment.factor=increment.factor , fac.oldxsi= fac.oldxsi) 
+                      control <- list ( nodes = nodes , snodes = snodes , QMC=QMC, convD = deviancechange ,conv = converge , convM = .0001 , Msteps = 4 , maxiter = n.iterations, max.increment = 1 , 
+                                 min.variance = .001 , progress = progress , ridge=0 , seed = seed , xsi.start0=FALSE,  increment.factor=increment.factor , fac.oldxsi= fac.oldxsi) 
                       return ( list ( software = software, qMatrix=qMatrix, anchor=anchor,  all.Names=all.Names, daten=daten, irtmodel=irtmodel, est.slopegroups = est.slopegroups, guessMat=guessMat, control = control))    } 
    }
 
@@ -562,19 +585,16 @@ getConquestResults<- function(path, analysis.name, model.name, qMatrix) {
 
 
 table.unlist <- function(dataFrame, verbose = TRUE, useNA = c("no","ifany", "always"))   {
-                useNA  <- match.arg(useNA)
-             #   if(!exists("rbind.fill.matrix"))  {library(plyr)}
+                useNA<- match.arg(useNA)
                 # if(class(dataFrame) != "data.frame" ) {stop("Argument of 'table.unlist' has to be of class 'data.frame'.\n")}
                 if(class(dataFrame) != "data.frame" ) {
                    if(verbose == TRUE ) {cat(paste("Warning! Argument of 'table.unlist' has to be of class 'data.frame'. Object will be converted to data.frame.\n",sep=""))}
                    dataFrame <- data.frame(dataFrame, stringsAsFactors=FALSE)
                 }
-                column.by.column   <- do.call("rbind.fill.matrix", lapply(dataFrame, FUN=function(ii) {
-                                      tab        <- table(ii, useNA = useNA)
-                                      names(tab) <- recode(names(tab), "NA='NA'")
-                                      return(t(tab))}))
-                freq.table         <- colSums(column.by.column,na.rm=TRUE)
-                return(freq.table)}
+                dLong<- melt(dataFrame, measure.vars = colnames(dataFrame), na.rm=FALSE)
+                freqT<- table(ii, useNA = useNA)
+                names(freqT) <- recode(names(freqT), "NA='NA'")
+                return(freqT)}
 
 as.numeric.if.possible <- function(dataFrame, set.numeric=TRUE, transform.factors=FALSE, maintain.factor.scores = TRUE, verbose=TRUE)   {
             originWarnLevel <- getOption("warn")
@@ -1038,24 +1058,6 @@ gen.syntax     <- function(Name,daten, all.Names, namen.all.hg = NULL, all.hg.ch
                    syntax    <- gsub("####hier.constraints.einfuegen####",match.arg(constraints),syntax)
                    compute.fit  <- if(compute.fit == TRUE ) compute.fit <- "yes" else compute.fit <- "no"
                    syntax    <- gsub("####hier.fitberechnen.einfuegen####",compute.fit,syntax)
-                   if(method == "montecarlo")  {
-                     if(is.null(nodes) )   {
-                        cat(paste("'",method,"' has been chosen for estimation method. Number of nodes was not explicitly specified. Set nodes to 1000.\n",sep=""))
-					              nodes <- 1000
-					           }
-                     if(nodes < 100 ) {
-					              cat(paste("Warning: Due to user specification, only ",nodes," nodes are used for '",method,"' estimation. Please note or re-specify your analysis.\n",sep=""))
-					           }
-				           }
-				           if(method != "montecarlo") {
-                      if ( is.null(nodes) )   {
-                           cat(paste("Number of nodes was not explicitly specified. Set nodes to 20 for method '",method,"'.\n",sep=""))
-					                 nodes <- 20
-					            }
-					            if ( !is.null(seed)) {
-                           cat("Warning! 'seed'-Parameter is appropriate only in Monte Carlo estimation method. (see conquest manual, p. 225) Recommend to set 'seed' to NULL.\n")
-                      }
-				           }
                    syntax    <- gsub("####hier.anzahl.nodes.einfuegen####",nodes,syntax)
                    syntax    <- gsub("####hier.std.err.einfuegen####",match.arg(std.err),syntax)
                    syntax    <- gsub("####hier.distribution.einfuegen####",match.arg(distribution),syntax)
