@@ -1,9 +1,9 @@
 Package: eat
 Type: Package
 Title: eat
-Version: 2.1.10
+Version: 2.1.11
 Depends: R (>= 2.14.0), eatDesign, eatRep, eatTools, eatRest, eatPrep
-Date: 2014-10-20
+Date: 2014-12-10
 Author: eat authors <eat-commits@lists.r-forge.r-project.org>
 Maintainer: eat authors <eat-commits@lists.r-forge.r-project.org>
 Description: a wrapper package to load all "eat" subpackages

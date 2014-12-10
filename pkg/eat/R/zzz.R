@@ -1,7 +1,8 @@
 
 .onAttach <- function(lib, pkg){
 		
-		versionString <- "eat version 2.1.10 (2014-10-20) -- \"Ginormous Phoenix\""
+		# versionString <- "eat version 2.1.10 (2014-10-20) -- \"Ginormous Phoenix\""
+		versionString <- "eat version 2.1.11 (2014-12-10)"
 		
 		eV <- eatVersion()
 		
