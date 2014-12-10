@@ -267,14 +267,14 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                   }
      ### Sektion 'Anpassung der Methode (gauss, monte carlo) und der Nodes'             
                   if(method == "montecarlo")  {
+                    if(nodes < 100 ) {
+				               cat(paste("Warning: Due to user specification, only ",nodes," nodes are used for '",method,"' estimation. Please note or re-specify your analysis.\n",sep=""))
+				            }
                     if(is.null(nodes) )   {
                       cat(paste("'",method,"' has been chosen for estimation method. Number of nodes was not explicitly specified. Set nodes to 1000.\n",sep=""))
 				              if(software == "conquest") {nodes <- 1000}
   		                if(software == "tam" )     {nodes <- 0; snodes <- 1000; QMC <- TRUE}
-				            }  else  { if(software == "tam" )     {nodes <- 0; snodes <- snodes; QMC <- TRUE} } 
-                    if(nodes < 100 ) {
-				              cat(paste("Warning: Due to user specification, only ",nodes," nodes are used for '",method,"' estimation. Please note or re-specify your analysis.\n",sep=""))
-				            }
+				            }  else  { if(software == "tam" )     {snodes <- nodes; nodes <- 0; QMC <- TRUE} } 
 			           }
 			           if(method != "montecarlo") {
                     if ( is.null(nodes) )   {
