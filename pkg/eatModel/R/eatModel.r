@@ -592,7 +592,7 @@ table.unlist <- function(dataFrame, verbose = TRUE, useNA = c("no","ifany", "alw
                    dataFrame <- data.frame(dataFrame, stringsAsFactors=FALSE)
                 }
                 dLong<- melt(dataFrame, measure.vars = colnames(dataFrame), na.rm=FALSE)
-                freqT<- table(ii, useNA = useNA)
+                freqT<- table(dLong[,"value"], useNA = useNA)
                 names(freqT) <- recode(names(freqT), "NA='NA'")
                 return(freqT)}
 
