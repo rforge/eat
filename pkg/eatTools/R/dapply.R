@@ -98,7 +98,7 @@ dapply <- function ( data , split.vars = NULL , fun = mean , new.name = NULL , w
 								appl.fun <- function ( vec , respVar , num , fun , verbose , ... ) {
 										if ( verbose ) cat ( paste0( "var",num,"=", respVar , " " ) )
 										flush.console()
-						
+					
 										# wenn fun eine Funktion ist, Liste drausmachen, um drüber zu lapplyen
 										if ( is.function ( fun ) ) {
 												fun <- list ( fun )
@@ -148,34 +148,78 @@ dapply <- function ( data , split.vars = NULL , fun = mean , new.name = NULL , w
 						
 								# neue Variablennamen
 								newName <- names ( resl )
+
+								# aus Liste data.frame machen
+								mdfr <- function ( l , nam ) {
+										dfr <- data.frame ( l , stringsAsFactors = FALSE )
+										if ( ncol ( dfr ) > 1 ) {
+												colnames ( dfr ) <- paste0 ( nam , "." , seq ( along = colnames ( dfr ) ) )
+										} else {
+												colnames ( dfr ) <- nam
+										}
+										return ( dfr )
+								}
+								resd.l <- mapply ( mdfr , resl , names ( resl ) , SIMPLIFY = FALSE )
+								
+								# gucken ob cbinden (=wide geht)
+								resd <- try ( do.call ( "cbind" , resd.l ) , silent = TRUE )
+								
+								# Warnmeldung
+								if ( wide & inherits(resd,"try-error") & verbose ) {
+										cat ( "results cannot be structured in wide format. long format is returned.\n" )
+								}
 								
 								# wide Datensatz
-								if ( wide ) {
-										resd <- data.frame ( resl )
-										colnames ( resd ) <- newName
-									
+								if ( wide & !inherits(resd,"try-error") ) {
+						
 										# Gruppen hinzu
 										do2 <- paste0 ( "resd$" , split.vars , " <- '" , r[,split.vars] , "'" ) 
 										eval ( parse ( text = do2 ) )
-										
+									
 										# sortieren
-										resd <- resd[,c(split.vars,colnames(resd)[!colnames(resd) %in% split.vars])]
+										resd <- resd[,c(split.vars,colnames(resd)[!colnames(resd) %in% split.vars]),drop=FALSE]
 										
 								# long Datensatz
 								} else {
-										f1 <- function ( v , vnam , r , split.vars ) {
-												resd <- data.frame ( v , stringsAsFactors = FALSE )
-												colnames ( resd ) <- "value"
-												resd$var <- vnam
-												do2 <- paste0 ( "resd$" , split.vars , " <- '" , r[,split.vars] , "'" )
-												eval ( parse ( text = do2 ) )
-												return ( resd )
+										
+										# Einzeldatensätze nach long
+										tolong <- function ( l ) {
+												tolong2 <- function ( sp , nam ) {
+														dfr <- data.frame ( sp , stringsAsFactors = FALSE )
+														dfr[,ncol(dfr)+1] <- nam
+														colnames ( dfr ) <- c ("value","var")
+														dfr$var <- as.character ( dfr$var )
+														return ( dfr )
+												}
+												mapply ( tolong2 , l , colnames ( l ) , SIMPLIFY = FALSE )
 										}
-										resl2.l <- mapply ( f1 , resl , newName , MoreArgs = list ( r , split.vars ) , SIMPLIFY = FALSE ) 
-										resl2 <- do.call ( "rbind" , resl2.l )
+										resd.l2 <- lapply ( resd.l , tolong )
+										resd.l3 <- unlist ( resd.l2 , recursive = FALSE )
+										
+										# wenn value alles numerisch ok, wenn nicht auf as.character
+										isnumeric <- sapply ( resd.l3 , function ( x ) is.numeric ( x$value ) )
+										if ( ! all ( isnumeric ) ) {
+												resd.l3 <- lapply ( resd.l3 , function ( x ) { x$value <- as.character ( x$value ); return(x)} )
+										}
+										resd <- do.call ( "rbind" , resd.l3 )
+										
+										# Gruppen hinzu
+										do2 <- paste0 ( "resd$" , split.vars , " <- '" , r[,split.vars] , "'" ) 
+										eval ( parse ( text = do2 ) )										
+										
+										# f1 <- function ( v , vnam , r , split.vars ) {
+												# resd <- data.frame ( v , stringsAsFactors = FALSE )
+												# colnames ( resd ) <- "value"
+												# resd$var <- vnam
+												# do2 <- paste0 ( "resd$" , split.vars , " <- '" , r[,split.vars] , "'" )
+												# eval ( parse ( text = do2 ) )
+												# return ( resd )
+										# }
+										# resl2.l <- mapply ( f1 , resl , newName , MoreArgs = list ( r , split.vars ) , SIMPLIFY = FALSE ) 
+										# resl2 <- do.call ( "rbind" , resl2.l )
 										
 										# sortieren
-										resd <- resl2[,c(split.vars,"var","value")]
+										resd <- resd[,c(split.vars,"var","value")]
 								
 								}
 						
@@ -206,7 +250,7 @@ dapply <- function ( data , split.vars = NULL , fun = mean , new.name = NULL , w
 				
 				# numerische split.vars wieder zurücksetzen
 				if ( any ( isnum ) ) {
-						do <- paste0 ( "data$" , names(old.class) , " <- as.",old.class," ( data$" , names(old.class) , " )" )
+						do <- paste0 ( "r$" , names(old.class) , " <- as.",old.class," ( r$" , names(old.class) , " )" )
 						eval ( parse ( text = do ) )
 				}
 				
