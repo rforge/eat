@@ -92,7 +92,7 @@ dapply ( data = d[,c("sex","age","resp1")] , split.vars = c("sex","age") , fun =
 dapply ( data = d[,c("sex","age","resp1","resp2")] , split.vars = c("sex","age") , fun = mean , wide = FALSE )
 
 # 2 variable, 2 splits, 2 functions
-dapply ( data = d[,c("sex","age","resp1","resp2")] , split.vars = c("sex","age") , fun = fun , wide = FALSE )
+dapply ( data = d[,c("sex","age","resp1","resp2")] , split.vars = c("sex","age") , fun = twofun1 , wide = FALSE )
 
 
 ### function has more than one return when applying data.frame()

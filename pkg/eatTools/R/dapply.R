@@ -161,16 +161,17 @@ dapply <- function ( data , split.vars = NULL , fun = mean , new.name = NULL , w
 								}
 								resd.l <- mapply ( mdfr , resl , names ( resl ) , SIMPLIFY = FALSE )
 								
-								# gucken ob cbinden (=wide geht)
+								# gucken ob cbinden (=wide) geht
 								resd <- try ( do.call ( "cbind" , resd.l ) , silent = TRUE )
 								
 								# Warnmeldung
-								if ( wide & inherits(resd,"try-error") & verbose ) {
-										cat ( "results cannot be structured in wide format. long format is returned.\n" )
+								if ( wide & inherits(resd,"try-error") ) {
+										wide <- FALSE
+										if ( verbose ) cat ( "results cannot be structured in wide format. long format is returned.\n" )
 								}
 								
 								# wide Datensatz
-								if ( wide & !inherits(resd,"try-error") ) {
+								if ( wide ) {
 						
 										# Gruppen hinzu
 										do2 <- paste0 ( "resd$" , split.vars , " <- '" , r[,split.vars] , "'" ) 
