@@ -10,7 +10,7 @@ split a data.frame, apply a function, and get data.frame with results
 }
 
 \usage{
-dapply ( data , split.vars = NULL , fun = mean , wide = TRUE , drop = TRUE , all.level = FALSE , verbose = FALSE , ... )
+dapply ( data , split.vars = NULL , fun = mean , wide = TRUE , drop = TRUE , all.level = FALSE , push.data.frame = FALSE , verbose = FALSE , ... )
 }
 
 \arguments{
@@ -20,6 +20,7 @@ dapply ( data , split.vars = NULL , fun = mean , wide = TRUE , drop = TRUE , all
   \item{wide}{logical, if \code{TRUE} (default) a data.frame in wide format is returned, if \code{FALSE} a data.frame in long format is returned}
   \item{drop}{logical, if \code{TRUE} (default) empty combinations will be dropped, if \code{FALSE} all combinations are kept and NAs are generated}
   \item{all.level}{logical, if \code{TRUE} all levels of factors are incorporated, if \code{FALSE} (default) only factor levels existing in the data are used}
+  \item{push.data.frame}{logical, if \code{TRUE} the splitted data.frame with all response variables is pushed to the function, if \code{FALSE} (default) the splitted data.frame is processed column-wise}
   \item{verbose}{logical, if \code{TRUE} progress is printed, if \code{FALSE} (default) no console output is generated}
   \item{...}{arguments to be passed to \code{fun}}
 }
@@ -128,5 +129,12 @@ dapply ( data = d[,c("sex","age","resp1","resp2")] , split.vars = c("sex","age")
 # 2 variable, 2 splits, 2 functions
 dapply ( data = d[,c("sex","age","resp1","resp2")] , split.vars = c("sex","age") , fun = twofun2 , wide = TRUE )
 dapply ( data = d[,c("sex","age","resp1","resp2")] , split.vars = c("sex","age") , fun = twofun2 , wide = FALSE )
+
+
+### push.data.frame = TRUE
+# instead of column-wise processing, now entire data.frame is pushed to function
+# for instance correlation of resp1 and resp2 splitted by sex is computed
+calc.cor <- function ( x ) {cor ( x[,1] , x[,2] )}
+dapply ( data = d[,c("sex","resp1","resp2")] , split.vars = c("sex") , fun = calc.cor , push.data.frame = TRUE )
 
 }

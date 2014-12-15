@@ -1,5 +1,5 @@
 
-dapply <- function ( data , split.vars = NULL , fun = mean , new.name = NULL , wide = TRUE , drop = TRUE , all.level = FALSE , verbose = FALSE , ... ) {
+dapply <- function ( data , split.vars = NULL , fun = mean , new.name = NULL , wide = TRUE , drop = TRUE , all.level = FALSE , push.data.frame = FALSE , verbose = FALSE , ... ) {
 
 		# Check-Vektor
 		ok <- as.logical()
@@ -12,10 +12,16 @@ dapply <- function ( data , split.vars = NULL , fun = mean , new.name = NULL , w
 				# Response Variablen
 				respVars <- colnames ( data )[! colnames ( data ) %in% split.vars]
 				
-				# keine Response-Variablen im Datensatz, dann eine setzen
+				# keine Response-Variablen im Datensatz
 				if ( ! identical ( respVars , character(0) ) ) {
 						ok[2] <- TRUE
-						if ( verbose ) cat ( paste0( "variable(s) to apply function(s): " , paste ( respVars , collapse = ", " ) , "\n" ) )
+						if ( verbose ) {
+								if ( !push.data.frame ) {
+										cat ( paste0( "function(s) is/are applied to variable(s): " , paste ( respVars , collapse = ", " ) , "\n" ) )
+								} else {
+										cat ( paste0( "function(s) is/are applied to data.frame with variable(s): " , paste ( respVars , collapse = ", " ) , "\n" ) )
+								}
+						}
 				} else {
 						ok[2] <- FALSE
 						if ( verbose ) cat ("no variable(s) to apply function(s)\n")
@@ -24,8 +30,33 @@ dapply <- function ( data , split.vars = NULL , fun = mean , new.name = NULL , w
 		} else {
 				ok[1] <- FALSE
 		}
+
+		# fun ist entweder eine Funktion oder mehrere
+		if ( is.function ( fun ) ) {
+				ok[3] <- TRUE
+				
+				# wenn fun eine einzelne Funktion ist, Liste drausmachen, um später drüber zu lapplyen
+				fun <- list ( fun )
+		} else {
+				if ( all ( sapply ( fun , is.function ) ) ) {
+						ok[3] <- TRUE
+				} else {
+						ok[3] <- FALSE
+				}
+		}
 		
 		if ( all ( ok ) ) {
+				
+				# Funktionsnamen
+				if ( !is.null ( names ( fun ) ) ) {
+						names ( fun ) <- make.unique ( names ( fun ) )
+				} else {
+						if ( length ( fun ) > 1 ) {
+								names ( fun ) <- paste0 ( "fun" , seq ( along = fun ) )
+						} else {
+								names ( fun ) <- "fun"
+						}
+				}
 				
 				# Splitvariablen nicht im Datensatz
 				splv <- !split.vars %in% colnames(data)
@@ -69,7 +100,7 @@ dapply <- function ( data , split.vars = NULL , fun = mean , new.name = NULL , w
 				eval ( parse ( text = do ) )
 				colnames ( cells ) <- split.vars
 				
-				schleifeD <- function ( vec , d , fun , split.vars , respVars , new.name , wide , drop , verbose , ... ) {
+				schleifeD <- function ( vec , d , fun , split.vars , respVars , new.name , wide , drop , push.data.frame , verbose , ... ) {
 
 						if ( verbose ) {
 								out <- paste0 ( "" , paste ( paste0 ( "" , names ( vec ) , "=" , vec , "" ) , collapse = " " ) , " " )
@@ -95,15 +126,10 @@ dapply <- function ( data , split.vars = NULL , fun = mean , new.name = NULL , w
 						if ( nrow ( d ) > 0 ) {
 						
 								# Statistik berechnen
-								appl.fun <- function ( vec , respVar , num , fun , verbose , ... ) {
-										if ( verbose ) cat ( paste0( "var",num,"=", respVar , " " ) )
+								appl.fun <- function ( vec , push.respVars , num , fun , verbose , ... ) {
+										if ( verbose ) cat ( paste0( "var",num,"=", push.respVars , " " ) )
 										flush.console()
-					
-										# wenn fun eine Funktion ist, Liste drausmachen, um drüber zu lapplyen
-										if ( is.function ( fun ) ) {
-												fun <- list ( fun )
-										}
-										
+
 										# Statistiken berechnen
 										callfun <- function ( fun , vec , ... ) {
 												eval ( as.call ( list ( fun, quote(vec) , quote(...) ) ) )
@@ -111,20 +137,30 @@ dapply <- function ( data , split.vars = NULL , fun = mean , new.name = NULL , w
 										l <- lapply ( fun , callfun , vec , ... )
 										
 										# Namen
-										if ( !is.null ( names ( fun ) ) ) {
-												names ( l ) <- names ( fun )
-										} else {
-												if ( length ( fun ) > 1 ) {
-														names ( l ) <- paste0 ( "fun" , seq ( along = fun ) )
-												} else {
-														names ( l ) <- "fun"
-												}
-										}
+										# if ( !is.null ( names ( fun ) ) ) {
+												# names ( l ) <- names ( fun )
+										# } else {
+												# if ( length ( fun ) > 1 ) {
+														# names ( l ) <- paste0 ( "fun" , seq ( along = fun ) )
+												# } else {
+														# names ( l ) <- "fun"
+												# }
+										# }
 										
 										return ( l )
 								}
+								# push.data.frame
+								# wenn ganzer data.frame übergeben werden soll, diesen listen
+								if ( push.data.frame ) {
+										push.d <- list ( d[,respVars,drop=FALSE] )
+										push.respVars <- paste ( respVars , collapse = ", " )
+								} else {
+										push.d <- d[,respVars,drop=FALSE]
+										push.respVars <- respVars
+								}
+
 								resl <- mapply (  appl.fun ,
-												  d[,respVars,drop=FALSE] , respVars , seq ( along = respVars ) ,
+												  push.d , push.respVars , seq ( along = push.respVars ) ,
 												  MoreArgs = list ( fun , verbose , ... ) , SIMPLIFY = FALSE )
 
 								# eine Liste ohne Verschachtelung machen
@@ -207,18 +243,7 @@ dapply <- function ( data , split.vars = NULL , fun = mean , new.name = NULL , w
 										# Gruppen hinzu
 										do2 <- paste0 ( "resd$" , split.vars , " <- '" , r[,split.vars] , "'" ) 
 										eval ( parse ( text = do2 ) )										
-										
-										# f1 <- function ( v , vnam , r , split.vars ) {
-												# resd <- data.frame ( v , stringsAsFactors = FALSE )
-												# colnames ( resd ) <- "value"
-												# resd$var <- vnam
-												# do2 <- paste0 ( "resd$" , split.vars , " <- '" , r[,split.vars] , "'" )
-												# eval ( parse ( text = do2 ) )
-												# return ( resd )
-										# }
-										# resl2.l <- mapply ( f1 , resl , newName , MoreArgs = list ( r , split.vars ) , SIMPLIFY = FALSE ) 
-										# resl2 <- do.call ( "rbind" , resl2.l )
-										
+
 										# sortieren
 										resd <- resd[,c(split.vars,"var","value")]
 								
@@ -230,7 +255,7 @@ dapply <- function ( data , split.vars = NULL , fun = mean , new.name = NULL , w
 						
 						return ( resd )
 				}
-				r.l <- apply ( cells , 1 , schleifeD , data , fun , split.vars , respVars , new.name , wide , drop , verbose , ... ) 
+				r.l <- apply ( cells , 1 , schleifeD , data , fun , split.vars , respVars , new.name , wide , drop , push.data.frame , verbose , ... ) 
 				r <- do.call ( "rbind" , r.l )
 
 				# ggf. hinzugefügte split.var löschen
