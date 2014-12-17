@@ -1,5 +1,6 @@
 importFrom(car, recode)
 importFrom(plyr, rbind.fill.matrix)
+importFrom(plyr, ddply)
 importFrom(psych,dummy.code)
 importFrom(xlsx,write.xlsx2)
 export(asNumericIfPossible)
