@@ -8,14 +8,12 @@ update an object of class "design"
 This function can be used to update a design. This might be useful to compute descriptives on a previously created design object.
 }
 \usage{
-updateDesign ( dsgn = new("design") , descriptives = TRUE , interactions = FALSE ,
-verbose = FALSE )
+updateDesign ( dsgn = new("design") , descriptives = TRUE , verbose = FALSE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dsgn}{Object of class \code{"design"}}
   \item{descriptives}{logical, compute descriptives (can be time consuming)}
-  \item{interactions}{NOT YET IMPLEMENTED logical, compute interactions (can be time consuming)}  
   \item{verbose}{logical, print information while processing}
 }
 %% \details{}

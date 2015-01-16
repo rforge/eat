@@ -9,7 +9,7 @@ This function can be used to define a design. An object of class \code{"design"}
 }
 \usage{
 defineDesign ( def = data.frame(), dsgn = new("design") , append = FALSE ,
-descriptives = TRUE , interactions = FALSE , verbose = FALSE )
+descriptives = TRUE , verbose = FALSE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -17,7 +17,6 @@ descriptives = TRUE , interactions = FALSE , verbose = FALSE )
   \item{dsgn}{object of class \code{"design"}}
   \item{append}{logical, append \code{def} to \code{dsgn} or overwrite}
   \item{descriptives}{logical, compute descriptives (can be time consuming)}
-  \item{interactions}{NOT YET IMPLEMENTED logical, compute interactions (can be time consuming)}
   \item{verbose}{logical, print information while processing}
 }
 %% \details{}
@@ -54,19 +53,19 @@ design7 <- defineDesign ( def = table7 )
 design7
 
 # add some more cases, using option 'append' in 'defineDesign'
-# add <- data.frame ( "Booklet" = c(4,4) , "Position" = c(3,4) , "Cluster" = c(4,5) )
-# ( design8 <- defineDesign ( def = add , dsgn = design7 , append = TRUE ) )
+add <- data.frame ( "Booklet" = c(4,4) , "Position" = c(3,4) , "Cluster" = c(4,5) )
+( design8 <- defineDesign ( def = add , dsgn = design7 , append = TRUE ) )
 
 # add even more cases, this time using '+' operator on 2 designs
 # (results are the same, but one of either method might be more convenient)
-# add2 <- data.frame ( "Booklet" = c(5,5,6,6) , "Position" = c(5,6,5,6) , "Cluster" = c(6,7,7,8) )
-# ( design2 <- defineDesign ( def = add2 ) )
-# ( design9 <- design7 + design2 )
+add2 <- data.frame ( "Booklet" = c(5,5,6,6) , "Position" = c(5,6,5,6) , "Cluster" = c(6,7,7,8) )
+( design2 <- defineDesign ( def = add2 ) )
+( design9 <- design7 + design2 )
 
 # add items that are nested within clusters
-# add3 <- data.frame ( "Item" = paste ( "item" , 1:12 , sep = "" ) ,
-# "Cluster" = as.vector ( sapply ( 1:3 , rep , 4 ) ) )
-# ( design3 <- defineDesign ( def = add3 ) )
-# ( design10 <- design3 + design7 )
+add3 <- data.frame ( "Item" = paste ( "item" , 1:12 , sep = "" ) ,
+					 "Cluster" = as.vector ( sapply ( 1:3 , rep , 4 ) ) )
+( design3 <- defineDesign ( def = add3 ) )
+( design10 <- design3 + design7 )
 
 }

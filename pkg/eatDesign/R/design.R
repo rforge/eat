@@ -17,9 +17,9 @@ setClass(
 			adjacency = "list" ,
 			link = "data.frame" ,
 			varCovMatrix = "matrix" , 
-			designDescriptives = "list" ,
-			interactionCells = "data.frame" ,
-			interactions = "list"
+			designDescriptives = "list" #,
+			# interactionCells = "data.frame" ,
+			# interactions = "list"
 			) ,
 	prototype = prototype ( 
 			definition = data.frame() ,
@@ -33,16 +33,17 @@ setClass(
 			adjacency = list() ,
 			link = data.frame() ,
 			varCovMatrix = matrix()[FALSE,FALSE] ,
-			designDescriptives = list() ,
-			interactionCells = data.frame() ,
-			interactions = list()
+			designDescriptives = list() #,
+			# interactionCells = data.frame() ,
+			# interactions = list()
 			)
 )
 
 # defineDesign
 # wrapper fuer define.design
 # statt den 4 "descriptives" nur 1 descriptives (for sake of simplicity)
-defineDesign <- function ( def = data.frame(), dsgn = new("design") , append = FALSE , descriptives = TRUE , interactions = FALSE , verbose = FALSE ) {
+defineDesign <- function ( def = data.frame(), dsgn = new("design") , append = FALSE , descriptives = TRUE , verbose = FALSE ) {
+# defineDesign <- function ( def = data.frame(), dsgn = new("design") , append = FALSE , descriptives = TRUE , interactions = FALSE , verbose = FALSE ) {
 					
 					# wenn verbose, sollen Warnmeldungen sofort kommen (dazwischen gemischt werden)
 					oldwarn <- options ( "warn" )
@@ -59,7 +60,8 @@ defineDesign <- function ( def = data.frame(), dsgn = new("design") , append = F
 					}					
 					
 					### Aufruf von defineDesign
-					ret <- define.design ( def=def, dsgn=dsgn, append=append, genStructure=descriptives, genDescriptives=descriptives, genLink=descriptives, genVarCovMatrix=descriptives, interactions=interactions, icell=NULL, verbose=verbose )
+					ret <- define.design ( def=def, dsgn=dsgn, append=append, genStructure=descriptives, genDescriptives=descriptives, genLink=descriptives, genVarCovMatrix=descriptives, icell=NULL, verbose=verbose )
+					# ret <- define.design ( def=def, dsgn=dsgn, append=append, genStructure=descriptives, genDescriptives=descriptives, genLink=descriptives, genVarCovMatrix=descriptives, interactions=interactions, icell=NULL, verbose=verbose )
 					
 					# auf altes Warn-Level zuruecksetzen
 					options ( oldwarn )
@@ -68,7 +70,8 @@ defineDesign <- function ( def = data.frame(), dsgn = new("design") , append = F
 					return ( ret )
 }
 
-define.design <- function ( def = data.frame() , dsgn = new("design") , append = FALSE , genStructure = TRUE , genDescriptives = TRUE , genLink = TRUE , genVarCovMatrix = TRUE , interactions = FALSE , icell = NULL , verbose = FALSE ) {
+define.design <- function ( def = data.frame() , dsgn = new("design") , append = FALSE , genStructure = TRUE , genDescriptives = TRUE , genLink = TRUE , genVarCovMatrix = TRUE , icell = NULL , verbose = FALSE ) {
+# define.design <- function ( def = data.frame() , dsgn = new("design") , append = FALSE , genStructure = TRUE , genDescriptives = TRUE , genLink = TRUE , genVarCovMatrix = TRUE , interactions = FALSE , icell = NULL , verbose = FALSE ) {
 
 					# Check verbose
 					if ( !is.logical ( verbose ) ) {
@@ -205,12 +208,13 @@ define.design <- function ( def = data.frame() , dsgn = new("design") , append =
 											# cat ( msg3 )
 									# }
 							} else { # append
-									if ( identical ( dsgn@definition , def ) || empty.def ) {
+									if ( identical ( dsgn@definition , def ) | empty.def ) {
 											# msg4a <- "remains unchanged.\n     It's current value is"
 									} else {
 
-											# 2 F�lle:
+											# 3 Faelle:
 											# wenn die Schnittmenge der colnames leer ist, dann kann merge nicht verwendet werden
+											# wenn gleiche Struktur, dann rbinden
 											# ansonsten macht merge mit Optionen incomparibles=NA und all=TRUE das was man -- wahrscheinlich -- will
 											
 											olddef <- dsgn@definition
@@ -246,34 +250,201 @@ define.design <- function ( def = data.frame() , dsgn = new("design") , append =
 													# Duplikate entfernen
 													newdef <- newdef [ !duplicated ( newdef ) , ]
 													
+											} else if ( identical ( sort ( colnames ( olddef ) ) , sort ( colnames ( adddef ) ) ) ) {
+													
+													newdef <- rbind ( olddef , adddef[,colnames(olddef)] )
+													# newdef <- newdef[!duplicated(newdef),]
+													
 											} else {
-													# mergen mit Optionen all=TRUE und incomparibles=NA
-													# f�r "gleichartige" Datens�tze ist das "rbind"
-													newdef <- merge ( olddef , adddef , by = intsec , all = TRUE , incomparables = NA , sort = FALSE )
+										
+													# seit irgendner Version von merge geht incomparables = NA nicht mehr
+													# 'incomparables' is supported only for merging on a single column
+													# deshalb jetzt mehr Faelle abfangen
+													# checken ob es überhaupt NAs auf den intersect Variablen gibt
+													anyNA <- any ( 
+																	any ( sapply ( olddef[,intsec,drop=FALSE] , function ( x ) any ( is.na ( x ) ) ) ) ,
+																	any ( sapply ( adddef[,intsec,drop=FALSE] , function ( x ) any ( is.na ( x ) ) ) )
+																 )
+													
+													# wenn keine NAs, dann merge normal nehmen
+													if ( !anyNA ) {
+															# mergen mit Optionen all=TRUE
+															newdef <- merge ( olddef , adddef , by = intsec , all = TRUE , sort = FALSE )
+													} else {
+															# ansonsten jetzt mal probeweise die merge Funktion aus 2.15.2
+															
+															merge.data.frame.2.15.2 <-
+																			function(x, y, by = intersect(names(x), names(y)), by.x = by, by.y = by,
+																					 all = FALSE, all.x = all, all.y = all,
+																					 sort = TRUE, suffixes = c(".x",".y"), incomparables = NULL,
+																					 ...)
+																		{
+																			fix.by <- function(by, df)
+																			{
+																				## fix up 'by' to be a valid set of cols by number: 0 is row.names
+																				if(is.null(by)) by <- numeric()
+																				by <- as.vector(by)
+																				nc <- ncol(df)
+																				if(is.character(by)) {
+																					poss <- c("row.names", names(df))
+																					# names(df) are not necessarily unique, so check for multiple matches.
+																					if(any(!charmatch(by, poss, 0L)))
+																						stop("'by' must specify uniquely valid column(s)")
+																					by <- match(by, poss) - 1L
+																				} else if(is.numeric(by)) {
+																					if(any(by < 0L) || any(by > nc))
+																						stop("'by' must match numbers of columns")
+																				} else if(is.logical(by)) {
+																					if(length(by) != nc) stop("'by' must match number of columns")
+																					by <- seq_along(by)[by]
+																				} else stop("'by' must specify column(s) as numbers, names or logical")
+																				if(any(is.na(by))) stop("'by' must specify valid column(s)")
+																				unique(by)
+																			}
+
+																			nx <- nrow(x <- as.data.frame(x)); ny <- nrow(y <- as.data.frame(y))
+																			by.x <- fix.by(by.x, x)
+																			by.y <- fix.by(by.y, y)
+																			if((l.b <- length(by.x)) != length(by.y))
+																				stop("'by.x' and 'by.y' specify different numbers of columns")
+																			if(l.b == 0L) {
+																				## return the cartesian product of x and y, fixing up common names
+																				nm <- nm.x <- names(x)
+																				nm.y <- names(y)
+																				has.common.nms <- any(cnm <- nm.x %in% nm.y)
+																				if(has.common.nms) {
+																					names(x)[cnm] <- paste0(nm.x[cnm], suffixes[1L])
+																					cnm <- nm.y %in% nm
+																					names(y)[cnm] <- paste0(nm.y[cnm], suffixes[2L])
+																				}
+																				if (nx == 0L || ny == 0L) {
+																					res <- cbind(x[FALSE, ], y[FALSE, ])
+																				} else {
+																					ij <- expand.grid(seq_len(nx), seq_len(ny))
+																					res <- cbind(x[ij[, 1L], , drop = FALSE], y[ij[, 2L], , drop = FALSE])
+																				}
+																			}
+																			else {
+																				if(any(by.x == 0L)) {
+																					x <- cbind(Row.names = I(row.names(x)), x)
+																					by.x <- by.x + 1L
+																				}
+																				if(any(by.y == 0L)) {
+																					y <- cbind(Row.names = I(row.names(y)), y)
+																					by.y <- by.y + 1L
+																				}
+																				row.names(x) <- NULL
+																				row.names(y) <- NULL
+																				## create keys from 'by' columns:
+																				if(l.b == 1L) {                  # (be faster)
+																					bx <- x[, by.x]; if(is.factor(bx)) bx <- as.character(bx)
+																					by <- y[, by.y]; if(is.factor(by)) by <- as.character(by)
+																				} else {
+																					## Do these together for consistency in as.character.
+																					## Use same set of names.
+																					bx <- x[, by.x, drop=FALSE]; by <- y[, by.y, drop=FALSE]
+																					names(bx) <- names(by) <- paste0("V", seq_len(ncol(bx)))
+																					bz <- do.call("paste", c(rbind(bx, by), sep = "\r"))
+																					bx <- bz[seq_len(nx)]
+																					by <- bz[nx + seq_len(ny)]
+																				}
+																				comm <- match(bx, by, 0L)
+																				bxy <- bx[comm > 0L]             # the keys which are in both
+																				xinds <- match(bx, bxy, 0L, incomparables)
+																				yinds <- match(by, bxy, 0L, incomparables)
+																				if(nx > 0L && ny > 0L)
+																					m <- .Internal(merge(xinds, yinds, all.x, all.y))
+																				else
+																					m <- list(xi = integer(), yi = integer(),
+																							  x.alone = seq_len(nx), y.alone = seq_len(ny))
+																				nm <- nm.x <- names(x)[-by.x]
+																				nm.by <- names(x)[by.x]
+																				nm.y <- names(y)[-by.y]
+																				ncx <- ncol(x)
+																				if(all.x) all.x <- (nxx <- length(m$x.alone)) > 0L
+																				if(all.y) all.y <- (nyy <- length(m$y.alone)) > 0L
+																				lxy <- length(m$xi)             # == length(m$yi)
+																				## x = [ by | x ] :
+																				has.common.nms <- any(cnm <- nm.x %in% nm.y)
+																				if(has.common.nms && nzchar(suffixes[1L]))
+																					nm.x[cnm] <- paste0(nm.x[cnm], suffixes[1L])
+																				x <- x[c(m$xi, if(all.x) m$x.alone),
+																					   c(by.x, seq_len(ncx)[-by.x]), drop=FALSE]
+																				names(x) <- c(nm.by, nm.x)
+																				if(all.y) { ## add the 'y.alone' rows to x[]
+																					## need to have factor levels extended as well -> using [cr]bind
+																					ya <- y[m$y.alone, by.y, drop = FALSE]
+																					names(ya) <- nm.by
+																					## this used to use a logical matrix, but that was not good
+																					## enough as x could be zero-row.
+																					ya <- cbind(ya, x[rep.int(NA_integer_, nyy), nm.x, drop=FALSE ])
+																					x <- rbind(x, ya)
+																				}
+																				## y (w/o 'by'):
+																				if(has.common.nms && nzchar(suffixes[2L])) {
+																					cnm <- nm.y %in% nm
+																					nm.y[cnm] <- paste0(nm.y[cnm], suffixes[2L])
+																				}
+																				y <- y[c(m$yi, if(all.x) rep.int(1L, nxx), if(all.y) m$y.alone),
+																					   -by.y, drop = FALSE]
+																				if(all.x) {
+																					zap <- (lxy+1L):(lxy+nxx)
+																					for(i in seq_along(y)) {
+																						## do it this way to invoke methods for e.g. factor
+																						if(is.matrix(y[[1]])) y[[1]][zap, ] <- NA
+																						else is.na(y[[i]]) <- zap
+																					}
+																				}
+
+																				if(has.common.nms) names(y) <- nm.y
+																				nm <- c(names(x), names(y))
+																				if(any(d <- duplicated(nm)))
+																					if(sum(d) > 1L)
+																						warning("column names ",
+																								paste(sQuote(nm[d]), collapse = ", "),
+																								" are duplicated in the result", domain = NA)
+																					else
+																						warning("column name ", sQuote(nm[d]),
+																								" is duplicated in the result", domain = NA)
+																				res <- cbind(x, y)
+
+																				if (sort)
+																					res <- res[if(all.x || all.y) ## does NOT work
+																							   do.call("order", x[, seq_len(l.b), drop = FALSE])
+																					else sort.list(bx[m$xi]),, drop = FALSE]
+																			}
+																			attr(res, "row.names") <- .set_row_names(nrow(res))
+																			res
+																		}
+															
+															# mergen mit Optionen all=TRUE und incomparibles=NA
+															newdef <- merge.data.frame.2.15.2 ( olddef , adddef , by = intsec , all = TRUE , incomparables = NA , sort = FALSE )
+													}
 													
 													# Spalten sortieren
 													newdef <- newdef [ , els ]
-													
-													# checken auf uniqueness in newdef
-													if ( is.data.frame ( newdef ) ) {
-															if ( nrow ( newdef ) > 0 ) {
-																	dupl <- duplicated ( newdef )
-																	if ( any ( dupl ) ) {
-																			msg4b <- paste ( ( l <- length ( dupl[dupl] ) ) ,
-																							 ifelse ( l == 1 , " case" , " cases" ) ,
-																							 " in new @definition " ,
-																							 ifelse ( l == 1 , "is" , "are" ) ,
-																							 " not unique and will be removed.\n" ,
-																							, sep = "" )
-																			if ( verbose ) {
-																					cat ( msg4b )
-																			}
-																			newdef <- newdef [ !dupl , ]
-																	}
-															}
-													}													
+																										
 											}
-									
+											
+											# checken auf uniqueness in newdef
+											if ( is.data.frame ( newdef ) ) {
+													if ( nrow ( newdef ) > 0 ) {
+															dupl <- duplicated ( newdef )
+															if ( any ( dupl ) ) {
+																	msg4b <- paste ( ( l <- length ( dupl[dupl] ) ) ,
+																					 ifelse ( l == 1 , " case" , " cases" ) ,
+																					 " in new @definition " ,
+																					 ifelse ( l == 1 , "is" , "are" ) ,
+																					 " not unique and will be removed.\n" ,
+																					, sep = "" )
+																	if ( verbose ) {
+																			cat ( msg4b )
+																	}
+																	newdef <- newdef [ !dupl , ]
+															}
+													}
+											}
+											
 											# setzen
 											dsgn@definition <- newdef
 
@@ -1188,7 +1359,7 @@ define.design <- function ( def = data.frame() , dsgn = new("design") , append =
 									# Definition
 									def <- dsgn@definition
 									
-									# def nach numerisch (durchz�hlen der Elemente von 1 an)
+									# def nach numerisch (durchzaehlen der Elemente von 1 an)
 									do <- paste ( sapply ( colnames ( def ) , function ( na ) paste ( "\"" , na , "\" = match ( def$\"" , na , "\", dsgn@units$\"" , na , "\" ) " , sep = "" ) ) , collapse = " , " )
 									do <- paste ( "def2 <- data.frame ( " , do , " ) " , sep = "" )
 									def2 <- eval ( parse ( text = do ) )
@@ -1265,7 +1436,7 @@ define.design <- function ( def = data.frame() , dsgn = new("design") , append =
 					# diese Kennwerte werden nur berechnet, wenn klar ist, was cluster/positionen/booklets sind
 					positionBalance <- NA
 					clusterPairBalance <- NA
-					empty.def <- identical ( def , data.frame() )
+					empty.def <- identical ( dsgn@definition , data.frame() )
 					if ( !empty.def ) {
 							nams <- colnames ( dsgn@definition )
 							# klein machen
@@ -1277,6 +1448,19 @@ define.design <- function ( def = data.frame() , dsgn = new("design") , append =
 							namsl <- sapply ( namsl1 , function ( x ) any ( x %in% TRUE ) )
 							names ( namsl ) <- sollnamen
 							
+							# wenn Booklet und Cluster da, kann cluster pair balance berechnet werden
+							if ( all ( namsl[c("booklet","cluster")] ) ) {
+									nams2 <- colnames ( dsgn@definition ) [ sapply ( c("booklet","cluster") , grep , nams , simplify = TRUE ) ]
+									names ( nams2 ) <- c("booklet","cluster")
+									
+									# cluster pair balance
+									empty.link <- identical ( dsgn@link , data.frame() )
+									if ( !empty.link ) {
+											clusterPairBalance <- dsgn@link[dsgn@link$element1 %in% nams2["cluster"] & dsgn@link$element2 %in% nams2["booklet"] , "linkrate1" ] * 100
+									}									
+							}
+							
+							# wenn Booklet, Cluster, und Position da, kann position balance berechnet werden
 							if ( all ( namsl ) ) {
 									
 									nams2 <- colnames ( dsgn@definition ) [ sapply ( c("booklet","cluster","position") , grep , nams , simplify = TRUE ) ]
@@ -1285,27 +1469,28 @@ define.design <- function ( def = data.frame() , dsgn = new("design") , append =
 									# check ob Datenstruktur gegeben
 									# in jedem Booklet alle Positionen
 									check1 <- dsgn@structure[nams2["booklet"],nams2["position"]] %in% "crossedcompletely"
+									if ( !check1 ) {
+											msg21 <- paste0 ( nams2["booklet"] , " and " , nams2["position"] , " are not completely crossed. positionBalance cannot be computed." )
+											warning ( msg21 , call. = FALSE )
+									}
 									
 									# position balance
-									if ( !empty.varCovMatrix ) {
-											positionBalance <- dsgn@varCovMatrix[nams2["position"],nams2["cluster"]]
-											positionBalance <- ( 1 - positionBalance ) * 100
+									if ( !empty.varCovMatrix & check1 ) {
+											positionBalance <- dsgn@varCovMatrix[nams2["position"],nams2["cluster"]] / ( sqrt ( dsgn@varCovMatrix[nams2["position"],nams2["position"]] ) * sqrt ( dsgn@varCovMatrix[nams2["cluster"],nams2["cluster"]] ) )
+											# abs zur Sicherheit, sollte eigentlich nicht negativ sein
+											positionBalance <- ( 1 - abs ( positionBalance ) ) * 100
 									}
-									
-									# cluster pair balance
-									empty.link <- identical ( dsgn@link , data.frame() )
-									if ( !empty.link ) {
-											clusterPairBalance <- dsgn@link[dsgn@link$element1 %in% nams2["cluster"] & dsgn@link$element2 %in% nams2["booklet"] , "linkrate1" ] * 100
-									}
+								
 							}
 					}
 
 					### Liste bauen ###
 					do1 <- "\"Doptimality\" = Doptimality"
-					if ( !is.na ( positionBalance ) & !is.na ( clusterPairBalance ) ) {
-							do2 <- c ( "\"positionBalance\" = positionBalance" , "\"clusterPairBalance\" = clusterPairBalance" )
-					} else {
+					if ( is.na ( positionBalance ) & is.na ( clusterPairBalance ) ) {
 							do2 <- NULL
+					} else {
+							do2 <- c ( "\"positionBalance\" = positionBalance" , "\"clusterPairBalance\" = clusterPairBalance" )
+							do2 <- do2 [ c ( !is.na ( positionBalance ) , !is.na ( clusterPairBalance ) ) ]
 					}
 					do <- paste ( "l <- list ( " , paste ( c ( do1 , do2 ) , collapse = "," ) , " ) " , sep = "" )
 					eval ( parse ( text = do ) )
@@ -1322,17 +1507,27 @@ define.design <- function ( def = data.frame() , dsgn = new("design") , append =
 					# auf altes Warn-Level zuruecksetzen
 					options ( oldwarn )
 					
-					#### Finales Design Objekt zur�ckgeben ####
+					#### Finales Design Objekt zurueckgeben ####
 					return( dsgn )
 }
 
-updateDesign <- function ( dsgn = new("design"), descriptives = TRUE , interactions = FALSE , verbose = FALSE ) {
-		dsgn2 <- defineDesign ( def = data.frame() , dsgn = dsgn , append = TRUE , descriptives = descriptives , interactions = interactions , verbose = verbose )
+
+updateDesign <- function ( dsgn = new("design"), descriptives = TRUE , verbose = FALSE ) {
+		dsgn2 <- defineDesign ( def = data.frame() , dsgn = dsgn , append = TRUE , descriptives = descriptives , verbose = verbose )
 }
 
-update.design <- function ( dsgn = new("design") , genStructure = TRUE , genDescriptives = TRUE , genLink = TRUE , genVarCovMatrix = TRUE , interactions = FALSE , verbose = FALSE ) {
-		dsgn2 <- define.design ( def = data.frame() , dsgn = dsgn , append = TRUE , genStructure = genStructure , genDescriptives = genDescriptives , genLink = genLink , genVarCovMatrix = genVarCovMatrix , interactions = interactions , verbose = verbose )
+update.design <- function ( dsgn = new("design") , genStructure = TRUE , genDescriptives = TRUE , genLink = TRUE , genVarCovMatrix = TRUE , verbose = FALSE ) {
+		dsgn2 <- define.design ( def = data.frame() , dsgn = dsgn , append = TRUE , genStructure = genStructure , genDescriptives = genDescriptives , genLink = genLink , genVarCovMatrix = genVarCovMatrix , verbose = verbose )
 }
+
+### mit interactions
+# updateDesign <- function ( dsgn = new("design"), descriptives = TRUE , interactions = FALSE , verbose = FALSE ) {
+		# dsgn2 <- defineDesign ( def = data.frame() , dsgn = dsgn , append = TRUE , descriptives = descriptives , interactions = interactions , verbose = verbose )
+# }
+
+# update.design <- function ( dsgn = new("design") , genStructure = TRUE , genDescriptives = TRUE , genLink = TRUE , genVarCovMatrix = TRUE , interactions = FALSE , verbose = FALSE ) {
+		# dsgn2 <- define.design ( def = data.frame() , dsgn = dsgn , append = TRUE , genStructure = genStructure , genDescriptives = genDescriptives , genLink = genLink , genVarCovMatrix = genVarCovMatrix , interactions = interactions , verbose = verbose )
+# }
 
 # "+" 
 setMethod ( f = "+" , signature = signature ( e1="design" , e2="design" ) ,
