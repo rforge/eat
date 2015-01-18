@@ -252,7 +252,7 @@ define.design <- function ( def = data.frame() , dsgn = new("design") , append =
 													
 											} else if ( identical ( sort ( colnames ( olddef ) ) , sort ( colnames ( adddef ) ) ) ) {
 													
-													newdef <- rbind ( olddef , adddef[,colnames(olddef)] )
+													newdef <- rbind ( olddef , adddef[,colnames(olddef),drop=FALSE] )
 													# newdef <- newdef[!duplicated(newdef),]
 													
 											} else {

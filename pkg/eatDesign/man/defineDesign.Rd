@@ -32,7 +32,7 @@ Martin Hecht
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \section{Warning}{
-This version is alpha. Use with care.
+This version is beta. Use with care.
 } 
 
 \seealso{
@@ -51,6 +51,9 @@ design7 <- defineDesign ( def = table7 )
 
 # print design object (with auto-generated descriptives)
 design7
+
+# plot linkage of clusters (visual inspection of cluster pair balance)
+plot ( design7@linkList[["Cluster|Booklet"]] )
 
 # add some more cases, using option 'append' in 'defineDesign'
 add <- data.frame ( "Booklet" = c(4,4) , "Position" = c(3,4) , "Cluster" = c(4,5) )

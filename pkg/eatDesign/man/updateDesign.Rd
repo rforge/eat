@@ -29,7 +29,7 @@ Martin Hecht
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \section{Warning}{
-This version is alpha. Use with care.
+This version is beta. Use with care.
 } 
 
 \seealso{
