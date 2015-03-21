@@ -19,6 +19,7 @@
 # Author:  Nicole Haag, Anna Lenski, Sebastian Weirich
 #
 # Change Log:
+# 2015-03-21 MH: debugged, aggregation rule auf "SUM" defaultet
 # 2012-09-05 NH
 # CHANGED: removed calls to 'eatTools:::sunk'
 # 0000-00-00 AA
@@ -161,7 +162,7 @@ aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, 
   unitVars <- aggregateinfo$subunits
   aggRule <- toupper(aggregateinfo$arule)
   
-  if(verbose) cat(paste (funVersion, "Aggregate unit ", unitName, ".\n", sep = ""))
+  if(verbose) cat(paste (funVersion, "Aggregate unit ", unitName, "", sep = ""))
   
   # check: sind alle Subunits vorhanden?	
   if (any((unitVars %in% colnames(dat)) == FALSE)) {
@@ -190,6 +191,22 @@ aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, 
   
   options(warn = -1)	
   
+  ### MH 19.03.2015
+  # Behandlung der Aggregation Rule
+  if ( !exists ( "aggRule" ) ) {
+		aggRule <- "SUM"
+  }
+  if ( is.na ( aggRule ) ) {
+		aggRule <- "SUM"
+  }
+  if ( !is.character ( aggRule ) ) {
+		aggRule <- "SUM"
+  }
+  # Warnung wenn nicht eine standardmäßige aggRule
+  if ( !aggRule %in% c("SUM","MEAN","") ) {
+		warning ( paste ( "Unit " , unitName , " has potentially problematic aggregation rule (\"" , aggRule , "\"). Please check.\n" , sep = "" ) )
+  }  
+  
   # MH 10.01.2013
   # Hotfix:
   # wenn die aggRule eine aggRule ist,
@@ -201,13 +218,13 @@ aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, 
   # diese in units$unitAggregateRule gelöscht oder auf SUM gesetzt wird
   # die Erkennung der "bekannten" Regel ist hier sehr primitiv und 
   # nicht sonderlich erschöpfend/fehlersicher, müsste optimiert werden
-  if ( nchar (aggRule) > 0 ) {
-		if ( grepl ( ":" , aggRule , fixed = TRUE ) ) aggRule <- "SUM"
-  }
+  # if ( nchar (aggRule) > 0 ) {
+		# if ( grepl ( ":" , aggRule , fixed = TRUE ) ) aggRule <- "SUM"
+  # }
   # hier gleich mal Warnung wenn nicht standardmäßige aggRule
-  if ( !aggRule %in% c("SUM","MEAN","") ) {
-		warning ( paste ( "Unit " , unitName , " has potentially problematic aggregation rule (\"" , aggRule , "\"). Please check.\n" , sep = "" ) )
-  }
+  # if ( !aggRule %in% c("SUM","MEAN","") ) {
+		# warning ( paste ( "Unit " , unitName , " has potentially problematic aggregation rule (\"" , aggRule , "\"). Please check.\n" , sep = "" ) )
+  # }
   
   # Aggregierung des units je nach Regel
 
@@ -216,7 +233,7 @@ aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, 
   unitDat.vc <- unitDat[ unitAggregated == "vc", , drop = FALSE ]
   # wird jetzt abgefangen
   if ( nrow ( unitDat.vc ) > 0 ) {
-		  if( aggRule == "SUM" | nchar (aggRule) == 0 ) {
+		  if( aggRule == "SUM" ) {
 			unitAggregated[unitAggregated == "vc"] <- as.character(rowSums(apply(unitDat.vc, 2, as.numeric), na.rm = TRUE))
 		  }
 		  
@@ -231,7 +248,11 @@ aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, 
   # MH 14.01.2013
   # der Teil war etwas suboptimal
   # da die vorige missing aggregation wieder überschrieben wurd :-)
-
+  
+  # MH 15.03.2015
+  # so viele Punkte printen wie Anzahl an Subitems
+  if ( verbose ) cat ( paste0 ( paste ( rep ( "." , ncol ( unitDat.vc ) ) , collapse = "" ) , "\n" ) )
+  
   options(warn = 0)
   
   # pattern aggregation (noch nicht getestet)
