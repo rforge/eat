@@ -7,14 +7,14 @@
 \description{
   The software Conquest (Wu, Adams, Wilson, & Haldane, 2007) is a computer program for fitting
   item response and latent regression models. It is based on the Muldi-dimensional mixed-Coefficients
-  Multinomial Logit Model, which is a Generalized Form of the Rasch Model (Adams & Wu, 2007). For
+  Multinomial Logit Model, which is a generalized form of the Rasch Model (Adams & Wu, 2007). For
   example, Conquest allows for the estimation of the Rasch model, the rating scale model, the
   partial credit model, the linear logistic test model, multifacet models, multidimensional and
   latent regression models.
   
   Like Mplus, the interface of Conquest is command-line (cmd) based, where the syntax, the data and
   fixed effects indicator names (i.e., names of items) have to be provided in separated ASCII files.
-  Hence, the package \code{eatModel} was created to allow for more fail-save, less cumbersome
+  The package \code{eatModel} was created to allow for more fail-save, less cumbersome
   specification of IRT models in R, which subsequently can be estimated in Conquest. At the heart
   of the package are three functions, which build on each other and should be called consecutively:
   \itemize{
@@ -22,8 +22,11 @@
           TAM) as well as the data. Several consistency checks are performed and all required input
           for the estimation software is prepared.
     \item \code{runModel} simply starts the \sQuote{estimator} (e.g. Conquest or TAM)
-    \item \code{retResults} is to re-collect all created model output which is represented then in a
-          single R data frame.
+    \item \code{getResults} re-collects all created model output which is represented then in a
+          single R data frame. The aim of the function is to provide the model output in a consistent 
+          framework which is independent from the software used for analysis. Strictly speaking, 
+          \code{getResults} is'nt necessary, i.e. the user is free to work with the output provided 
+          by Conquest or TAM directly.
   }
 
   Basically, \code{eatModel} is useful for Conquest analyses calling from R. Recently the R package
@@ -34,15 +37,15 @@
   many categories or differential item functioning) might be unstable in TAM. 
   
   Historically, \code{eatModel} is a \sQuote{reboot} of the package \code{eatRest} formerly known as
-  \code{eat}. The funtionality of both packages is quite identical, whereas \code{eatModel} uses some
+  \code{eat}. The functionality of both packages is quite identical, whereas \code{eatModel} uses some
   more efficient routines, though.
 }
 \details{
 \tabular{ll}{
 Package: \tab eatModel\cr
 Type: \tab Package\cr
-Version: \tab 0.0.20\cr
-Date: \tab 2014-12-10\cr
+Version: \tab 0.0.21\cr
+Date: \tab 2015-03-23\cr
 License: \tab GPL(>=2)
 }
 }

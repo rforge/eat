@@ -13,7 +13,8 @@ defineModel (dat, items, id,
    qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL, anchor = NULL, 
    check.for.linking = TRUE, boundary = 6, remove.boundary = FALSE, remove.no.answers = TRUE,
    remove.missing.items = TRUE, remove.constant.items = TRUE, remove.failures = FALSE, 
-   verbose=TRUE, software = c("conquest","tam"), dir = NULL, analysis.name,
+   remove.vars.DIF.missing = TRUE, remove.vars.DIF.constant = TRUE, verbose=TRUE, 
+   software = c("conquest","tam"), dir = NULL, analysis.name,
    model.statement = "item",  compute.fit = TRUE, n.plausible=5,
    seed = NULL, conquest.folder=NULL,constraints=c("cases","none","items"),
    std.err=c("quick","full","none"), distribution=c("normal","discrete"),
@@ -32,7 +33,10 @@ A data frame containing all variables necessary for analysis.
 }
   \item{items}{
 %%     ~~Describe \code{dif.term} here~~
-Names or column numbers of variables with item responses.
+Names or column numbers of variables with item responses. Item response values must 
+be numeric (i.e. 0, 1, 2, 3 ... ). Character values (i.e. A, B, C ... or a, b, c, ...) 
+are not allowed. Class of item columns are expected to be numeric or integer. 
+Columns of class \code{character} will be transformed. 
 }
   \item{id}{
 %%     ~~Describe \code{split.dif} here~~
@@ -105,6 +109,16 @@ Logical: Should items without variance being removed prior to analysis?
   \item{remove.failures}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Logical: Should persons without any correct item response (i.e., only \dQuote{0} responses) being removed prior to analysis?
+}
+  \item{remove.vars.DIF.missing}{
+Logical: Applies only in DIF analyses. Should items without any responses in at least one 
+DIF group being removed prior to analyses? Note: Conquest may crash if these items
+remain in the data. 
+}
+  \item{remove.vars.DIF.constant}{
+Logical: Applies only in DIF analyses. Should items without variance in at least one 
+DIF group being removed prior to analyses? Note: Conquest may crash if these items 
+remain in the data. 
 }
   \item{verbose}{
 A logical value indicating whether messages are printed on the R console.

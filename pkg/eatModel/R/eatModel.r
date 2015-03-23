@@ -80,7 +80,8 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
 
 defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
                qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL, anchor = NULL, check.for.linking = TRUE,
-               boundary = 6, remove.boundary = FALSE, remove.no.answers = TRUE, remove.missing.items = TRUE, remove.constant.items = TRUE, remove.failures = FALSE, verbose=TRUE,
+               boundary = 6, remove.boundary = FALSE, remove.no.answers = TRUE, remove.missing.items = TRUE, remove.constant.items = TRUE, remove.failures = FALSE, 
+               remove.vars.DIF.missing = TRUE, remove.vars.DIF.constant = TRUE, verbose=TRUE,
                software = c("conquest","lme4", "tam"), dir = NULL, analysis.name, model.statement = "item",  compute.fit = TRUE,
                n.plausible=5, seed = NULL, conquest.folder=NULL,constraints=c("cases","none","items"),std.err=c("quick","full","none"),
                distribution=c("normal","discrete"), method=c("gauss", "quadrature", "montecarlo"), n.iterations=2000,nodes=NULL, p.nodes=2000,
@@ -94,7 +95,7 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                   if(software == "conquest") {
                      original.options <- options("scipen")                      ### lese Option fuer Anzahl der Nachkommastellen
                      options(scipen = 20)                                       ### setze Option fuer Anzahl der Nachkommastellen
-                     if(missing(analysis.name)) {stop("'analysis.name' not specified.\n") }   }
+                     if(missing(analysis.name)) {stop("Please specify 'analysis.name' or use 'software = \"tam\"'\n")} }
                   if(length(model.statement)!=1)            {stop("'model.statement' has to be of length 1.\n")}
                   if(class(model.statement)!="character")   {stop("'model.statement' has to be of class 'character'.\n")}
                   if(missing(dat)) {stop("No dataset specified.\n") }           ### 11.04.2014: nutzt Hilfsfunktionen von jk2.mean etc.
@@ -139,35 +140,41 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
      ### Sektion 'Alle Items auf einfache Konsistenz pruefen' ###
                   namen.items.weg <- NULL
                   is.NaN <- do.call("cbind", lapply(dat[,all.Names[["variablen"]], drop = FALSE], FUN = function (uu) { is.nan(uu) } ) )
-                  if(sum(is.NaN) > 0 ) {dat[is.NaN] <- NA}                      ### Wandle NaN in NA, falls es welche gibt
-                  n.werte <- lapply(dat[,all.Names[["variablen"]], drop = FALSE], FUN=function(ii) {table(ii)})
-                  onlyHomogenBezeichner <- lapply(n.werte, FUN = function (zz) {### geprueft werden Testitems: Keine Werte? konstant? nicht dichotom?
-                             zahl <- grep("[[:digit:]]", names(zz))
-                             buch <- grep("[[:alpha:]]", names(zz))
-                             ret  <- (length(zahl) == length(zz) & length(buch) == 0 ) | (length(zahl) == 0 & length(buch) == length(zz) )
-                             return(ret)})
-                  noHomogenBezeichner   <- which(onlyHomogenBezeichner == FALSE)
-                  datasetBezeichner     <- unique(unlist(lapply(n.werte, names)))
-                  zahl                  <- grep("[[:digit:]]", datasetBezeichner )
-                  buch                  <- grep("[[:alpha:]]", datasetBezeichner )
-                  ret                   <- (length(zahl) == length(datasetBezeichner) & length(buch) == 0 ) | (length(zahl) == 0 & length(buch) == length(datasetBezeichner) )
-                  options(warn = -1)                                            ### zuvor: schalte Warnungen aus!
-                  only.null.eins        <- unlist( lapply(n.werte, FUN=function(ii) {all( names(ii) == c("0","1") ) }) )
-                  options(warn = 0)                                             ### danach: schalte Warnungen wieder an!
-                  n.werte <- sapply(n.werte, FUN=function(ii) {length(ii)})
+                  if(sum(is.NaN) > 0 ) {                                        ### Wandle NaN in NA, falls es welche gibt
+                     cat(paste("Found ",sum(is.NaN)," 'NaN' values in the data. Convert 'NaN' to 'NA'.\n",sep=""))
+                     for ( j in all.Names[["variablen"]]) { 
+                           weg <- which ( is.nan(dat[,j] ))
+                           if(length(weg)>0) {  dat[weg,j] <- NA }
+                     }
+                  }         
+                  n.werte <- table.unlist(dat[,all.Names[["variablen"]], drop = FALSE]) 
+                  zahl    <- grep("[[:digit:]]", names(n.werte))                ### sind das alles Ziffern? (auch wenn die Spalten als "character" klassifiziert sind
+                  noZahl  <- setdiff(1:length(n.werte), zahl)
+                  if (length( zahl ) == 0 )  { stop("Please use numeric values for item responses.\n")}
+                  if (length( noZahl ) > 0 ) { 
+                      cat(paste(" W A R N I N G !  Found ",sum(n.werte[noZahl])," non-numeric values in the item responses. These values will be treated as missing responses!\n",sep="")) }
+                  klasse  <- unlist( lapply(dat[,all.Names[["variablen"]], drop = FALSE], class) ) 
+                  if( "character" %in% klasse | "factor" %in% klasse | "logical" %in% klasse ) { 
+                      cat(paste(" W A R N I N G !  Found unexpected class type(s) in item response columns: ",paste(setdiff(klasse, c("numeric", "integer")), collapse = ", "), "\n",sep=""))
+                      cat("                  All item columns will be transformed to be 'numeric'. Recommend to edit your data manually prior to analysis.\n")
+                      for ( uu in all.Names[["variablen"]] ) { dat[,uu] <- as.numeric(dat[,uu])}
+                  }    
+                  values  <- lapply(dat[,all.Names[["variablen"]], drop = FALSE], FUN = function ( ii ) { table(ii)})
+                  isDichot<- unlist(lapply(values, FUN = function ( vv ) { identical(c("0","1"), names(vv)) }))
+                  n.werte <- sapply(values, FUN=function(ii) {length(ii)})
                   n.mis   <- which(n.werte == 0)
                   if(length(n.mis) >0) {cat(paste("Serious warning: ",length(n.mis)," testitems(s) without any values.\n",sep=""))
                                         if(verbose == TRUE) {cat(paste("    ", paste(names(n.mis), collapse=", "), "\n", sep=""))}
                                         if(remove.missing.items == TRUE) {
                                            cat(paste("Remove ",length(n.mis)," variable(s) due to solely missing values.\n",sep=""))
                                            namen.items.weg <- c(namen.items.weg, names(n.mis))}}
-                  n.constant <- which(n.werte == 1)
-                  if(length(n.constant) >0) {cat(paste("Warning: ",length(n.constant)," testitems(s) are constants.\n",sep=""))
-                                             if(verbose == TRUE) {foo <- lapply(names(n.constant),FUN=function(ii) {cat(paste(ii,": ",names(table(dat[,ii])),sep="")); cat("\n")})}
+                  constant <- which(n.werte == 1)
+                  if(length(constant) >0) {cat(paste("Warning: ",length(constant)," testitems(s) are constants.\n",sep=""))
+                                             if(verbose == TRUE) {foo <- lapply(names(constant),FUN=function(ii) {cat(paste(ii,": ",names(table(dat[,ii])),sep="")); cat("\n")})}
                                              if(remove.constant.items == TRUE) {
-                                                cat(paste("Remove ",length(n.constant)," variable(s) due to solely constant values.\n",sep=""))
-                                                namen.items.weg <- c(namen.items.weg, names(n.constant))}}
-                  n.rasch   <- which( !only.null.eins )
+                                                cat(paste("Remove ",length(constant)," variable(s) due to solely constant values.\n",sep=""))
+                                                namen.items.weg <- c(namen.items.weg, names(constant))}}
+                  n.rasch   <- which( !isDichot )
                   if(length(n.rasch) >0 )   {cat(paste("Warning: ",length(n.rasch)," variable(s) are not strictly dichotomous with 0/1.\n",sep=""))
                                              for (ii in 1:length(n.rasch))  {
                                                   max.nchar <-  max(nchar(names(table(dat[,names(n.rasch)[ii]]))))
@@ -176,10 +183,6 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                                              cat("Expect a rating scale model or partial credit model.\n")
                                              if(model.statement == "item")
                                                {cat("WARNING: Sure you want to use 'model statement = item' even when items are not dichotomous?\n")} }
-                  if(length(noHomogenBezeichner)>0) {
-                     stop(paste("Item(s) ",paste(names(noHomogenBezeichner), collapse=", ")," with mixed response identifier (numeric and string).\n",sep=""))}
-                  if(ret == FALSE ) {
-                     stop("Itemdata with inconsistant response identifier (numeric and string).\n")}
      ### Sektion 'Hintergrundvariablen auf Konsistenz zu sich selbst und zu den Itemdaten pruefen'. Ausserdem Stelligkeit (Anzahl der benoetigten character) fuer jede Variable herausfinden ###
                   weg.dif <- NULL; weg.hg <- NULL; weg.weight <- NULL; weg.group <- NULL
                   if(length(all.Names$HG.var)>0)    {
@@ -198,6 +201,14 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                   }
                   if(length(all.Names$DIF.var)>0)  {
                      dif.info <- lapply(all.Names$DIF.var, FUN = function(ii) {.checkContextVars(x = dat[,ii], varname=ii, type="DIF", itemdaten=dat[,all.Names[["variablen"]], drop = FALSE])})
+                     if ( remove.vars.DIF.missing == TRUE ) {
+                          cat("Remove item(s) which only have missing values in at least one group of the DIF variable.\n")
+                          for ( uu in 1:length(dif.info)) { if (length(dif.info[[uu]]$wegDifMis) >0) { namen.items.weg <- c(namen.items.weg,dif.info[[uu]]$wegDifMis) } }
+                     }
+                     if ( remove.vars.DIF.constant == TRUE ) {
+                          cat("Remove item(s) which are constant in at least one group of the DIF variable.\n")
+                          for ( uu in 1:length(dif.info)) { if (length(dif.info[[uu]]$wegDifConst) >0) { namen.items.weg <- c(namen.items.weg,dif.info[[uu]]$wegDifConst) } }
+                     }
                      for ( i in 1:length(dif.info)) { dat[, dif.info[[i]]$varname ] <- dif.info[[i]]$x }
                      weg.dif  <- unique(unlist(lapply(dif.info, FUN = function ( y ) {y$weg})))
                      if(length(weg.dif)>0)                                      ### untere Zeile: dies geschieht erst etwas spaeter, wenn datensatz zusammengebaut ist
@@ -225,7 +236,13 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                      qMatrix             <- qMatrix[match(all.Names$variablen, qMatrix[,1]),]
                   }
      ### Sektion 'Personen ohne gueltige Werte identifizieren und ggf. loeschen' ###
-                  datL  <- reshape2::melt(data = dat, id.vars = unique(unlist(all.Names[-match("variablen", names(all.Names))])), measure.vars = all.Names[["variablen"]], na.rm=TRUE)
+                  if(inherits(try(datL  <- reshape2::melt(data = dat, id.vars = unique(unlist(all.Names[-match("variablen", names(all.Names))])), measure.vars = all.Names[["variablen"]], na.rm=TRUE)  ),"try-error"))  {
+                     cat("W A R N I N G ! ! !   Error in melting for unknown reasons. Try workaround.\n"); flush.console()
+                     allHG <- setdiff(unique(unlist(all.Names[-match("variablen", names(all.Names))])), all.Names[["ID"]] )
+                     stopifnot(length(allHG)>0)                                 ### dies ist eni Workaround, wenn "melt" fehltschlaegt (Fehler nicht reproduzierbar)
+                     datL  <- reshape2::melt(data = dat, id.vars = all.Names[["ID"]], measure.vars = all.Names[["variablen"]], na.rm=TRUE)
+                     datL  <- merge(datL, dat[,unique(unlist(all.Names[-match("variablen", names(all.Names))]))], by = all.Names[["ID"]], all=TRUE)
+                  }   
                   weg   <- setdiff(dat[,all.Names[["ID"]]], unique(datL[,all.Names[["ID"]]]))
                   if(length(weg)>0)   {                                         ### identifiziere Faelle mit ausschliesslich missings
                      cat(paste("Found ",length(weg)," cases with missings on all items.\n",sep=""))
@@ -333,7 +350,7 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                         if (type == "weight") {stop(paste(type, " variable has to be 'numeric' necessarily. Automatic transformation is not recommended. Please transform by yourself.\n",sep=""))}
                         cat(paste(type, " variable has to be 'numeric'. Variable '",varname,"' of class '",class(x),"' will be transformed to 'numeric'.\n",sep=""))
                         x <- unlist(as.numeric.if.possible(dataFrame = data.frame(x, stringsAsFactors = FALSE), transform.factors = TRUE, maintain.factor.scores = FALSE, verbose=FALSE))
-                        if(class(x) != "numeric")  {                            ### erst wenn as.numeric.if.possible fehlschlaegt, wird mit Gewalt numerisch gemacht, denn fuer Conquest MUSS es numerisch sein
+                        if(class(x) != "numeric")  {                            ### erst wenn as.numeric.if.possible fehlschlägt, wird mit Gewalt numerisch gemacht, denn für Conquest MUSS es numerisch sein
                            x <- as.numeric(as.factor(x))
                         }
                         cat(paste("    '", varname, "' was converted into numeric variable of ",length(table(x))," categories. Please check whether this was intended.\n",sep=""))
@@ -346,6 +363,7 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                      char    <- max(nchar(as.character(na.omit(x))))
                      weg     <- which(is.na(x))
                      if(length(weg) > 0 ) {cat(paste("Warning: Found ",length(weg)," cases with missing on ",type," variable '",varname,"'. Conquest probably will collapse unless cases are not deleted.\n",sep=""))}
+                     wegDifMis <- NULL; wegDifConst <- NULL
                      if(type == "DIF" ) {
                                    if(mis > 2 )   {cat(paste(type, " Variable '",varname,"' does not seem to be dichotomous.\n",sep=""))}
                                    n.werte <- lapply(itemdaten, FUN=function(iii){by(iii, INDICES=list(x), FUN=table)})
@@ -354,16 +372,18 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                                         missingCat.i <- which(completeMissingGroupwise[,iii] == 0)
                                         if(length(missingCat.i) > 0) {
                                            cat(paste("Warning: Following items with no values in ",type," variable '",varname,"', group ",iii,": \n",sep=""))
+                                           wegDifMis <- c(wegDifMis, rownames(completeMissingGroupwise)[missingCat.i] )
                                            cat(paste(rownames(completeMissingGroupwise)[missingCat.i],collapse=", ")); cat("\n")
                                         }
                                         constantCat.i <- which(completeMissingGroupwise[,iii] == 1)
                                         if(length(constantCat.i) > 0) {
                                            cat(paste("Warning: Following items are constants in ",type," variable '",varname,"', group ",iii,":\n",sep=""))
+                                           wegDifConst <- c(wegDifConst, rownames(completeMissingGroupwise)[constantCat.i] )
                                            cat(paste(rownames(completeMissingGroupwise)[constantCat.i],collapse=", ")); cat("\n")
                                         }
                                    }
                      }
-                     return(list(x = x, char = char, weg = weg, varname=varname))}
+                     return(list(x = x, char = char, weg = weg, varname=varname, wegDifMis = wegDifMis, wegDifConst = wegDifConst))}
 
 
 .existsBackgroundVariables <- function(dat, variable )  {
