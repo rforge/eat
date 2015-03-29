@@ -1,13 +1,12 @@
 get.lmer.effects.forBootMer <- function ( lmerObj) {get.lmer.effects ( lmerObj=lmerObj , saveData = FALSE)[,"value"]}
 
+### needs lme4 version >1
 get.lmer.effects <- function ( lmerObj , bootMerObj = NULL, conf = .95, saveData = FALSE) {
              model    <- as.character(substitute(lmerObj))                      ### implementieren wie in p:\ZKD\07_Code\dev\get.lmer.effects\get.lmer.effects_Konzept.xlsx
              checkForReshape()                                                  ### Beispiel in c:\diskdrv\Winword\Psycho\IQB\Dropbox\Literatur\R_help\Bates_2010_lme4_book.rsy
-             # if(!exists("fixef"))        {library(lme4)}
-             lme4Ver  <- installed.packages()
-             lme4Ver  <- substr(lme4Ver[lme4Ver[,"Package"] == "lme4","Version"],1,1)
              random   <- VarCorr( lmerObj ) 
-             fixed    <- lme4::fixef(lmerObj)                                   ### zunaechst werden die random effects extrahiert
+             fixed    <- fixef(lmerObj)                                   
+     ### Sektion 'random effects einlesen'
              randomF  <- do.call("rbind", lapply(names(random), FUN = function ( y ) {
                          ret <- data.frame(model = model, Var1 = colnames(random[[y]]), Var2 = NA, type = "random", group = y, par = "var", derived.par = NA, value = diag(random[[y]]), stringsAsFactors = FALSE )
                          ret <- rbind(ret, data.frame(model = model, Var1 = colnames(random[[y]]), Var2 = NA, type = "random", group = y, par = "sd", derived.par = NA, value = sqrt(diag(random[[y]])), stringsAsFactors = FALSE ))
@@ -22,17 +21,19 @@ get.lmer.effects <- function ( lmerObj , bootMerObj = NULL, conf = .95, saveData
              if ( !is.na(attr(random, "sc"))) {                                 ### vergleichen zwischen Versionen!
                   randomF  <- rbind.fill ( randomF, rbind ( data.frame ( model=model, Var1 = "residual", type = "random", par = "var", derived.par = NA, value = attr(random, "sc")^2, stringsAsFactors = FALSE ), data.frame ( model=model, Var1 = "residual", type = "random", par = "sd", derived.par = NA, value = attr(random, "sc"), stringsAsFactors = FALSE )))
              }                                                                  ### jetzt kommen die fixed effects
+     ### Sektion 'fixed effects einlesen'
              fixedF   <- data.frame ( model=model, Var1 = names(fixed), Var2 = NA, type = "fixed", group = NA, par = "est", derived.par = NA, value = as.numeric(fixed), stringsAsFactors = FALSE )
              fixedF   <- rbind(fixedF, data.frame ( model=model, Var1 = names(fixed), Var2 = NA, type = "fixed", group = NA, par = "se", derived.par = NA, value = sqrt(diag(vcov(lmerObj))), stringsAsFactors = FALSE ))
              fixedF   <- rbind(fixedF, data.frame ( model=model, Var1 = names(fixed), Var2 = NA, type = "fixed", group = NA, par = "z.value", derived.par = NA, value = fixedF[fixedF[,"par"] == "est","value"] / fixedF[fixedF[,"par"] == "se","value"], stringsAsFactors = FALSE ))
              fixedF   <- rbind(fixedF, data.frame ( model=model, Var1 = names(fixed), Var2 = NA, type = "fixed", group = NA, par = "p.value", derived.par = NA, value = 2*(1-pnorm(abs(fixedF[fixedF[,"par"] == "z.value","value"]))), stringsAsFactors = FALSE ))
-             if(lme4Ver == "0"){
-                 rr       <- as(sigma(lmerObj)^2 * chol2inv(lmerObj@RX, size = lmerObj@dims['p']), "dpoMatrix")
-                 nms      <- colnames(lmerObj@X)                                ### extract matrix of fixed effects, for lme4 version < 1 
-			       } else { 
+             #if(lme4Ver == "0"){
+             #    rr       <- as(sigma(lmerObj)^2 * chol2inv(lmerObj@RX, size = lmerObj@dims['p']), "dpoMatrix")
+             #    nms      <- colnames(lmerObj@X)                                ### extract matrix of fixed effects, for lme4 version < 1 
+			       #} else { 
+             # lme4 version > 1 
                  rr       <- as(sigma(lmerObj)^2 * chol2inv(getME(lmerObj, name = "RX")), "dpoMatrix")
                  nms      <- colnames(lmerObj@pp$X)                             ### for lme4 version > 1
-             }    
+             #}    
              dimnames(rr) <- list(nms, nms)
              if(is.null(nms)) {dimnames(rr) <- list(names(fixed), names(fixed))}
              korMat <- as.matrix(as(rr, "corMatrix"))	
@@ -48,9 +49,30 @@ get.lmer.effects <- function ( lmerObj , bootMerObj = NULL, conf = .95, saveData
                  wahl1    <- which(!duplicated(apply(korTab, 1, FUN = function ( xx ) { paste( sort(c(xx[1], xx[2])), collapse="_") })))
                  fixedF   <- rbind.fill( fixedF, data.frame ( model=model, korTab[intersect(wahl1, wahl2),], type = "fixed", group = NA, par = "correlation", derived.par=NA, stringsAsFactors = FALSE ) )
              }
-             LogLik   <- logLik(lmerObj)                                        ### nun kommen die deviance measures
-             if(lme4Ver == "0"){ deviancF <- data.frame(model=model, type = "model", par = c("LogLik", "df", paste("Deviance",names(lmerObj@deviance),sep="_"), "AIC", "BIC"), value = c(LogLik[[1]], attr(LogLik, "df"), lmerObj@deviance, AIC(LogLik ), BIC(LogLik)), stringsAsFactors = FALSE ) 
-                        } else { deviancF <- data.frame(model=model, type = "model", par = c("LogLik", "df", paste("Deviance",names(lmerObj@devcomp$cmp),sep="_"), "AIC", "BIC"), value = c(LogLik[[1]], attr(LogLik, "df"), lmerObj@devcomp$cmp, AIC(LogLik ), BIC(LogLik)), stringsAsFactors = FALSE )  }
+     ### Sektion 'deviance measures einlesen' 
+             LogLik   <- logLik(lmerObj)                                       
+             # if(lme4Ver == "0"){ deviancF <- data.frame(model=model, type = "model", par = c("LogLik", "df", paste("Deviance",names(lmerObj@deviance),sep="_"), "AIC", "BIC"), value = c(LogLik[[1]], attr(LogLik, "df"), lmerObj@deviance, AIC(LogLik ), BIC(LogLik)), stringsAsFactors = FALSE ) 
+             deviancF <- data.frame(model=model, type = "model", par = c("LogLik", "df", paste("Deviance",names(lmerObj@devcomp$cmp),sep="_"), "AIC", "BIC"), value = c(LogLik[[1]], attr(LogLik, "df"), lmerObj@devcomp$cmp, AIC(LogLik ), BIC(LogLik)), stringsAsFactors = FALSE )  
+             err      <- NA                                                     ### Fehlerterm initialisieren
+             if(class(lmerObj) %in% "glmerMod") {                               ### jetzt das R^2, dazu Fehlerkomponente bestimmen, haengt von Linkfunktion ab
+                if ( lmerObj@resp$family$family == "binomial" & lmerObj@resp$family$link == "logit")  {err <- pi^2/3}
+                if ( lmerObj@resp$family$family == "binomial" & lmerObj@resp$family$link == "probit") {err <- 1} 
+                ### Achtung, kompliziert: poisson-models brauchen das Nullmodell (alle random effects, keine fixed effects)
+                if ( lmerObj@resp$family$family == "poisson" & lmerObj@resp$family$link == "log") {
+                     cat("Calculation of r^2 needs estimation of the null model. Will be implemented at a later date.\n")}
+             }                                                                  ### prblem: was, wenn LMMs ueber "glmer" mit family=gaussian aufgerufen werden? --> ok, gibt eine lme4-Warnung
+             if(class(lmerObj) %in% "lmerMod") { err <- attr(VarCorr(lmerObj), "sc")^2 }
+             if(!is.na(err)) {                                                  ### r^2 wird nur berechnet, wenn es irgendwie gelungen ist, die Fehlerkomponente zu identifizieren
+                 VarFixed <- var(as.vector(fixef(lmerObj) %*% t(getME(lmerObj, name="X"))))
+                 namesRan <- names(VarCorr(lmerObj))
+                 string   <- paste("VarCorr(lmerObj)[[\"",namesRan,"\"]][1]", sep="", collapse=" + ")
+                 R2_m     <- paste("VarFixed/(VarFixed + ", string, " + err)",sep="")
+                 R2_m     <- eval(parse(text=R2_m))
+                 R2_c     <- paste("(VarFixed + ",string,")/(VarFixed + ",string," + err)", sep="")
+                 R2_c     <- eval(parse(text=R2_c))
+                 deviancF <- rbind(deviancF, data.frame(model=model, type = "model", par = c("R2_m", "R2_c"), value = c(R2_m, R2_c), stringsAsFactors = FALSE))
+             }
+     ### Sektion 'Ergebnisse sammeln'
              ret      <- rbind.fill(randomF, fixedF)
              ret      <- rbind.fill(ret, deviancF)
              groups   <- lapply(names(table(randomF[,"group"])), FUN = function ( rg ) {
@@ -62,8 +84,8 @@ get.lmer.effects <- function ( lmerObj , bootMerObj = NULL, conf = .95, saveData
                               if(checkVar == TRUE) {return(TRUE)} else { return(FALSE)} })))]
              groups$obs    <- nrow(lmerObj@frame)
              attr(ret, "groups")  <- groups
-             if(lme4Ver == "0"){ attr(ret, "formula") <- lmerObj@call } else {  ### dies beides fuer lme4 version < 1; pruefen ob das andere auch klappt ...
-                attr(ret, "formula") <- list(completeCall =  gsub(" +"," ", paste(deparse(lmerObj@call),collapse="", sep="")), sepCall = as.character(lmerObj@call))}
+             #if(lme4Ver == "0"){ attr(ret, "formula") <- lmerObj@call } else {  ### dies beides fuer lme4 version < 1; pruefen ob das andere auch klappt ...
+             attr(ret, "formula") <- list(completeCall =  gsub(" +"," ", paste(deparse(lmerObj@call),collapse="", sep="")), sepCall = as.character(lmerObj@call))
              if(saveData == TRUE ) { attr(ret, "data")    <- lmerObj@frame }
              ret      <- data.frame ( ret[,1,drop=FALSE], source = attr(ret, "formula")$sepCall[1], ret[,-1], stringsAsFactors = FALSE)
              class(ret) <- c("data.frame", "lmer.effects")                      ### untere Zeile: wenn bootMerObj uebergeben, dann werden jetzt bootstrap-Parameter angebunden
@@ -90,87 +112,50 @@ get.lmer.effects <- function ( lmerObj , bootMerObj = NULL, conf = .95, saveData
              colnames(ret) <- tolower(colnames(ret))
              return(ret) } 
 
-get.fixef <- function ( lmer.effects, easy.to.difficult = FALSE, withCorrelation = FALSE) {
-             checkForReshape()
-             if(!"lmer.effects" %in% class(lmer.effects) ) {lmer.effects <- get.lmer.effects(lmer.effects)}
-             withoutCorr <- lmer.effects[intersect ( which(lmer.effects[,"type"] == "fixed"), which (lmer.effects[,"parameter"] != "correlation" ) ) ,]
-             withoutCorr <- dcast(withoutCorr, Var1~parameter, value.var = "value")[,c("Var1", "est", "se", "z.value", "p.value")]
-             if(easy.to.difficult == TRUE) { withoutCorr[,"est"] <- -1 * withoutCorr[,"est"]}
-             if(withCorrelation == TRUE ) {
-                onlyCorr    <- lmer.effects[intersect ( which (lmer.effects[,"parameter"] == "correlation" ), which(lmer.effects[,"type"] == "fixed")) ,]
-                if(nrow(onlyCorr)>0) {
-                   onlyCorr    <- dcast(onlyCorr, Var1~Var2, value.var = "value")
-                   colnames(onlyCorr)[-1] <- paste("corr", colnames(onlyCorr)[-1], sep="_")
-                   withoutCorr <- merge(withoutCorr, onlyCorr, by = "Var1", all = TRUE)
-                }
-             }
-             return(withoutCorr)}
-             
-
-get.ranef <- function ( lmer.effects ) {
-             checkForReshape()
-             if(!"lmer.effects" %in% class(lmer.effects) ) {lmer.effects <- get.lmer.effects(lmer.effects)}
-             withoutCorr <- lmer.effects[lmer.effects[,"type"] == "random" & lmer.effects[,"parameter"] != "correlation",]
-             obj     <- dcast(withoutCorr, Var1+group~parameter, value.var = "value")
-             match1  <- match(c("group", "Var1", "var", "sd"), colnames(obj))
-             obj     <- obj[,match1]
-             onlyCor <- lmer.effects[lmer.effects[,"type"] == "random" & lmer.effects[,"parameter"] == "correlation",]
-             if(nrow(onlyCor)>0) {
-                obj2 <- dcast(onlyCor, Var1+group~Var2, value.var = "value")
-                obj  <- merge(obj, obj2, by = c("group", "Var1"), all = TRUE)
-             }
-             match2  <- na.omit(match("residual", obj[,"Var1"]))
-             if(length(match2)>0) {obj <- obj[c(setdiff(1:nrow(obj),match2),match2) ,]}
-             return(obj)}
-
-
-lmerAnova <- function ( lmer.effects1, lmer.effects2, verbose = TRUE ) {
-             chisQuare <- abs ( (-2)*lmer.effects1[lmer.effects1[,"par"] == "LogLik","value"] - (-2)*lmer.effects2[lmer.effects2[,"par"] == "LogLik","value"] )
-             deltaDF   <- abs ( lmer.effects1[lmer.effects1[,"par"] == "df","value"] - lmer.effects2[lmer.effects2[,"par"] == "df","value"] )
-             ret       <- data.frame ( chisQuare = chisQuare, deltaDF = deltaDF, p.value = 1-pchisq(chisQuare, deltaDF), stringsAsFactors = FALSE )
-             return(ret)}
              
 save.lmer.effects <- function ( lmerObj, lmerObjRestrict = NULL, fileName, scipen=6) {    
+           ret   <- get.lmer.effects(lmerObj, saveData = FALSE)
+           save(ret, file = paste0(fileName,".rda")) 
            orSci <- options()$scipen                                            ### lmerObj und lmerObjRestrict muessen zueinander genestet sein!
-           if(scipen != orSci ) { options(scipen=scipen) }
-           sink(file = paste0(fileName,".txt"))                                 
+           if(scipen != unlist(orSci) ) { options(scipen=scipen) }
+           sink(file = paste0(fileName,".txt"))                                 ### file to sink wird geoeffnet
            if(!is.null(lmerObjRestrict)) { cat("H1 model:\n\n")}
            print(summary(lmerObj), correlation=TRUE)
+     ### Sektion R^2 abspeichern (falls vorhanden)
+           zeileC<- match("R2_c", ret[,"par"])
+           zeileM<- match("R2_m", ret[,"par"])
+           if( length(zeileC) == 1 ) {
+               cat(paste("\nR^2 according to Nakagawa & Schielzeth (2013), p. 137:\n     marginal R2: ",formatC(round(100*ret[zeileM,"value"], digits = 2),width=5)," %\n  conditional R2: ",formatC(round(100*ret[zeileC,"value"],digits = 2),width=5)," %\n",sep=""))
+           }
+     ### Sektion 'Modellvergleich' (optional)     
            if(!is.null(lmerObjRestrict)) { 
                cat("\n\nH0 model:\n\n")
                print(summary(lmerObjRestrict)); cat("\n\nModel comparison:\n\n")
                print(anova(lmerObj, lmerObjRestrict))
            }    
-           sink()
-           ret     <- get.lmer.effects(lmerObj, saveData = FALSE)
-           save(ret, file = paste0(fileName,".rda")) 
+           sink()                                                               ### file to sink wird geschlossen
            if(!is.null(lmerObjRestrict)) { 
                retR    <- get.lmer.effects(lmerObjRestrict, saveData = FALSE)
                save(retR, file = paste0(fileName,"_Restrict.rda")) }  
-           if(scipen != orSci ) {options(scipen=orSci)}   }                     ### scipen-Option wieder zuruecksetzen
+           if(scipen != unlist(orSci) ) {options(scipen=orSci)}   }             ### scipen-Option wieder zuruecksetzen
 
 
 checkForReshape <- function () {
         if("package:reshape" %in% search() ) {
            cat("Warning: Package 'reshape' is attached. Functions in package 'eatRep' depend on 'reshape2'. 'reshape' and 'reshape2' conflict in some way.\n  'reshape' therefore will be detached now. \n")
            detach(package:reshape) } }
-			 
-checkForReshape <- function () {
-        if("package:reshape" %in% search() ) {
-           cat("Warning: Package 'reshape' is attached. Functions in package 'eatRep' depend on 'reshape2'. 'reshape' and 'reshape2' conflict in some way.\n  'reshape' therefore will be detached now. \n")
-           detach(package:reshape) } }			 
 
 
 ### Class definition of "eatGot" ###
-setClass(
-	"eatGot" ,
-	representation = representation ( 
-			results = "data.frame"
-			) ,
-	prototype = prototype ( 
-			results = data.frame()
-			)
-)
+#setClass(
+#	"eatGot" ,
+#	representation = representation ( 
+#			results = "data.frame"
+#			) ,
+#	prototype = prototype ( 
+#			results = data.frame()
+#			)
+#)
 
 
 ## show
