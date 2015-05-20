@@ -88,6 +88,7 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                f.nodes=2000,converge=0.001,deviancechange=0.0001, equivalence.table=c("wle","mle","NULL"), use.letters=FALSE, allowAllScoresEverywhere = TRUE,
                guessMat = NULL, est.slopegroups = NULL, progress = FALSE, increment.factor=1 , fac.oldxsi=0,
                export = list(logfile = TRUE, systemfile = FALSE, history = TRUE, covariance = TRUE, reg_coefficients = TRUE, designmatrix = FALSE) )   {
+                  checkForPackage (namePackage = "eatRest", targetPackage = "eatModel")
                   if(!"data.frame" %in% class(dat) ) { cat("Convert 'dat' to a data.frame.\n"); dat <- data.frame ( dat, stringsAsFactors = FALSE)}
                   irtmodel <- match.arg(irtmodel)
                   software <- match.arg(software)
@@ -673,8 +674,8 @@ as.numeric.if.possible <- function(dataFrame, set.numeric=TRUE, transform.factor
            }
          }
 
-get.plausible <- function(file, quiet = FALSE, forConquestResults = FALSE)  { 
-                 checkForReshape()                                              ### hier beginnt Einlesen fuer Plausible Values aus Conquest
+get.plausible <- function(file, quiet = FALSE, forConquestResults = FALSE)  {   ### untere Zeile: hier beginnt Einlesen fuer Plausible Values aus Conquest
+                 checkForPackage (namePackage = "reshape", targetPackage = "eatRep")                                              
                  input           <- scan(file,what="character",sep="\n",quiet=TRUE)
                  input           <- strsplit(crop(gsub("-"," -",input) ) ," +")# Untere Zeile gibt die maximale Spaltenanzahl
                  n.spalten       <- max ( sapply(input,FUN=function(ii){ length(ii) }) )
@@ -715,10 +716,10 @@ get.plausible <- function(file, quiet = FALSE, forConquestResults = FALSE)  {
                  }  else { 
                  return(PV)}}
                  
-checkForReshape <- function () {
-        if("package:reshape" %in% search() ) {
-           cat("Warning: Package 'reshape' is attached. Functions in package 'eatRep' depend on 'reshape2'. 'reshape' and 'reshape2' conflict in some way.\n  'reshape' therefore will be detached now. \n")
-           detach(package:reshape) } }
+checkForPackage <- function (namePackage, targetPackage) {
+        if(paste("package:",namePackage,sep="") %in% search() ) {
+           cat(paste("Warning: Package '",namePackage,"' is attached. Functions in package '",targetPackage,"' conflict with '",namePackage,"'in some way.\n  '",namePackage,"' therefore will be detached now. \n", sep=""))
+           eval(parse(text=paste("detach(package:",namePackage,")",sep=""))) } }
 
 get.wle <- function(file)      {                                                ### alte und neue Version der Funktion: neue beginnt dort, wo if(n.wle != round(n.wle))
             input <- scan(file, what = "character", sep = "\n", quiet = TRUE)   ### in neuer Funktion wird nicht mehr der relative Anteil geloester Aufgaben angegeben
