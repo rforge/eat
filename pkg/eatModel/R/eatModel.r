@@ -105,6 +105,19 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                   doppelt     <- which(duplicated(dat[,all.Names[["ID"]]]))
                   if(length(doppelt)>0)  {stop(paste( length(doppelt) , " duplicate IDs found!",sep=""))}
                   dir <- crop(dir,"/")
+     ### pruefen, ob es Personen gibt, die weniger als <boundary> items gesehen haben (muss VOR den Konsistenzpruefungen geschehen)
+                  datL.valid  <- reshape2::melt(dat, id.vars = all.Names[["ID"]], meaure.vars = all.Names[["variablen"]], na.rm=TRUE)
+                  nValid      <- table(datL.valid[,all.Names[["ID"]]])
+                  inval       <- nValid[which(nValid<boundary)]
+                  if(length(inval)>0) { 
+                     cat(paste( length(inval), " subject(s) with less than ",boundary," valid item responses: ", paste(names(inval),nValid[inval],sep=": ", collapse="; "),"\n",sep=""))
+                     if(remove.boundary==TRUE) { 
+                        cat(paste("subjects with less than ",boundary," valid responses will be removed.\n    Caution! This can result in loosing some items likewise.\n",sep="") )
+                        weg <- match(names(inval), dat[,all.Names[["ID"]]])
+                        stopifnot(length(which(is.na(weg))) == 0 ) ; flush.console()
+                        dat <- dat[-weg,]
+                     }
+                  }                    
      ### Sektion 'explizite Variablennamen ggf. aendern' ###
                   subsNam <- .substituteSigns(dat=dat, variable=unlist(all.Names[-c(1:2)]))
                   if(software == "conquest") {                                  ### Conquest erlaubt keine gross geschriebenen und expliziten Variablennamen, die ein "." oder "_" enthalten
@@ -116,7 +129,7 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                         all.Names     <- lapply(all.Names, FUN = function ( y ) { recode(y, recStr) })
                         if(model.statement != "item") {
                            cat("    Remove deleted signs from variables names for explicit variables also in the model statement. Please check afterwards for consistency!\n")
-                           model.statement <- gsub(sn[,"old"], sn[,"new"], model.statement)
+                           for ( uu in 1:nrow(sn))  {model.statement <- gsub(sn[uu,"old"], sn[uu,"new"], model.statement)}
                         }
                      }
                      if("item" %in% unlist(all.Names[-c(1:2)])) { stop("Conquest does not allow labelling explicit variable(s) with 'Item' or 'item'.\n") }
@@ -251,30 +264,19 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                      if( remove.no.answers == FALSE) {cat("Cases with missings on all items will be kept.\n")}}
      ### Sektion 'Summenscores fuer Personen pruefen' ###
                   datW  <- reshape2::dcast(datL, as.formula(paste("variable~",all.Names[["ID"]],sep="")), value.var = "value")
-                  nValid<- sapply(datW[,-1], FUN = function ( x ) { length(x) - length(which(is.na(x)))})
-                  inval <- which(nValid<boundary)
-                  if(length(inval)>0) { 
-                     cat(paste( length(inval), " subject(s) with less than ",boundary," valid item responses: ", paste(names(inval),nValid[inval],sep=": ", collapse="; "),"\n",sep=""))
-                     if(remove.boundary==TRUE) { 
-                        cat(paste("subjects with less than ",boundary," valid responses will be removed.\n",sep="") )
-                        weg <- match(names(inval), dat[,all.Names[["ID"]]])
-                        stopifnot(length(which(is.na(weg))) == 0 ) ; flush.console()
-                        dat <- dat[-weg,]
-                     }
-                  }                    
                   means <- colMeans(datW[,-1], na.rm=TRUE)
-                  allFal<- which(means == 0 ) 
+                  minMea<- mean(sapply(datW[,-1], min, na.rm=TRUE), na.rm=TRUE)
+                  maxMea<- mean(sapply(datW[,-1], max, na.rm=TRUE), na.rm=TRUE)
+                  allFal<- which ( sapply ( means, FUN = function ( xx ) { isTRUE(all.equal( xx, minMea ))}))
                   if(length(allFal)>0) { 
-                     cat(paste( length(allFal), " subject(s) do not solve any item: ", paste(names(allFal), " (0/",nValid[allFal],")",sep="",collapse=", "),"\n",sep=""))
+                     cat(paste( length(allFal), " subject(s) have a sum score of ",minMea," which seems to be the lowest possible test score. Hence, they do not solve any item:\n   ", paste(names(allFal), " (",minMea,"/",nValid[allFal],")",sep="",collapse=", "),"\n",sep=""))
                      if (remove.failures == TRUE)  { 
                          cat("   Remove subjects without any correct response.\n"); flush.console()
                          weg <- na.omit(match(names(allFal), dat[,all.Names[["ID"]]]))
                          dat <- dat[-weg,] } 
                   }
-                  if(all(names( table ( datL[,"value"])) == c("0", "1"))) { 
-                     allTru <- which(means == 1 ) 
-                     if(length(allTru)>0) { cat(paste( length(allTru), " subject(s) solved each item: ", paste(names(allTru), " (",nValid[allTru],"/",nValid[allTru],")",sep="", collapse=", "),"\n",sep=""))}
-                  }   
+                  allTru<- which ( sapply ( means, FUN = function ( xx ) { isTRUE(all.equal( xx, maxMea ))}))
+                  if(length(allTru)>0) { cat(paste( length(allTru), " subject(s) solved each item: ", paste(names(allTru), " (",nValid[allTru],"/",nValid[allTru],")",sep="", collapse=", "),"\n",sep=""))}
      ### Sektion 'Verlinkung pruefen' ###
                   if(check.for.linking == TRUE) {                               ### Dies geschieht auf dem nutzerspezifisch reduzierten/selektierten Datensatz
                      linkNaKeep <- checkLink(dataFrame = dat[,all.Names[["variablen"]], drop = FALSE], remove.non.responser = FALSE, verbose = FALSE )
