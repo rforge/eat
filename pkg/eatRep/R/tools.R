@@ -31,19 +31,16 @@ crop <- function ( x , char = " " ) {
 							 
 ### Hilfsfunktion, ersetzt table(unlist( ... ))
 table.unlist <- function(dataFrame, verbose = TRUE, useNA = c("no","ifany", "always"))   {
-                useNA  <- match.arg(useNA)
-                # if(!exists("rbind.fill.matrix"))  {library(plyr)}
+                useNA<- match.arg(useNA)
                 # if(class(dataFrame) != "data.frame" ) {stop("Argument of 'table.unlist' has to be of class 'data.frame'.\n")}
                 if(class(dataFrame) != "data.frame" ) {
                    if(verbose == TRUE ) {cat(paste("Warning! Argument of 'table.unlist' has to be of class 'data.frame'. Object will be converted to data.frame.\n",sep=""))}
                    dataFrame <- data.frame(dataFrame, stringsAsFactors=FALSE)
                 }
-                column.by.column   <- do.call("rbind.fill.matrix", lapply(dataFrame, FUN=function(ii) {
-                                      tab        <- table(ii, useNA = useNA)
-                                      names(tab) <- recode(names(tab), "NA='NA'")
-                                      return(t(tab))}))
-                freq.table         <- colSums(column.by.column,na.rm=TRUE)
-                return(freq.table)}
+                dLong<- melt(dataFrame, measure.vars = colnames(dataFrame), na.rm=FALSE)
+                freqT<- table(dLong[,"value"], useNA = useNA)
+                names(freqT) <- recode(names(freqT), "NA='NA'")
+                return(freqT)}
 
 
 as.numeric.if.possible <- function(dataFrame, set.numeric=TRUE, transform.factors=FALSE, maintain.factor.scores = TRUE, verbose=TRUE)   {

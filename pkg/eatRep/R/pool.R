@@ -4,7 +4,12 @@ pool.means <- function (m, se, na.rm = FALSE) {
         pooled <- pool.scalar(Q=m, U=se^2)
         pooled <- data.frame ( m.pooled = pooled$qbar, se.pooled = sqrt(pooled$t), df = pooled$df, stringsAsFactors = FALSE)
      }  else  {                                                                 ### genestete Struktur
-        stopifnot(all(unlist(lapply(m, length)) == unlist(lapply(se, length)) ) )## keine missings erlaubt 
+        if(!all(unlist(lapply(m, length)) == unlist(lapply(se, length)) ) ) {   ### keine missings erlaubt 
+            if(!all ( unlist(lapply(se,length)) == 0)) { 
+               cat(paste("Some coefficients without standard error estimates. Standard errors won't be pooled.\n"))
+            }
+            se <- lapply(m, FUN = function ( x ) { rep(NA,length(x)) })
+        }    
         M      <- length(m)
         N      <- length(m[[1]])
         Q.m    <- lapply(m,mean)                                                ### Rubin 2003b, S. 7, 1. Formel. 
