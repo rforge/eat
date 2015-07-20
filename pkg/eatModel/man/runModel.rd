@@ -5,8 +5,8 @@
 \description{Start the estimation of an IRT model defined by \code{defineModel}. \code{runModel} 
 should be called with the argument returned by \code{defineModel}.}
 \usage{
-runModel(defineModelObj, show.output.on.console = FALSE, show.dos.console = TRUE,
-    wait = TRUE) }
+runModel(defineModelObj, show.output.on.console = FALSE, 
+    show.dos.console = TRUE, wait = TRUE) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{defineModelObj}{

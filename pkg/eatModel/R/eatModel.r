@@ -1,11 +1,11 @@
-getResults <- function ( runModelObj ) {
-            if(runModelObj$software == "conquest") {
-               return ( getConquestResults (path = runModelObj$dir, analysis.name=runModelObj$analysis.name, model.name=runModelObj$model.name, qMatrix=runModelObj$qMatrix))
-            }
-            if(runModelObj$software == "tam") {
-               return(NULL)
-            } }
-
+getResults <- function ( runModelObj ) { 
+            if(length(runModelObj$software) == 1 ) { 
+               if(runModelObj$software == "conquest") {                         ### Check: wurde mit Conquest gerechnet?
+                  return ( getConquestResults (path = runModelObj$dir, analysis.name=runModelObj$analysis.name, model.name=runModelObj$model.name, qMatrix=runModelObj$qMatrix)) 
+               }  else  { stop("Invalid argument.\n")}
+            }  else  {                                                          ### Alternativ: es wurde mit TAM gerechnet 
+               return ( getTamResults (runModelObj=runModelObj))
+            } }   
 
 runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.console = TRUE, wait = TRUE) {
             if(defineModelObj$software == "conquest") {
@@ -75,6 +75,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                  colnames(facetten) <- paste("DIF_",all.Names[["DIF.var"]],sep="")
                  mod      <- tam.mml.mfr(resp = daten[,all.Names[["variablen"]]], facets = facetten, formulaA = formel, pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, irtmodel = irtmodel, pweights = wgt, control = control)
                }
+               attr(mod, "qMatrix") <- defineModelObj[["qMatrix"]]
                return(mod)  }  }
 
 
@@ -496,7 +497,7 @@ checkLink <- function(dataFrame, remove.non.responser = FALSE, sysmis = NA, verb
 
 getConquestResults<- function(path, analysis.name, model.name, qMatrix) {
          allFiles <- list.files(path=path, pattern = analysis.name, recursive = FALSE)
-         qL       <- reshape2::melt(qMatrix, id.vars = colnames(qMatrix)[1], na.rm=TRUE)
+         qL       <- reshape2::melt(qMatrix, id.vars = colnames(qMatrix)[1], variable.name = "dimensionName", na.rm=TRUE)
          qL       <- qL[which(qL[,"value"] != 0 ) , ]
          varName  <- colnames(qMatrix)[1]
          ret      <- NULL                                                       ### Rueckgabeobjekt initialisieren
@@ -508,14 +509,14 @@ getConquestResults<- function(path, analysis.name, model.name, qMatrix) {
              shw  <- get.shw( file.path(path, shwFile) )                        ### Untere Zeile: Dimensionen analog zu Bezeichnung in Q Matrix benennen
              if(is.null( dim(shw$cov.structure) )) {from <- NA} else { from <- shw$cov.structure[-ncol(shw$cov.structure),1]}
              altN <- data.frame ( nr = 1:(ncol(qMatrix)-1), pv = paste("dim", 1:(ncol(qMatrix)-1),sep="."), from = from ,  to = colnames(qMatrix)[-1], stringsAsFactors = FALSE)
-             shw1 <- data.frame ( model = model.name, source = "conquest", var1 = shw$item[,"item"], var2 = NA , type = "fixed", indicator.group = "items", group = qL[match(qL[,varName],shw$item[,"item"]),"variable"], par = "est",  derived.par = NA, value = as.numeric(shw$item[,"ESTIMATE"]), stringsAsFactors = FALSE)
-             shw2 <- data.frame ( model = model.name, source = "conquest", var1 = shw$item[,"item"], var2 = NA , type = "fixed", indicator.group = "items",group = qL[match(qL[,varName],shw$item[,"item"]),"variable"], par = "est",  derived.par = "se", value = as.numeric(shw$item[,"ERROR"]), stringsAsFactors = FALSE)
+             shw1 <- data.frame ( model = model.name, source = "conquest", var1 = shw$item[,"item"], var2 = NA , type = "fixed", indicator.group = "items", group = qL[match(qL[,varName],shw$item[,"item"]),"dimensionName"], par = "est",  derived.par = NA, value = as.numeric(shw$item[,"ESTIMATE"]), stringsAsFactors = FALSE)
+             shw2 <- data.frame ( model = model.name, source = "conquest", var1 = shw$item[,"item"], var2 = NA , type = "fixed", indicator.group = "items",group = qL[match(qL[,varName],shw$item[,"item"]),"dimensionName"], par = "est",  derived.par = "se", value = as.numeric(shw$item[,"ERROR"]), stringsAsFactors = FALSE)
              toOff<- shw2[ which(is.na(shw2[,"value"])), "var1"]
              if(length(toOff)>0) {
                 shw1[match(toOff, shw1[,"var1"]), "par"] <- "offset"
                 shw2  <- shw2[-which(is.na(shw2[,"value"])),] }                 ### entferne Zeilen aus shw2, die in der "value"-Spalte NA haben
              ret  <- rbind(ret, shw1, shw2)                                     ### Rueckgabeobjekt befuellen, danach infit auslesen
-             ret  <- rbind(ret, data.frame ( model = model.name, source = "conquest", var1 = shw$item[,"item"], var2 = NA , type = "fixed", indicator.group = "items", group = qL[match(qL[,varName],shw$item[,"item"]),"variable"], par = "est",  derived.par = "infit", value = as.numeric(shw$item[,"MNSQ.1"]), stringsAsFactors = FALSE))
+             ret  <- rbind(ret, data.frame ( model = model.name, source = "conquest", var1 = shw$item[,"item"], var2 = NA , type = "fixed", indicator.group = "items", group = qL[match(qL[,varName],shw$item[,"item"]),"dimensionName"], par = "est",  derived.par = "infit", value = as.numeric(shw$item[,"MNSQ.1"]), stringsAsFactors = FALSE))
              if(length(shw) > 4 )  {                                            ### ggf. Parameter zusaetzlicher Conquest-Terme einlesen
                 read  <- 2 : (length(shw) - 3)                                  ### Diese Terme muessen eingelesen werden
                 for ( i in names(shw)[read] ) {
@@ -604,6 +605,70 @@ getConquestResults<- function(path, analysis.name, model.name, qMatrix) {
              foo[,"group"]       <- recode(tolower(foo[,"group"]), rec)
              ret  <- rbind ( ret, data.frame ( model = model.name, source = "conquest", var1 = eaps[,"ID"], var2 = NA , type = "indicator", indicator.group = "persons", group = foo[,"group"], par = "eap",  derived.par = foo[,"derived.par"], value = eaps[,"value"] , stringsAsFactors = FALSE))
          }
+         return(ret)}
+
+
+getTamResults     <- function(runModelObj, model.name = NA) {
+         qMatrix  <- attr(runModelObj, "qMatrix") 
+         qL       <- reshape2::melt(qMatrix, id.vars = colnames(qMatrix)[1], variable.name = "dimensionName", na.rm=TRUE)
+         qL       <- qL[which(qL[,"value"] != 0 ) , ]
+         varName  <- colnames(qMatrix)[1]
+         ret      <- NULL                                                       ### Rueckgabeobjekt initialisieren
+    ### Sektion 'Itemparameter auslesen' (shw)
+         shw1 <- data.frame ( model = model.name, source = "tam", var1 = rownames(runModelObj[["xsi"]]), var2 = NA , type = "fixed", indicator.group = "items", group = qL[match(qL[,varName],rownames(runModelObj[["xsi"]])),"dimensionName"], par = "est",  derived.par = NA, value = runModelObj[["xsi"]][,"xsi"], stringsAsFactors = FALSE)
+         shw2 <- data.frame ( model = model.name, source = "tam", var1 = rownames(runModelObj[["xsi"]]), var2 = NA , type = "fixed", indicator.group = "items", group = qL[match(qL[,varName],rownames(runModelObj[["xsi"]])),"dimensionName"], par = "est",  derived.par = "se", value = runModelObj[["xsi"]][,"se.xsi"], stringsAsFactors = FALSE)
+         toOff<- shw2[ which(is.na(shw2[,"value"])), "var1"]
+         if(length(toOff)>0) {
+            shw1[match(toOff, shw1[,"var1"]), "par"] <- "offset"
+            shw2  <- shw2[-which(is.na(shw2[,"value"])),] }                     ### entferne Zeilen aus shw2, die in der "value"-Spalte NA haben
+         ret  <- rbind(ret, shw1, shw2)                                         ### Rueckgabeobjekt befuellen, danach infit auslesen
+         infit<- tam.fit(runModelObj, progress=FALSE)
+         ret  <- rbind(ret, data.frame ( model = model.name, source = "tam", var1 = infit$itemfit[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = qL[match(qL[,varName],rownames(runModelObj[["xsi"]])),"dimensionName"], par = "est",  derived.par = "infit", value = infit$itemfit[,"Infit"], stringsAsFactors = FALSE))
+    ### ggf. Parameter zusaetzlicher Terme einlesen (DIF, ... )
+         cat("noch leer")
+    ### Sektion 'Populationsparameter auslesen' (shw)
+         if(ncol(qMatrix) == 2) {                                               ### eindimensionaler Fall
+            ret  <- rbind(ret, data.frame ( model = model.name, source = "tam", var1 = colnames(qMatrix)[2], var2 = NA , type = "distrpar", indicator.group = NA, group = "persons", par = "var",  derived.par = NA, value = runModelObj[["variance"]][1,1] , stringsAsFactors = FALSE))
+         }  else  {                                                             ### mehrdimensional: (Residual-)Varianzen und (Residual-)Korrelationen der lat. Dimensionen
+            cov1 <- runModelObj[["variance"]]
+            colnames(cov1) <- colnames(qMatrix)[-1]
+            rownames(cov1) <- colnames(qMatrix)[-1]
+            cor1 <- cov2cor(cov1)
+            for (ii in 1:nrow(cor1))   {                                        ### loesche alles oberhalb der Hauptdiagonalen
+                 cor1[ii,ii:ncol(cor1)] <- NA}
+            cor1 <- reshape2::melt(cor1, measure.vars = colnames(cor1), na.rm=TRUE)
+            vars <- diag(cov1)
+            ret  <- rbind(ret, data.frame ( model = model.name, source = "tam", var1 = c(names(vars),as.character(cor1[,"Var1"])) , var2 = c(rep(NA, length(vars)), as.character(cor1[,"Var2"])) , type = "random", indicator.group = NA, group = "persons", par = c(rep("var",length(vars)), rep("correlation", nrow(cor1))) ,  derived.par = NA, value = c(unlist(vars), cor1[,"value"]), stringsAsFactors = FALSE))
+         }
+    ### Sektion 'Regressionsparameter auslesen' (shw)
+         if( !isTRUE(all.equal ( dim(runModelObj$beta) , c(1,1))))  {           ### wird nur gemacht, wenns auch Regressionsparameter gibt
+             regr <- tam.se(runModelObj)
+             regr <- data.frame ( reg.var = rownames(regr$beta), regr$beta, stringsAsFactors = FALSE)
+             regr <- reshape2::melt(regr, id.vars = "reg.var", na.rm=TRUE)
+             regr2<- data.frame ( par = "est", derived.par = car::recode(unlist(lapply(strsplit(as.character(regr[,"variable"]),"\\."), FUN = function ( l ) {l[1]})), "'se'='se'; else=NA"), group = colnames(qMatrix)[as.numeric(remove.pattern( string = unlist(lapply(strsplit(as.character(regr[,"variable"]),"\\."), FUN = function ( l ) {l[2]})), pattern = "Dim")) + 1], regr, stringsAsFactors = FALSE)
+             ret  <- rbind(ret, data.frame ( model = model.name, source = "tam", var1 = regr2[,"reg.var"], var2 = NA , type = "regcoef", indicator.group = NA, group = regr2[,"group"], par = regr2[,"par"],  derived.par = regr2[,"derived.par"], value = regr2[,"value"] , stringsAsFactors = FALSE))
+         }
+    ### Sektion 'Modellindizes auslesen' (shw)
+             ret  <- rbind(ret, data.frame ( model = model.name, source = "tam", var1 = NA, var2 = NA , type = "model", indicator.group = NA, group = NA, par = c("deviance", "Npar", "AIC", "BIC"), derived.par = NA, value = unlist(runModelObj[["ic"]][c("deviance", "Npars", "AIC", "BIC")]), stringsAsFactors = FALSE))
+    ### Sektion 'Personenparameter auslesen' (wle)
+         wle  <- tam.wle(runModelObj, progress = FALSE)
+         weg1 <- grep("WLE.rel", colnames(wle))
+         wleL <- reshape2::melt(wle, id.vars = "pid", measure.vars = colnames(wle)[-c(1:2,weg1)], na.rm=TRUE)
+         wleL[,"group"] <- colnames(qMatrix)[as.numeric(remove.pattern(string = unlist(lapply(strsplit(as.character(wleL[,"variable"]),"\\."), FUN = function (l) {l[2]})), pattern = "Dim"))+1]
+         wleL[,"par"]   <- car::recode(unlist(lapply(strsplit(as.character(wleL[,"variable"]),"\\."), FUN = function (l) {l[1]})), "'PersonScores'='NitemsSolved'; 'PersonMax'='NitemsTotal'; 'theta'='wle'; 'error'='wle'")
+         wleL[,"derived.par"] <- car::recode(unlist(lapply(strsplit(as.character(wleL[,"variable"]),"\\."), FUN = function (l) {l[1]})), "'theta'='est'; 'error'='se';else=NA")
+         ret  <- rbind ( ret, data.frame ( model = model.name, source = "tam", var1 = wleL[,"pid"], var2 = NA , type = "indicator", indicator.group = "persons", group = wleL[,"group"], par = wleL[,"par"],  derived.par = wleL[,"derived.par"], value = wleL[,"value"] , stringsAsFactors = FALSE))
+    ### Sektion 'Personenparameter auslesen' (PVs)
+         pv   <- tam.pv(runModelObj, nplausible = 20, normal.approx = TRUE, ntheta = 2000, np.adj = 20 )$pv
+         pvL  <- reshape2::melt(pv, id.vars = "pid", na.rm=TRUE)
+         pvL[,"PV.Nr"] <- as.numeric(remove.pattern(string = unlist(lapply(strsplit(as.character(pvL[,"variable"]),"\\."), FUN = function (l) {l[1]})), pattern = "PV"))
+         pvL[,"group"] <- colnames(qMatrix)[as.numeric(remove.pattern(string = unlist(lapply(strsplit(as.character(pvL[,"variable"]),"\\."), FUN = function (l) {l[2]})), pattern = "Dim"))+1]
+         ret  <- rbind ( ret, data.frame ( model = model.name, source = "tam", var1 = pvL[,"pid"], var2 = NA , type = "indicator", indicator.group = "persons", group = pvL[,"group"], par = "pv",  derived.par = paste("pv", pvL[,"PV.Nr"],sep=""), value = pvL[,"value"] , stringsAsFactors = FALSE))
+         eaps <- reshape2::melt(runModelObj[["person"]], id.vars = "pid", measure.vars = grep("EAP", colnames(runModelObj[["person"]])), na.rm=TRUE)
+         eaps[,"group"] <- colnames(qMatrix)[as.numeric(remove.pattern ( string = halve.string(string = as.character(eaps[,"variable"]), pattern = "\\.", first = FALSE)[,"X2"], pattern = "Dim"))+1]
+         eaps[,"par"]   <- "est"
+         eaps[grep("^SD.",as.character(eaps[,"variable"])),"par"]   <- "se"
+         ret  <- rbind ( ret, data.frame ( model = model.name, source = "tam", var1 = eaps[,"pid"], var2 = NA , type = "indicator", indicator.group = "persons", group = pvL[,"group"], par = "eap", derived.par = eaps[,"par"], value = eaps[,"value"] , stringsAsFactors = FALSE))
          return(ret)}
 
 
@@ -1344,31 +1409,16 @@ getConquestVersion <- function ( path.conquest , path.temp , asDate = TRUE ) {
 }
 
 halve.string <- function (string, pattern, first = TRUE )  {
-    n <- 2
-    if (length(string) == 0)
-        return(matrix(character(), nrow = n, ncol = 1))
-    string <- stringr:::check_string(string)
-    pattern <- stringr:::check_pattern(pattern, string)
-    if (!is.numeric(n) || length(n) != 1) {
-        stop("n should be a numeric vector of length 1")
-    }
-    if (n == Inf) {
-        stop("n must be finite", call. = FALSE)
-    }
-    else if (n == 1) {
-        matrix(string, ncol = 1)
-    }
-    else {
-        locations <- stringr:::str_locate_all(string, pattern)
-        do.call("rbind", plyr::llply(seq_along(locations), function(i) {
-            location <- locations[[i]]
-            string <- string[i]
-            pieces <- 1
-            if ( first == TRUE)  {
-                  cut <- t(as.matrix(location[1,]))
-            } else {cut <- t(as.matrix(location[nrow(location),])) }
-            keep <- invert_match(cut)
-            padding <- rep("", n - pieces - 1)
-            c(str_sub(string, keep[, 1], keep[, 2]), padding)
-        }))
-    } }
+     allSplit<- strsplit(x = string, split = pattern)
+     if(first==TRUE)  { 
+        ret <- as.matrix(data.frame(X1 = unlist(lapply(allSplit, FUN = function (l) { l[1]})), 
+               X2 = unlist(lapply(allSplit, FUN = function (l) {
+                    if(length(l) == 1 )  { ret <- NA } else { ret <- paste(l[-1], collapse=pattern)}
+                    return(ret)})), stringsAsFactors = FALSE))
+     }  else  {
+        ret <- as.matrix(data.frame(X1 = unlist(lapply(allSplit, FUN = function (l) {paste(l[1:(length(l)-1)], collapse=pattern)})), 
+               X2 = unlist(lapply(allSplit, FUN = function (l) { 
+                    if(length(l)==1) { ret <- NA}  else { ret <- l[length(l)]}
+                    return(ret)})), stringsAsFactors = FALSE))
+     }
+     return(ret)}           

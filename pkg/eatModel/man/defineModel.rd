@@ -313,64 +313,72 @@ Sebastian Weirich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-\dontrun{
 # load example data
 # (these are simulated achievement test data)
 data(sciences)
 # first reshape the data set into wide format
 datW <- reshape2::dcast(sciences, id+grade+sex~variable, value.var="value")
-### Example 1: define and run a unidimensional Rasch model with all variables in dataset 
-### using "Conquest". Note: if software="conquest", the path of the windows executable 
-### ConQuest console must be specified by setting conquest.folder = "<path_to_your_conquest.exe>"
+# second, create the q matrix from the long format data frame
+qMat <- sciences[ which( sciences[,"subject"] == "biology") ,c("variable","domain")]
+qMat <- qMat[!duplicated(qMat[,1]),]
+qMat <- data.frame ( qMat[,1,drop=FALSE], knowledge  = as.numeric(qMat[,"domain"] == "knowledge"),
+        procedural = as.numeric(qMat[,"domain"] == "procedural"))
+\dontrun{
+# Example 1: define and run a unidimensional Rasch model with all variables in dataset
+# using "Conquest". Note: if software="conquest", the path of the windows executable
+# ConQuest console must be specified by setting conquest.folder = "<path_to_your_conquest.exe>"
 # defining the model: specifying q matrix is not necessary
 mod1 <- defineModel(dat=datW, items= -c(1:3), id="id", analysis.name = "unidim",
-        conquest.folder = "c:/programme/conquest/console_Feb2007.exe", 
+        conquest.folder = "c:/programme/conquest/console_Feb2007.exe",
         dir = "c:/Dokumente und Einstellungen/Gast/Eigene Dateien")
 # run the model
 run1 <- runModel(mod1)
 # get the results
 res1 <- getResults(run1)
 #
-### Example 2: running a multidimensional Rasch model on a subset of items with latent 
-### regression (sex). Use item parameter from the first model as anchor parameters
+# Example 2: running a multidimensional Rasch model on a subset of items with latent
+# regression (sex). Use item parameter from the first model as anchor parameters
 # use only biology items from both domains (procedural/knowledge)
-# first we create a q matrix from the data
-qMat <- sciences[ which( sciences[,"subject"] == "biology") ,c("variable","domain")]
-qMat <- qMat[!duplicated(qMat[,1]),]
-qMat <- data.frame ( qMat[,1,drop=FALSE], knowledge  = as.numeric(qMat[,"domain"] == "knowledge"), 
-        procedural = as.numeric(qMat[,"domain"] == "procedural"))
-# read in anchor parameters from showfile 
+# read in anchor parameters from showfile
 aPar <- get.shw("c:/Dokumente und Einstellungen/Gast/Eigene Dateien/unidim.shw")
 aPar <- aPar$item[,2:3]
 # defining the model: specifying q matrix now is necessary. please acknowledge the notes
 # printed on console!
 mod2 <- defineModel(dat=datW, items= qMat[,1], id="id", analysis.name = "twodim",
         qMatrix = qMat, HG.var = "sex", anchor = aPar, n.plausible = 20,
-        conquest.folder = "c:/programme/conquest/console_Feb2007.exe", 
+        conquest.folder = "c:/programme/conquest/console_Feb2007.exe",
         dir = "c:/Dokumente und Einstellungen/Gast/Eigene Dateien")
 # run the model
 run2 <- runModel(mod2)
 # get the results
 res2 <- getResults(run2)
+}
 #
-### Example 3: the same model in TAM
-mod2T<- defineModel(dat=datW, items= qMat[,1], id="id", analysis.name = "twodim",
-        qMatrix = qMat, HG.var = "sex", anchor = aPar, n.plausible = 20, software = "tam")
+# Example 3: the same model in TAM
+# first use unidimensional calibration (model 1) to get item parameters
+mod1T<- defineModel(dat=datW, items= -c(1:3), id="id", software = "tam")
+run1T<- runModel(mod1T)
+res1T<- getResults(run1T)
+# anchor parameters from TAM
+aParT<- data.frame ( item = rownames(run1T$xsi), par = run1T$xsi[,"xsi"])
+mod2T<- defineModel(dat=datW, items= qMat[,1], id="id", qMatrix = qMat,
+        HG.var = "sex", anchor = aParT, software = "tam")
 # run the model
 run2T<- runModel(mod2T)
-# the class of 'run2T' corresponds to the TAM class; all functions of the TAM package
-# intenden for further processing (e.g. drawing plausible values) work!
+# the class of 'run2T' corresponds to the class defined by the TAM package; all
+# functions of the TAM package intended for further processing (e.g. drawing
+# plausible values) work.
+res2T<- getResults(run2T)
 class(run2T)
 # However, TAM has some problems with the estimation:
 plotDevianceTAM(run2T)
 # TAM authors recommend to increase 'increment.factor' and 'fac.oldxsi'
-mod2T2<- defineModel(dat=datW, items= qMat[,1], id="id", analysis.name = "twodim",
-        qMatrix = qMat, HG.var = "sex", anchor = aPar, n.plausible = 20, software = "tam",
+mod2T2<- defineModel(dat=datW, items= qMat[,1], id="id", qMatrix = qMat,
+        HG.var = "sex", anchor = aParT, n.plausible = 20, software = "tam",
         increment.factor=1.1 , fac.oldxsi=.4)
 run2T2<- runModel(mod2T2)
+res2T2<- getResults(run2T2)
 plotDevianceTAM(run2T2)
-# get the results (does not work actually for tam)
-}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
