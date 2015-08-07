@@ -367,10 +367,12 @@ mod2T<- defineModel(dat=datW, items= qMat[,1], id="id", qMatrix = qMat,
 run2T<- runModel(mod2T)
 # the class of 'run2T' corresponds to the class defined by the TAM package; all
 # functions of the TAM package intended for further processing (e.g. drawing
-# plausible values) work.
+# plausible values, plotting deviance change etc.) work, for example:
+wle  <- tam.wle(run2T)
+# Now, the model result are collected in a single data frame
 res2T<- getResults(run2T)
 class(run2T)
-# However, TAM has some problems with the estimation:
+# Sometimes, TAM has some problems with the estimation:
 plotDevianceTAM(run2T)
 # TAM authors recommend to increase 'increment.factor' and 'fac.oldxsi'
 mod2T2<- defineModel(dat=datW, items= qMat[,1], id="id", qMatrix = qMat,

@@ -76,6 +76,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                  mod      <- tam.mml.mfr(resp = daten[,all.Names[["variablen"]]], facets = facetten, formulaA = formel, pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, irtmodel = irtmodel, pweights = wgt, control = control)
                }
                attr(mod, "qMatrix") <- defineModelObj[["qMatrix"]]
+               attr(mod, "n.plausible") <- defineModelObj[["n.plausible"]]
                return(mod)  }  }
 
 
@@ -178,26 +179,42 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                   isDichot<- unlist(lapply(values, FUN = function ( vv ) { identical(c("0","1"), names(vv)) }))
                   n.werte <- sapply(values, FUN=function(ii) {length(ii)})
                   n.mis   <- which(n.werte == 0)
-                  if(length(n.mis) >0) {cat(paste("Serious warning: ",length(n.mis)," testitems(s) without any values.\n",sep=""))
-                                        if(verbose == TRUE) {cat(paste("    ", paste(names(n.mis), collapse=", "), "\n", sep=""))}
-                                        if(remove.missing.items == TRUE) {
-                                           cat(paste("Remove ",length(n.mis)," variable(s) due to solely missing values.\n",sep=""))
-                                           namen.items.weg <- c(namen.items.weg, names(n.mis))}}
+                  if(length(n.mis) >0) {                                        ### identifiziere Items ohne jegliche gueltige Werte
+                     cat(paste("Serious warning: ",length(n.mis)," testitems(s) without any values.\n",sep=""))
+                     if(verbose == TRUE) {cat(paste("    ", paste(names(n.mis), collapse=", "), "\n", sep=""))}
+                     if(remove.missing.items == TRUE) {
+                     cat(paste("Remove ",length(n.mis)," variable(s) due to solely missing values.\n",sep=""))
+                     namen.items.weg <- c(namen.items.weg, names(n.mis))}
+                  }   
                   constant <- which(n.werte == 1)
-                  if(length(constant) >0) {cat(paste("Warning: ",length(constant)," testitems(s) are constants.\n",sep=""))
-                                             if(verbose == TRUE) {foo <- lapply(names(constant),FUN=function(ii) {cat(paste(ii,": ",names(table(dat[,ii])),sep="")); cat("\n")})}
-                                             if(remove.constant.items == TRUE) {
-                                                cat(paste("Remove ",length(constant)," variable(s) due to solely constant values.\n",sep=""))
-                                                namen.items.weg <- c(namen.items.weg, names(constant))}}
-                  n.rasch   <- which( !isDichot )
-                  if(length(n.rasch) >0 )   {cat(paste("Warning: ",length(n.rasch)," variable(s) are not strictly dichotomous with 0/1.\n",sep=""))
-                                             for (ii in 1:length(n.rasch))  {
-                                                  max.nchar <-  max(nchar(names(table(dat[,names(n.rasch)[ii]]))))
-                                                  if(max.nchar>1) {cat(paste("Arity of variable",names(n.rasch)[ii],"exceeds 1.\n"))}
-                                                  if(verbose == TRUE) {cat(paste(names(n.rasch)[ii],": ", paste( names(table(dat[,names(n.rasch)[ii]])),collapse=", "),"\n",sep=""))}}
-                                             cat("Expect a rating scale model or partial credit model.\n")
-                                             if(model.statement == "item")
-                                               {cat("WARNING: Sure you want to use 'model statement = item' even when items are not dichotomous?\n")} }
+                  if(length(constant) >0) {                                     ### identifiziere konstante Items (Items ohne Varianz)
+                     cat(paste("Warning: ",length(constant)," testitems(s) are constants.\n",sep=""))
+                     if(verbose == TRUE) {foo <- lapply(names(constant),FUN=function(ii) {cat(paste(ii,": ",names(table(dat[,ii])),sep="")); cat("\n")})}
+                     if(remove.constant.items == TRUE) {
+                     cat(paste("Remove ",length(constant)," variable(s) due to solely constant values.\n",sep=""))
+                     namen.items.weg <- c(namen.items.weg, names(constant))}
+                  }   
+                  n.rasch   <- which( !isDichot )                               ### identifiziere alle Items, die nicht dichotom (="ND") sind 
+                  if(length(n.rasch) >0 )   {                                   ### (aber nicht die, die bereits wegen konstanter Werte aussortiert wurden!)
+                     valND <- values[ which(names(values) %in% names(n.rasch)) ]### also polytome Items oder Items, die mit 1/2 anstatt 0/1 kodiert sind
+                     valND <- valND[which(sapply(valND, length) > 1)]
+                     if(length(valND)>0) { 
+                        cat(paste("Warning: ",length(valND)," variable(s) are not strictly dichotomous with 0/1.\n",sep=""))
+                        for (ii in 1:length(valND))  {
+                             max.nchar <-  max(nchar(names(table(dat[,names(valND)[ii]]))))
+                             if(max.nchar>1) {
+                                cat(paste("Arity of variable",names(valND)[ii],"exceeds 1.\n"))
+                             }
+                             if(verbose == TRUE) {
+                                cat(paste(names(valND)[ii],": ", paste( names(table(dat[,names(valND)[ii]])),collapse=", "),"\n",sep=""))
+                             }
+                        }
+                        cat("Expect a rating scale model or partial credit model.\n")
+                        if(model.statement == "item") {
+                           cat("WARNING: Sure you want to use 'model statement = item' even when items are not dichotomous?\n")
+                        } 
+                     }
+                  }   
      ### Sektion 'Hintergrundvariablen auf Konsistenz zu sich selbst und zu den Itemdaten pruefen'. Ausserdem Stelligkeit (Anzahl der benoetigten character) fuer jede Variable herausfinden ###
                   weg.dif <- NULL; weg.hg <- NULL; weg.weight <- NULL; weg.group <- NULL
                   if(length(all.Names$HG.var)>0)    {
@@ -217,16 +234,18 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                   if(length(all.Names$DIF.var)>0)  {
                      dif.info <- lapply(all.Names$DIF.var, FUN = function(ii) {.checkContextVars(x = dat[,ii], varname=ii, type="DIF", itemdaten=dat[,all.Names[["variablen"]], drop = FALSE])})
                      if ( remove.vars.DIF.missing == TRUE ) {
-                          cat("Remove item(s) which only have missing values in at least one group of the DIF variable.\n")
-                          for ( uu in 1:length(dif.info)) { if (length(dif.info[[uu]]$wegDifMis) >0) { namen.items.weg <- c(namen.items.weg,dif.info[[uu]]$wegDifMis) } }
+                          for ( uu in 1:length(dif.info)) { if (length(dif.info[[uu]]$wegDifMis) >0) { 
+                                cat(paste("Remove item(s) which only have missing values in at least one group of DIF variable '",dif.info[[uu]]$varname,"'.\n", sep=""))
+                                namen.items.weg <- c(namen.items.weg,dif.info[[uu]]$wegDifMis) } }
                      }
                      if ( remove.vars.DIF.constant == TRUE ) {
-                          cat("Remove item(s) which are constant in at least one group of the DIF variable.\n")
-                          for ( uu in 1:length(dif.info)) { if (length(dif.info[[uu]]$wegDifConst) >0) { namen.items.weg <- c(namen.items.weg,dif.info[[uu]]$wegDifConst) } }
+                          for ( uu in 1:length(dif.info)) { if (length(dif.info[[uu]]$wegDifConst) >0) { 
+                                cat(paste("Remove item(s) which are constant in at least one group of DIF variable '",dif.info[[uu]]$varname,"'.\n",sep=""))
+                                namen.items.weg <- c(namen.items.weg,dif.info[[uu]]$wegDifConst) } }
                      }
                      for ( i in 1:length(dif.info)) { dat[, dif.info[[i]]$varname ] <- dif.info[[i]]$x }
                      weg.dif  <- unique(unlist(lapply(dif.info, FUN = function ( y ) {y$weg})))
-                     if(length(weg.dif)>0)                                      ### untere Zeile: dies geschieht erst etwas spaeter, wenn datensatz zusammengebaut ist
+                     if(length(weg.dif)>0)                                      ### untere Zeile: dies geschieht erst etwas später, wenn datensatz zusammengebaut ist
                        {cat(paste("Remove ",length(weg.dif)," cases with missings on DIF variable.\n",sep=""))}
                   }
                   if(length(all.Names$weight.var)>0)  {
@@ -343,7 +362,7 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                   if ( software == "tam" )   {
                       control <- list ( nodes = nodes , snodes = snodes , QMC=QMC, convD = deviancechange ,conv = converge , convM = .0001 , Msteps = 4 , maxiter = n.iterations, max.increment = 1 , 
                                  min.variance = .001 , progress = progress , ridge=0 , seed = seed , xsi.start0=FALSE,  increment.factor=increment.factor , fac.oldxsi= fac.oldxsi) 
-                      return ( list ( software = software, qMatrix=qMatrix, anchor=anchor,  all.Names=all.Names, daten=daten, irtmodel=irtmodel, est.slopegroups = est.slopegroups, guessMat=guessMat, control = control))    } 
+                      return ( list ( software = software, qMatrix=qMatrix, anchor=anchor,  all.Names=all.Names, daten=daten, irtmodel=irtmodel, est.slopegroups = est.slopegroups, guessMat=guessMat, control = control, n.plausible=n.plausible))    } 
    }
 
 
@@ -622,10 +641,28 @@ getTamResults     <- function(runModelObj, model.name = NA) {
             shw1[match(toOff, shw1[,"var1"]), "par"] <- "offset"
             shw2  <- shw2[-which(is.na(shw2[,"value"])),] }                     ### entferne Zeilen aus shw2, die in der "value"-Spalte NA haben
          ret  <- rbind(ret, shw1, shw2)                                         ### Rueckgabeobjekt befuellen, danach infit auslesen
-         infit<- tam.fit(runModelObj, progress=FALSE)
-         ret  <- rbind(ret, data.frame ( model = model.name, source = "tam", var1 = infit$itemfit[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = qL[match(qL[,varName],rownames(runModelObj[["xsi"]])),"dimensionName"], par = "est",  derived.par = "infit", value = infit$itemfit[,"Infit"], stringsAsFactors = FALSE))
-    ### ggf. Parameter zusaetzlicher Terme einlesen (DIF, ... )
-         cat("noch leer")
+         infit<- tam.fit(runModelObj, progress=FALSE)                           ### Achtung: wenn DIF-Analyse, dann misslingt untere Zeile: Workarond!
+    ### DIF-Parameter umbenennen, so dass es konsistent zu "getConquestResults" ist 
+         if(inherits(try( ret  <- rbind(ret, data.frame ( model = model.name, source = "tam", var1 = infit$itemfit[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = qL[match(qL[,varName],rownames(runModelObj[["xsi"]])),"dimensionName"], par = "est",  derived.par = "infit", value = infit$itemfit[,"Infit"], stringsAsFactors = FALSE)) , silent = TRUE),"try-error"))  {
+            ret  <- rbind(ret, data.frame ( model = model.name, source = "tam", var1 = infit$itemfit[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = NA, par = "est",  derived.par = "infit", value = infit$itemfit[,"Infit"], stringsAsFactors = FALSE))
+            ret[,"toMerge"] <- halve.string(ret[,"var1"], ":", first=TRUE)[,1]
+            ret  <- merge(ret, qL[,c("Item", "dimensionName")], by.x = "toMerge", by.y = "Item", all.x = TRUE)
+            ret  <- ret[,-match(c("group", "toMerge"), colnames(ret))]
+            colnames(ret) <- car::recode(colnames(ret), "'dimensionName'='group'")
+            indD5<- setdiff( 1:nrow(ret), grep(":DIF", ret[,"var1"]))
+            indD5<- setdiff( ret[indD5,"var1"], qL[,"Item"])
+            to   <- remove.pattern(string = indD5, pattern = "DIF_")
+            to1  <- remove.numeric(to)
+            to2  <- remove.non.numeric(to)
+            indD5<- data.frame ( from = indD5, to = paste(to1, to2, sep="_"), stringsAsFactors = FALSE)
+            recSt<- paste("'",indD5[,"from"] , "' = '" , indD5[,"to"],"'", collapse="; ",sep="")
+            indD <- grep(":DIF", ret[,"var1"])
+            indD2<- halve.string(ret[indD,"var1"], pattern = ":DIF_", first=TRUE)
+            indD3<- remove.numeric(indD2[,2])
+            indD4<- remove.non.numeric(indD2[,2])
+            ret[indD,"var1"] <- paste("item_", indD2[,1], "_X_", paste(indD3, indD4, sep="_"), sep="")
+            ret[,"var1"]     <- car::recode(ret[,"var1"], recSt)
+         }   
     ### Sektion 'Populationsparameter auslesen' (shw)
          if(ncol(qMatrix) == 2) {                                               ### eindimensionaler Fall
             ret  <- rbind(ret, data.frame ( model = model.name, source = "tam", var1 = colnames(qMatrix)[2], var2 = NA , type = "distrpar", indicator.group = NA, group = "persons", par = "var",  derived.par = NA, value = runModelObj[["variance"]][1,1] , stringsAsFactors = FALSE))
@@ -659,16 +696,25 @@ getTamResults     <- function(runModelObj, model.name = NA) {
          wleL[,"derived.par"] <- car::recode(unlist(lapply(strsplit(as.character(wleL[,"variable"]),"\\."), FUN = function (l) {l[1]})), "'theta'='est'; 'error'='se';else=NA")
          ret  <- rbind ( ret, data.frame ( model = model.name, source = "tam", var1 = wleL[,"pid"], var2 = NA , type = "indicator", indicator.group = "persons", group = wleL[,"group"], par = wleL[,"par"],  derived.par = wleL[,"derived.par"], value = wleL[,"value"] , stringsAsFactors = FALSE))
     ### Sektion 'Personenparameter auslesen' (PVs)
-         pv   <- tam.pv(runModelObj, nplausible = 20, normal.approx = TRUE, ntheta = 2000, np.adj = 20 )$pv
+         pv   <- tam.pv(runModelObj, nplausible = attr(runModelObj, "n.plausible"), normal.approx = TRUE, ntheta = 2000, np.adj = 20 )$pv
          pvL  <- reshape2::melt(pv, id.vars = "pid", na.rm=TRUE)
          pvL[,"PV.Nr"] <- as.numeric(remove.pattern(string = unlist(lapply(strsplit(as.character(pvL[,"variable"]),"\\."), FUN = function (l) {l[1]})), pattern = "PV"))
          pvL[,"group"] <- colnames(qMatrix)[as.numeric(remove.pattern(string = unlist(lapply(strsplit(as.character(pvL[,"variable"]),"\\."), FUN = function (l) {l[2]})), pattern = "Dim"))+1]
          ret  <- rbind ( ret, data.frame ( model = model.name, source = "tam", var1 = pvL[,"pid"], var2 = NA , type = "indicator", indicator.group = "persons", group = pvL[,"group"], par = "pv",  derived.par = paste("pv", pvL[,"PV.Nr"],sep=""), value = pvL[,"value"] , stringsAsFactors = FALSE))
-         eaps <- reshape2::melt(runModelObj[["person"]], id.vars = "pid", measure.vars = grep("EAP", colnames(runModelObj[["person"]])), na.rm=TRUE)
+         eaps <- runModelObj[["person"]]                                        ### Achtung: im eindimensionalen Fall enthalten die Spaltennamen keine Benennung der Dimension 
+         eind1<- ncol(eaps) == 7                                                ### (uneinheitlich zu pvs, wo es immer eine Benennung gibt. 
+         eind2<- length(grep(".Dim1$", colnames(eaps))) == 0                    ### Im eindimensionamen Fall muss Benennung ergaenzt werden
+         stopifnot ( eind1 == eind2)                                            ### zur Sicherheit werden hier zwei Indikatoren fuer Eindimensionalitaet genutzt. Fehlermeldung bei Widerspruch 
+         if(eind1 == TRUE) {                                                    ### ggf. muss diese Passage nach Release neuerer TAM-Versionen korrigiert werden
+            cols <- grep("EAP$", colnames(eaps))                                
+            stopifnot(length(cols) == 2)
+            colnames(eaps)[cols] <- paste(colnames(eaps)[cols], ".Dim1", sep="")
+         }   
+         eaps <- reshape2::melt(eaps, id.vars = "pid", measure.vars = grep("EAP", colnames(eaps)), na.rm=TRUE)
          eaps[,"group"] <- colnames(qMatrix)[as.numeric(remove.pattern ( string = halve.string(string = as.character(eaps[,"variable"]), pattern = "\\.", first = FALSE)[,"X2"], pattern = "Dim"))+1]
          eaps[,"par"]   <- "est"
          eaps[grep("^SD.",as.character(eaps[,"variable"])),"par"]   <- "se"
-         ret  <- rbind ( ret, data.frame ( model = model.name, source = "tam", var1 = eaps[,"pid"], var2 = NA , type = "indicator", indicator.group = "persons", group = pvL[,"group"], par = "eap", derived.par = eaps[,"par"], value = eaps[,"value"] , stringsAsFactors = FALSE))
+         ret  <- rbind ( ret, data.frame ( model = model.name, source = "tam", var1 = eaps[,"pid"], var2 = NA , type = "indicator", indicator.group = "persons", group = eaps[,"group"], par = "eap", derived.par = eaps[,"par"], value = eaps[,"value"] , stringsAsFactors = FALSE))
          return(ret)}
 
 
@@ -1049,7 +1095,7 @@ get.equ <- function(file)  {
             ende        <- sapply(dimensionen, FUN=function(ii) {ende[ende>ii][1]})
             tabellen    <- lapply(1:length(dimensionen), FUN=function(ii)
                            {part <- crop(input[(dimensionen[ii]+6):(ende[ii]-1)])
-                            part <- data.frame(matrix(as.numeric(unlist(strsplit(part," +"))),ncol=3,byrow=T),stringsAsFactors=F)
+                            part <- data.frame(matrix(as.numeric(unlist(strsplit(part," +"))),ncol=3,byrow = TRUE),stringsAsFactors = FALSE)
                             colnames(part) <- c("Score","Estimate","std.error")
                             return(part)})
             regr.model  <- grep("The regression model",input)
@@ -1057,12 +1103,25 @@ get.equ <- function(file)  {
             stopifnot(length(regr.model) == length(item.model))
             name.dimensionen <- unlist( lapply(dimensionen,FUN=function(ii) {unlist(lapply(strsplit(input[ii], "\\(|)"),FUN=function(iii){iii[length(iii)]}))}) )
             model       <- lapply(1:length(regr.model), FUN=function(ii) {rbind ( crop(gsub("The regression model:","",input[regr.model[ii]])), crop(gsub("The item model:","",input[item.model[ii]])) ) })
-            model       <- do.call("data.frame",args=list(model,row.names=c("regression.model","item.model"),stringsAsFactors=F))
+            model       <- do.call("data.frame",args=list(model,row.names=c("regression.model","item.model"),stringsAsFactors = FALSE))
             colnames(model) <- name.dimensionen
             tabellen$model.specs <- model
             names(tabellen)[1:length(dimensionen)] <- name.dimensionen
             return(tabellen)}
                  
+
+### as.numeric(remove.non.numeric) gives "NA" instead of empty "" in case of no numbers in n-th string
+### Bsp.: remove.non.numeric(c("5","  h89 kj.9","2-4h","aags"))
+remove.non.numeric <- function(string)
+                      {if(!is.null(dim(string))) {dimension <- dim(string)}
+                       splitt <- strsplit(string,"")
+                       options(warn = -1)                                       ### warnungen aus
+                       splitt <- unlist ( lapply(splitt, FUN=function(ii) {paste( na.omit(as.numeric(ii)),collapse="")}))
+                       options(warn = 0)                                        ### warnungen wieder an
+                       if(!is.null(dim(string))) {splitt <- matrix(splitt,dimension[1],dimension[2],byrow = FALSE)}
+                       return(splitt)}
+
+
 remove.numeric <- function(string)
                       {if(!is.null(dim(string))) {dimension <- dim(string)}
                        splitt <- strsplit(string,"")
