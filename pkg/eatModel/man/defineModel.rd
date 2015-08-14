@@ -352,7 +352,6 @@ mod2 <- defineModel(dat=datW, items= qMat[,1], id="id", analysis.name = "twodim"
 run2 <- runModel(mod2)
 # get the results
 res2 <- getResults(run2)
-}
 #
 # Example 3: the same model in TAM
 # first use unidimensional calibration (model 1) to get item parameters
@@ -381,6 +380,7 @@ mod2T2<- defineModel(dat=datW, items= qMat[,1], id="id", qMatrix = qMat,
 run2T2<- runModel(mod2T2)
 res2T2<- getResults(run2T2)
 plotDevianceTAM(run2T2)
+}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
