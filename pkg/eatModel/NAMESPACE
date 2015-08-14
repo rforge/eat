@@ -12,6 +12,10 @@ export(get.itn)
 export(get.shw)
 export(get.dsc)
 export(get.equ)
+export(itemFromRes)
+export(wleFromRes)
+export(eapFromRes)
+export(pvFromRes)
 
 
 

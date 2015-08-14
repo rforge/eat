@@ -15,7 +15,11 @@ The object returned by \code{runModel}.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+If \code{defineModel} was run with software Conquest, a path argument (\code{'dir'})
+is necessary. The path argument is optional for software TAM. If \code{'dir'} was
+specified, \code{getResults} additionally writes its output into the specified folder, 
+using the \code{'analysis.name'} argument for file naming. Otherwise, \code{getResults} 
+only returnes the result data frame. 
 }
 \value{
 %%  ~Describe the value returned
