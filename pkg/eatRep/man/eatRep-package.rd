@@ -36,15 +36,18 @@
   the first one is often referred to as \dQuote{Jackknife Zone}, whereas the second one is often referred to 
   as \dQuote{Jackknife Replicate}. The number of distinct units in the PSU variable define the number of replications
   which are necessary due to the clustered structure. A design object is created and the appropriate \code{survey} 
-  function is called. The process is repeated for each imputed dataset and the results of the analyses are pooled 
-  according to Rubin (1987) or Rubin (2003).
+  function is called. The process is repeated for each imputed dataset and the results of the analyses are pooled.
+  The pooling procedure varies in relation to the type of variable to be pooled. For examples, means or regression 
+  coefficients are pooled according to Rubin (1987) or Rubin (2003). \eqn{R^2} is pooled according to Harel (2009),
+  using a Fisher z-transformation. Chi-square distributed values are pooled according to Thomas and Rao (1990) for
+  clustered data and according to Enders (2010) and Allison (2002) for multiple imputed data. 
   
   Without multiple imputations, the outer loop has only one cycle. Without a clustered sampling structure (i.e, in a 
   random sample), the inner loop has only one cycle. Without both, no replication is performed at all. To compute 
   simple mean estimates, for example, \code{eatRep} then simply calls \code{mean} instead of \code{svymean} from 
   the \code{survey} package. A special case occurs with nested multiple imputation. We then have three loops in a 
   nested structure. Hence, the corresponding analyses may take considerably computational effort. 
-  
+ 
   \emph{Important note:} The structure of the the \code{eatRep}-functions varied substantially between versions 
   0.5.0 and 0.6.0. Up to version 0.5.0, the data has to be provided in the wide format. Beginning with version 
   0.6.0, \code{eatRep}-functions need the long format. This distinction practically means that version 0.5.0 
@@ -57,8 +60,8 @@
 \tabular{ll}{
 Package: \tab eatRep\cr
 Type: \tab Package\cr
-Version: \tab 0.6.7\cr
-Date: \tab 2015-07-07\cr
+Version: \tab 0.6.8\cr
+Date: \tab 2015-08-15\cr
 License: \tab GPL(>=2)
 }
 }
@@ -66,6 +69,10 @@ License: \tab GPL(>=2)
     Author/maintainer: Sebastian Weirich <sebastian.weirich@iqb.hu-berlin.de>
 }
 \references{
+  Allison, P. D. (2002). Missing data. Newbury Park, CA: Sage.
+
+  Enders, C. K. (2010). Applied missing data analysis. Guilford Press.
+
   Foy, P., Galia , J. & Li, I. (2008). Scaling the data from the TIMSS 2007 mathematics
   and science asssessment. In J. F. Olson, M. O. Martin & I. V. S. Mullis (ed.),
   \emph{TIMSS 2007 Technical Report} (S. 225--280). Chestnut Hill, MA: TIMSS & PIRLS
@@ -86,6 +93,9 @@ License: \tab GPL(>=2)
 
 	Satorra, A., & Bentler, P. M. (1994). Corrections to test statistics
 		and standard errors in covariance structure analysis.
+
+  Thomas, D. R. & Rao, JNK (1990): Small-sample comparison of level and power for simple goodnessof-
+  fit statistics under cluster sampling. JASA 82:630-636
 
   Westat (2000). \emph{WesVar.} Rockville, MD: Westat.
 

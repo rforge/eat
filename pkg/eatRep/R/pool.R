@@ -50,14 +50,23 @@ pool.R2 <- function ( r2, N, quiet = FALSE ) {
 
 jk2.pool <- function ( datLong, allNam ) {                                    
             retList <- do.call("rbind", by(data = datLong, INDICES = datLong[, c("group","parameter")], FUN = function ( u ) {
-               uM   <- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "est"),"value"]})
-               uSE  <- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "se"),"value"]})
-               if(u[1,"parameter"] %in% c("R2", "R2nagel")) {    
-                  getNvalid <- datLong[ intersect( intersect(  which(datLong[,"group"] == u[1,"group"]), which( datLong[,"parameter"] == "Nvalid")), which( datLong[,"coefficient"] == "est") ) ,]
-                  pooled    <- t(pool.R2(r2 = u[,"value"], N = getNvalid[,"value"]))
-               } else {
-                  pooled <- pool.means(m = uM, se = uSE)$summary[c("m.pooled","se.pooled")]
-               }
-               ret    <- data.frame ( group = names(table(u[,"group"])), depVar = allNam[["dependent"]], modus="noch_leer", parameter = names(table(u[,"parameter"])), coefficient = c("est","se"), value = unlist(pooled), u[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
+               if(u[1,"parameter"] == "chiSquareTest") {                        ### jetzt wird chi quadrat gepoolt, Achtung, erstmal kein Unterschied zwischen genestet und nicht genestet
+                  chi  <- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "chi2"),"value"]})
+                  degFr<- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "df"),"value"]})
+                  stopifnot(length(table(degFr)) == 1)
+                  degFr<- unique(unlist(degFr))
+                  pool <- micombine.chisquare ( dk = unlist(chi), df=degFr, display = FALSE)
+                  ret  <- data.frame ( group = names(table(u[,"group"])), depVar = allNam[["dependent"]], modus="noch_leer", parameter = names(table(u[,"parameter"])), coefficient = c("D2statistic","chi2Approx", "df1", "df2", "p", "pApprox"), value = pool[c("D", "chisq.approx", "df", "df2", "p", "p.approx")], u[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
+               }  else  { 
+                  uM   <- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "est"),"value"]})
+                  uSE  <- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "se"),"value"]})
+                  if(u[1,"parameter"] %in% c("R2", "R2nagel")) {                   ### vorerst werden keine Standardfehler des R^2 berechnet
+                     getNvalid <- datLong[ intersect( intersect(  which(datLong[,"group"] == u[1,"group"]), which( datLong[,"parameter"] == "Nvalid")), which( datLong[,"coefficient"] == "est") ) ,]
+                     pooled    <- t(pool.R2(r2 = u[,"value"], N = getNvalid[,"value"]))
+                  } else {
+                     pooled <- pool.means(m = uM, se = uSE)$summary[c("m.pooled","se.pooled")]
+                  }
+                  ret    <- data.frame ( group = names(table(u[,"group"])), depVar = allNam[["dependent"]], modus="noch_leer", parameter = names(table(u[,"parameter"])), coefficient = c("est","se"), value = unlist(pooled), u[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
+               }   
                return(ret)}))
            return(retList)}

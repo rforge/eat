@@ -12,8 +12,9 @@ for the svymean() function of the survey package.
 \usage{
 jk2.table(datL, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, repInd = NULL, 
           nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), 
-          group.delimiter = "_", dependent , separate.missing.indicator = FALSE, 
-          na.rm=FALSE, expected.values = NULL, doCheck = TRUE)}
+          group.differences.by = NULL, group.delimiter = "_", dependent , 
+          separate.missing.indicator = FALSE, na.rm=FALSE, expected.values = NULL, 
+          doCheck = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -58,6 +59,13 @@ Optional: vector of names or column numbers of one or more grouping variables.
 %%     ~~Describe \code{sig.dif.bound} here~~
 Optional: If groups are defined, \code{group.splits} optionally specifies whether analysis should be done also
 in the whole group or overlying groups. See examples for more details.
+}
+  \item{group.differences.by}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: Specifies one grouping variable for which a chi-square test should be applied. 
+The corresponding variable must be included in the \code{groups} statement. If specified, the 
+distribution of the dependent variable is compared between the groups. See examples for 
+further details.
 }
   \item{group.delimiter}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -136,9 +144,11 @@ Sebastian Weirich
 \examples{
 data(hisei)
 ### First example: Computes frequencies of the hisei group conditionally on country
+### The distribution of the hisei categories is compared between countries using
+### the chi square test. 
 freq.tab  <- jk2.table(datL = hisei, ID = "idstud", wgt = "wgtSTUD",
              imp="imputation", type = "JK2", PSU = "JKZone", repInd = "JKrep",
-             groups = "country", dependent = "hisei")
+             groups = "country", group.differences.by = "country", dependent = "hisei")
 
 ### Second example: Computes frequencies of passed and failed conditionally on the
 ### groups of sex and country. Assuming no cluster but a nested imputation structure. 

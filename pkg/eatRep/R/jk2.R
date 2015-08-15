@@ -30,14 +30,13 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "BRR"),
                    nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, dependent = dependent,
                    group.delimiter=group.delimiter, na.rm=na.rm, doCheck=doCheck)}
 
-
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf 
 jk2.table<- function(datL, ID, wgt = NULL, type = c("JK2", "BRR"),
             PSU = NULL, repInd = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
-            group.delimiter = "_", dependent , separate.missing.indicator = FALSE,
+            group.differences.by = NULL, group.delimiter = "_", dependent , separate.missing.indicator = FALSE,
             na.rm=FALSE, expected.values = NULL, doCheck = TRUE ) { 
             eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, toCall = "table",
-                   nest = nest, imp = imp, groups = groups, group.splits = group.splits, dependent = dependent,
+                   nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, dependent = dependent,
                    group.delimiter=group.delimiter, separate.missing.indicator=separate.missing.indicator, 
                    expected.values=expected.values, na.rm=na.rm, doCheck=doCheck)}
 
@@ -287,16 +286,47 @@ conv.table      <- function ( dat.i , allNam, na.rm, group.delimiter, type, sepa
                                  } else { ret    <- data.frame ( prefix , desk(foo[,-1, drop = FALSE], p.weights = sub.dat[,allNam[["wgt"]]],na.rm=TRUE)[,c("Mittelwert", "std.err")], stringsAsFactors = FALSE )}
                                  ret[,"parameter"] <- substring(rownames(ret),5)
                                  return(ret)}) )
+                   if(!is.null(allNam[["group.differences.by"]]))   {
+                      m            <- table.cast
+                      m$comb.group <- apply(m, 1, FUN = function (ii) { crop(paste( ii[allNam[["group"]]], collapse = "."))})
+                      m$all.group  <- 1
+                      res.group    <- tempR <- setdiff(allNam[["group"]], allNam[["group.differences.by"]])
+                      if(length(res.group) == 0 ) {res.group <- "all.group"} 
+                      kontraste      <- expand.grid(1:length(table(m[,allNam[["group.differences.by"]]])), 1:length(table(m[,allNam[["group.differences.by"]]])))
+                      weg            <- which(apply(kontraste, 1, FUN = function ( x ) {x[1] >= x[2]}))
+                      kontraste      <- kontraste[-weg,]
+                      recodeString   <- paste("'", 1:length(table(m[,allNam[["group.differences.by"]]])),"' = '", names(table(m[,allNam[["group.differences.by"]]])),"'", sep = "", collapse = "; ")
+                      kontraste      <- data.frame ( lapply(kontraste, FUN = function ( x ) {recode(x, recodeString)}), stringsAsFactors = FALSE )
+                      difs           <- do.call("rbind", by(data = m, INDICES = m[,res.group], FUN = function (iii)   {
+                                        ret <- do.call("rbind", apply(kontraste, 1, FUN = function ( k ) {
+                                               if ( sum ( k %in% iii[,allNam[["group.differences.by"]]]) != length(k) ) { 
+                                                  cat(paste("Warning: cannot compute contrasts for 'group.differences.by = ",allNam[["group.differences.by"]],"'.\n",sep="")); flush.console()
+                                                  return(NULL)
+                                               }  else  {                       ### fuer den Datensatz muss ein zweifacher Filter (nach res.group und Kontraste definiert werden)
+                                                  datSel    <- dat.i[which(dat.i[,allNam[["group.differences.by"]]] %in% as.vector(k)),]
+                                                  datSel    <- merge(datSel, iii[!duplicated(iii[,res.group]),res.group,drop=FALSE], by = res.group, all = FALSE)
+                                                  datSelWide<- dcast(datSel, as.formula(paste( allNam[["group.differences.by"]], " ~ ",allNam[["dependent"]] , sep="") ), value.var = allNam[["dependent"]], fun.aggregate = sum)
+                                                  tbl       <- as.table(as.matrix(datSelWide[,-1]))
+                                                  dimNames  <- list( first = datSelWide[,allNam[["group.differences.by"]]], second = colnames(tbl))
+                                                  names(dimNames) <- c(allNam[["group.differences.by"]], allNam[["dependent"]])
+                                                  dimnames(tbl)   <- dimNames
+                                                  chisq     <- chisq.test(tbl)
+                                                  scumm     <- iii[!duplicated(iii[,res.group]),res.group,drop = FALSE]
+                                                  group     <- paste( paste( colnames(scumm), as.character(scumm[1,]), sep="="), sep="", collapse = ", ")
+                                                  dif.iii   <- data.frame(group = paste(group, paste(k, collapse = ".vs."),sep="____"), parameter = "chiSquareTest", coefficient = c("chi2","df","pValue"), value = c(chisq[["statistic"]],chisq[["parameter"]],chisq[["p.value"]]) , stringsAsFactors = FALSE )
+                                                  return(dif.iii)               ### siehe http://www.vassarstats.net/dist2.html
+                                               } }))                            ### http://onlinestatbook.com/2/tests_of_means/difference_means.html
+                                        return(ret)})) }                        
                    ret        <- melt(table.cast, measure.vars = c("Mittelwert", "std.err"), na.rm=TRUE)
                    ret[,"coefficient"] <- recode(ret[,"variable"], "'Mittelwert'='est'; 'std.err'='se'")
-                   ret        <- facToChar ( data.frame ( group = apply(ret[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["dependent"]], modus = "noch_leer", ret[,c("coefficient", "parameter")], value = ret[,"value"], ret[,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE) )
-                   return(ret)}
+                   ret        <- data.frame ( group = apply(ret[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["dependent"]], modus = "noch_leer", ret[,c("coefficient", "parameter")], value = ret[,"value"], ret[,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE) 
+                   if(!is.null(allNam[["group.differences.by"]]))   {return(facToChar(rbind.fill(ret,difs)))} else {return(facToChar(ret))}}                   
 
 
 jackknife.table <- function ( dat.i , allNam, na.rm, group.delimiter, type, repA, separate.missing.indicator, expected.values) { 
                    cat("."); flush.console()
                    dat.i[,allNam[["dependent"]]] <- factor(dat.i[,allNam[["dependent"]]], levels = expected.values)
-        #           if(!exists("svrepdesign"))      {library(survey)}
+  #                 if(!exists("svrepdesign"))      {library(survey)}
                    typeS     <- recode(type, "'JK2'='JKn'")
                    design    <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]])], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, mse = TRUE)
                    formel    <- as.formula(paste("~factor(",allNam[["dependent"]],", levels = expected.values)",sep=""))
@@ -309,8 +339,38 @@ jackknife.table <- function ( dat.i , allNam, na.rm, group.delimiter, type, repA
                    molt      <- melt(data=means, id.vars=allNam[["group"]], na.rm=TRUE)
                    splits    <- data.frame ( do.call("rbind", strsplit(as.character(molt[,"variable"]),"____________")), stringsAsFactors = FALSE)
                    colnames(splits) <- c("coefficient", "parameter")
-                   ret       <- facToChar( data.frame ( group = apply(molt[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["dependent"]], modus = "noch_leer", splits, value = molt[,"value"], molt[,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE) )
-                   return(ret)}
+                   ret       <- data.frame ( group = apply(molt[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["dependent"]], modus = "noch_leer", splits, value = molt[,"value"], molt[,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE) 
+                   if(!is.null(allNam[["group.differences.by"]]))   {
+                      m            <- ret
+                      m$comb.group <- apply(m, 1, FUN = function (ii) { crop(paste( ii[allNam[["group"]]], collapse = "."))})
+                      m$all.group  <- 1
+                      res.group    <- tempR <- setdiff(allNam[["group"]], allNam[["group.differences.by"]])
+                      if(length(res.group) == 0 ) {res.group <- "all.group"} 
+                      kontraste      <- expand.grid(1:length(table(m[,allNam[["group.differences.by"]]])), 1:length(table(m[,allNam[["group.differences.by"]]])))
+                      weg            <- which(apply(kontraste, 1, FUN = function ( x ) {x[1] >= x[2]}))
+                      kontraste      <- kontraste[-weg,]
+                      recodeString   <- paste("'", 1:length(table(m[,allNam[["group.differences.by"]]])),"' = '", names(table(m[,allNam[["group.differences.by"]]])),"'", sep = "", collapse = "; ")
+                      kontraste      <- data.frame ( lapply(kontraste, FUN = function ( x ) {recode(x, recodeString)}), stringsAsFactors = FALSE )
+                      difs           <- do.call("rbind", by(data = m, INDICES = m[,res.group], FUN = function (iii)   {
+                                        ret <- do.call("rbind", apply(kontraste, 1, FUN = function ( k ) {
+                                               if ( sum ( k %in% iii[,allNam[["group.differences.by"]]]) != length(k) ) { 
+                                                  cat(paste("Warning: cannot compute contrasts for 'group.differences.by = ",allNam[["group.differences.by"]],"'.\n",sep="")); flush.console()
+                                                  return(NULL)
+                                               }  else  {                       ### fuer den Datensatz muss ein zweifacher Filter (nach res.group und Kontraste definiert werden)
+                                                  datSel    <- dat.i[which(dat.i[,allNam[["group.differences.by"]]] %in% as.vector(k)),]
+                                                  if(length(tempR)>0) { 
+                                                     datSel    <- merge(datSel, iii[!duplicated(iii[,res.group]),res.group,drop=FALSE], by = res.group, all = FALSE)
+                                                  }
+                                                  designSel <- svrepdesign(data = datSel[,c(allNam[["group.differences.by"]], allNam[["dependent"]])], weights = datSel[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repA[match(datSel[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, mse = TRUE)
+                                                  formel    <- as.formula(paste("~", allNam[["group.differences.by"]] ,"+",allNam[["dependent"]],sep=""))
+                                                  tbl       <- svychisq(formula = formel, design = designSel, statistic = "Chisq")
+                                                  scumm     <- iii[!duplicated(iii[,res.group]),res.group,drop = FALSE]
+                                                  group     <- paste( paste( colnames(scumm), as.character(scumm[1,]), sep="="), sep="", collapse = ", ")
+                                                  dif.iii   <- data.frame(group = paste(group, paste(k, collapse = ".vs."),sep="____"), parameter = "chiSquareTest", coefficient = c("chi2","df","pValue"), value = c(tbl[["statistic"]],tbl[["parameter"]],tbl[["p.value"]]) , stringsAsFactors = FALSE )
+                                                  return(dif.iii)               ### siehe http://www.vassarstats.net/dist2.html
+                                               } }))                            ### http://onlinestatbook.com/2/tests_of_means/difference_means.html
+                                        return(ret)})) }                        
+                   if(!is.null(allNam[["group.differences.by"]]))   {return(facToChar(rbind.fill(ret,difs)))} else {return(facToChar(ret))}}                   
 
 
 conv.mean      <- function (dat.i , allNam, na.rm, group.delimiter) {
