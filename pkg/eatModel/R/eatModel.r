@@ -126,6 +126,7 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                   if(length(model.statement)!=1)            {stop("'model.statement' has to be of length 1.\n")}
                   if(class(model.statement)!="character")   {stop("'model.statement' has to be of class 'character'.\n")}
                   if(missing(dat)) {stop("No dataset specified.\n") }           ### 11.04.2014: nutzt Hilfsfunktionen von jk2.mean etc.
+                  if(is.null(items)) {stop("Argument 'items' must not be NULL.\n",sep="")}
                   allVars     <- list(ID = id, variablen=items, DIF.var=DIF.var, HG.var=HG.var, group.var=group.var, weight.var=weight.var)
                   all.Names   <- lapply(allVars, FUN=function(ii) {.existsBackgroundVariables(dat = dat, variable=ii)})
                   doppelt     <- which(duplicated(dat[,all.Names[["ID"]]]))
@@ -134,7 +135,7 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                      dir         <- crop(dir,"/")                               ### das Verzeichnis aber nicht existiert, wird es jetzt erzeugt
                      if(dir.exists(dir) == FALSE) { 
                         cat(paste("Warning: Specified folder '",dir,"' does not exist. Create folder ... \n",sep="")); flush.console()
-                        dir.create(dir)
+                        dir.create(dir, recursive = TRUE)
                      }
                   }      
      ### pruefen, ob es Personen gibt, die weniger als <boundary> items gesehen haben (muss VOR den Konsistenzpruefungen geschehen)
@@ -178,6 +179,7 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                      if(length(notInDat)>0) {
                         cat(paste("Following ", length(notInDat)," item(s) missed in data frame will removed from Q matrix: \n    ",paste(notInDat,collapse=", "),"\n",sep=""))
                         qMatrix <- qMatrix[-match(notInDat, qMatrix[,1]),]
+                        if(nrow(qMatrix) == 0) { stop("No common items in Q matrix and data.\n")}
                      }
                      if(length(notInQ)>0) {
                         cat(paste("Following ", length(notInQ)," item(s) missed in Q matrix will removed from data: \n    ",paste(notInQ,collapse=", "),"\n",sep=""))
