@@ -36,8 +36,9 @@ automateIrtModels <- function ( dat, id, items=NULL, item.grouping = NULL,
         if(is.null(dir)) { dirI <- NULL }  else  { dirI   <- file.path(dir, substring(m[["model.subpath"]],3)) }
         nameI  <- m[["model.name"]]
      ### 'defineModel' aufrufen
-        modI   <- defineModel ( dat = datSel, items = itemSel, id=id, qMatrix=qMatrix, software = software, conquest.folder=conquest.folder,
-                  analysis.name = nameI, dir = dirI )
+        if(inherits(try( modI   <- defineModel ( dat = datSel, items = itemSel, id=id, qMatrix=qMatrix, software = software, conquest.folder=conquest.folder,  analysis.name = nameI, dir = dirI ) ),"try-error"))  {        
+           modI <- NULL
+        }   
         cat("\n===============================================\n\n")
         return(modI)})
      }
