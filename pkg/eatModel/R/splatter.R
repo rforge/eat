@@ -8,7 +8,11 @@
 # split             character, was gesplittet werden soll
 # all.persons       logical (default: TRUE), je Gruppen-Variable wird eine "alle"-Kategorie hinzugefügt
 # all.persons.lab   character, Name der "alle"-Kategorie (nur relevant wenn all.persons TRUE ist)
-# env               logical (defautl: FALSE), aendert Rueckgabe
+# cross				named list, Namen sind die Variablen die reingekreuzt werden, die Elemente sind die Stufen der jeweiligen Variable
+#					z.B. list ( "software" = c ( "conquest" , "tam" ) )
+# full.model.names	logical (default: TRUE), Modellnamen werden aus Kategorienbezeichnungen gebaut (kann sehr lange Modellnamen ergeben); wenn FALSE sind die Modellnamen einfach hochnummeriert
+# env               logical (default: FALSE), aendert Rueckgabe
+# verbose			logical (default: TRUE), Ausgabe wie viele Modelle gemacht werden und Progress Bar
 
 ### Rueckgabe:
 # Liste mit zwei Eintraegen: 
@@ -17,10 +21,7 @@
 #     wenn env FALSE: Liste mit 4 Elementen: model.name, model.subpath, item.grouping, person.grouping
 #     wenn env TRUE:  Liste mit environments die die 4 Objekte model.name, model.subpath, item.grouping, person.grouping beinhalten
 
-splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c ( "item.grouping" , "person.groups" ) , all.persons = TRUE , all.persons.lab = "all" , env = FALSE , verbose = TRUE ) {
-
-		# potentielle TODOs:
-				# item.grouping / person.group checks ob richtige Struktur und Plausibilitaet
+splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c ( "item.grouping" , "person.groups" ) , all.persons = TRUE , all.persons.lab = "all" , cross = NULL , full.model.names = TRUE , env = FALSE , verbose = TRUE ) {
 		
 		# Funktion: person.groups nach person.grouping
 		pg2pgr <- function ( x , nam ) {
@@ -32,11 +33,66 @@ splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c (
 		# wenn kein data.frame, dann ignorieren
 		if ( !is.null ( item.grouping ) & !is.data.frame ( item.grouping ) ) {
 				item.grouping <- NULL
-				warning ( paste0 ( "item.grouping is not a data.frame and will be ignored." ) )
+				warning ( paste0 ( "item.grouping is not a data.frame and will be ignored." ) , call. = FALSE )
 		}
 		if ( !is.null ( person.groups ) & !is.data.frame ( person.groups ) ) {
 				person.groups <- NULL
-				warning ( paste0 ( "person.groups is not a data.frame and will be ignored." ) )
+				warning ( paste0 ( "person.groups is not a data.frame and will be ignored." ) , call. = FALSE )
+		}
+
+		# wenn keine Spalten / Zeilen dann NULL
+		if ( !is.null ( item.grouping ) ) {
+				if ( nrow ( item.grouping ) %in% 0 | ncol ( item.grouping ) %in% 0 ) {
+						warning ( "check item.grouping" , call. = FALSE )
+						item.grouping <- NULL
+				}
+		}
+		if ( !is.null ( person.groups ) ) {
+				if ( nrow ( person.groups ) %in% 0 | ncol ( person.groups ) %in% 0 ) {
+						warning ( "check person.groups" , call. = FALSE )
+						person.groups <- NULL
+				}
+		}
+
+		# Dimensionen in item.grouping duerfen nur 0/1 haben
+		if ( !is.null ( item.grouping ) ) {
+				if ( ncol ( item.grouping ) > 1 ) {
+						not01 <- ! sapply ( item.grouping[,-1,drop=FALSE] , function ( x ) all ( x %in% c(0,1) ) )
+						
+						if ( any ( not01 ) ) {
+								warning ( paste0 ( "column(s) " , paste ( names (not01)[not01] , collapse = ", " ) , " in item.grouping contain elements that are not 0 or 1; this/these column(s) are ignored" ) , call. = FALSE )
+								item.grouping <- item.grouping[,colnames(item.grouping)[!colnames(item.grouping) %in% names (not01)[not01]],drop=FALSE]
+						}
+				}
+		}
+		
+		# wenn nur eine Spalte wird diese als IDs angenommen
+		if ( !is.null ( item.grouping ) ) {
+				if ( ncol ( item.grouping ) %in% 1 ) {
+						warning ( "item.grouping contains just one column; this is treated as item names" , call. = FALSE )
+						item.grouping$dim <- 1
+				}
+		}
+		if ( !is.null ( person.groups ) ) {
+				if ( ncol ( person.groups ) %in% 1 ) {
+						warning ( "person.groups contains just one column; this is treated as person ids" , call. = FALSE )
+						person.groups$group <- all.persons.lab
+						all.persons = FALSE
+				}
+		}		
+		
+		# item.grouping und person.groups auf Plausibilitaet checken
+		if ( !is.null ( item.grouping ) ) {
+				# hat erste Spalte mehr Elemente als alle anderen
+				len <- sapply ( item.grouping , function ( x ) length ( unique ( x ) ) )
+				len.log <- len < len[1]
+				if ( ! all ( len.log[-1] ) ) warning ( paste0 ( "first column of item.grouping might not contain item names; please check\n(number of unique elements is smaller than in another column)" ) , call. = FALSE )
+		}
+		if ( !is.null ( person.groups ) ) {
+				# hat erste Spalte mehr Elemente als alle anderen
+				len <- sapply ( person.groups , function ( x ) length ( unique ( x ) ) )
+				len.log <- len < len[1]
+				if ( ! all ( len.log[-1] ) ) warning ( paste0 ( "first column of person.groups might not contain person ids; please check\n(number of unique elements is smaller than in another column)" ) , call. = FALSE )
 		}
 		
 		# aus Split die Sachen raus, die nicht da sind
@@ -44,7 +100,7 @@ splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c (
 		if ( is.null ( person.groups ) ) split <- split[!split %in% "person.groups"]
 
 		# all.persons.lab checken ob bereits eine Kategorie in person.groups so heisst
-		if ( !is.null ( person.groups ) ) {
+		if ( !is.null ( person.groups ) & all.persons ) {
 				cats <- unique ( unname ( do.call ( "c" , sapply ( person.groups[,-1,drop=FALSE] , unique , simplify = FALSE ) ) ) )
 				if ( all.persons.lab %in% cats ) {
 						# Alternativen checken
@@ -56,11 +112,12 @@ splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c (
 						# solange random erzeugen bis eine noch nicht verwendete Kategorie gefunden
 								new.lab <- cats[1]
 								while ( new.lab %in% cats ) {
+										set.seed ( 1234567 )
 										new.lab <- paste ( sample ( letters , 3 , replace = TRUE ) , collapse = "")
 								}
 						}
 						# Warnung
-						warning ( paste0 ( "'" , all.persons.lab , "' is already a used category in person.groups, it has been changed to '" , new.lab , "'." ) )
+						warning ( paste0 ( "'" , all.persons.lab , "' is already a used category in person.groups, it has been changed to '" , new.lab , "'." ) , call. = FALSE )
 						# neues Label setzen
 						all.persons.lab <- new.lab
 				}
@@ -73,7 +130,6 @@ splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c (
 				do.order <- paste0 ( "person.groups <- person.groups[order(",paste ( paste0 ( "person.groups$" , names ( colcl[colcl %in% "factor"] ) ) , collapse = "," ),"),]" )
 				eval ( parse ( text = do.order ) )
 		}
-		
 		
 		# item.grouping
 		if ( "item.grouping" %in% split & !is.null ( item.grouping ) ) {
@@ -173,10 +229,20 @@ splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c (
 		i.dfr <- data.frame ( "dim" = names ( i ) , stringsAsFactors = FALSE )
 		p.dfr <- data.frame ( "group" = names ( p3 ) , stringsAsFactors = FALSE )
 
-		# Modelle
-		m <- merge ( p.dfr , i.dfr , by = NULL , sort = FALSE )
-		m <- m [ , c ( "dim" , "group" ) ]
+		### cross Elemente reinkreuzen
+		if ( !is.null ( cross ) ) {
+				cr.l <- mapply ( function ( d , n ) {d <- data.frame ( d , stringsAsFactors = FALSE ); colnames ( d ) <- n; return ( d )} , cross , names ( cross ) , SIMPLIFY = FALSE )
+				cr <- Reduce(function(x, y) merge(x, y, all=TRUE,by=NULL),rev(cr.l),accumulate=FALSE )
+		} else {
+				cr <- NULL
+		}
 
+		# Modelle
+		m.l <- list(cr,p.dfr,i.dfr)
+		m.l <- m.l [ ! sapply ( m.l , is.null ) ]
+		m <- Reduce(function(x, y) merge(x, y, all=TRUE,by=NULL),m.l,accumulate=FALSE )
+		m <- m [ , rev ( colnames ( m ) ) , drop = FALSE ]
+		
 		# Ausgabe wie viele Modelle generiert werden
 		if ( verbose ) {
 				# wenn zu viele Modelle werden noch zusaetzlich - gebraucht
@@ -185,33 +251,46 @@ splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c (
 				out.str <- paste0 ( "----------------------------",paste(rep("-",nchar ( as.character ( nrow ( m ) ) )),collapse=""),zus,"\nsplatter: generating " , nrow ( m ) , " models\n" )
 				cat ( out.str )
 		}
-		
+
 		# Modellname
-		f4 <- function ( z ) {
-				z <- z[!z %in% ""]
-				paste ( z , collapse = "__" )
+		if ( full.model.names ) {
+				f4 <- function ( z ) {
+						z <- z[!z %in% ""]
+						paste ( gsub ( "\\s" , "" , z ) , collapse = "__" )
+				}
+				m$model.name <- apply ( m , 1 , f4 )
+		} else {
+				m$model.name <- paste0 ( "model" , formatC ( seq ( along = rownames ( m ) ) , format = "fg" , width = nchar ( as.character ( nrow ( m ) ) ) , flag = "0" ) )
 		}
-		m$model.name <- apply ( m , 1 , f4 )
-		
+				
 		# Modellname muss vorhanden sein (sonst geht Listenerstellung schlecht)
-		if ( any ( m$model.name %in% "" ) ) m$model.name <- "model"
+		if ( any ( abc <- m$model.name %in% "" ) ) {
+				m$model.name[abc] <- paste0 ( "model" , formatC ( seq ( along = abc ) , format = "fg" , width = nchar ( as.character ( length ( abc ) ) ) , flag = "0" ) )
+		}
 		
 		# Subpath
-		m$model.subpath <- "."
-		if ( "item.grouping" %in% split ) m$model.subpath <- file.path ( m$model.subpath , m$dim )
-		if ( "person.groups" %in% split ) m$model.subpath <- file.path ( m$model.subpath , m$group )
 		
+		m$model.subpath <- "."
+		if ( full.model.names ) {		
+				if ( "item.grouping" %in% split ) m$model.subpath <- file.path ( m$model.subpath , m$dim )
+				if ( "person.groups" %in% split ) m$model.subpath <- file.path ( m$model.subpath , m$group )
+		} else {
+				if ( nrow ( m ) > 1 ) {
+						m$model.subpath <- file.path ( "." , m$model.name )
+				}
+		}
+				
 		# Modell-Nr (=Listen-Index)
-		m$model.no <- seq ( along = rownames ( m ) )
+		m$model.no <- as.integer ( seq ( along = rownames ( m ) ) )
 		
 		# Modell-Datensatz Spalten sortieren
 		vorn <- c ( "model.no" , "model.name" , "model.subpath" , "dim" , "group" )
-		m <- m[,c(vorn,colnames(m)[!colnames(m) %in% vorn])]
+		m <- m[,c(vorn,colnames(m)[!colnames(m) %in% vorn]),drop=FALSE]
 		
 		# Return-Objekt bauen
 		r <- list ()
 		
-		f3 <- function ( z , env ) {
+		f3 <- function ( z , env , cross ) {
 
 				# Ausgabe eines Punktes
 				if ( verbose ) {
@@ -230,23 +309,48 @@ splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c (
 				# NULL setzen wenn nicht da
 				if ( z["dim"] %in% "" ) ig <- NULL.char else ig <- paste0 ( "i$" , z["dim"] )
 				if ( z["group"] %in% "" ) pg <- NULL.char else pg <- paste0 ( "p3$" , z["group"] )
-				if ( z["model.name"] %in% "" ) mn <- NULL.char else mn <- z["model.name"]
-				if ( z["model.subpath"] %in% "" ) msp <- NULL.char else msp <- z["model.subpath"]
+				# if ( z["model.name"] %in% "" ) mn <- NULL.char else mn <- z["model.name"]
+				# if ( z["model.subpath"] %in% "" ) msp <- NULL.char else msp <- z["model.subpath"]
+
+				# wenn cross nicht NULL, muessen character eintraege gequotet werden
+				# und Typ richtig gemacht
+				if ( !is.null ( cross ) ) {
+						notnum <- !sapply ( cross , is.numeric )
+						quotes <- sapply ( notnum , function ( x ) if ( x ) "'" else "" )
+						as.vorn <- sapply ( cross , function ( x ) paste0 ( " as." , class ( x ),"(" ) )
+						as.hinten <- ") "
+				}
 				
 				if ( !env ) {
-						ret <- 	c ( paste0 ( "r$'" , z["model.name"] , "'$model.name <- '",mn,"'" ) ,
-									paste0 ( "r$'" , z["model.name"] , "'$model.subpath <- '",msp,"'" ) ,
+						ret <- 	c ( paste0 ( "r$'" , z["model.name"] , "'$model.no <- as.integer(",z["model.no"],")" ) ,
+									paste0 ( "r$'" , z["model.name"] , "'$model.name <- '",z["model.name"],"'" ) ,
+									paste0 ( "r$'" , z["model.name"] , "'$model.subpath <- '",z["model.subpath"],"'" ) ,
 									paste0 ( "r$'" , z["model.name"] , "'$item.grouping <- ",ig,"" ) ,
 									paste0 ( "r$'" , z["model.name"] , "'$person.grouping <- ",pg,"" ) )
+						# die Sachen aus cross setzen
+						if ( !is.null ( cross ) ) {
+								ret <- c (	ret ,
+											mapply ( function ( x , q , as.vorn , as.hinten , z ) paste0 ( "r$'" , x , "' <- ", as.vorn , q , z [ x ] , q , as.hinten ) , names ( cross ) , quotes , as.vorn, as.hinten, MoreArgs = list ( z ) )
+										  )
+						}
+									
 				} else {
 						ret <-  c (	paste0 ( "r$'" , z["model.name"] , "' <- new.env()" ) ,
-									paste0 ( "assign ( 'model.name' , '" , mn , "' , pos = r$'" , z["model.name"] , "' ) " ) ,
-									paste0 ( "assign ( 'model.subpath' , '" , msp , "' , pos = r$'" , z["model.name"] , "' ) " ) ,
+									paste0 ( "assign ( 'model.no' , as.integer(" , z["model.no"] , ") , pos = r$'" , z["model.name"] , "' ) " ) ,
+									paste0 ( "assign ( 'model.name' , '" , z["model.name"] , "' , pos = r$'" , z["model.name"] , "' ) " ) ,
+									paste0 ( "assign ( 'model.subpath' , '" , z["model.subpath"] , "' , pos = r$'" , z["model.name"] , "' ) " ) ,
 									paste0 ( "assign ( 'item.grouping' , " , ig , " , pos = r$'" , z["model.name"] , "' ) " ) ,
 									paste0 ( "assign ( 'person.grouping' , " , pg , " , pos = r$'" , z["model.name"] , "' ) " ) )
+						# die Sachen aus cross setzen
+						if ( !is.null ( cross ) ) {
+								ret <- c (	ret ,
+											mapply ( function ( x , q , as.vorn , as.hinten , z ) paste0 ( "assign ( '" , x , "' , " , as.vorn,  q , z [ x ] , q , as.hinten , " , pos = r$'", z["model.name"] , "' ) " ) , names ( cross ) , quotes , as.vorn , as.hinten , MoreArgs = list ( z ) )
+										  )
+						}
 				}
+				return ( ret )
 		}
-		do3 <- unname ( sapply ( apply ( m , 1 , f3 , env ) , c ) )
+		do3 <- unname ( sapply ( apply ( m , 1 , f3 , env , cross ) , c ) )
 		eval ( parse ( text = do3 ) )
 		
 		# Modell-Dataframe noch an Rueckgabe ranhaengen
@@ -271,7 +375,7 @@ splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c (
 # person.groups <- data.frame ( "idstud" = 1:10 , "group1" = sample ( c ( "cat1" , "cat2" ) , 10 , replace = TRUE ), "group2" = sample ( c ( "cat1" , "cat2" ) , 10 , replace = TRUE ) , stringsAsFactors = FALSE )
 
 # l1 <- splatter ( item.grouping, person.groups )
-# length(l1)
+# length(l1$models.splitted)
 
 # l1b <- splatter ( item.grouping, person.groups , env = TRUE )
 # str(l1b)
@@ -279,19 +383,19 @@ splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c (
 # identical ( get ( "item.grouping" , l1b[[2]][[1]] ) , l1[[2]][[1]]$item.grouping )
 
 # l1c <- splatter ( item.grouping, person.groups , all.persons = FALSE )
-# length(l1c)
+# length(l1c[[2]])
 
 # l2 <- splatter ( item.grouping, person.groups , split = "item.grouping" )
-# length(l2)
+# length(l2[[2]])
 
 # l3 <- splatter ( item.grouping, person.groups , split = "person.groups" )
-# length(l3)
+# length(l3[[2]])
 
 # l4 <- splatter ( item.grouping, person.groups , split = NULL )
 # str(l4)
 
 # l5 <- splatter ( item.grouping = NULL, person.groups=person.groups )
-# length(l5)
+# length(l5[[2]])
 # str(l5)
 
 # l5b <- splatter ( item.grouping = NULL, person.groups=person.groups, split = NULL )
@@ -344,4 +448,31 @@ splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c (
 # Ausgabe checken
 # person.groups5 <- data.frame ( "idstud" = 1:10 , "group1" = sample ( c ( "cat1" , "cat2" ,"cat3","cat4","cat5") , 10 , replace = TRUE ), "group2" = sample ( c ( "cat1" , "cat2" ,"cat3","cat4" ) , 10 , replace = TRUE ) , "group3" = sample ( c ( "cat2" , "cat1" ,"cat3" ) , 10 , replace = TRUE ), "group4" = sample ( c ( "cat2" , "cat1" ,"cat3" ) , 10 , replace = TRUE ) )
 # l12 <- splatter ( item.grouping=NULL, person.groups=person.groups5 ) 
+
+# full.model.names = FALSE
+# l13 <- splatter ( item.grouping, person.groups , cross = list ( "software" = c ( "conquest" , "tam" ) , "n.plausible" = c ( 5 , 10 ) ) , full.model.names = FALSE )
+# l13$models
+
+# cross
+# l14 <- splatter ( item.grouping, person.groups , cross = list ( "software" = c ( "conquest" , "tam" ) , "n.plausible" = as.integer ( c ( 5 , 10 ) ) ) , env = TRUE )
+# ls ( l14[[2]][[1]] )
+
+
+# l15 <- splatter ( item.grouping, person.groups[,1,drop=FALSE] )
+# str(l15)
+# l15$models
+
+# l16 <- splatter ( item.grouping[,1,drop=FALSE], person.groups )
+# str(l16)
+# l16$models
+
+# l17 <- splatter ( item.grouping[,c(3,1,1),drop=FALSE], person.groups )
+# str(l17)
+# l17$models
+
+
+
+
+
+
 
