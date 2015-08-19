@@ -12,17 +12,16 @@
 
 ### Rueckgabe:
 # Liste mit zwei Eintraegen: 
-# [1] data.frame mit Modell-Informationen model.nr, model.name, model.subpath, item.grouping, person.grouping
+# [1] data.frame mit Modell-Informationen model.no, model.name, model.subpath, item.grouping, person.grouping
 # [2] Liste (Anzahl Listenelemente = Anzahl Modelle)
 #     wenn env FALSE: Liste mit 4 Elementen: model.name, model.subpath, item.grouping, person.grouping
 #     wenn env TRUE:  Liste mit environments die die 4 Objekte model.name, model.subpath, item.grouping, person.grouping beinhalten
 
-splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c ( "item.grouping" , "person.groups" ) , all.persons = TRUE , all.persons.lab = "all" , env = FALSE ) {
+splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c ( "item.grouping" , "person.groups" ) , all.persons = TRUE , all.persons.lab = "all" , env = FALSE , verbose = TRUE ) {
 
 		# potentielle TODOs:
-				# Bezeichner all.persons.lab checken ob bereitsvergeben
 				# item.grouping / person.group checks ob richtige Struktur und Plausibilitaet
-
+		
 		# Funktion: person.groups nach person.grouping
 		pg2pgr <- function ( x , nam ) {
 				d <- x[,1,drop=FALSE]
@@ -39,11 +38,43 @@ splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c (
 				person.groups <- NULL
 				warning ( paste0 ( "person.groups is not a data.frame and will be ignored." ) )
 		}
-
+		
 		# aus Split die Sachen raus, die nicht da sind
 		if ( is.null ( item.grouping ) ) split <- split[!split %in% "item.grouping"]
 		if ( is.null ( person.groups ) ) split <- split[!split %in% "person.groups"]
 
+		# all.persons.lab checken ob bereits eine Kategorie in person.groups so heisst
+		if ( !is.null ( person.groups ) ) {
+				cats <- unique ( unname ( do.call ( "c" , sapply ( person.groups[,-1,drop=FALSE] , unique , simplify = FALSE ) ) ) )
+				if ( all.persons.lab %in% cats ) {
+						# Alternativen checken
+						alt <- c ( "all" , "ALL" , "_all_" , "_ALL_" )
+						# wenn eine der Alternativen nicht in Kategorien, dann diese setzen
+						if ( any ( !alt %in% cats ) ) {
+								new.lab <- alt[!alt %in% cats][1]
+						} else {
+						# solange random erzeugen bis eine noch nicht verwendete Kategorie gefunden
+								new.lab <- cats[1]
+								while ( new.lab %in% cats ) {
+										new.lab <- paste ( sample ( letters , 3 , replace = TRUE ) , collapse = "")
+								}
+						}
+						# Warnung
+						warning ( paste0 ( "'" , all.persons.lab , "' is already a used category in person.groups, it has been changed to '" , new.lab , "'." ) )
+						# neues Label setzen
+						all.persons.lab <- new.lab
+				}
+		}
+
+		# wenn Faktoren in person.groups, dann sortieren
+		# bei Nicht-Faktoren Reihenfolge wie im Datensatz
+		colcl <- sapply ( person.groups[,-1,drop=FALSE] , class )
+		if ( any ( colcl %in% "factor" ) ) {
+				do.order <- paste0 ( "person.groups <- person.groups[order(",paste ( paste0 ( "person.groups$" , names ( colcl[colcl %in% "factor"] ) ) , collapse = "," ),"),]" )
+				eval ( parse ( text = do.order ) )
+		}
+		
+		
 		# item.grouping
 		if ( "item.grouping" %in% split & !is.null ( item.grouping ) ) {
 				# item.grouping mit mehreren Dimensionen zu Liste von item.groupings mit nur einer Dimension
@@ -65,7 +96,7 @@ splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c (
 	
 				#  Liste mit allen Kategorien aller Gruppen machen
 				make.pers.l <- function ( v , x , all.persons , all.persons.lab ) { 
-						cats <- unique ( v )
+						cats <- unique ( as.character ( v ) )
 						if ( all.persons ) cats <- c ( cats , "all" )
 						d <- data.frame ( cats , stringsAsFactors = FALSE )
 						colnames ( d ) <- x
@@ -74,7 +105,10 @@ splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c (
 				pers.l <- mapply ( make.pers.l , person.groups[,-1,drop=FALSE] , colnames ( person.groups )[-1] , MoreArgs = list ( all.persons , all.persons.lab ) , SIMPLIFY = FALSE )
 				
 				# jetzt komplettes Kreuzen der Kategorien
-				p <- Reduce(function(x, y) merge(x, y, all=TRUE,by=NULL),pers.l,accumulate=FALSE )
+				# pers.l reversen fuer schoenere Sortierung der Kategorien
+				p <- Reduce(function(x, y) merge(x, y, all=TRUE,by=NULL),rev(pers.l),accumulate=FALSE )
+				# Spaltenreihenfolge zurueckaendern
+				p <- p[,rev(colnames(p)),drop = FALSE ]
 				
 				# person.groups reduzieren/listen
 				p2 <- list ()
@@ -142,11 +176,16 @@ splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c (
 		# Modelle
 		m <- merge ( p.dfr , i.dfr , by = NULL , sort = FALSE )
 		m <- m [ , c ( "dim" , "group" ) ]
-		
-		# wenn eins von beiden NULL war rausnehmen
-		# if ( is.null ( item.grouping ) ) m <- m [ , colnames (m)[!colnames (m) %in% "dim"] , drop = FALSE ]
-		# if ( is.null ( person.groups ) ) m <- m [ , colnames (m)[!colnames (m) %in% "group"] , drop = FALSE ]
 
+		# Ausgabe wie viele Modelle generiert werden
+		if ( verbose ) {
+				# wenn zu viele Modelle werden noch zusaetzlich - gebraucht
+				zus <- ""
+				if ( nrow ( m ) > 28 ) zus <- paste(rep("-", nrow ( m ) - 28 - nchar ( as.character ( nrow ( m ) ) ) ),collapse="")
+				out.str <- paste0 ( "----------------------------",paste(rep("-",nchar ( as.character ( nrow ( m ) ) )),collapse=""),zus,"\nsplatter: generating " , nrow ( m ) , " models\n" )
+				cat ( out.str )
+		}
+		
 		# Modellname
 		f4 <- function ( z ) {
 				z <- z[!z %in% ""]
@@ -163,13 +202,24 @@ splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c (
 		if ( "person.groups" %in% split ) m$model.subpath <- file.path ( m$model.subpath , m$group )
 		
 		# Modell-Nr (=Listen-Index)
-		m$model.nr <- seq ( along = rownames ( m ) )
-	
+		m$model.no <- seq ( along = rownames ( m ) )
+		
+		# Modell-Datensatz Spalten sortieren
+		vorn <- c ( "model.no" , "model.name" , "model.subpath" , "dim" , "group" )
+		m <- m[,c(vorn,colnames(m)[!colnames(m) %in% vorn])]
+		
 		# Return-Objekt bauen
 		r <- list ()
 		
 		f3 <- function ( z , env ) {
-				
+
+				# Ausgabe eines Punktes
+				if ( verbose ) {
+						out.str <- paste0 ( "." )
+						cat ( out.str )
+						flush.console()
+				}
+		
 				# NULL in abhaengig von env
 				if ( env ) {
 						NULL.char <- "NULL"
@@ -200,12 +250,17 @@ splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c (
 		eval ( parse ( text = do3 ) )
 		
 		# Modell-Dataframe noch an Rueckgabe ranhaengen
-		# TODO: Leerstrings noch NA in m Datensatz
-		#       Spalten sortieren
-		#       ggf. model.nr zu model.no
+		# Leerstrings zu NA
+		do.leer <- paste0 ( "m$" , colnames(m) , "[m$", colnames(m) , " %in% ''] <- NA" )
+		eval ( parse ( text = do.leer ) )
+		# anhaengen
 		r <- list ( "models" = m , "models.splitted" = r )
 		
-		# TODO: Ausgabe auf console
+		# Ausgabe auf console
+		if ( verbose ) {
+				out.str <- paste0 ( "\nsee <returned>$models\n----------------------------",paste(rep("-",nchar ( as.character ( nrow ( m ) ) )),collapse=""),zus,"\n" )
+				cat ( out.str )
+		}
 		
 		return ( r )
 }
@@ -270,3 +325,23 @@ splatter <- function ( item.grouping = NULL , person.groups = NULL , split = c (
 
 # l7 <- splatter ( item.grouping=NULL, person.groups=NULL, split = NULL )
 # str(l7)
+
+# all.persons.lab checken
+# l8 <- splatter ( item.grouping=NULL, person.groups=person.groups , all.persons.lab = "cat1" ) 
+# person.groups2 <- data.frame ( "idstud" = 1:10 , "group1" = sample ( c ( "all" , "ALL" ) , 10 , replace = TRUE ), "group2" = sample ( c ( "_all_" , "_ALL_" ) , 10 , replace = TRUE ) , stringsAsFactors = FALSE )
+# l9 <- splatter ( item.grouping=NULL, person.groups=person.groups2 ) 
+
+# check factor person.groups
+# person.groups3 <- data.frame ( "idstud" = 1:10 , "group1" = sample ( c ( "cat1" , "cat2" ) , 10 , replace = TRUE ), "group2" = sample ( c ( "cat1" , "cat2" ) , 10 , replace = TRUE ) )
+# l10 <- splatter ( item.grouping=NULL, person.groups=person.groups3 ) 
+# set.seed(123456)
+# person.groups4 <- data.frame ( "idstud" = 1:10 , "group1" = sample ( c ( "cat1" , "cat2" ) , 10 , replace = TRUE ), "group2" = sample ( c ( "cat1" , "cat2" ) , 10 , replace = TRUE ) , "group3" = sample ( c ( "cat2" , "cat1" ) , 10 , replace = TRUE ) )
+# person.groups4$group1 <- factor ( person.groups4$group1 , levels(person.groups4$group1)[ c(2,1) ] )
+# person.groups4$group2 <- factor ( person.groups4$group2 , levels(person.groups4$group2)[ c(2,1) ] )
+# person.groups4$group3 <- as.character ( person.groups4$group3 )
+# l11 <- splatter ( item.grouping=NULL, person.groups=person.groups4 ) 
+
+# Ausgabe checken
+# person.groups5 <- data.frame ( "idstud" = 1:10 , "group1" = sample ( c ( "cat1" , "cat2" ,"cat3","cat4","cat5") , 10 , replace = TRUE ), "group2" = sample ( c ( "cat1" , "cat2" ,"cat3","cat4" ) , 10 , replace = TRUE ) , "group3" = sample ( c ( "cat2" , "cat1" ,"cat3" ) , 10 , replace = TRUE ), "group4" = sample ( c ( "cat2" , "cat1" ,"cat3" ) , 10 , replace = TRUE ) )
+# l12 <- splatter ( item.grouping=NULL, person.groups=person.groups5 ) 
+
