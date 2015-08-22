@@ -10,9 +10,9 @@ Conceptually, the function combines replication and imputation methods. Technica
 for the svymean() function of the survey package.
 }
 \usage{
-jk2.table(datL, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, repInd = NULL, 
+jk2.table(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, 
           nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), 
-          group.differences.by = NULL, group.delimiter = "_", dependent , 
+          group.differences.by = NULL, correct = TRUE, group.delimiter = "_", dependent , 
           separate.missing.indicator = FALSE, na.rm=FALSE, expected.values = NULL, 
           doCheck = TRUE)}
 %- maybe also 'usage' for other objects documented here.
@@ -66,6 +66,10 @@ Optional: Specifies one grouping variable for which a chi-square test should be 
 The corresponding variable must be included in the \code{groups} statement. If specified, the 
 distribution of the dependent variable is compared between the groups. See examples for 
 further details.
+}
+  \item{correct}{
+Logical. Applies only if 'group.differences.by' is requested without cluster replicates. A logical indicating whether to apply 
+continuity correction when computing the test statistic for 2 by 2 tables. See help page of 'chisq.test' for further details. 
 }
   \item{group.delimiter}{
 %%     ~~Describe \code{sig.dif.bound} here~~

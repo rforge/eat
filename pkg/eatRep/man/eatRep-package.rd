@@ -18,7 +18,7 @@
   Moreover, computing standard errors for the mean of a variable which stems from a clustered design may involve
   replication methods like balanced repeated replicate (BRR), bootstrap or Jackknife methods.
   See Weststat (2000), Foy, Galia & Li (2008), Rust and Rao (1996), and Wolter (1985) for details. 
-  To date, only the Jackknife-2 (JK2) and the Balanced Repeated Replicates (BRR) procedures are supported.
+  To date, the Jackknife-1 (JK1), Jackknife-2 (JK2) and the Balanced Repeated Replicates (BRR) procedures are supported.
 
   The package \code{eatRep} is designed to combine both methods which is necessary if (nested) multiple imputed
   data are used in clustered designs. Considering the structure is relevant especially for the estimation of
@@ -60,8 +60,8 @@
 \tabular{ll}{
 Package: \tab eatRep\cr
 Type: \tab Package\cr
-Version: \tab 0.6.8\cr
-Date: \tab 2015-08-15\cr
+Version: \tab 0.7.0\cr
+Date: \tab 2015-08-21\cr
 License: \tab GPL(>=2)
 }
 }

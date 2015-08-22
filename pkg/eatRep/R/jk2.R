@@ -1,20 +1,28 @@
-generate.replicates <- function ( dat, ID, wgt = NULL, PSU, repInd, type = c("JK2", "BRR"))   {
-                       stopifnot(length(PSU) == 1 & length(repInd) == 1 )
+generate.replicates <- function ( dat, ID, wgt = NULL, PSU, repInd, type = c("JK1", "JK2", "BRR"))   {
+                       if(type %in% c("JK2", "BRR")) { stopifnot(length(PSU) == 1 & length(repInd) == 1 ) } 
+                       if(type  == "JK1" ) { if(!is.null(repInd))  { 
+                          cat("'repInd' is ignored for 'type = JK1'.\n")
+                          repInd <- NULL
+                       }  } 
                        allVars     <- list(ID = ID, wgt = wgt, PSU = PSU, repInd = repInd)
                        all.Names   <- lapply(allVars, FUN=function(ii) {.existsBackgroundVariables(dat = dat, variable=ii)})
                        dat.i       <- dat[,unlist(all.Names)]
-                       if( !all( names(table(dat.i[,all.Names[["repInd"]]])) == c(0,1)) ) {stop("Only 0 and 1 are allowed for repInd variable.\n")}
+                       if(type %in% c("JK2", "BRR")) { if( !all( names(table(dat.i[,all.Names[["repInd"]]])) == c(0,1)) ) {stop("Only 0 and 1 are allowed for repInd variable.\n")} }
                        zonen       <- names(table(dat.i[,all.Names[["PSU"]]]) )
                        cat(paste("Create ",length(zonen)," replicate weights.\n",sep=""))
                        missings    <- sapply(dat.i, FUN = function (ii) {length(which(is.na(ii)))})
                        if(!all(missings == 0)) {
                            mis.vars <- paste(names(missings)[which(missings != 0)], collapse = ", ")
                            stop(paste("Found missing value(s) in variable(s) ", mis.vars,".\n",sep=""))
-                       }
-                       reps <- data.frame ( lapply(zonen , FUN = function(ii) {
-                               rep.ii <- dat.i[,all.Names[["wgt"]]]             ### untere Zeile: im Jackknife werden die gewichte nur in der entsprechenden PSU geaender; in BRR werden sie in allen Zonen geaendert!
+                       }                                                        ### untere Zeile: in JK-2 werden die gewichte nur in der entsprechenden PSU _fuer ein Replicate_ geaendert 
+                       reps <- data.frame ( lapply(zonen , FUN = function(ii) { ### in BRR werden die Gewichte in allen Zonen _fuer ein Replicate_ geaendert!
+                               rep.ii <- dat.i[,all.Names[["wgt"]]]             ### in JK-1 werden die Gewichte nur in der entsprechenden PSU _fuer alle Replicates_ geaendert 
                                if(type == "JK2")  { rep.ii[dat.i[,all.Names[["PSU"]]] == ii ] <- ifelse(dat.i[ dat.i[,all.Names[["PSU"]]] == ii ,all.Names[["repInd"]]] == 1, 0, 2 * rep.ii[dat.i[,all.Names[["PSU"]]] == ii ] ) }
                                if(type == "BRR")  { rep.ii <- ifelse(dat.i[ ,all.Names[["repInd"]]] == 1, 0, 2 * rep.ii ) }
+                               if(type == "JK1")  { 
+                                  rep.ii[ which ( dat.i[,all.Names[["PSU"]]] == ii) ] <- 0
+                                  rep.ii[ which ( dat.i[,all.Names[["PSU"]]] != ii) ] <- rep.ii[ which ( dat.i[,all.Names[["PSU"]]] != ii) ] *  ( sum(dat.i[,all.Names[["wgt"]]]) / sum (rep.ii))
+                               }
                                return(rep.ii) }), stringsAsFactors = FALSE)
                        colnames(reps) <- paste(all.Names[["wgt"]], 1:ncol(reps), sep="_")
                        ret            <- data.frame(dat.i[,all.Names[["ID"]],drop=FALSE], reps, stringsAsFactors = FALSE)
@@ -23,7 +31,7 @@ generate.replicates <- function ( dat, ID, wgt = NULL, PSU, repInd, type = c("JK
 
 
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf 
-jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "BRR"),
+jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"),
             PSU = NULL, repInd = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
             group.differences.by = NULL, group.delimiter = "_", dependent, na.rm = FALSE, doCheck = TRUE) {
             eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, toCall = "mean",
@@ -31,9 +39,9 @@ jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK2", "BRR"),
                    group.delimiter=group.delimiter, na.rm=na.rm, doCheck=doCheck)}
 
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf 
-jk2.table<- function(datL, ID, wgt = NULL, type = c("JK2", "BRR"),
+jk2.table<- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"),
             PSU = NULL, repInd = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
-            group.differences.by = NULL, group.delimiter = "_", dependent , separate.missing.indicator = FALSE,
+            group.differences.by = NULL, correct = TRUE, group.delimiter = "_", dependent , separate.missing.indicator = FALSE,
             na.rm=FALSE, expected.values = NULL, doCheck = TRUE ) { 
             eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, toCall = "table",
                    nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, dependent = dependent,
@@ -42,7 +50,7 @@ jk2.table<- function(datL, ID, wgt = NULL, type = c("JK2", "BRR"),
 
             
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf 
-jk2.quantile<- function(datL, ID, wgt = NULL, type = c("JK2", "BRR"),
+jk2.quantile<- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"),
             PSU = NULL, repInd = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
             group.delimiter = "_", dependent, probs = seq(0, 1, 0.25),  na.rm = FALSE,
             nBoot = NULL, bootMethod = c("wSampling","wQuantiles") , doCheck = TRUE)  { 
@@ -53,7 +61,7 @@ jk2.quantile<- function(datL, ID, wgt = NULL, type = c("JK2", "BRR"),
 
 
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf 
-jk2.glm  <- function(datL, ID, wgt = NULL, type = c("JK2", "BRR"),
+jk2.glm  <- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"),
             PSU = NULL, repInd = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), group.delimiter = "_",
             formula, family=gaussian, forceSingularityTreatment = FALSE, doCheck = TRUE, na.rm = FALSE ) { 
             eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, toCall = "glm",
@@ -62,11 +70,11 @@ jk2.glm  <- function(datL, ID, wgt = NULL, type = c("JK2", "BRR"),
                    group.delimiter=group.delimiter, na.rm=na.rm, doCheck=doCheck)}
 
 
-eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, repInd = NULL, nest=NULL, imp=NULL, 
+eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, nest=NULL, imp=NULL, 
           toCall = c("mean", "table", "quantile", "glm"), groups = NULL, group.splits = length(groups), group.differences.by = NULL, 
           group.delimiter = "_", dependent, na.rm = FALSE, forcePooling = TRUE, boundary = 3, doCheck = TRUE,
           separate.missing.indicator = FALSE, expected.values = NULL, probs = NULL, nBoot = NULL, bootMethod = NULL,
-          formula=NULL, family=NULL, forceSingularityTreatment = FALSE)    {
+          formula=NULL, family=NULL, forceSingularityTreatment = FALSE, correct)    {
           # if(!exists("rbind.fill"))   {library(plyr)}
           checkForPackage (namePackage = "reshape", targetPackage = "eatRep")
           toCall<- match.arg(toCall)
@@ -117,7 +125,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, re
           }  else  { repA <- NULL}
     ### splitten nach super splitter
           allRes<- do.call("rbind.fill", lapply( names(toAppl), FUN = function ( gr ) {
-              if(toCall=="mean")  { allNam[["group.differences.by"]] <- attr(toAppl[[gr]], "group.differences.by") } 
+              if(toCall %in% c("mean", "table"))  { allNam[["group.differences.by"]] <- attr(toAppl[[gr]], "group.differences.by") } 
               if( nchar(gr) == 0 ){ datL[,"dummyGroup"] <- "wholeGroup" ; allNam[["group"]] <- "dummyGroup" } else {allNam[["group"]] <- toAppl[[gr]] }
     ### check: Missings duerfen nur in abhaengiger Variable auftreten!          ### obere Zeile: problematisch!! "allNam" wird hier in jedem Schleifendurchlauf ueberschrieben -- nicht so superschoen!
               noMis <- unlist ( c ( allNam[-match(c("group", "dependent"), names(allNam))], toAppl[gr]) )
@@ -153,8 +161,12 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, re
                           if( (toCall == "table" & separate.missing.indicator == FALSE) | (toCall %in% c("mean", "quantile", "glm") & na.rm==FALSE ) )  {    
                               nObserved <- length(which(is.na(sub.dat[, allNam[["dependent"]]])))
                               if(nObserved>0) { 
-                                 cat("Warning! Found unexpected missing data in dependent variable for at least one group. Please check your data!\n"); flush.console()
-                                 sub.dat[,"isClear"] <- FALSE 
+                                 if ( toCall %in% c("mean", "quantile", "glm") ) { 
+                                      cat("Warning! Found unexpected missing data in dependent variable for at least one group. Execution haltered. Please check your data!\n"); flush.console()
+                                      sub.dat[,"isClear"] <- FALSE 
+                                 }  else  { 
+                                      cat("Warning! Found unexpected missing data in dependent variable for at least one group although 'separate.missing.indicator' was set to 'FALSE'. \n    Sure that this is intended? Try to continue execution ... \n"); flush.console()
+                                 }     
                               }
                           }                                                     ### untere Zeile: prueft; es darf NICHT ALLES missing sein
                           if ( toCall %in% c("mean", "quantile", "glm") & na.rm==TRUE) { 
@@ -199,14 +211,14 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, re
                                            if ( !is.null(allNam[["PSU"]]) )  {
                                                ana.i <- jackknife.table ( dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA, separate.missing.indicator = separate.missing.indicator, expected.values=expected.values)
                                            }  else  { 
-                                               ana.i <- conv.table (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, separate.missing.indicator = separate.missing.indicator, expected.values=expected.values)
+                                               ana.i <- conv.table (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, separate.missing.indicator = separate.missing.indicator, correct=correct, expected.values=expected.values)
                                            }
                                        }
                                        if( toCall == "quantile" ) {                
                                            if ( !is.null(allNam[["PSU"]]) )  {
                                                ana.i <- jackknife.quantile (dat.i = datI, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA, probs=probs)
                                            }  else  { 
-                                               ana.i <- conv.quantile (dat.i = datI, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, probs=probs, nBoot=nBoot,bootMethod=bootMethod)
+                                               ana.i <- conv.quantile (dat.i = datI, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, probs=probs, nBoot=nBoot,bootMethod=bootMethod)
                                            }
                                        }
                                        if( toCall == "glm" ) {                
@@ -235,7 +247,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK2", "BRR"), PSU = NULL, re
           rownames(allRes) <- NULL;  cat("\n")
           return(allRes) }
 
-conv.quantile      <- function ( dat.i , allNam, na.rm, group.delimiter, type, repA, probs, nBoot,bootMethod  ) {
+conv.quantile      <- function ( dat.i , allNam, na.rm, group.delimiter, repA, probs, nBoot,bootMethod  ) {
                       ret  <- do.call("rbind", by(data = dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( sub.dat) {
                               if( all(sub.dat[,allNam[["wgt"]]] == 1) )  {      ### alle Gewichte sind 1 bzw. gleich
                                  ret   <- hdquantile(x = sub.dat[,allNam[["dependent"]]], se = TRUE, probs = probs,na.rm=na.rm )
@@ -266,7 +278,7 @@ conv.quantile      <- function ( dat.i , allNam, na.rm, group.delimiter, type, r
 jackknife.quantile <- function ( dat.i , allNam, na.rm, type, repA, probs, group.delimiter) {
                       cat("."); flush.console()
                 #      if(!exists("svrepdesign"))      {library(survey)}
-                      typeS          <- recode(type, "'JK2'='JKn'")        ### typeS steht fuer type_Survey
+                      typeS          <- recode(type, "'JK2'='JKn'")             ### typeS steht fuer type_Survey
                       design         <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, mse = TRUE)
                       formel         <- as.formula(paste("~ ",allNam[["dependent"]], sep = "") )
                       quantile.imp   <- svyby(formula = formel, by = as.formula(paste("~", paste(allNam[["group"]], collapse = " + "))), design = design, FUN = svyquantile, quantiles = probs, return.replicates = TRUE, na.rm = na.rm)
@@ -278,7 +290,7 @@ jackknife.quantile <- function ( dat.i , allNam, na.rm, type, repA, probs, group
                       return(facToChar(data.frame ( group = apply(molt[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["group"]], modus = "noch_leer", molt[,c("parameter", "coefficient", "value", allNam[["group"]])], stringsAsFactors = FALSE))) }
 
 
-conv.table      <- function ( dat.i , allNam, na.rm, group.delimiter, type, separate.missing.indicator , expected.values  ) {
+conv.table      <- function ( dat.i , allNam, na.rm, group.delimiter, separate.missing.indicator , correct, expected.values  ) {
                    table.cast <- do.call("rbind", by(data = dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( sub.dat) {
                                  prefix <- data.frame(sub.dat[1,allNam[["group"]], drop=FALSE], row.names = NULL, stringsAsFactors = FALSE )
                                  foo    <- make.indikator(variable = sub.dat[,allNam[["dependent"]]], name.var = "ind", force.indicators =expected.values, separate.missing.indikator = ifelse(separate.missing.indicator==TRUE, "always","no"))
@@ -310,7 +322,7 @@ conv.table      <- function ( dat.i , allNam, na.rm, group.delimiter, type, sepa
                                                   dimNames  <- list( first = datSelWide[,allNam[["group.differences.by"]]], second = colnames(tbl))
                                                   names(dimNames) <- c(allNam[["group.differences.by"]], allNam[["dependent"]])
                                                   dimnames(tbl)   <- dimNames
-                                                  chisq     <- chisq.test(tbl)
+                                                  chisq     <- chisq.test(tbl, correct=correct)
                                                   scumm     <- iii[!duplicated(iii[,res.group]),res.group,drop = FALSE]
                                                   group     <- paste( paste( colnames(scumm), as.character(scumm[1,]), sep="="), sep="", collapse = ", ")
                                                   dif.iii   <- data.frame(group = paste(group, paste(k, collapse = ".vs."),sep="____"), parameter = "chiSquareTest", coefficient = c("chi2","df","pValue"), value = c(chisq[["statistic"]],chisq[["parameter"]],chisq[["p.value"]]) , stringsAsFactors = FALSE )
@@ -416,7 +428,7 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA) 
           cat("."); flush.console()
           dat.i[,"N_weighted"]      <- 1
           dat.i[,"N_weightedValid"] <- 1
-          if( length(which(is.na(dat.i[,allNam[["dependent"]]]))) ) { dat.i[which(is.na(dat.i[,allNam[["dependent"]]])), "N_weightedValid" ] <- 0 }
+          if( length(which(is.na(dat.i[,allNam[["dependent"]]]))) > 0 ) { dat.i[which(is.na(dat.i[,allNam[["dependent"]]])), "N_weightedValid" ] <- 0 }
           typeS<- recode(type, "'JK2'='JKn'")
        #   if(!exists("svrepdesign"))      {library(survey)}
           repl <- repA[ match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]]),]
