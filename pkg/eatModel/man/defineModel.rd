@@ -8,7 +8,7 @@ corresponding TAM call for a single model specified by several arguments in R. F
 R object is created which contain the required input for Conquest or TAM. To start the estimation,
 call \code{runModel} with the argument returned by \code{defineModel}.}
 \usage{
-defineModel (dat, items, id, 
+defineModel (dat, items, id, splittedModels = NULL,
    irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
    qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL, anchor = NULL, 
    check.for.linking = TRUE, boundary = 6, remove.boundary = FALSE, remove.no.answers = TRUE,
@@ -22,7 +22,7 @@ defineModel (dat, items, id,
    nodes=NULL, p.nodes=2000, f.nodes=2000,converge=0.001,deviancechange=0.0001,
    equivalence.table=c("wle","mle","NULL"), use.letters=FALSE,
    allowAllScoresEverywhere = TRUE, guessMat = NULL, est.slopegroups = NULL,
-   progress = FALSE, increment.factor=1 , fac.oldxsi=0, splittedModels = NULL,
+   progress = FALSE, increment.factor=1 , fac.oldxsi=0, 
    export = list(logfile = TRUE, systemfile = FALSE, history = TRUE,
    covariance = TRUE, reg_coefficients = TRUE, designmatrix = FALSE)}
 %- maybe also 'usage' for other objects documented here.
@@ -41,6 +41,10 @@ Columns of class \code{character} will be transformed.
   \item{id}{
 %%     ~~Describe \code{split.dif} here~~
 Name or column number of the identifier (ID) variable.
+}
+  \item{splittedModels}{
+%%     ~~Describe \code{dif.term} here~~
+Optional: Object returned by 'splitModels'. Definition for multiple model handling. 
 }
   \item{irtmodel}{
 %%     ~~Describe \code{abs.dif.bound} here~~
@@ -278,10 +282,6 @@ See help page of \code{tam.mml} for further details.
 %%     ~~Describe \code{dif.term} here~~
 Applies only if \code{software = "tam"}. Should only be varied if the model does not converge.
 See help page of \code{tam.mml} for further details.
-}
-  \item{splittedModels}{
-%%     ~~Describe \code{dif.term} here~~
-Optional: Object returned by 'splitModels'. Definition for multiple model handling. 
 }
   \item{export}{
 %%     ~~Describe \code{dif.term} here~~

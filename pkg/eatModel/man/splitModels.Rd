@@ -102,6 +102,7 @@ This version is beta. Use with care.
 
 \examples{
 
+# see also examples in 'defineModel'
 # example qMatrix
 qMatrix <- data.frame ( "item" = 1:4 , "science" = c(1,1,0,0) , "math" = c(0,0,1,1) , stringsAsFactors = FALSE )
 

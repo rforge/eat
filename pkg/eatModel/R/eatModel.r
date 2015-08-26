@@ -136,40 +136,48 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                    return(mod)  }  }   }
 
 
-defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
+defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
                qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL, anchor = NULL, check.for.linking = TRUE, boundary = 6, 
                remove.boundary = FALSE, remove.no.answers = TRUE, remove.missing.items = TRUE, remove.constant.items = TRUE, remove.failures = FALSE, 
-               remove.vars.DIF.missing = TRUE, remove.vars.DIF.constant = TRUE, verbose=TRUE,
-               software = c("conquest","lme4", "tam"), dir = NULL, analysis.name, model.statement = "item",  compute.fit = TRUE,
-               n.plausible=5, seed = NULL, conquest.folder=NULL,constraints=c("cases","none","items"),std.err=c("quick","full","none"),
-               distribution=c("normal","discrete"), method=c("gauss", "quadrature", "montecarlo"), n.iterations=2000,nodes=NULL, p.nodes=2000,
-               f.nodes=2000,converge=0.001,deviancechange=0.0001, equivalence.table=c("wle","mle","NULL"), use.letters=FALSE, allowAllScoresEverywhere = TRUE,
-               guessMat = NULL, est.slopegroups = NULL, progress = FALSE, increment.factor=1 , fac.oldxsi=0, splittedModels = NULL,
-               export = list(logfile = TRUE, systemfile = FALSE, history = TRUE, covariance = TRUE, reg_coefficients = TRUE, designmatrix = FALSE) )   {
+               remove.vars.DIF.missing = TRUE, remove.vars.DIF.constant = TRUE, verbose=TRUE, software = c("conquest","lme4", "tam"), dir = NULL, 
+               analysis.name, model.statement = "item",  compute.fit = TRUE, n.plausible=5, seed = NULL, conquest.folder=NULL,
+               constraints=c("cases","none","items"),std.err=c("quick","full","none"), distribution=c("normal","discrete"), 
+               method=c("gauss", "quadrature", "montecarlo"), n.iterations=2000,nodes=NULL, p.nodes=2000, f.nodes=2000,converge=0.001,deviancechange=0.0001, 
+               equivalence.table=c("wle","mle","NULL"), use.letters=FALSE, allowAllScoresEverywhere = TRUE, guessMat = NULL, est.slopegroups = NULL, 
+               progress = FALSE, increment.factor=1 , fac.oldxsi=0, export = list(logfile = TRUE, systemfile = FALSE, history = TRUE, covariance = TRUE, reg_coefficients = TRUE, designmatrix = FALSE) )   {
                   checkForPackage (namePackage = "eatRest", targetPackage = "eatModel")
                   if(!"data.frame" %in% class(dat) ) { cat("Convert 'dat' to a data.frame.\n"); dat <- data.frame ( dat, stringsAsFactors = FALSE)}
      ### Sektion 'multiple models handling': jedes Modell einzeln von 'defineModel' aufbereiten lassen 
-     ### ACHTUNG: Argumente in 'splittedModels' ueberschreiben default- und vom Nutzer gesetzte Argumente in 'defineModel'!
-                  if(!is.null(splittedModels)) { 
-                     mods   <- intersect(splittedModels[["models"]][,"model.no"], unlist(lapply(splittedModels[["models.splitted"]], FUN = function ( l ) {l[["model.no"]]})))
+     ### Hier wird jetzt erstmal nur die bescheuerte Liste aus 'splitModels' aufbereitet (wenn der Nutzer sie verhunzt hat)
+                  if(!is.null(splittedModels)) {
+                     if(length(splittedModels) == 2 & !is.null(splittedModels[[1]]) &  length(nrow( splittedModels[[1]]) > 0)>0 ) { 
+                        if(nrow(splittedModels[[1]])>0) { 
+                           mods   <- intersect(splittedModels[["models"]][,"model.no"], unlist(lapply(splittedModels[["models.splitted"]], FUN = function ( l ) {l[["model.no"]]})))
+                        }  else  { 
+                           mods <- unlist(lapply(splittedModels[["models.splitted"]], FUN = function ( l ) {l[["model.no"]]})) 
+                        }
+                     }  else  { 
+                        mods <- unlist(lapply(splittedModels[["models.splitted"]], FUN = function ( l ) {l[["model.no"]]})) 
+                     }
                      if(length(mods) == 0) { stop("Inconsistent model specification in 'splittedModels'.\n") } else { if(verbose == TRUE) { cat(paste("\nSpecification of 'item.grouping' and 'person.groups' results in ",length(mods)," model(s).\n",sep="")) } }
+     ### Jetzt wird die aufbereitete Liste aus 'splitModels' abgearbeitet 
+     ### ACHTUNG: Argumente in 'splittedModels' ueberschreiben default- und vom Nutzer gesetzte Argumente in 'defineModel'!
                      models <- lapply( mods, FUN = function ( m ) { 
-                               matchF <- match(m, splittedModels[["models"]][,"model.no"])
                                matchL <- match(m, unlist(lapply(splittedModels[["models.splitted"]], FUN = function ( l ) { l[["model.no"]] } )))
-                               if(!is.null(splittedModels[["models.splitted"]][[matchL]][["item.grouping"]][[1]])) {
-                                  itemMis<- setdiff ( splittedModels[["models.splitted"]][[matchL]][["item.grouping"]][,1], colnames(dat))
+                               if(!is.null(splittedModels[["models.splitted"]][[matchL]][["item.grouping"]])) {
+                                  itemMis<- setdiff ( splittedModels[["models.splitted"]][[matchL]][["qMatrix"]][,1], colnames(dat))
                                   if( length ( itemMis ) > 0) {
-                                      cat(paste( "Warning: ",length(itemMis) ," from ",nrow(splittedModels[["models.splitted"]][[matchL]][["item.grouping"]])," items not found in data.\n",sep=""))
+                                      cat(paste( "Warning: ",length(itemMis) ," from ",nrow(splittedModels[["models.splitted"]][[matchL]][["qMatrix"]])," items not found in data.\n",sep=""))
                                   }
-                                  itemSel<- intersect ( splittedModels[["models.splitted"]][[matchL]][["item.grouping"]][,1], colnames(dat))
-                                  qMatrix<- splittedModels[["models.splitted"]][[matchL]][["item.grouping"]]
+                                  itemSel<- intersect ( splittedModels[["models.splitted"]][[matchL]][["qMatrix"]][,1], colnames(dat))
+                                  qMatrix<- splittedModels[["models.splitted"]][[matchL]][["qMatrix"]]
                                }  else  {
-                                  if(is.null(items)) { stop(paste("Model no. ",m," ('",splittedModels[["models"]][matchF,"model.name"],"'): no items defined.\n",sep=""))}
+                                  if(is.null(items)) { stop(paste("Model no. ",m," ('",splittedModels[["models.splitted"]][[matchL]][["model.name"]],"'): no items defined.\n",sep=""))}
                                   itemSel<- items
                                   qMatrix<- NULL
                                }
      ### Personen im Datensatz selektieren: Achtung: wenn keine Personen in "person.grouping", nimm alle!
-                               if(!is.null(splittedModels[["models.splitted"]][[matchL]][["person.grouping"]][[1]])) {
+                               if(!is.null(splittedModels[["models.splitted"]][[matchL]][["person.grouping"]])) {
                                   persMis<- setdiff ( splittedModels[["models.splitted"]][[matchL]][["person.grouping"]][,1], dat[,id])
                                   if( length ( persMis ) > 0) {
                                       cat(paste( "Warning: ",length(persMis) ," from ",nrow(splittedModels[["models.splitted"]][[matchL]][["person.grouping"]])," persons not found in data.\n",sep=""))
@@ -178,14 +186,14 @@ defineModel <- function(dat, items, id, irtmodel = c("1PL", "2PL", "PCM", "PCM2"
                                   datSel <- dat[match(persons, dat[,id]),]
                                }  else  { datSel <- dat }
      ### Unterverzeichnisse definieren
-                               if(is.null(dir)) { dirI <- NULL }  else  { dirI   <- file.path(dir, substring(splittedModels[["models"]][matchF,"model.subpath"],3)) }
-                               nameI  <- splittedModels[["models"]][matchF,"model.name"]
+                               if(is.null(dir)) { dirI <- NULL }  else  { dirI   <- file.path(dir, substring(splittedModels[["models.splitted"]][[matchL]][["model.subpath"]],3)) }
+                               nameI  <- splittedModels[["models.splitted"]][[matchL]][["model.name"]]
                                if(is.null (qMatrix)) { nDim <- 1 } else { nDim <- ncol(qMatrix)-1 }
      ### Aufruf von 'defineModel' generieren
                                overwr1<- data.frame ( arg = c("dat", "items", "qMatrix", "analysis.name", "dir", "splittedModels"), val = c("datSel", "itemSel", "qMatrix", "nameI", "dirI", "NULL"), stringsAsFactors = FALSE)
                                notNull<- which ( unlist(lapply(splittedModels[["models.splitted"]][[matchL]], is.null)) == FALSE ) 
-                               overwr2<- intersect ( names(formals(defineModel)), names ( notNull))
-                               if(length(overwr2)>0) { 
+                               overwr2<- setdiff ( intersect ( names(formals(defineModel)), names ( notNull)), "qMatrix")
+                               if(length(overwr2)>0) {                          ### obere Zeile: qMatrix ist oben schon definiert, wird hier NICHT aus der Liste durchgeschleift 
                                   overwr3 <- data.frame ( arg = overwr2, val = paste("splittedModels[[\"models.splitted\"]][[",matchL,"]][[\"",overwr2,"\"]]",sep=""), stringsAsFactors = FALSE)
                                   overwr1 <- rbind ( overwr1, overwr3)
                                   overwr3[,"eval"] <- unlist(lapply(paste(overwr3[,"val"],sep=""), FUN = function ( l ) { eval(parse(text = l))}))
