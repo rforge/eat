@@ -45,8 +45,12 @@ catPbc <- function(datRaw, datRec, idRaw, idRec, context.vars, values, subunits,
 		
 		# exclude context vars from subunits and values
   if ( length(context.vars != 0) ) {
-    subunits <- subunits[-which(subunits$subunit %in% context.vars), ]
-    values   <- values[-which(values$subunit %in% context.vars), ]
+    if (any(!is.na (match(context.vars, subunits$subunit)))){
+      subunits <- subunits[-which(subunits$subunit %in% context.vars), ]
+    }
+    if (any(!is.na (match(context.vars, values$subunit)))){
+      values   <- values[-which(values$subunit %in% context.vars), ]
+    }  
 	}
 
     # make inputs
