@@ -2,6 +2,7 @@ importFrom("car", recode)
 importFrom("gdata", write.fwf)
 importFrom("plyr", rbind.fill, rbind.fill.matrix, alply)
 importFrom("date", as.date)
+export(splitModels)
 export(defineModel)
 export(runModel)
 export(getResults)
@@ -16,7 +17,3 @@ export(itemFromRes)
 export(wleFromRes)
 export(eapFromRes)
 export(pvFromRes)
-
-
-
-

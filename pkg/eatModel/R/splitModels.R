@@ -1,28 +1,5 @@
 
-### Funktion:
-# splitModels
-
-### Argumente:
-# item.grouping     data.frame, erste Spalte muss item-ID sein, dann Dimensionen als Spalten mit Werten 0/1
-# person.groups     data.frame, erste Spalte muss person-ID sein, dann Gruppen-Variablen als Spalten mit Gruppen-Kategorien als Werte
-# split             character, was gesplittet werden soll
-# all.persons       logical (default: TRUE), je Gruppen-Variable wird eine "alle"-Kategorie hinzugefügt
-# all.persons.lab   character, Name der "alle"-Kategorie (nur relevant wenn all.persons TRUE ist)
-# TODO: add
-# cross				named list, Namen sind die Variablen die reingekreuzt werden, die Elemente sind die Stufen der jeweiligen Variable
-#					z.B. list ( "software" = c ( "conquest" , "tam" ) )
-# full.model.names	logical (default: TRUE), Modellnamen werden aus Kategorienbezeichnungen gebaut (kann sehr lange Modellnamen ergeben); wenn FALSE sind die Modellnamen einfach hochnummeriert
-# env               logical (default: FALSE), aendert Rueckgabe
-# verbose			logical (default: TRUE), Ausgabe wie viele Modelle gemacht werden und Progress Bar
-
-### Rueckgabe:
-# Liste mit zwei Eintraegen: 
-# [1] data.frame mit Modell-Informationen model.no, model.name, model.subpath, item.grouping, person.grouping
-# [2] Liste (Anzahl Listenelemente = Anzahl Modelle)
-#     wenn env FALSE: Liste mit 4 Elementen: model.name, model.subpath, item.grouping, person.grouping
-#     wenn env TRUE:  Liste mit environments die die 4 Objekte model.name, model.subpath, item.grouping, person.grouping beinhalten
-
-splitModels <- function ( item.grouping = NULL , person.groups = NULL , split = c ( "item.grouping" , "person.groups" ) , all.persons = TRUE , all.persons.lab = "all" , add = NULL , cross = NULL , full.model.names = TRUE , env = FALSE , verbose = TRUE ) {
+splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "qMatrix" , "person.groups" ) , add = NULL , cross = NULL , all.persons = TRUE , all.persons.lab = "all" , full.model.names = TRUE , model.name.elements = c ( "dim" , "group" , "cross" ) , include.var.name = FALSE , env = FALSE , verbose = TRUE ) {
 		
 		# Funktion: person.groups nach person.grouping
 		pg2pgr <- function ( x , nam ) {
@@ -32,9 +9,9 @@ splitModels <- function ( item.grouping = NULL , person.groups = NULL , split = 
 		}
 
 		# wenn kein data.frame, dann ignorieren
-		if ( !is.null ( item.grouping ) & !is.data.frame ( item.grouping ) ) {
-				item.grouping <- NULL
-				warning ( paste0 ( "splitModels: item.grouping is not a data.frame and will be ignored." ) , call. = FALSE )
+		if ( !is.null ( qMatrix ) & !is.data.frame ( qMatrix ) ) {
+				qMatrix <- NULL
+				warning ( paste0 ( "splitModels: qMatrix is not a data.frame and will be ignored." ) , call. = FALSE )
 		}
 		if ( !is.null ( person.groups ) & !is.data.frame ( person.groups ) ) {
 				person.groups <- NULL
@@ -42,10 +19,10 @@ splitModels <- function ( item.grouping = NULL , person.groups = NULL , split = 
 		}
 
 		# wenn keine Spalten / Zeilen dann NULL
-		if ( !is.null ( item.grouping ) ) {
-				if ( nrow ( item.grouping ) %in% 0 | ncol ( item.grouping ) %in% 0 ) {
-						warning ( "splitModels: check item.grouping" , call. = FALSE )
-						item.grouping <- NULL
+		if ( !is.null ( qMatrix ) ) {
+				if ( nrow ( qMatrix ) %in% 0 | ncol ( qMatrix ) %in% 0 ) {
+						warning ( "splitModels: check qMatrix" , call. = FALSE )
+						qMatrix <- NULL
 				}
 		}
 		if ( !is.null ( person.groups ) ) {
@@ -55,39 +32,39 @@ splitModels <- function ( item.grouping = NULL , person.groups = NULL , split = 
 				}
 		}
 
-		# Dimensionen in item.grouping duerfen nur 0/1 haben
-		if ( !is.null ( item.grouping ) ) {
-				if ( ncol ( item.grouping ) > 1 ) {
-						not01 <- ! sapply ( item.grouping[,-1,drop=FALSE] , function ( x ) all ( x %in% c(0,1) ) )
+		# Dimensionen in qMatrix duerfen nur 0/1 haben
+		if ( !is.null ( qMatrix ) ) {
+				if ( ncol ( qMatrix ) > 1 ) {
+						not01 <- ! sapply ( qMatrix[,-1,drop=FALSE] , function ( x ) all ( x %in% c(0,1) ) )
 						
 						if ( any ( not01 ) ) {
-								warning ( paste0 ( "splitModels: column(s) " , paste ( names (not01)[not01] , collapse = ", " ) , " in item.grouping contain elements that are not 0 or 1; this/these column(s) are ignored" ) , call. = FALSE )
-								item.grouping <- item.grouping[,colnames(item.grouping)[!colnames(item.grouping) %in% names (not01)[not01]],drop=FALSE]
+								warning ( paste0 ( "splitModels: column(s) " , paste ( names (not01)[not01] , collapse = ", " ) , " in qMatrix contain elements that are not 0 or 1; this/these column(s) are ignored" ) , call. = FALSE )
+								qMatrix <- qMatrix[,colnames(qMatrix)[!colnames(qMatrix) %in% names (not01)[not01]],drop=FALSE]
 						}
 				}
 		}
 		
 		# wenn nur eine Spalte wird diese als IDs angenommen
-		if ( !is.null ( item.grouping ) ) {
-				if ( ncol ( item.grouping ) %in% 1 ) {
-						warning ( "splitModels: item.grouping contains just one column; this is treated as item names" , call. = FALSE )
-						item.grouping$dim <- 1
+		if ( !is.null ( qMatrix ) ) {
+				if ( ncol ( qMatrix ) %in% 1 ) {
+						warning ( "splitModels: qMatrix contains just one column; this is treated as item names" , call. = FALSE )
+						qMatrix$dim <- 1
 				}
 		}
 		if ( !is.null ( person.groups ) ) {
 				if ( ncol ( person.groups ) %in% 1 ) {
 						warning ( "splitModels: person.groups contains just one column; this is treated as person ids" , call. = FALSE )
 						person.groups$group <- all.persons.lab
-						all.persons = FALSE
+						all.persons <- FALSE
 				}
 		}		
 		
-		# item.grouping und person.groups auf Plausibilitaet checken
-		if ( !is.null ( item.grouping ) ) {
+		# qMatrix und person.groups auf Plausibilitaet checken
+		if ( !is.null ( qMatrix ) ) {
 				# hat erste Spalte mehr Elemente als alle anderen
-				len <- sapply ( item.grouping , function ( x ) length ( unique ( x ) ) )
+				len <- sapply ( qMatrix , function ( x ) length ( unique ( x ) ) )
 				len.log <- len < len[1]
-				if ( ! all ( len.log[-1] ) ) warning ( paste0 ( "splitModels: first column of item.grouping might not contain item names; please check\n(number of unique elements is smaller than in another column)" ) , call. = FALSE )
+				if ( ! all ( len.log[-1] ) ) warning ( paste0 ( "splitModels: first column of qMatrix might not contain item names; please check\n(number of unique elements is smaller than in another column)" ) , call. = FALSE )
 		}
 		if ( !is.null ( person.groups ) ) {
 				# hat erste Spalte mehr Elemente als alle anderen
@@ -97,7 +74,7 @@ splitModels <- function ( item.grouping = NULL , person.groups = NULL , split = 
 		}
 		
 		# aus Split die Sachen raus, die nicht da sind
-		if ( is.null ( item.grouping ) ) split <- split[!split %in% "item.grouping"]
+		if ( is.null ( qMatrix ) ) split <- split[!split %in% "qMatrix"]
 		if ( is.null ( person.groups ) ) split <- split[!split %in% "person.groups"]
 
 		# all.persons.lab checken ob bereits eine Kategorie in person.groups so heisst
@@ -132,14 +109,14 @@ splitModels <- function ( item.grouping = NULL , person.groups = NULL , split = 
 				eval ( parse ( text = do.order ) )
 		}
 		
-		# item.grouping
-		if ( "item.grouping" %in% split & !is.null ( item.grouping ) ) {
-				# item.grouping mit mehreren Dimensionen zu Liste von item.groupings mit nur einer Dimension
-				i <- sapply ( colnames ( item.grouping )[-1] , function ( x , d ) { d <- d[,c(colnames(item.grouping)[1],x)]; d <- d[ d[,x] %in% 1 , ]; return ( d ) } , item.grouping , simplify = FALSE )
-		} else if ( ! "item.grouping" %in% split & !is.null ( item.grouping ) ) {
-				i <- list ( item.grouping )
+		# qMatrix
+		if ( "qMatrix" %in% split & !is.null ( qMatrix ) ) {
+				# qMatrix mit mehreren Dimensionen zu Liste von item.groupings mit nur einer Dimension
+				i <- sapply ( colnames ( qMatrix )[-1] , function ( x , d ) { d <- d[,c(colnames(qMatrix)[1],x)]; d <- d[ d[,x] %in% 1 , ]; return ( d ) } , qMatrix , simplify = FALSE )
+		} else if ( ! "qMatrix" %in% split & !is.null ( qMatrix ) ) {
+				i <- list ( qMatrix )
 		} else {
-				i <- list ( item.grouping )
+				i <- list ( qMatrix )
 		}
 
 		# benennen wenn das erste Element von i nicht NULL ist
@@ -230,6 +207,23 @@ splitModels <- function ( item.grouping = NULL , person.groups = NULL , split = 
 		i.dfr <- data.frame ( "dim" = names ( i ) , stringsAsFactors = FALSE )
 		p.dfr <- data.frame ( "group" = names ( p3 ) , stringsAsFactors = FALSE )
 
+		# Abgleich von cross und add
+		# cross gewinnt, d.h. wenn in cross, wirds aus add rausgenommen
+		if ( !is.null ( cross ) & !is.null ( add ) ) {
+				if ( any ( names ( cross ) %in% names ( add ) ) ) add <- add[!names(add) %in% names(cross)]
+				if ( length ( add ) < 1 ) add <- NULL
+		}
+		
+		# add darf immer nur ein Element haben
+		if ( !is.null ( add ) ) {
+				addlen <- sapply ( add , length )
+				if ( any ( addlen > 1 ) ) {
+						warning ( paste0 ( "splitModels: one or more element(s) of add have length greater than 1; only first value is considered." ) , call. = FALSE )
+						do.oneel <- paste0 ( "add$" , names ( add )[addlen > 1] , " <- " , "add$" , names ( add )[addlen > 1] , "[1]" )
+						eval ( parse ( text = do.oneel ) )
+				}
+		}
+		
 		### cross Elemente zum reinkreuzen vorbereiten
 		if ( !is.null ( cross ) ) {
 				cr.l <- mapply ( function ( d , n ) {d <- data.frame ( d , stringsAsFactors = FALSE ); colnames ( d ) <- n; return ( d )} , cross , names ( cross ) , SIMPLIFY = FALSE )
@@ -259,48 +253,84 @@ splitModels <- function ( item.grouping = NULL , person.groups = NULL , split = 
 		if ( verbose ) {
 				# wenn zu viele Modelle werden noch zusaetzlich - gebraucht
 				zus <- ""
-				if ( nrow ( m ) > 28 ) zus <- paste(rep("-", nrow ( m ) - 28 - nchar ( as.character ( nrow ( m ) ) ) ),collapse="")
-				out.str <- paste0 ( "----------------------------",paste(rep("-",nchar ( as.character ( nrow ( m ) ) )),collapse=""),zus,"\nsplitModels: generating " , nrow ( m ) , " models\n" )
+				if ( nrow ( m ) > 31 ) zus <- paste(rep("-", nrow ( m ) - 31 - nchar ( as.character ( nrow ( m ) ) ) ),collapse="")
+				out.str <- paste0 ( "-------------------------------",paste(rep("-",nchar ( as.character ( nrow ( m ) ) )),collapse=""),zus,"\nsplitModels: generating " , nrow ( m ) , " models\n" )
 				cat ( out.str )
 				flush.console()
 		}
 
 		# Modellname
-		if ( full.model.names ) {
+		if ( full.model.names & !is.null ( model.name.elements ) ) {
+				
+				# Elemente aus denen Modellname gebildet werden soll raussuchen
+				fx <- function ( el , add , cross ) {
+					if ( el %in% c("add","cross") ) eval ( parse ( text = paste0 ( "names ( ",el," )" ) ) ) else el
+				}
+				mne <- unname ( do.call ( "c" , sapply ( model.name.elements, fx , add , cross , simplify = FALSE ) ) )
+				
+				# Datensatz reduzieren
+				mn <- m[,colnames ( m ) %in% mne , drop = FALSE ]
+				# sortieren
+				mn <- mn[,mne,drop=FALSE]
+				
+				# Namen erzeugen
 				f4 <- function ( z ) {
 						z <- z[!z %in% ""]
+						if ( include.var.name ) z <- paste0 ( names ( z ) , "." , z )
 						paste ( gsub ( "\\s" , "" , z ) , collapse = "__" )
 				}
-				# Spalten die durch Parameter add dazugekommen sind und deshalb ueber Modelle keine Varianz haben, rausloeschen, damit Modellnamen nicht zu lang
-				# TODO: ggf. parametrisieren (wenn gewuenscht)
-				mn <- m[,!colnames ( m ) %in% names ( add ) ]
-				# Namen erzeugen
 				m$model.name <- apply ( mn , 1 , f4 )
+
+				# Modell-Name ggf. unique machen
+				if ( any ( duplicated ( m$model.name ) ) ) m$model.name <- make.unique ( m$model.name )
+				
+				# Subpfade
+				# bzgl. add gibts keine Varianz ueber Modelle
+				# dann setzt man sinnlos Subpfade
+				# deshalb rausnehmen (egal obs im Modell-Name drin ist oder nicht
+				# if ( !is.null ( add ) ) mn2 <- mn[, ! colnames ( mn ) %in% names ( add ),drop=FALSE ]
+				
+				# Subpath erzeugen
+				f5 <- function ( z ) {
+						z <- z[!z %in% ""]
+						if ( include.var.name ) z <- paste0 ( names ( z ) , "." , z )						
+						x <- as.character ( c( "." , unname ( gsub ( "\\s" , "" , z ) ) ) )
+						return ( eval ( parse ( text = paste0 ( "file.path ( " , paste ( paste0("'",x,"'") , collapse = " , " ) , ") " ) ) ) )
+				}
+				m$model.subpath <- apply ( mn , 1 , f5 )
+
+				# Subpfade ggf. unique machen
+				if ( any ( duplicated ( m$model.subpath ) ) ) m$model.subpath <- make.unique ( m$model.subpath )			
+				
 		} else {
 				m$model.name <- paste0 ( "model" , formatC ( seq ( along = rownames ( m ) ) , format = "fg" , width = nchar ( as.character ( nrow ( m ) ) ) , flag = "0" ) )
+
+				if ( nrow ( m ) > 1 ) {
+						m$model.subpath <- file.path ( "." , m$model.name )
+				} else {
+						m$model.subpath <- "."
+				}
 		}
 				
 		# Modellname muss vorhanden sein (sonst geht Listenerstellung schlecht)
 		if ( any ( abc <- m$model.name %in% "" ) ) {
 				m$model.name[abc] <- paste0 ( "model" , formatC ( seq ( along = abc ) , format = "fg" , width = nchar ( as.character ( length ( abc ) ) ) , flag = "0" ) )
 		}
-		
-		# Subpath
-		m$model.subpath <- "."
-		if ( full.model.names ) {		
-				if ( "item.grouping" %in% split ) m$model.subpath <- file.path ( m$model.subpath , m$dim )
-				if ( "person.groups" %in% split ) m$model.subpath <- file.path ( m$model.subpath , m$group )
-		} else {
-				if ( nrow ( m ) > 1 ) {
-						m$model.subpath <- file.path ( "." , m$model.name )
-				}
-		}
 				
 		# Modell-Nr (=Listen-Index)
 		m$model.no <- as.integer ( seq ( along = rownames ( m ) ) )
 		
+		# Anzahl Dimensionen
+		m$Ndim <- as.integer ( unname ( sapply ( m$dim , function ( dim , i ) length ( i[[dim]] ) - 1 , i ) ) )
+		m$Ndim[ m$Ndim < 1 ] <- NA
+		
+		# Anzahl Gruppen
+		m$Ngroup <- as.integer ( unname ( sapply ( m$group , function ( group , p3 ) length ( p3[[group]] ) - 1 , p3 ) ) )
+		m$Ngroup[ m$Ngroup < 1 ] <- NA
+		
+		
 		# Modell-Datensatz Spalten sortieren
-		vorn <- c ( "model.no" , "model.name" , "model.subpath" , "dim" , "group" )
+		vorn <- c ( "model.no" , "model.name" , "model.subpath" , "dim" , "Ndim" , "group" , "Ngroup" )
 		m <- m[,c(vorn,colnames(m)[!colnames(m) %in% vorn]),drop=FALSE]
 		
 		# Return-Objekt bauen
@@ -323,11 +353,24 @@ splitModels <- function ( item.grouping = NULL , person.groups = NULL , split = 
 				}
 				
 				# NULL setzen wenn nicht da
-				if ( z["dim"] %in% "" ) ig <- NULL.char else ig <- paste0 ( "i$" , z["dim"] )
-				if ( z["group"] %in% "" ) pg <- NULL.char else pg <- paste0 ( "p3$" , z["group"] )
-				# if ( z["model.name"] %in% "" ) mn <- NULL.char else mn <- z["model.name"]
-				# if ( z["model.subpath"] %in% "" ) msp <- NULL.char else msp <- z["model.subpath"]
-
+				if ( z["dim"] %in% "" ) {
+						ig <- NULL.char 
+						di <- NULL.char
+				} else {
+						ig <- paste0 ( "i$" , z["dim"] )
+						di <- z["dim"]
+				}
+				if ( z["group"] %in% "" ) {
+						pg <- NULL.char
+						gr <- NULL.char
+				} else {
+						pg <- paste0 ( "p3$" , z["group"] )
+						gr <- z["group"]
+				}
+						
+				if ( is.na ( z["Ndim"] ) ) nd <- NULL.char else nd <- z["Ndim"]
+				if ( is.na ( z["Ngroup"] ) ) ng <- NULL.char else ng <- z["Ngroup"]
+				
 				# wenn cross oder add nicht NULL, muessen character eintraege gequotet werden
 				# und Typ richtig gemacht
 				if ( !is.null ( cross ) | !is.null ( add ) ) {
@@ -341,8 +384,13 @@ splitModels <- function ( item.grouping = NULL , person.groups = NULL , split = 
 						ret <- 	c ( paste0 ( "r$'" , z["model.name"] , "'$model.no <- as.integer(",z["model.no"],")" ) ,
 									paste0 ( "r$'" , z["model.name"] , "'$model.name <- '",z["model.name"],"'" ) ,
 									paste0 ( "r$'" , z["model.name"] , "'$model.subpath <- '",z["model.subpath"],"'" ) ,
-									paste0 ( "r$'" , z["model.name"] , "'$item.grouping <- ",ig,"" ) ,
-									paste0 ( "r$'" , z["model.name"] , "'$person.grouping <- ",pg,"" ) )
+									paste0 ( "r$'" , z["model.name"] , "'",ifelse(di%in%NULL.char,"","["),"['dim']",ifelse(di%in%NULL.char,"","]")," <- ",ifelse(di%in%NULL.char,"","'"),di,ifelse(di%in%NULL.char,"","'") ) ,
+									paste0 ( "r$'" , z["model.name"] , "'",ifelse(nd%in%NULL.char,"","["),"['Ndim']",ifelse(nd%in%NULL.char,"","]")," <- ",ifelse(nd%in%NULL.char,"","as.integer("),nd,ifelse(nd%in%NULL.char,"",")"),"" ) ,
+									paste0 ( "r$'" , z["model.name"] , "'",ifelse(gr%in%NULL.char,"","["),"['group']",ifelse(gr%in%NULL.char,"","]")," <- ",ifelse(gr%in%NULL.char,"","'"),gr,ifelse(gr%in%NULL.char,"","'") ) ,
+									paste0 ( "r$'" , z["model.name"] , "'",ifelse(ng%in%NULL.char,"","["),"['Ngroup']",ifelse(ng%in%NULL.char,"","]")," <- ",ifelse(ng%in%NULL.char,"","as.integer("),ng,ifelse(ng%in%NULL.char,"",")"),"" ) ,
+									paste0 ( "r$'" , z["model.name"] , "'",ifelse(ig%in%NULL.char,"","["),"['qMatrix']",ifelse(ig%in%NULL.char,"","]")," <- ",ig,"" ) ,
+									paste0 ( "r$'" , z["model.name"] , "'",ifelse(pg%in%NULL.char,"","["),"['person.grouping']",ifelse(pg%in%NULL.char,"","]")," <- ",pg,"" ) )
+									
 						# die Sachen aus cross/add setzen
 						if ( !is.null ( cross ) | !is.null ( add ) ) {
 								ret <- c (	ret ,
@@ -355,8 +403,13 @@ splitModels <- function ( item.grouping = NULL , person.groups = NULL , split = 
 									paste0 ( "assign ( 'model.no' , as.integer(" , z["model.no"] , ") , pos = r$'" , z["model.name"] , "' ) " ) ,
 									paste0 ( "assign ( 'model.name' , '" , z["model.name"] , "' , pos = r$'" , z["model.name"] , "' ) " ) ,
 									paste0 ( "assign ( 'model.subpath' , '" , z["model.subpath"] , "' , pos = r$'" , z["model.name"] , "' ) " ) ,
-									paste0 ( "assign ( 'item.grouping' , " , ig , " , pos = r$'" , z["model.name"] , "' ) " ) ,
+									paste0 ( "assign ( 'dim' , " , ifelse(di%in%NULL.char,"","'") , di , ifelse(di%in%NULL.char,"","'") , " , pos = r$'" , z["model.name"] , "' ) " ) ,
+									paste0 ( "assign ( 'Ndim' , " ,ifelse(nd%in%NULL.char,"","as.integer(") , nd , ifelse(nd%in%NULL.char,"",")") , " , pos = r$'" , z["model.name"] , "' ) " ) ,
+									paste0 ( "assign ( 'group' , " , ifelse(gr%in%NULL.char,"","'") , gr , ifelse(gr%in%NULL.char,"","'") , " , pos = r$'" , z["model.name"] , "' ) " ) ,
+									paste0 ( "assign ( 'Ngroup' , " , ifelse(ng%in%NULL.char,"","as.integer(") , ng , ifelse(ng%in%NULL.char,"",")") , " , pos = r$'" , z["model.name"] , "' ) " ) ,
+									paste0 ( "assign ( 'qMatrix' , " , ig , " , pos = r$'" , z["model.name"] , "' ) " ) ,
 									paste0 ( "assign ( 'person.grouping' , " , pg , " , pos = r$'" , z["model.name"] , "' ) " ) )
+									
 						# die Sachen aus cross(add) setzen
 						if ( !is.null ( cross ) | !is.null ( add ) ) {
 								ret <- c (	ret ,
@@ -371,7 +424,6 @@ splitModels <- function ( item.grouping = NULL , person.groups = NULL , split = 
 		
 		# Modell-Dataframe noch an Rueckgabe ranhaengen
 		# Leerstrings zu NA
-		# TODO: ggf. noch Ndim Ngroup adden
 		do.leer <- paste0 ( "m$" , colnames(m) , "[m$", colnames(m) , " %in% ''] <- NA" )
 		eval ( parse ( text = do.leer ) )
 		# anhaengen
@@ -379,129 +431,10 @@ splitModels <- function ( item.grouping = NULL , person.groups = NULL , split = 
 		
 		# Ausgabe auf console
 		if ( verbose ) {
-				out.str <- paste0 ( "\nsee <returned>$models\n----------------------------",paste(rep("-",nchar ( as.character ( nrow ( m ) ) )),collapse=""),zus,"\n" )
+				out.str <- paste0 ( "\nsee <returned>$models\n-------------------------------",paste(rep("-",nchar ( as.character ( nrow ( m ) ) )),collapse=""),zus,"\n" )
 				cat ( out.str )
+				flush.console()
 		}
 		
 		return ( r )
 }
-
-### Tests ###
-# set.seed ( 1234 )
-# item.grouping <- data.frame ( "item" = 1:10 , "dim1" = sample ( c ( 0 , 1 ) , 10 , replace = TRUE ), "dim2" = sample ( c ( 0 , 1 ) , 10 , replace = TRUE ) , stringsAsFactors = FALSE )
-# person.groups <- data.frame ( "idstud" = 1:10 , "group1" = sample ( c ( "cat1" , "cat2" ) , 10 , replace = TRUE ), "group2" = sample ( c ( "cat1" , "cat2" ) , 10 , replace = TRUE ) , stringsAsFactors = FALSE )
-
-# l1 <- splitModels ( item.grouping, person.groups , cross = list ( "software" = c ( "conquest" , "tam" ) ) , add = list ( "n.plausible" = 5 , "nodes" = 1000  ) )
-# l1 <- splitModels ( item.grouping, person.groups , cross = NULL , add = list ( "n.plausible" = 5 , "nodes" = 1000  ) )
-# l1 <- splitModels ( item.grouping, person.groups , cross = list ( "software" = c ( "conquest" , "tam" ) ) , add = NULL )
-# l1 <- splitModels ( item.grouping, person.groups , cross = NULL , add = NULL )
-
-# l1 <- splitModels ( item.grouping, person.groups , cross = list ( "n.plausible" = c(5,10) ) , add = list ( "software" = c ( "conquest" ) ) )
-
-# l1[[1]]
-# str(l1[[2]])
-
-
-
-# l1 <- splitModels ( item.grouping, person.groups )
-# length(l1$models.splitted)
-
-# l1b <- splitModels ( item.grouping, person.groups , env = TRUE )
-# str(l1b)
-# ls ( l1b[[1]] )
-# identical ( get ( "item.grouping" , l1b[[2]][[1]] ) , l1[[2]][[1]]$item.grouping )
-
-# l1c <- splitModels ( item.grouping, person.groups , all.persons = FALSE )
-# length(l1c[[2]])
-
-# l2 <- splitModels ( item.grouping, person.groups , split = "item.grouping" )
-# length(l2[[2]])
-
-# l3 <- splitModels ( item.grouping, person.groups , split = "person.groups" )
-# length(l3[[2]])
-
-# l4 <- splitModels ( item.grouping, person.groups , split = NULL )
-# str(l4)
-
-# l5 <- splitModels ( item.grouping = NULL, person.groups=person.groups )
-# length(l5[[2]])
-# str(l5)
-
-# l5b <- splitModels ( item.grouping = NULL, person.groups=person.groups, split = NULL )
-# str(l5b)
-
-# l5c <- splitModels ( item.grouping = NULL, person.groups=person.groups, split = "item.grouping" )
-# str(l5c)
-
-# l5d <- splitModels ( item.grouping = NULL, person.groups=person.groups, split = "person.groups" )
-# str(l5d)
-
-# l6 <- splitModels ( item.grouping, person.groups=NULL )
-# str(l6)
-
-# l6b <- splitModels ( item.grouping, person.groups=NULL, split = NULL)
-# str(l6b)
-
-# l6c <- splitModels ( item.grouping, person.groups=NULL, split = "person.groups" )
-# str(l6c)
-
-# l6d <- splitModels ( item.grouping, person.groups=NULL, split = "item.grouping" )
-# str(l6d)
-
-# l6e <- splitModels ( item.grouping, person.groups=NULL, split = "item.grouping" , env = TRUE )
-# str(l6e)
-# ls ( l6e[[2]][[1]] )
-# get ( "person.grouping" , l6e[[2]][[1]] )
-# get ( "item.grouping" , l6e[[2]][[1]] )
-# get ( "model.name" , l6e[[2]][[1]] )
-# get ( "model.subpath" , l6e[[2]][[1]] )
-
-# l7 <- splitModels ( item.grouping=NULL, person.groups=NULL, split = NULL )
-# str(l7)
-
-# all.persons.lab checken
-# l8 <- splitModels ( item.grouping=NULL, person.groups=person.groups , all.persons.lab = "cat1" ) 
-# person.groups2 <- data.frame ( "idstud" = 1:10 , "group1" = sample ( c ( "all" , "ALL" ) , 10 , replace = TRUE ), "group2" = sample ( c ( "_all_" , "_ALL_" ) , 10 , replace = TRUE ) , stringsAsFactors = FALSE )
-# l9 <- splitModels ( item.grouping=NULL, person.groups=person.groups2 ) 
-
-# check factor person.groups
-# person.groups3 <- data.frame ( "idstud" = 1:10 , "group1" = sample ( c ( "cat1" , "cat2" ) , 10 , replace = TRUE ), "group2" = sample ( c ( "cat1" , "cat2" ) , 10 , replace = TRUE ) )
-# l10 <- splitModels ( item.grouping=NULL, person.groups=person.groups3 ) 
-# set.seed(123456)
-# person.groups4 <- data.frame ( "idstud" = 1:10 , "group1" = sample ( c ( "cat1" , "cat2" ) , 10 , replace = TRUE ), "group2" = sample ( c ( "cat1" , "cat2" ) , 10 , replace = TRUE ) , "group3" = sample ( c ( "cat2" , "cat1" ) , 10 , replace = TRUE ) )
-# person.groups4$group1 <- factor ( person.groups4$group1 , levels(person.groups4$group1)[ c(2,1) ] )
-# person.groups4$group2 <- factor ( person.groups4$group2 , levels(person.groups4$group2)[ c(2,1) ] )
-# person.groups4$group3 <- as.character ( person.groups4$group3 )
-# l11 <- splitModels ( item.grouping=NULL, person.groups=person.groups4 ) 
-
-# Ausgabe checken
-# person.groups5 <- data.frame ( "idstud" = 1:10 , "group1" = sample ( c ( "cat1" , "cat2" ,"cat3","cat4","cat5") , 10 , replace = TRUE ), "group2" = sample ( c ( "cat1" , "cat2" ,"cat3","cat4" ) , 10 , replace = TRUE ) , "group3" = sample ( c ( "cat2" , "cat1" ,"cat3" ) , 10 , replace = TRUE ), "group4" = sample ( c ( "cat2" , "cat1" ,"cat3" ) , 10 , replace = TRUE ) )
-# l12 <- splitModels ( item.grouping=NULL, person.groups=person.groups5 ) 
-
-# full.model.names = FALSE
-# l13 <- splitModels ( item.grouping, person.groups , cross = list ( "software" = c ( "conquest" , "tam" ) , "n.plausible" = c ( 5 , 10 ) ) , full.model.names = FALSE )
-# l13$models
-
-# cross
-# l14 <- splitModels ( item.grouping, person.groups , cross = list ( "software" = c ( "conquest" , "tam" ) , "n.plausible" = as.integer ( c ( 5 , 10 ) ) ) , env = TRUE )
-# ls ( l14[[2]][[1]] )
-
-
-# l15 <- splitModels ( item.grouping, person.groups[,1,drop=FALSE] )
-# str(l15)
-# l15$models
-
-# l16 <- splitModels ( item.grouping[,1,drop=FALSE], person.groups )
-# str(l16)
-# l16$models
-
-# l17 <- splitModels ( item.grouping[,c(3,1,1),drop=FALSE], person.groups )
-# str(l17)
-# l17$models
-
-
-
-
-
-
-
