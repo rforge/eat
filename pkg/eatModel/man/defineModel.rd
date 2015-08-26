@@ -22,7 +22,7 @@ defineModel (dat, items, id,
    nodes=NULL, p.nodes=2000, f.nodes=2000,converge=0.001,deviancechange=0.0001,
    equivalence.table=c("wle","mle","NULL"), use.letters=FALSE,
    allowAllScoresEverywhere = TRUE, guessMat = NULL, est.slopegroups = NULL,
-   progress = FALSE, increment.factor=1 , fac.oldxsi=0,
+   progress = FALSE, increment.factor=1 , fac.oldxsi=0, splittedModels = NULL,
    export = list(logfile = TRUE, systemfile = FALSE, history = TRUE,
    covariance = TRUE, reg_coefficients = TRUE, designmatrix = FALSE)}
 %- maybe also 'usage' for other objects documented here.
@@ -279,6 +279,10 @@ See help page of \code{tam.mml} for further details.
 Applies only if \code{software = "tam"}. Should only be varied if the model does not converge.
 See help page of \code{tam.mml} for further details.
 }
+  \item{splittedModels}{
+%%     ~~Describe \code{dif.term} here~~
+Optional: Object returned by 'splitModels'. Definition for multiple model handling. 
+}
   \item{export}{
 %%     ~~Describe \code{dif.term} here~~
 Applies only if \code{software = "conquest"}. Specifies which additional files should be written
@@ -380,6 +384,18 @@ mod2T2<- defineModel(dat=datW, items= qMat[,1], id="id", qMatrix = qMat,
 run2T2<- runModel(mod2T2)
 res2T2<- getResults(run2T2)
 plotDevianceTAM(run2T2)
+#
+# Example 4: define und run multiple models defined by 'splitModels'
+# define person grouping
+pers  <- data.frame ( idstud = datW[,"id"] , group1 = datW[,"sex"], group2 = datW[,"grade"], stringsAsFactors = FALSE )
+# define 18 models
+l1    <- eatModel:::splitModels ( item.grouping = qMat, person.groups = pers)
+# run 'defineModel' for each model in 'l1'
+modMul<- defineModel(dat = datW, items = qMat[,1], id = "id", check.for.linking = TRUE, splittedModels = l1, software = "tam")
+# run all models 
+runMul<- runModel(modMul)
+# get results
+resMul<- getResults(runMul)
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

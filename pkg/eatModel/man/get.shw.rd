@@ -5,7 +5,7 @@
 \description{Function reads Conquest showfiles and transforms them into an R list of data frames. }
 \usage{
 get.shw(file, dif.term, split.dif = TRUE, abs.dif.bound = 0.6,
-    sig.dif.bound = 0.3)}
+    sig.dif.bound = 0.3, p.value = 0.9)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{file}{
@@ -30,6 +30,10 @@ DIF.
 %%     ~~Describe \code{file} here~~
 When DIF-Parameter are evaluated, this specifies the critical value for confidence
 interval DIF.
+}
+  \item{p.value}{
+%%     ~~Describe \code{file} here~~
+When DIF-Parameter are evaluated, this specifies the critical p-value for confidence interval DIF.
 }
 }
 \details{

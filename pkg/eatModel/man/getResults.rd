@@ -6,12 +6,36 @@
 call \code{runModel} with the argument returned by \code{defineModel} to start the estimation.
 The last step then is to create a results frame using \code{getResults}. }
 \usage{
-getResults(runModelObj)}
+getResults(runModelObj, overwrite = FALSE, abs.dif.bound = 0.6,
+    sig.dif.bound = 0.3, p.value = 0.9, simplify = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{runModelObj}{
 %%     ~~Describe \code{file} here~~
 The object returned by \code{runModel}.
+}
+  \item{overwrite}{
+%%     ~~Describe \code{file} here~~
+Logical. Should result files be overwritten if exist?
+}
+  \item{abs.dif.bound}{
+%%     ~~Describe \code{file} here~~
+Applies only if DIF analyses are performed before. When DIF-Parameter are evaluated, 
+this specifies the critical value for absolute DIF.
+}
+  \item{sig.dif.bound}{
+%%     ~~Describe \code{file} here~~
+Applies only if DIF analyses are performed before. When DIF-Parameter are evaluated, 
+this specifies the critical value for confidence interval DIF.
+}
+  \item{p.value}{
+%%     ~~Describe \code{file} here~~
+Applies only if DIF analyses are performed before. When DIF-Parameter are evaluated, 
+this specifies the critical p-value for confidence interval DIF.
+}
+  \item{simplify}{
+%%     ~~Describe \code{file} here~~
+Logical.
 }
 }
 \details{

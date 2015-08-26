@@ -29,7 +29,13 @@
           by Conquest or TAM directly.
   }
 
-  Basically, \code{eatModel} is useful for Conquest analyses calling from R. Recently the R package
+  The tripartite process of model estimation works for one single specified model as well as for a 
+  compilation of several models in only one call. To define the compilation of multiple models, use
+  the function \code{splitModels}, which returns a list which may be assigned to the 'splittedModels'
+  argument in \code{defineModel}. In that case, not only one but several models are defined, called and 
+  evaluated. 
+  
+  Basically, \code{eatModel} is useful for Conquest analyses calling from R. For a short time the R package
   \code{TAM} allows to estimate parameters of the mixed-Coefficients Multinomial Logit Model solely in an
   R environment. Hence, \code{eatModel} allows all models to be estimated in \code{TAM} likewise.
   Please note that some model specifications (for example, 2PL/3PL) lead to models only TAM is able to 
@@ -44,8 +50,8 @@
 \tabular{ll}{
 Package: \tab eatModel\cr
 Type: \tab Package\cr
-Version: \tab 0.1.4\cr
-Date: \tab 2015-08-22\cr
+Version: \tab 0.1.5\cr
+Date: \tab 2015-08-26\cr
 License: \tab GPL(>=2)
 }
 }
