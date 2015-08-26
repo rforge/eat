@@ -7,7 +7,7 @@ Create several models by splitting the qMatrix and/or person.groups
 \description{
 \code{\link{defineModel}} is programmed to define a single model.
 With \code{splitModels} several models can be set up.
-The output of \code{splitModels} can be directly passed to the \code{XXXXXX} argument of \code{\link{defineModel}}
+The output of \code{splitModels} can be directly passed to the \code{splittedModels} argument of \code{\link{defineModel}}
 }
 \usage{
 splitModels ( qMatrix = NULL , person.groups = NULL , split = c ( "qMatrix" , "person.groups" ) , add = NULL , cross = NULL , all.persons = TRUE , all.persons.lab = "all" , full.model.names = TRUE , model.name.elements = c ( "dim" , "group" , "cross" ) , include.var.name = FALSE , env = FALSE , verbose = TRUE )
