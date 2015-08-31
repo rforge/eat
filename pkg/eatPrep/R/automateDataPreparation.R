@@ -154,7 +154,7 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 		if( checkData ) {
 			if(verbose) cat ( "\n" )
 			if(verbose) cat ( paste ( f.n , "Check data...\n" ) )
-			mapply(checkData, datList, MoreArgs = list(inputList$values, inputList$subunits, inputList$units, verbose))
+			mapply(checkData, datList, names(datList), MoreArgs = list(inputList$values, inputList$subunits, inputList$units, verbose))
 		} else {if(verbose) cat ( "\n" )	
 		if(verbose) cat ( paste ( f.n , "Check has been skipped\n" ) )}
 

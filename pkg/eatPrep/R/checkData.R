@@ -26,6 +26,8 @@
 # 2011-12-08 NH
 # FIXED: error message in getID corresponds with colnames in 'units'
 # 0000-00-00 AA
+# 
+# KS: Da muss unbedingt noch ausgegeben werden, welcher Datensatz hier gerade gecheckt wird.
 
 # * 1.2.0 (2011-11-22, NH): bugfix 
 #   + check auf Missing Values und Invalid Codes deaktiviert, wenn für keine Variable aus Datensatz varinfo vorliegt.
@@ -63,10 +65,12 @@
 
 #-----------------------------------------------------------------------------------------
 
-	checkData <- function (dat, values, subunits, units, verbose = TRUE) {
+	checkData <- function (dat, datnam, values, subunits, units, verbose = TRUE) {
 	  funVersion <- "checkData: "	 
 		varinfo <- makeInputCheckData (values, subunits, units)
-
+		
+		if(verbose) cat(paste("\n", funVersion, "Checking dataset ", datnam, " \n", sep = ""))
+		
 		if (class(dat) != "data.frame") {
 			stop (paste(funVersion, "dat must be a data.frame.", sep = ""))
 		}
