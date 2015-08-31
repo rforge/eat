@@ -206,6 +206,20 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 		### kreuzen 
 		i.dfr <- data.frame ( "dim" = names ( i ) , stringsAsFactors = FALSE )
 		p.dfr <- data.frame ( "group" = names ( p3 ) , stringsAsFactors = FALSE )
+		
+		# aus add Elemente mit Laenge 0 (z.B. NULL) rausnehmen
+		if ( !is.null ( add ) ) {
+				addlength <- sapply ( add , length )
+				if ( any ( addlength < 1 ) ) add <- add[!(addlength < 1)]
+				if ( length ( add ) < 1 ) add <- NULL
+		}
+		
+		# aus cross Elemente mit Laenge 0 (z.B. NULL) rausnehmen
+		if ( !is.null ( cross ) ) {
+				crosslength <- sapply ( cross , length )
+				if ( any ( crosslength < 1 ) ) cross <- cross[!(addlength < 1)]
+				if ( length ( cross ) < 1 ) cross <- NULL
+		}
 
 		# Abgleich von cross und add
 		# cross gewinnt, d.h. wenn in cross, wirds aus add rausgenommen
@@ -214,13 +228,56 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 				if ( length ( add ) < 1 ) add <- NULL
 		}
 		
-		# add darf immer nur ein Element haben
+		# environment fuer vektorartige Elemente aus add und cross, die spaeter wieder gesetzt werden
+		ac.env <- new.env()
+		
+		# Elemente von add mit mehreren Elementen (Vektor) verarbeiten
 		if ( !is.null ( add ) ) {
 				addlen <- sapply ( add , length )
 				if ( any ( addlen > 1 ) ) {
-						warning ( paste0 ( "splitModels: one or more element(s) of add have length greater than 1; only first value is considered." ) , call. = FALSE )
-						do.oneel <- paste0 ( "add$" , names ( add )[addlen > 1] , " <- " , "add$" , names ( add )[addlen > 1] , "[1]" )
-						eval ( parse ( text = do.oneel ) )
+						
+						# Elemente aufs Environment schieben und add modifizieren
+						f6 <- function ( x , y ) {
+								# fuer model data.frame nur die Elemente verbinden
+								new.nam <- paste ( x , collapse = "." )
+								# fuer ac.env, komplett mit Variablen-Name um uniqueness zu gewaehren
+								full.new.nam <- paste ( c ( y , x ) , collapse = "." )
+								paste0 ( "assign ( '" , full.new.nam , "' , add$" , y , " , env=ac.env ); add$" , y , " <- '" , new.nam , "'" )
+						}
+						do.2env <- mapply ( f6 , add[addlen > 1] , names ( add[addlen > 1] ) , SIMPLIFY = TRUE )
+						eval ( parse ( text = do.2env ) )
+				}
+		}
+		
+
+		# Elemente von cross mit mehreren Elementen (gelistete Vektoren) verarbeiten
+		if ( !is.null ( cross ) ) {
+				# Elemente identifizieren, die Liste sind
+				cross.is.list <- sapply ( cross , is.list )
+				
+				if ( any ( cross.is.list ) ) {
+						# ueber die Listen-Elemente schleifen
+						f9 <- function ( l , lnam ) {
+								# Elemente aufs Environment schieben
+								f10 <- function ( x , y , nr ) {
+										# fuer model data.frame nur die Elemente verbinden
+										new.nam <- paste ( x , collapse = "." )
+										# fuer ac.env, komplett mit Variablen-Name um uniqueness zu gewaehren
+										full.new.nam <- paste ( c ( y , x ) , collapse = "." )
+										list ( "do" = paste0 ( "assign ( '" , full.new.nam , "' , cross$" , y , "[[",nr,"]] , env=ac.env )" ) , "new.nam" = new.nam )
+								}
+								ret <- mapply ( f10 , l , lnam , seq(along=l) , SIMPLIFY = FALSE )
+								
+								# Rueckgabe
+								c ( 
+									# ausfuehren Elemente aufs Environment schieben
+									sapply ( ret , "[[" , 1 ) ,
+									# cross modifizieren
+									paste0 ( "cross$" , lnam , " <- c(" , paste ( paste0 ( "'" , unname ( sapply ( ret , "[[" , 2 ) ) , "'") , collapse = "," ) ,")" )
+								  )
+						}
+						do.2env <- do.call ( "c" , mapply ( f9 , cross[cross.is.list] , names ( cross[cross.is.list] ) , SIMPLIFY = FALSE ) )
+						eval ( parse ( text = do.2env ) )
 				}
 		}
 		
@@ -234,15 +291,12 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 
 		### add Elemente zum reinkreuzen vorbereiten
 		if ( !is.null ( add ) ) {
-				# TODO check ob immer nur ein Element
-				# wenn nicht dann nur erstes Element nehmen und Warnmeldung
-				# TODO (an geeigneter Stelle): Checken ob in add und cross diesselben Namen
 				ad.l <- mapply ( function ( d , n ) {d <- data.frame ( d , stringsAsFactors = FALSE ); colnames ( d ) <- n; return ( d )} , add , names ( add ) , SIMPLIFY = FALSE )
 				ad <- Reduce(function(x, y) merge(x, y, all=TRUE,by=NULL),rev(ad.l),accumulate=FALSE )
 		} else {
 				ad <- NULL
 		}		
-		
+
 		# Modelle
 		m.l <- list(cr,ad,p.dfr,i.dfr)
 		m.l <- m.l [ ! sapply ( m.l , is.null ) ]
@@ -328,7 +382,6 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 		m$Ngroup <- as.integer ( unname ( sapply ( m$group , function ( group , p3 ) length ( p3[[group]] ) - 1 , p3 ) ) )
 		m$Ngroup[ m$Ngroup < 1 ] <- NA
 		
-		
 		# Modell-Datensatz Spalten sortieren
 		vorn <- c ( "model.no" , "model.name" , "model.subpath" , "dim" , "Ndim" , "group" , "Ngroup" )
 		m <- m[,c(vorn,colnames(m)[!colnames(m) %in% vorn]),drop=FALSE]
@@ -336,7 +389,7 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 		# Return-Objekt bauen
 		r <- list ()
 		
-		f3 <- function ( z , env , cross ) {
+		f3 <- function ( z , env , cross , add , include.var.name) {
 
 				# Ausgabe eines Punktes
 				if ( verbose ) {
@@ -393,8 +446,24 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 									
 						# die Sachen aus cross/add setzen
 						if ( !is.null ( cross ) | !is.null ( add ) ) {
+
+								f7 <- function ( x , q , as.vorn , as.hinten , z , include.var.name ) {
+										# checken ob im ac.env
+										# check.name <- ifelse ( include.var.name , z[x] , paste ( c( x , z[x] ) , collapse = "." ) )
+										check.name <- paste ( c( x , z[x] ) , collapse = "." )
+										is.in.env <- check.name %in% ls ( ac.env )
+
+										# setzen, entweder aus ac.env oder als Skalar
+										if ( is.in.env ) {
+												ret <- paste0 ( "r$'" , z["model.name"] , "'$'" , x , "' <- get ( '",check.name,"' , pos = ac.env )" )
+										} else {
+												ret <- paste0 ( "r$'" , z["model.name"] , "'$'" , x , "' <- ", as.vorn , q , z [ x ] , q , as.hinten )
+										}
+										return ( ret )
+								}
+								
 								ret <- c (	ret ,
-											mapply ( function ( x , q , as.vorn , as.hinten , z ) paste0 ( "r$'" , x , "' <- ", as.vorn , q , z [ x ] , q , as.hinten ) , names ( c ( cross , add ) ) , quotes , as.vorn, as.hinten, MoreArgs = list ( z ) )
+											mapply ( f7 , names ( c ( cross , add ) ) , quotes , as.vorn, as.hinten, MoreArgs = list ( z , include.var.name ) )
 										  )
 						}
 									
@@ -409,17 +478,35 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 									paste0 ( "assign ( 'Ngroup' , " , ifelse(ng%in%NULL.char,"","as.integer(") , ng , ifelse(ng%in%NULL.char,"",")") , " , pos = r$'" , z["model.name"] , "' ) " ) ,
 									paste0 ( "assign ( 'qMatrix' , " , ig , " , pos = r$'" , z["model.name"] , "' ) " ) ,
 									paste0 ( "assign ( 'person.grouping' , " , pg , " , pos = r$'" , z["model.name"] , "' ) " ) )
-									
-						# die Sachen aus cross(add) setzen
+	
+						# die Sachen aus cross/add setzen
 						if ( !is.null ( cross ) | !is.null ( add ) ) {
+
+								f8 <- function ( x , q , as.vorn , as.hinten , z , include.var.name ) {
+										# checken ob im ac.env
+										# check.name <- ifelse ( include.var.name , z[x] , paste ( c( x , z[x] ) , collapse = "." ) )
+										check.name <- paste ( c( x , z[x] ) , collapse = "." )
+										is.in.env <- check.name %in% ls ( ac.env )
+
+										# setzen, entweder aus ac.env oder als Skalar
+										if ( is.in.env ) {
+												# ret <- paste0 ( "r$'" , z["model.name"] , "'$'" , x , "' <- get ( '",check.name,"' , pos = ac.env )" )
+												ret <- paste0 ( "assign ( '" , x , "' , get ( '",check.name,"' , pos = ac.env ) , pos = r$'", z["model.name"] , "' ) " )
+										} else {
+												ret <- paste0 ( "assign ( '" , x , "' , " , as.vorn,  q , z [ x ] , q , as.hinten , " , pos = r$'", z["model.name"] , "' ) " )
+										}
+										return ( ret )
+								}
+								
 								ret <- c (	ret ,
-											mapply ( function ( x , q , as.vorn , as.hinten , z ) paste0 ( "assign ( '" , x , "' , " , as.vorn,  q , z [ x ] , q , as.hinten , " , pos = r$'", z["model.name"] , "' ) " ) , names ( c ( cross , add ) ) , quotes , as.vorn , as.hinten , MoreArgs = list ( z ) )
+											mapply ( f8 , names ( c ( cross , add ) ) , quotes , as.vorn, as.hinten, MoreArgs = list ( z , include.var.name ) )
 										  )
-						}
+						}	
+	
 				}
 				return ( ret )
 		}
-		do3 <- unname ( sapply ( apply ( m , 1 , f3 , env , cross ) , c ) )
+		do3 <- unname ( sapply ( apply ( m , 1 , f3 , env , cross , add , include.var.name ) , c ) )
 		eval ( parse ( text = do3 ) )
 		
 		# Modell-Dataframe noch an Rueckgabe ranhaengen
