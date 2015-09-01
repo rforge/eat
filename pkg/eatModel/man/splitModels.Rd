@@ -133,8 +133,12 @@ m05$models
 m06 <- splitModels ( qMatrix=qMatrix, person.groups=person.groups , add = list ( "software"="conquest" , "method"="montecarlo" ) , cross = list ( "nodes"=c(1000,5000) , "seed"=c(1234,4321) ) )
 m06$models
 
-# Example 7: create an "empty" model without qMatrix and person.groups
-m07 <- splitModels ( qMatrix=NULL, person.groups=NULL )
+# Example 7: list elements in cross that contain more than one element need to be lists themselves
+m07 <- splitModels ( qMatrix=qMatrix, person.groups=NULL , cross = list ( "regression"=list( c("sex") , c("sex","state") ) , "seed"=c(1234,4321) ) )
 m07$models
+
+# Example 8: create an "empty" model without qMatrix and person.groups
+m08 <- splitModels ( qMatrix=NULL, person.groups=NULL )
+m08$models
 
 }

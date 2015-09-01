@@ -206,6 +206,23 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 		### kreuzen 
 		i.dfr <- data.frame ( "dim" = names ( i ) , stringsAsFactors = FALSE )
 		p.dfr <- data.frame ( "group" = names ( p3 ) , stringsAsFactors = FALSE )
+
+		# Abgleich von cross und add
+		# cross gewinnt, d.h. wenn in cross, wirds aus add rausgenommen
+		if ( !is.null ( cross ) & !is.null ( add ) ) {
+				if ( any ( names ( cross ) %in% names ( add ) ) ) add <- add[!names(add) %in% names(cross)]
+				if ( length ( add ) < 1 ) add <- NULL
+		}
+		
+		# wenn Elemente von add Listen sind, dann erstes Element jeweils und Warnmeldung
+		if ( !is.null ( add ) ) {
+				add.is.list <- sapply ( add , is.list )
+				if ( any ( add.is.list ) ) {
+						warning ( paste0 ( "splitModels: One or more elements of add are lists. Only first element of each list entry is used." ) , call. = FALSE )
+						do.unlist <- paste0 ( "add$" , names ( add[add.is.list] ) , " <- add$" , names ( add[add.is.list] ) , "[[1]]" )
+						eval ( parse ( text = do.unlist ) )
+				}
+		}
 		
 		# aus add Elemente mit Laenge 0 (z.B. NULL) rausnehmen
 		if ( !is.null ( add ) ) {
@@ -220,14 +237,7 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 				if ( any ( crosslength < 1 ) ) cross <- cross[!(addlength < 1)]
 				if ( length ( cross ) < 1 ) cross <- NULL
 		}
-
-		# Abgleich von cross und add
-		# cross gewinnt, d.h. wenn in cross, wirds aus add rausgenommen
-		if ( !is.null ( cross ) & !is.null ( add ) ) {
-				if ( any ( names ( cross ) %in% names ( add ) ) ) add <- add[!names(add) %in% names(cross)]
-				if ( length ( add ) < 1 ) add <- NULL
-		}
-		
+	
 		# environment fuer vektorartige Elemente aus add und cross, die spaeter wieder gesetzt werden
 		ac.env <- new.env()
 		
@@ -248,7 +258,6 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 						eval ( parse ( text = do.2env ) )
 				}
 		}
-		
 
 		# Elemente von cross mit mehreren Elementen (gelistete Vektoren) verarbeiten
 		if ( !is.null ( cross ) ) {
@@ -337,12 +346,6 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 
 				# Modell-Name ggf. unique machen
 				if ( any ( duplicated ( m$model.name ) ) ) m$model.name <- make.unique ( m$model.name )
-				
-				# Subpfade
-				# bzgl. add gibts keine Varianz ueber Modelle
-				# dann setzt man sinnlos Subpfade
-				# deshalb rausnehmen (egal obs im Modell-Name drin ist oder nicht
-				# if ( !is.null ( add ) ) mn2 <- mn[, ! colnames ( mn ) %in% names ( add ),drop=FALSE ]
 				
 				# Subpath erzeugen
 				f5 <- function ( z ) {
