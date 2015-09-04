@@ -4,7 +4,7 @@
 \description{Aggregate datasets with constraints on missing values}
 \usage{
 aggregateData(dat, subunits, units, aggregatemissings = NULL, 
-              rename = FALSE, recodedData = TRUE, verbose = FALSE)
+              rename = FALSE, recodedData = TRUE, suppressErr = FALSE, verbose = FALSE)
 }
 \arguments{
   \item{dat}{A data frame containing the data to be aggregated.}
@@ -13,6 +13,7 @@ aggregateData(dat, subunits, units, aggregatemissings = NULL,
   \item{aggregatemissings}{Optional: A symmetrical \emph{n x n} matrix with information on how missing values should be aggregated. If no matrix is given, the default will be used. See 'Examples'.}
   \item{rename}{Logical indicating whether units with only one subunit should be renamed to their unit name? Default is \code{FALSE}.}
   \item{recodedData}{Logical indicating whether colnames in \code{dat} are the subunit names (as in \code{subunits$subunit}) or recoded subunit names (as in \code{subunits$subunitRecoded}). Default is \code{TRUE}, meaning that colnames are recoded subitem names.}
+  \item{suppressErr}{Logical.}
    \item{verbose}{Logical. If \code{TRUE} additional information is printed.
 }
 }

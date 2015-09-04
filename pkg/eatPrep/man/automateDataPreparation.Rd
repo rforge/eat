@@ -5,16 +5,14 @@
 \description{
 prepare datasets for \code{automateModels}
 }
-\usage{
-automateDataPreparation(datList = NULL, inputList, path = NULL, 
+\usage{datList = NULL, inputList, path = NULL, 
 readSpss, checkData,  mergeData , recodeData, recodeMnr = FALSE,
-aggregateData, scoreData, writeSpss,
-mnrFunction = c( "recodeMbiToMnr" , "mnrCoding" ),
+aggregateData, scoreData, writeSpss, 
 filedat = "mydata.txt", filesps = "readmydata.sps", breaks=NULL, nMbi = 2,
-rotation.id = NULL, aggregatemissings = NULL, rename = TRUE, recodedData = TRUE, 
+rotation.id = NULL, suppressErr = FALSE,
+aggregatemissings = NULL, rename = TRUE, recodedData = TRUE, 
 correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL, 
-missing.rule = list(mvi = 0, mnr = 0, mci = 0, mbd = NA, mir = 0, mbi = 0), 
-verbose = FALSE)
+missing.rule = list(mvi = 0, mnr = 0, mci = 0, mbd = NA, mir = 0, mbi = 0), verbose=FALSE)
             }
 \arguments{
   \item{datList}{
@@ -53,9 +51,6 @@ logical. If \code{TRUE} function \code{\link{scoreData}} will be called.
   \item{writeSpss}{
 logical. If \code{TRUE} function \code{\link{writeSpss}} will be called.
 }
-  \item{mnrFunction}{
-character. Choose one of two functions for mnr coding, either "recodeMbiToMnr" (default) or "mnrCoding".
-}
   \item{filedat}{
 a character string containing the name of the output data file required
 by \code{\link{writeSpss}}.
@@ -72,6 +67,9 @@ numeric (argument used by \code{\link{recodeMbiToMnr}}).
 }
  \item{rotation.id}{
 character (argument used by \code{\link{recodeMbiToMnr}}).
+}
+ \item{suppressErr}{
+logical. Required by \code{\link{aggregateData}}.
 }
 \item{missing.rule}{
 a list containing recode information for character missings required

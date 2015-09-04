@@ -37,7 +37,7 @@
 # - Pattern aggregation implementieren
 # - wenn rename = TRUE: auch nach unrekodiertem Subitemnamen suchen
 
-aggregateData <- function (dat, subunits, units, aggregatemissings = NULL, rename = FALSE, recodedData = TRUE, verbose = FALSE) {
+aggregateData <- function (dat, subunits, units, aggregatemissings = NULL, rename = FALSE, recodedData = TRUE, suppressErr = FALSE, verbose = FALSE) {
 
   funVersion <- "aggregateData: "
 
@@ -90,6 +90,9 @@ aggregateData <- function (dat, subunits, units, aggregatemissings = NULL, renam
 	warning("Matrix used for missing aggregation is not symmetrical. This may lead to unexpected results.")
   }
 
+  # füge eine Spalte und eine Zeile mit "err" an -> egal, was auf "err" trifft, es soll immer "err" rauskommen
+  am <- cbind(am, err = "err") ;  am <- rbind(am, err = "err")
+
   # which subunits should be aggregated?
   unitsToAggregate <- names(aggregateinfo)
   subunitsToAggregate <- unname(unlist(lapply(aggregateinfo, "[[", "subunits")))
@@ -115,7 +118,7 @@ aggregateData <- function (dat, subunits, units, aggregatemissings = NULL, renam
   }
 
   # erstelle aggregierten Datensatz der Units, die aggregiert werden
-  unitsAggregated <- mapply(aggregateData.aggregate, unitsToAggregate, aggregateinfo, MoreArgs = list(am, dat, verbose = verbose))
+  unitsAggregated <- mapply(aggregateData.aggregate, unitsToAggregate, aggregateinfo, MoreArgs = list(am, dat, verbose = verbose, suppressErr = suppressErr))
 
  if(!missing(unitsAggregated)){
 	datAggregated <- cbind(datAggregated, unitsAggregated, stringsAsFactors = FALSE)
@@ -154,13 +157,34 @@ aggregateData <- function (dat, subunits, units, aggregatemissings = NULL, renam
 #-----------------------------------------------------------------------------------------------------------
 # findet zu aggregierende Spalten eines Datensatzes und aggregiert sie nach einer vorgegebenen Aggregierungsregel
 
-aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, dat, verbose = FALSE){
+aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, dat, verbose = FALSE, suppressErr = FALSE){
 
   funVersion <- "aggregateData: "
 
   unitVars <- aggregateinfo$subunits
   aggRule <- toupper(aggregateinfo$arule)
 
+  # Behandlung der Aggregation Rule
+  if ( !exists ( "aggRule" ) ) {
+		aggRule <- "SUM"
+  }
+  if ( is.na ( aggRule ) ) {
+		aggRule <- "SUM"
+  }
+  if (nchar(aggRule) == 0) {
+    aggRule <- "SUM"
+  }
+  if ( !is.character ( aggRule ) ) {
+		aggRule <- "SUM"
+  }
+  # Warnung wenn nicht eine standardmäßige aggRule
+  if ( !aggRule %in% c("SUM","MEAN","") ) {
+		warning ( paste ( "Unit " , unitName , " has potentially problematic aggregation rule (\"" , aggRule , "\"). Please check.\n" , sep = "" ) )
+  }
+
+
+  ## AGGREGIEREN DER MISSINGS
+  
   if(verbose) cat(paste (funVersion, "Aggregate unit ", unitName, "", sep = ""))
 
   # check: sind alle Subunits vorhanden?
@@ -180,60 +204,15 @@ aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, 
 
   agg <- .makeMissingind(unitDat, aggregatemissings)
 
-  ### wenn agg an irgendeiner Stelle auf "err" gesetzt wird, muß die Funktion mit einer Fehlermeldung abbrechen!
-  if(any(agg == "err"))  {
-  	stop(paste(funVersion, "Aggregation of missing values for unit ", unitName, " produced 'err'.\n",sep=""))
-  }
-
   # initialisiere Rückgabe des aggregierten units
   unitAggregated <- unname(agg)
 
   options(warn = -1)
+  
+  ## AGGREGIEREN DER VALIDEN CODES JE NACH REGEL
 
-  ### MH 19.03.2015
-  # Behandlung der Aggregation Rule
-  if ( !exists ( "aggRule" ) ) {
-		aggRule <- "SUM"
-  }
-  if ( is.na ( aggRule ) ) {
-		aggRule <- "SUM"
-  }
-  if (nchar(aggRule) == 0) {
-    aggRule <- "SUM"
-  }
-  if ( !is.character ( aggRule ) ) {
-		aggRule <- "SUM"
-  }
-  # Warnung wenn nicht eine standardmäßige aggRule
-  if ( !aggRule %in% c("SUM","MEAN","") ) {
-		warning ( paste ( "Unit " , unitName , " has potentially problematic aggregation rule (\"" , aggRule , "\"). Please check.\n" , sep = "" ) )
-  }
-
-  # MH 10.01.2013
-  # Hotfix:
-  # wenn die aggRule eine aggRule ist,
-  # die der ZKDaemon auf das unitRecoding Sheet automatisch umsetzt
-  # (z.B. "1:3")
-  # dann ist die aggrule an dieser Stelle hier auch "SUM"
-  # alternativ könnte man das auch gleich im ZKDaemon ändern,
-  # also dass wenn die aggRule nach unitRecoding umgesetzt wurde,
-  # diese in units$unitAggregateRule gelöscht oder auf SUM gesetzt wird
-  # die Erkennung der "bekannten" Regel ist hier sehr primitiv und
-  # nicht sonderlich erschöpfend/fehlersicher, müsste optimiert werden
-  # if ( nchar (aggRule) > 0 ) {
-		# if ( grepl ( ":" , aggRule , fixed = TRUE ) ) aggRule <- "SUM"
-  # }
-  # hier gleich mal Warnung wenn nicht standardmäßige aggRule
-  # if ( !aggRule %in% c("SUM","MEAN","") ) {
-		# warning ( paste ( "Unit " , unitName , " has potentially problematic aggregation rule (\"" , aggRule , "\"). Please check.\n" , sep = "" ) )
-  # }
-
-  # Aggregierung des units je nach Regel
-
-  # MH 11.01.2013
-  # das Ding kann hier auch leer sein, dann crash
+  # prüfen, ob überhaupt valide Codes in der aggregierten Variable stehen
   unitDat.vc <- unitDat[ unitAggregated == "vc", , drop = FALSE ]
-  # wird jetzt abgefangen
   if ( nrow ( unitDat.vc ) > 0 ) {
 		  if( aggRule == "SUM" ) {
 			unitAggregated[unitAggregated == "vc"] <- as.character(rowSums(apply(unitDat.vc, 2, as.numeric), na.rm = TRUE))
@@ -243,17 +222,20 @@ aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, 
 			unitAggregated[unitAggregated == "vc"] <- as.character(rowMeans(apply(unitDat.vc, 2, as.numeric), na.rm = TRUE))
 		  }
   }
-  #else {
-  #		unitAggregated <- unitDat
-  #		cat ( paste ( "No valid cells (only missings) for " , unitName , "\n" , sep = "" ) )
-  #}
-  # MH 14.01.2013
-  # der Teil war etwas suboptimal
-  # da die vorige missing aggregation wieder überschrieben wurd :-)
 
   # MH 15.03.2015
   # so viele Punkte printen wie Anzahl an Subitems
   if ( verbose ) cat ( paste0 ( paste ( rep ( "." , ncol ( unitDat.vc ) ) , collapse = "" ) , "\n" ) )
+
+ ### wenn agg an irgendeiner Stelle auf "err" gesetzt wird, soll eine Warnung ausgegeben werden
+  if(any(agg == "err"))  {
+  	cat(paste(funVersion, "Aggregation of missing values for unit ", unitName, " produced 'err' for row(s)", paste(which(agg == "err"), collapse = ", "), ".\n",sep=""))
+  }
+
+  if (suppressErr == TRUE) {
+#    cat(paste("'err' in unit ", unitName, " will be recoded to 'mci'.\n",sep=""))
+    unitAggregated[unitAggregated == "err"] <- "mci"
+  }
 
   options(warn = 0)
 
@@ -264,4 +246,4 @@ aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, 
   #	}
 
   return(unitAggregated)
-}
+}                    

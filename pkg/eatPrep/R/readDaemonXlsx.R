@@ -31,7 +31,7 @@ readDaemonXlsx <- function(filename) {
 
 	inL <- list() 
 	
-	sheetNameVec <- c("units", "subunits", "values", "unitrecoding", "sav-files", "params", "aggregate-missings", "itemproperties", "propertylabels", "booklets", "blocks")
+	sheetNameVec <- c("units", "subunits", "values", "unitrecoding", "sav-files", "params", "aggregate-missings", "booklets", "blocks")
 	
 	for(pp in sheetNameVec) {
 		if(inherits(try( inL[[pp]] <- read.xlsx2(filename, sheetName=pp, as.data.frame=TRUE, header=TRUE, colClasses="character", stringsAsFactors=FALSE), silent=TRUE)	, "try-error")) {
@@ -77,7 +77,6 @@ readDaemonXlsx <- function(filename) {
 	names(inL)[which(names(inL) == "params")] <- "newID"
 	names(inL)[which(names(inL) == "aggregate-missings")] <- "aggrMiss"
 	names(inL)[which(names(inL) == "unitrecoding")] <- "unitRecodings"
-	#cat("(Sheets savFiles, newID, aggrMiss, unitRecodings were renamed due to naming standards). \n")
 
 	return(inL)
 }
