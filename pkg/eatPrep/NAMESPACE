@@ -23,7 +23,7 @@ export(mergeData)
 export(readDaemonXlsx)
 export(readSpss)
 export(recodeData)
-export(recodeMbiToMnr)
+export(mnrCoding)
 export(scoreData)
 export(writeSpss)
 

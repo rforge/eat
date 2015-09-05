@@ -20,11 +20,9 @@ aggregateData(dat, subunits, units, aggregatemissings = NULL,
 <<<<<<< .mine
   \item{suppressErr}{Logical indicating whether aggregated cells with \code{err} (see 'Details') should be recoded to another value.}
   \item{recodeErr}{Character vector of length 1 indicating to which \{err} should be recoded. Only used when \code{suppressErr == TRUE} }
-  \item{verbose}{Logical. If \code{TRUE} additional information is printed.
-=======
+  \item{verbose}{Logical. If \code{TRUE} additional information is printed.}
   \item{suppressErr}{Logical.}
-   \item{verbose}{Logical. If \code{TRUE} additional information is printed.
->>>>>>> .r493
+   \item{verbose}{Logical. If \code{TRUE} additional information is printed.}
 }
 }
 \details{
