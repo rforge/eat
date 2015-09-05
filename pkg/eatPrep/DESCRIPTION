@@ -1,9 +1,9 @@
 Package: eatPrep
 Type: Package
 Title: eatPrep
-Version: 0.2.0
+Version: 0.2.1
 Depends: R (>= 2.14.0), eatTools, xlsx, car, foreign, reshape2 
-Date: 2015-09-04
+Date: 2015-09-05
 Author: Nicole Haag, Martin Hecht, Karoline Sachse, Sebastian Weirich
 Maintainer: Karoline Sachse <karoline.sachse@iqb.hu-berlin.de>
 Description: preparing data for IRT modeling
