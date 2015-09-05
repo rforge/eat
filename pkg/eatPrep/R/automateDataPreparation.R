@@ -2,7 +2,7 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 						readSpss, checkData,  mergeData , recodeData, recodeMnr = FALSE,
 						aggregateData, scoreData, writeSpss, 
 						filedat = "mydata.txt", filesps = "readmydata.sps", breaks=NULL, nMbi = 2,
-						rotation.id = NULL, suppressErr = FALSE,
+						rotation.id = NULL, suppressErr = FALSE, recodeErr = "mci",
 						aggregatemissings = NULL, rename = TRUE, recodedData = TRUE, 
             correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL, 
             missing.rule = list(mvi = 0, mnr = 0, mci = 0, mbd = NA, mir = 0, mbi = 0), verbose=FALSE) {
@@ -47,6 +47,7 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 		}
 	
 		### ggf. sav-files einlesen
+		idname <- NULL
 		if( readSpss ) {
 			if(verbose) cat ( "\n" )
 			if(verbose) cat ( paste ( f.n , "Load .sav Files\n" ) )
@@ -111,6 +112,7 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 			if(verbose) cat ( "\n" )	
 			if(verbose) cat ( paste ( f.n , "Merge has been skipped\n Only the first dataset in datList will be considered for the following steps\n" ) )
 			dat <- datList[[1]]
+			idname <- oldIDs[1]
 		}
 		
 		if( recodeData ) {
@@ -145,14 +147,18 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 				}
 		}
 		
-		if(is.null(inputList$rotation)) {
-				warning ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$rotation. Data frame not available!\n" ) )
+		if(is.null(inputList$rotation) & is.null(rotation.id)) {
+				warning ( paste ( f.n , "Recoding Mnr in automateDataPreparation requires inputList$rotation or rotation.id. These are not available!\n" ) )
 		}
 			
-		if ( any ( is.null(inputList$booklets), is.null(inputList$blocks), is.null(inputList$rotation) ) ) {
+		if ( any ( is.null(inputList$booklets), is.null(inputList$blocks) ) ) {
 			warning ( "RecodeMnr had to be skipped due to missing input variables.\n" )
 		} else {
-			dat <- recodeMbiToMnr(dat = dat, id = newID, rotation.id = rotation.id, booklets = inputList$booklets, blocks = inputList$blocks, rotation = inputList$rotation, breaks, nMbi = nMbi, subunits = inputList$subunits, verbose = verbose)
+			if(is.null(rotation.id)) {
+				dat <- mergeData(newID, list(dat, inputList$rotation))
+				rotation.id <- names(inputList$rotation)[2]
+			}
+			dat <- mnrCoding ( dat = dat , pid = newID , rotation.id = rotation.id , blocks = inputList$blocks , booklets = inputList$booklets , breaks = breaks , subunits = inputList$subunits , nMbi = nMbi  , mbiCode = "mbi" , mnrCode = "mnr" , invalidCodes = c ( "mbd", "mir", "mci" ) , verbose = verbose )
 		}
 		
 		} else {if(verbose) cat ( "\n" )	
@@ -173,7 +179,7 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 										c(names(inputList$aggrMiss)[-1], "err"))
 			}				
 			dat <- aggregateData (dat=dat, subunits=inputList$subunits, units=inputList$units,
-            aggregatemissings = aggregatemissings, rename = rename, recodedData = recodedData, verbose = verbose, suppressErr = suppressErr)
+            aggregatemissings = aggregatemissings, rename = rename, recodedData = recodedData, verbose = verbose, suppressErr = suppressErr, recodeErr = recodeErr)
 		} else {if(verbose) cat ( "\n" )	
 		if(verbose) cat ( paste ( f.n , "Aggregate has been skipped\n" ) )}
 	

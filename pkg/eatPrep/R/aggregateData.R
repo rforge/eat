@@ -37,12 +37,19 @@
 # - Pattern aggregation implementieren
 # - wenn rename = TRUE: auch nach unrekodiertem Subitemnamen suchen
 
-aggregateData <- function (dat, subunits, units, aggregatemissings = NULL, rename = FALSE, recodedData = TRUE, suppressErr = FALSE, verbose = FALSE) {
+aggregateData <- function (dat, subunits, units, aggregatemissings = NULL, rename = FALSE, recodedData = TRUE, suppressErr = FALSE, recodeErr = "mci", verbose = FALSE) {
 
   funVersion <- "aggregateData: "
 
   if (class(dat) != "data.frame") {
   stop(paste(funVersion, "'dat' is not a data.frame.\n", sep = ""))
+  }
+  
+  if(suppressErr == TRUE){
+    if(length(recodeErr != 1)){
+      cat("recodeErr does not have a length of 1. err will be recoded to 'mci'.")
+      recodeErr <- "mci"
+    }
   }
 
   # make aggregateinfo
@@ -118,7 +125,7 @@ aggregateData <- function (dat, subunits, units, aggregatemissings = NULL, renam
   }
 
   # erstelle aggregierten Datensatz der Units, die aggregiert werden
-  unitsAggregated <- mapply(aggregateData.aggregate, unitsToAggregate, aggregateinfo, MoreArgs = list(am, dat, verbose = verbose, suppressErr = suppressErr))
+  unitsAggregated <- mapply(aggregateData.aggregate, unitsToAggregate, aggregateinfo, MoreArgs = list(am, dat, verbose = verbose, suppressErr = suppressErr, recodeErr = recodeErr))
 
  if(!missing(unitsAggregated)){
 	datAggregated <- cbind(datAggregated, unitsAggregated, stringsAsFactors = FALSE)
@@ -157,7 +164,7 @@ aggregateData <- function (dat, subunits, units, aggregatemissings = NULL, renam
 #-----------------------------------------------------------------------------------------------------------
 # findet zu aggregierende Spalten eines Datensatzes und aggregiert sie nach einer vorgegebenen Aggregierungsregel
 
-aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, dat, verbose = FALSE, suppressErr = FALSE){
+aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, dat, verbose = FALSE, suppressErr = suppressErr, recodeErr = recodeErr){
 
   funVersion <- "aggregateData: "
 
@@ -234,7 +241,7 @@ aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, 
 
   if (suppressErr == TRUE) {
 #    cat(paste("'err' in unit ", unitName, " will be recoded to 'mci'.\n",sep=""))
-    unitAggregated[unitAggregated == "err"] <- "mci"
+    unitAggregated[unitAggregated == "err"] <- recodeErr
   }
 
   options(warn = 0)

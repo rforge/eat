@@ -9,7 +9,7 @@ prepare datasets for \code{automateModels}
 readSpss, checkData,  mergeData , recodeData, recodeMnr = FALSE,
 aggregateData, scoreData, writeSpss, 
 filedat = "mydata.txt", filesps = "readmydata.sps", breaks=NULL, nMbi = 2,
-rotation.id = NULL, suppressErr = FALSE,
+rotation.id = NULL, suppressErr = FALSE, recodeErr = "mci",
 aggregatemissings = NULL, rename = TRUE, recodedData = TRUE, 
 correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL, 
 missing.rule = list(mvi = 0, mnr = 0, mci = 0, mbd = NA, mir = 0, mbi = 0), verbose=FALSE)
@@ -40,7 +40,7 @@ logical. If \code{TRUE} function \code{\link{mergeData}} will be called.
 logical. If \code{TRUE} function \code{\link{recodeData}} will be called.
 }
   \item{recodeMnr}{
-logical. If \code{TRUE} function \code{\link{recodeMbiToMnr}} will be called.
+logical. If \code{TRUE} function \code{\link{mnrCoding}} will be called.
 }
   \item{aggregateData}{
 logical. If \code{TRUE} function \code{\link{aggregateData}} will be called.
@@ -60,16 +60,19 @@ a character string containing the name of the output syntax file required
 by \code{\link{writeSpss}}.
 }
  \item{breaks}{
-numeric vector (argument used by \code{\link{recodeMbiToMnr}}).
+numeric vector (argument used by \code{\link{mnrCoding}}).
 }
  \item{nMbi}{
-numeric (argument used by \code{\link{recodeMbiToMnr}}).
+numeric (argument used by \code{\link{mnrCoding}}).
 }
  \item{rotation.id}{
-character (argument used by \code{\link{recodeMbiToMnr}}).
+character (argument used by \code{\link{mnrCoding}}).
 }
  \item{suppressErr}{
 logical. Required by \code{\link{aggregateData}}.
+}
+ \item{recodeErr}{
+character. Required by \code{\link{aggregateData}}.
 }
 \item{missing.rule}{
 a list containing recode information for character missings required

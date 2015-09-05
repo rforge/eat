@@ -1,49 +1,54 @@
-\name{recodeMbiToMnr}
-\alias{recodeMbiToMnr}
+\name{mnrCoding}
+\alias{mnrCoding}
 \title{
 Recode Missing by Intention to Missing not Reached
 }
 \description{
-\code{recodeMbiToMnr} converts missing responses coded as missing by intention at the end of a block of items to missing not reached.
+\code{mnrCoding} converts missing responses coded as missing by intention at the end of a block of items to missing not reached.
 }
 
 \usage{
-	recodeMbiToMnr (dat, id, rotation.id, booklets, blocks, rotation, breaks, nMbi = 2, 
-	subunits = NULL, verbose = FALSE)
+	mnrCoding (dat, pid, rotation.id, blocks, booklets, breaks, subunits = NULL, nMbi = 2, mbiCode = "mbi", mnrCode = "mnr", invalidCodes = c("mbd", "mir", "mci"), verbose = FALSE)
 }
 
 \arguments{
 	\item{dat}{
 		A dataset. Missing by intention needs to be coded \code{mbi}.
 	}
-	\item{id}{
+	\item{pid}{
 		Name or column number of identifier (ID) variable in dataset.
 	}
 	\item{rotation.id}{
 		Name of rotation indicator (e.g. "booklet") in \code{dat}.
 	}	
-	\item{booklets}{
-		A data frame containing the sequence of blocks in each booklet in wide format. The column names need to be \code{booklet, block1, block2, block3 ...}.
-	}
 	\item{blocks}{
 		A data frame containing the sequence of subunits in each block in long format. The column names need to be \code{subunit, block, subunitBlockPosition}. 
 	}
-	\item{rotation}{
-		A data frame containing the assignment of booklets to participants. The first column should have the same name as the ID variable in \code{dat} and the second column needs to be named\code{booklet}. 	
+	\item{booklets}{
+		A data frame containing the sequence of blocks in each booklet in wide format. The column names need to be \code{booklet, block1, block2, block3 ...}.
 	}
-	
+%	\item{rotation}{
+%		A data frame containing the assignment of booklets to participants. The first column should have %the same name as the ID variable in \code{dat} and the second column needs to be named\code{booklet}. 	
+%	}	
 	\item{breaks}{
 		Number of blocks after which \code{mbi} shall be recoded to \code{mnr}, e.g., \code{c(1,2)} to specify breaks after the first and second block.
 	}
-
-	\item{nMbi}{
-		Number of \code{mbi}-Codes required at the end of a block to code \code{mnr}. Needs to be >=1. 
-	}   
-	
 	\item{subunits}{
 	Optional: A data frame with subunit information if a dataset is used that has been recoded with \code{recodeData}. This data frame will be used to find the names of recoded subunits in \code{dat}. 
 	}
-	 \item{verbose}{
+	\item{nMbi}{
+		Number of \code{mbi}-Codes required at the end of a block to code \code{mnr}. Needs to be >=1. 
+	}   	
+	\item{mbiCode}{
+		Character indicating \code{mbi} (missing by intention) in dataset. 
+	}  
+	\item{mnrCode}{
+		Character to which \code{mnr} has to be recoded.  
+	}  
+	\item{invalidCodes}{
+		Character vector indicating missing codes to be ignored.  
+	}  	
+	\item{verbose}{
 	logical. If \code{TRUE} additional diagnostics are printed.
 	}
 }
@@ -59,9 +64,6 @@ Examples for data frames \code{booklets}, \code{blocks}, \code{rotation} and \co
 A data frame with missing not reached coded as \code{mnr}. For each person with at least one \code{mnr} in the returned dataset the names of recoded variables are given as an attribute to \code{dat}.
 }
 
-\author{
-Nicole Haag
-}
 
 
 \examples{
@@ -70,10 +72,11 @@ data(inputList)
 
 prepDat <- automateDataPreparation (inputList = inputList, datList = inputDat,
            readSpss = FALSE, checkData=FALSE, mergeData = TRUE, recodeData=TRUE, 
-		       aggregateData=FALSE, scoreData= FALSE, writeSpss=FALSE, verbose = TRUE)
-
-mnrDat <- recodeMbiToMnr (dat = prepDat, id = "ID", booklets = inputList$booklets, 
-          blocks = inputList$blocks, rotation = inputList$rotation, breaks = c(1, 2), 
-          nMbi = 2, subunits = inputList$subunits, verbose = TRUE)
+		   aggregateData=FALSE, scoreData= FALSE, writeSpss=FALSE, verbose = TRUE)
+		   
+prepDat2 <- mergeData("ID", list(prepDat, inputList$rotation))		   
+			   
+mnrDat <- mnrCoding (dat = prepDat2, pid = "ID", booklets = inputList$booklets, 
+          blocks = inputList$blocks, rotation.id = "booklet", breaks = c(1, 2), subunits = inputList$subunits, nMbi = 2, mbiCode = "mbi", mnrCode = "mnr", invalidCodes = c("mbd", "mir", "mci"), verbose = TRUE)
 
 }

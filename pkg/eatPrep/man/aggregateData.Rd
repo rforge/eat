@@ -4,7 +4,11 @@
 \description{Aggregate datasets with constraints on missing values}
 \usage{
 aggregateData(dat, subunits, units, aggregatemissings = NULL, 
+<<<<<<< .mine
+              rename = FALSE, recodedData = TRUE, suppressErr = FALSE, recodeErr = "mci", verbose = FALSE)
+=======
               rename = FALSE, recodedData = TRUE, suppressErr = FALSE, verbose = FALSE)
+>>>>>>> .r493
 }
 \arguments{
   \item{dat}{A data frame containing the data to be aggregated.}
@@ -13,8 +17,14 @@ aggregateData(dat, subunits, units, aggregatemissings = NULL,
   \item{aggregatemissings}{Optional: A symmetrical \emph{n x n} matrix with information on how missing values should be aggregated. If no matrix is given, the default will be used. See 'Examples'.}
   \item{rename}{Logical indicating whether units with only one subunit should be renamed to their unit name? Default is \code{FALSE}.}
   \item{recodedData}{Logical indicating whether colnames in \code{dat} are the subunit names (as in \code{subunits$subunit}) or recoded subunit names (as in \code{subunits$subunitRecoded}). Default is \code{TRUE}, meaning that colnames are recoded subitem names.}
+<<<<<<< .mine
+  \item{suppressErr}{Logical indicating whether aggregated cells with \code{err} (see 'Details') should be recoded to another value.}
+  \item{recodeErr}{Character vector of length 1 indicating to which \{err} should be recoded. Only used when \code{suppressErr == TRUE} }
+  \item{verbose}{Logical. If \code{TRUE} additional information is printed.
+=======
   \item{suppressErr}{Logical.}
    \item{verbose}{Logical. If \code{TRUE} additional information is printed.
+>>>>>>> .r493
 }
 }
 \details{
@@ -70,10 +80,6 @@ print(am)
   
 datAggr <- aggregateData(datRec, inputList$subunits, inputList$units, 
 			aggregatemissings = am, rename = TRUE, recodedData = TRUE,
-			verbose = TRUE)
+			suppressErr = TRUE, recodeErr = "mci", verbose = TRUE)
 }
 
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-%\keyword{ ~kwd1 }
-%\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
