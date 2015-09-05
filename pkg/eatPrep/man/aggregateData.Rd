@@ -17,13 +17,11 @@ aggregateData(dat, subunits, units, aggregatemissings = NULL,
   \item{aggregatemissings}{Optional: A symmetrical \emph{n x n} matrix with information on how missing values should be aggregated. If no matrix is given, the default will be used. See 'Examples'.}
   \item{rename}{Logical indicating whether units with only one subunit should be renamed to their unit name? Default is \code{FALSE}.}
   \item{recodedData}{Logical indicating whether colnames in \code{dat} are the subunit names (as in \code{subunits$subunit}) or recoded subunit names (as in \code{subunits$subunitRecoded}). Default is \code{TRUE}, meaning that colnames are recoded subitem names.}
-<<<<<<< .mine
   \item{suppressErr}{Logical indicating whether aggregated cells with \code{err} (see 'Details') should be recoded to another value.}
   \item{recodeErr}{Character vector of length 1 indicating to which \{err} should be recoded. Only used when \code{suppressErr == TRUE} }
   \item{verbose}{Logical. If \code{TRUE} additional information is printed.}
   \item{suppressErr}{Logical.}
    \item{verbose}{Logical. If \code{TRUE} additional information is printed.}
-}
 }
 \details{
 \code{aggregateData} aggregates units in data frames with special consideration of missing values.The aggregation of missing values is specified in the argument \code{aggregatemissings}. The rownames and colnames of this \emph{n x n} matrix correspond to the missing codes in the data. Additionally, the values \code{"vc"} (for valid code) and \code{"err"} (for error) are used. If \code{aggregatemissings} is a data frame, it will be coerced to a matrix with the first column of the data frame being transformed into the rownames of the matrix. 
