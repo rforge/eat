@@ -5,9 +5,9 @@ checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="ID", s
 	if (is.na(match(id, colnames(dat)))) {
 		stop(paste(funVersion, " ID variable '", id, "' not found in dataset.", sep = "")) }
 
-	blocks <- eatTools:::set.col.type(blocks, col.type = list ( "character" = names(blocks) ))
-	booklets <- eatTools:::set.col.type(booklets, col.type = list ( "character" = names(booklets) ))
-	rotation <- eatTools:::set.col.type(rotation, col.type = list ( "character" = names(rotation) ))
+	blocks <- set.col.type(blocks, col.type = list ( "character" = names(blocks) ))
+	booklets <- set.col.type(booklets, col.type = list ( "character" = names(booklets) ))
+	rotation <- set.col.type(rotation, col.type = list ( "character" = names(rotation) ))
 	
 	if(!is.null(subunits)){
 		if(verbose) cat("Use names for recoded subunits.\n")

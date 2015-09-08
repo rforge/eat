@@ -54,8 +54,8 @@ catPbc <- function(datRaw, datRec, idRaw, idRec, context.vars, values, subunits,
 	}
 
     # make inputs
-    recodeinfo <- eatPrep:::makeInputRecodeData (values = values, subunits = subunits)
-    varinfo    <- eatPrep:::.makeVarinfoRaw (values, subunits)
+    recodeinfo <- makeInputRecodeData (values = values, subunits = subunits)
+    varinfo    <- .makeVarinfoRaw (values, subunits)
 
 #		Kontextvariablen ausschließen
     if(is.numeric(context.vars)) {
