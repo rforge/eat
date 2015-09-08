@@ -7,7 +7,7 @@ prepare datasets for \code{automateModels}
 }
 \usage{datList = NULL, inputList, path = NULL, 
 readSpss, checkData,  mergeData , recodeData, recodeMnr = FALSE,
-aggregateData, scoreData, writeSpss, 
+aggregateData, scoreData, writeSpss, collapseMissings = FALSE, 
 filedat = "mydata.txt", filesps = "readmydata.sps", breaks=NULL, nMbi = 2,
 rotation.id = NULL, suppressErr = FALSE, recodeErr = "mci",
 aggregatemissings = NULL, rename = TRUE, recodedData = TRUE, 
@@ -47,6 +47,9 @@ logical. If \code{TRUE} function \code{\link{aggregateData}} will be called.
 }
   \item{scoreData}{
 logical. If \code{TRUE} function \code{\link{scoreData}} will be called.
+}
+  \item{collapseMissings}{
+logical. If \code{TRUE} function \code{\link{collapseMissings}} will be called and a data.frame containing 0,1 and NA according to the specified missing rule will be returned.
 }
   \item{writeSpss}{
 logical. If \code{TRUE} function \code{\link{writeSpss}} will be called.

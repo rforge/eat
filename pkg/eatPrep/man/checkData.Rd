@@ -19,4 +19,4 @@ Examples of data frames \code{values}, \code{subunits} and \code{units} can be f
 \references{
 For missing types see http://code.google.com/p/zkdlib/wiki/MissingHandling
 }
-\author{Nicole Haag, Anna Lenski}
+\author{Nicole Haag, Anna Lenski, Karoline Sachse}

@@ -1,6 +1,6 @@
 automateDataPreparation <- function(datList = NULL, inputList, path = NULL, 
 						readSpss, checkData,  mergeData , recodeData, recodeMnr = FALSE,
-						aggregateData, scoreData, writeSpss, 
+						aggregateData, scoreData, writeSpss, collapseMissings = FALSE,
 						filedat = "mydata.txt", filesps = "readmydata.sps", breaks=NULL, nMbi = 2,
 						rotation.id = NULL, suppressErr = FALSE, recodeErr = "mci",
 						aggregatemissings = NULL, rename = TRUE, recodedData = TRUE, 
@@ -34,6 +34,7 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 		stopifnot(is.logical(aggregateData))
 		stopifnot(is.logical(scoreData))
 		stopifnot(is.logical(writeSpss))
+		stopifnot(is.logical(collapseMissings))
 		stopifnot(is.logical(correctDigits))
 		stopifnot(is.logical(truncateSpaceChar))
 		stopifnot(is.logical(verbose))
@@ -204,6 +205,13 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 			}
 		} else {if(verbose) cat ( "\n" )	
 		if(verbose) cat ( paste ( f.n , "No SPSS-File has been written.\n" ) )}
+		
+		if( collapseMissings ) {
+			if(verbose) cat ( "\n" )
+			if(verbose) cat ( paste ( f.n , "Collapsing missings\n" ) )
+			dat <- collapseMissings(dat=dat, missing.rule = missing.rule)
+		} else {if(verbose) cat ( "\n" )	
+		if(verbose) cat ( paste ( f.n , "Missings are UNcollapsed.\n" ) )}
 		
 		# finale Ausgabe 
 		if(verbose) cat ( "\n" )
