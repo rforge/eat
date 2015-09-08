@@ -1,14 +1,12 @@
 \name{aggregateData}
 \alias{aggregateData}
-\title{Aggregate Datasets with Several Kinds of Missing Values}
+\title{Aggregate Datasets With Several Kinds of Missing Values}
 \description{Aggregate datasets with constraints on missing values}
 \usage{
 aggregateData(dat, subunits, units, aggregatemissings = NULL, 
-<<<<<<< .mine
-              rename = FALSE, recodedData = TRUE, suppressErr = FALSE, recodeErr = "mci", verbose = FALSE)
-=======
-              rename = FALSE, recodedData = TRUE, suppressErr = FALSE, verbose = FALSE)
->>>>>>> .r493
+              rename = FALSE, recodedData = TRUE, suppressErr = FALSE, 
+              recodeErr = "mci", verbose = FALSE)
+
 }
 \arguments{
   \item{dat}{A data frame containing the data to be aggregated.}
@@ -20,8 +18,6 @@ aggregateData(dat, subunits, units, aggregatemissings = NULL,
   \item{suppressErr}{Logical indicating whether aggregated cells with \code{err} (see 'Details') should be recoded to another value.}
   \item{recodeErr}{Character vector of length 1 indicating to which \{err} should be recoded. Only used when \code{suppressErr == TRUE} }
   \item{verbose}{Logical. If \code{TRUE} additional information is printed.}
-  \item{suppressErr}{Logical.}
-   \item{verbose}{Logical. If \code{TRUE} additional information is printed.}
 }
 \details{
 \code{aggregateData} aggregates units in data frames with special consideration of missing values.The aggregation of missing values is specified in the argument \code{aggregatemissings}. The rownames and colnames of this \emph{n x n} matrix correspond to the missing codes in the data. Additionally, the values \code{"vc"} (for valid code) and \code{"err"} (for error) are used. If \code{aggregatemissings} is a data frame, it will be coerced to a matrix with the first column of the data frame being transformed into the rownames of the matrix. 
@@ -59,18 +55,20 @@ dat1 <- inputDat[[1]]  # get first dataset from inputDat
 datRec <- recodeData(dat1, inputList$values, inputList$subunits)
   
 # define matrix for missing aggregation (note: this is the default matrix)
-am <- matrix(c("vc" , "mvi", "vc" , "mci", "err", "vc" , "vc" , "err",
-							"mvi", "mvi", "err", "mci", "err", "err", "err", "err",
-							"vc" , "err", "mnr", "mci", "err", "mir", "mnr", "err",           
-							"mci", "mci", "mci", "mci", "err", "mci", "mci", "err",
-							"err", "err", "err", "err", "mbd", "err", "err", "err", 
-							"vc" , "err", "mir", "mci", "err", "mir", "mir", "err",
-							"vc" , "err", "mnr", "mci", "err", "mir", "mbi", "err", 
-							"err", "err", "err", "err", "err", "err", "err", "err" ),
-							nrow = 8, ncol = 8, byrow = TRUE) 
+am <- matrix(c(
+    "vc" , "mvi", "vc" , "mci", "err", "vc" , "vc" , "err",
+    "mvi", "mvi", "err", "mci", "err", "err", "err", "err",
+		"vc" , "err", "mnr", "mci", "err", "mir", "mnr", "err",
+    "mci", "mci", "mci", "mci", "err", "mci", "mci", "err",
+		"err", "err", "err", "err", "mbd", "err", "err", "err",
+    "vc" , "err", "mir", "mci", "err", "mir", "mir", "err",
+		"vc" , "err", "mnr", "mci", "err", "mir", "mbi", "err",
+    "err", "err", "err", "err", "err", "err", "err", "err" ),
+		nrow = 8, ncol = 8, byrow = TRUE) 
 
-dimnames(am) <- list(c("vc" ,"mvi", "mnr", "mci",  "mbd", "mir", "mbi", "err"), 
-									c("vc" ,"mvi", "mnr", "mci",  "mbd", "mir", "mbi", "err")) 
+dimnames(am) <- list(
+  c("vc" ,"mvi", "mnr", "mci",  "mbd", "mir", "mbi", "err"),
+  c("vc" ,"mvi", "mnr", "mci",  "mbd", "mir", "mbi", "err"))
   
 print(am)
   
