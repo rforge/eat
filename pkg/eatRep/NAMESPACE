@@ -15,4 +15,7 @@ export(dM)
 export(dT)
 export(dQ)
 export(dG)
+export(getOutputIfSingular)
+export(getOutputIfSingularT1)
+
 
