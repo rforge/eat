@@ -30,16 +30,16 @@ pool.means <- function (m, se, na.rm = FALSE) {
 ###                genestet:       pool.R2 ( r2 = lapply(1:3, FUN = function (x) { runif(10,0.6,0.95) } ), N = lapply(1:3, FUN = function (x) { sample(200:2000,10,FALSE) } ) )
 pool.R2 <- function ( r2, N, quiet = FALSE ) {
            if(!is.list(r2)) {r2 <- list(r2)}
+           if (missing(N))  {
+               if(quiet == FALSE ) {cat("No sample size given. Will not compute standard error of pooled R squared.\n")}
+               N <- lapply(r2, FUN = function (x) { rep ( 1000, length( x ) ) } )
+               mis.N <- TRUE
+           }
            if(!is.list(N))  {N  <- list(N)}
            if (!missing(N)) {
                stopifnot(length(N) == length(r2) )
                mis.N <- FALSE
                stopifnot( all ( sapply(N, length) == sapply(r2, length) ) )
-           }
-           if (missing(N))  {
-               if(quiet == FALSE ) {cat("No sample size given. Will not compute standard error of pooled R squared.\n")}
-               N <- lapply(r2, FUN = function (x) { rep ( 1000, length( x ) ) } )
-               mis.N <- TRUE
            }
            Q.i     <- lapply(r2, FUN = function (x) {0.5*log( (1 + sqrt(x)) / (1-sqrt(x))  )})
            Q.i.err <- lapply(N,  FUN = function (n) {1 / (n-3)})
@@ -48,21 +48,36 @@ pool.R2 <- function ( r2, N, quiet = FALSE ) {
            if(mis.N) {return(transformed[1])} else {return(transformed)} }
 
 
-jk2.pool <- function ( datLong, allNam ) {                                    
+jk2.pool <- function ( datLong, allNam, forceSingularityTreatment ) {                                    
             retList <- do.call("rbind", by(data = datLong, INDICES = datLong[, c("group","parameter")], FUN = function ( u ) {
                if(u[1,"parameter"] == "chiSquareTest") {                        ### jetzt wird chi quadrat gepoolt, Achtung, erstmal kein Unterschied zwischen genestet und nicht genestet
                   chi  <- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "chi2"),"value"]})
                   degFr<- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "df"),"value"]})
                   stopifnot(length(table(degFr)) == 1)
                   degFr<- unique(unlist(degFr))
-                  pool <- micombine.chisquare ( dk = unlist(chi), df=degFr, display = FALSE)
+                  pool <- miceadds::micombine.chisquare ( dk = unlist(chi), df=degFr, display = FALSE)
                   ret  <- data.frame ( group = names(table(u[,"group"])), depVar = allNam[["dependent"]], modus="noch_leer", parameter = names(table(u[,"parameter"])), coefficient = c("D2statistic","chi2Approx", "df1", "df2", "p", "pApprox"), value = pool[c("D", "chisq.approx", "df", "df2", "p", "p.approx")], u[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
                }  else  { 
                   uM   <- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "est"),"value"]})
                   uSE  <- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "se"),"value"]})
                   if(u[1,"parameter"] %in% c("R2", "R2nagel")) {                   ### vorerst werden keine Standardfehler des R^2 berechnet
                      getNvalid <- datLong[ intersect( intersect(  which(datLong[,"group"] == u[1,"group"]), which( datLong[,"parameter"] == "Nvalid")), which( datLong[,"coefficient"] == "est") ) ,]
-                     pooled    <- t(pool.R2(r2 = u[,"value"], N = getNvalid[,"value"]))
+                     if(nrow(getNvalid)==0) { 
+                        pooled    <- t(pool.R2(r2 = u[,"value"]))
+                     }  else  { 
+                        if (forceSingularityTreatment == TRUE) { 
+                            if(nrow(getNvalid) != nrow(u) )  { 
+                               paste("Inconsistent number of sample size replications and/or R^2 estimates. Try workaround.\n")
+                               u <- u[which(u[,"coefficient"] == "est"),]
+                               stopifnot(nrow(getNvalid) == nrow(u))
+                               pooled    <- t(pool.R2(r2 = u[,"value"], N = getNvalid[,"value"]))
+                            }   else  { 
+                               pooled    <- t(pool.R2(r2 = u[,"value"], N = getNvalid[,"value"]))
+                            }   
+                        }  else  {     
+                           pooled    <- t(pool.R2(r2 = u[,"value"], N = getNvalid[,"value"]))
+                        }   
+                     }   
                   } else {
                      pooled <- pool.means(m = uM, se = uSE)$summary[c("m.pooled","se.pooled")]
                   }

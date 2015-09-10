@@ -1,4 +1,4 @@
-generate.replicates <- function ( dat, ID, wgt = NULL, PSU, repInd, type = c("JK1", "JK2", "BRR"))   {
+generate.replicates <- function ( dat, ID, wgt = NULL, PSU, repInd, type )   {
                        if(type %in% c("JK2", "BRR")) { stopifnot(length(PSU) == 1 & length(repInd) == 1 ) } 
                        if(type  == "JK1" ) { if(!is.null(repInd))  { 
                           cat("'repInd' is ignored for 'type = JK1'.\n")
@@ -9,7 +9,7 @@ generate.replicates <- function ( dat, ID, wgt = NULL, PSU, repInd, type = c("JK
                        dat.i       <- dat[,unlist(all.Names)]
                        if(type %in% c("JK2", "BRR")) { if( !all( names(table(dat.i[,all.Names[["repInd"]]])) == c(0,1)) ) {stop("Only 0 and 1 are allowed for repInd variable.\n")} }
                        zonen       <- names(table(dat.i[,all.Names[["PSU"]]]) )
-                       cat(paste("Create ",length(zonen)," replicate weights.\n",sep=""))
+                       cat(paste("Create ",length(zonen)," replicate weights according to ",type," procedure.\n",sep=""))
                        missings    <- sapply(dat.i, FUN = function (ii) {length(which(is.na(ii)))})
                        if(!all(missings == 0)) {
                            mis.vars <- paste(names(missings)[which(missings != 0)], collapse = ", ")
@@ -63,22 +63,26 @@ jk2.quantile<- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"),
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf 
 jk2.glm  <- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"),
             PSU = NULL, repInd = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), group.delimiter = "_",
-            formula, family=gaussian, forceSingularityTreatment = FALSE, doCheck = TRUE, na.rm = FALSE ) { 
+            formula, family=gaussian, forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE ) { 
             eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, toCall = "glm",
                    nest = nest, imp = imp, groups = groups, group.splits = group.splits,
                    formula=formula, family=family, forceSingularityTreatment=forceSingularityTreatment, 
+                   glmTransformation = glmTransformation,
                    group.delimiter=group.delimiter, na.rm=na.rm, doCheck=doCheck)}
-
 
 eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, nest=NULL, imp=NULL, 
           toCall = c("mean", "table", "quantile", "glm"), groups = NULL, group.splits = length(groups), group.differences.by = NULL, 
           group.delimiter = "_", dependent, na.rm = FALSE, forcePooling = TRUE, boundary = 3, doCheck = TRUE,
           separate.missing.indicator = FALSE, expected.values = NULL, probs = NULL, nBoot = NULL, bootMethod = NULL,
-          formula=NULL, family=NULL, forceSingularityTreatment = FALSE, correct)    {
+          formula=NULL, family=NULL, forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), correct)    {
           # if(!exists("rbind.fill"))   {library(plyr)}
           checkForPackage (namePackage = "reshape", targetPackage = "eatRep")
           toCall<- match.arg(toCall)
           type  <- match.arg(type)
+          glmTransformation <- match.arg(glmTransformation)
+          if(forceSingularityTreatment == FALSE & glmTransformation != "none") { 
+             cat("'forceSingularityTreatment' was set to 'FALSE'. Please note that 'glmTransformation' is only possible if 'forceSingularityTreatment' is 'TRUE'.\n"); flush.console()
+          }
           if(toCall == "glm") {                                                 ### fuer glm muessen abhaengge und unabhaengige Variablen aus Formel extrahiert werden
              dependent  <- as.character(formula)[2]
              independent<- unlist ( sapply( strsplit(as.character(formula)[3], "\\*|\\:|\\+|-|\\(|\\)|\\^")[[1]], crop ) )
@@ -222,14 +226,14 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                                            }
                                        }
                                        if( toCall == "glm" ) {                
-                                           ana.i <- jackknife.glm ( dat.i = datI , allNam=allNam, formula=formula, forceSingularityTreatment=forceSingularityTreatment, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA)
+                                           ana.i <- jackknife.glm ( dat.i = datI , allNam=allNam, formula=formula, forceSingularityTreatment=forceSingularityTreatment, glmTransformation=glmTransformation, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA)
                                        }
                                        ana.i <- data.frame ( ana.i, datI[1,c(allNam[["nest"]], allNam[["imp"]]),drop=FALSE], stringsAsFactors = FALSE)
                                        return(ana.i)}))
                                return(anaI)}))
     ### es wird nur gepoolt, wenn es mehr als eine Imputation gibt!
                         if( length(table(ana[,allNam[["imp"]]])) > 1 ) { 
-                            retList <- jk2.pool ( datLong = ana, allNam=allNam)
+                            retList <- jk2.pool ( datLong = ana, allNam=allNam, forceSingularityTreatment = forceSingularityTreatment)
                         }  else  { retList <- ana[,-match(c(allNam[["nest"]], allNam[["imp"]]), colnames(ana))] }
     ### hier die dummy-Ergebnisstruktur erzeugen (noch nicht schoen)
                      }  else  {                                                 
@@ -492,21 +496,22 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA) 
           return(facToChar(resAl)) }
           
 
-jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, na.rm, group.delimiter, type, repA ) {
+### Hilfsfunktion fuer jk2.glm()
+jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, glmTransformation, na.rm, group.delimiter, type, repA ) {
                  cat("."); flush.console()
                  sub.ana <- do.call("rbind", by(data = dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function (sub.dat) {
                             glm.ii         <- glm(formula = formula, data = sub.dat, family = glm.family)
                             singular       <- names(glm.ii$coefficients)[which(is.na(glm.ii$coefficients))]
                             if(!is.null(repA)) {
-                         #       if(!exists("svrepdesign"))      {library(survey)}
-                                typeS          <- recode(type, "'JK2'='JKn'")
-                                design         <- svrepdesign(data = sub.dat[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = sub.dat[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repA[match(sub.dat[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, mse = TRUE)
+                            #    if(!exists("svrepdesign"))      {library(survey)}
+                                typeS          <- car::recode(type, "'JK2'='JKn'")
+                                design         <- survey::svrepdesign(data = sub.dat[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = sub.dat[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repA[match(sub.dat[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, mse = TRUE)
                                 if(length(singular) == 0 & forceSingularityTreatment == FALSE ) {
-                                   glm.ii      <- svyglm(formula = formula, design = design, return.replicates = FALSE, family = glm.family)
+                                   glm.ii      <- survey::svyglm(formula = formula, design = design, return.replicates = FALSE, family = glm.family)
                                 }
                             }
                             r.squared      <- data.frame ( r.squared = var(glm.ii$fitted.values)/var(glm.ii$y) , N = nrow(sub.dat) , N.valid = length(glm.ii$fitted.values) )
-                            r.nagelkerke   <- NagelkerkeR2(glm.ii)
+                            r.nagelkerke   <- fmsb::NagelkerkeR2(glm.ii)
                             summaryGlm     <- summary(glm.ii)
                             res.bl         <- data.frame ( group=paste(sub.dat[1,allNam[["group"]]], collapse=group.delimiter), depVar =allNam[["dependent"]],modus = "noch_leer", parameter = c(rep(c("Ncases","Nvalid",names(glm.ii$coefficients)),2),"R2","R2nagel"),
                                               coefficient = c(rep(c("est","se"),each=2+length(names(glm.ii$coefficients))),"est","est"),
@@ -521,10 +526,12 @@ jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, n
                                 if(length(singular) > 0 | forceSingularityTreatment == TRUE ) {
                                    stopifnot(length(as.character(formula)) == 3 )
                                    formelNew  <- paste ( as.character(formula)[2] ," ~ ",as.character(formula)[3],sep="")
-                                   string     <- paste("resRoh <- data.frame( withReplicates(design, quote(getOutputIfSingular(glm(formula = ",formelNew,", weights=.weights, family = ",glm.family$family,"(link=\"", glm.family$link,"\"))))), stringsAsFactors = FALSE)",sep="")
+                                   cat("Unidentified bug with Nagelkerkes r^2 in singularity treatment. No r^2 is computed.\n")
+                                   if ( glmTransformation == "none" )  {string     <- paste("resRoh <- data.frame( withReplicates(design, quote(getOutputIfSingular(glm(formula = ",formelNew,", weights=.weights, family = ",glm.family$family,"(link=\"", glm.family$link,"\"))))), stringsAsFactors = FALSE)",sep="")}
+                                   if ( glmTransformation == "sdY" )   {string     <- paste("resRoh <- data.frame( withReplicates(design, quote(getOutputIfSingularT1(glm(formula = ",formelNew,", weights=.weights, family = ",glm.family$family,"(link=\"", glm.family$link,"\"))))), stringsAsFactors = FALSE)",sep="")}
                                    eval ( parse ( text = string ) )
-                                   rownames(resRoh) <- gsub("N", "Ncases", rownames(resRoh))
-                                   index      <- which(nchar(rownames(resRoh)) == 0)
+                                   # rownames(resRoh) <- gsub("N", "Ncases", rownames(resRoh))
+                                   index      <- which(nchar(rownames(resRoh)) == 0)                  
                                    if(length(index)>0) { for ( j in 1:length(index)) { rownames(resRoh)[index[j]] <- paste("dummyPar",j,sep="")}}
                                    res.bl     <- data.frame ( group=paste(sub.dat[1,allNam[["group"]]], collapse=group.delimiter), depVar =allNam[["dependent"]],modus = "noch_leer", parameter = rep(rownames(resRoh), 2), coefficient = c(rep("est", nrow(resRoh)), rep("se", nrow(resRoh))),
                                                  value = c(resRoh[,"theta"], resRoh[,"SE"]), sub.dat[1,allNam[["group"]], drop=FALSE], stringsAsFactors = FALSE)
@@ -572,7 +579,7 @@ superSplitter <- function ( group=NULL, group.splits = length(group), group.diff
 checkForPackage <- function (namePackage, targetPackage) {
         if(paste("package:",namePackage,sep="") %in% search() ) {
            cat(paste("Warning: Package '",namePackage,"' is attached. Functions in package '",targetPackage,"' conflict with '",namePackage,"'in some way.\n  '",namePackage,"' therefore will be detached now. \n", sep=""))
-           eval(parse(text=paste("detach(package:",namePackage,")",sep=""))) } }
+           eval(parse(text=paste("detach(\"package:",namePackage,"\", force = TRUE)",sep=""))) } }
 
 
 dT <- function ( object, reshapeFormula = depVar + group ~ parameter + coefficient, seOmit = FALSE) {
@@ -620,10 +627,31 @@ dG <- function ( object , analyses = NULL ) {
 
 
 ### Hilfsfunktion fuer jk2.glm() wenn Regression singulaere Terme enthaelt
+### Achtung: negelkerke wird irgendwie falsch berechnet, keine Ahnung woran es liegt, wird ausgeschlossen
 getOutputIfSingular <- function ( glmRes ) {
                        coefs <- na.omit(coef(glmRes))
-                       coefs <- c(coefs, var(glmRes$fitted.values)/var(glmRes$y), unlist(NagelkerkeR2(glmRes)))
+                       rnagel<- unlist(fmsb::NagelkerkeR2(glmRes))
+                       names(rnagel) <- c("Nvalid", "R2nagel")
+                       rnagel<- rnagel[1]
+                       coefs <- c(coefs, R2 = var(glmRes$fitted.values)/var(glmRes$y), rnagel)
                        return(coefs)}
+
+### wie oben, nur werden hier lineare Transformationen der Regressionskoeffizienten erlaubt
+### unstandardisierte Koeffizienten werden genutzt, um den logit vorherzusagen
+### jede person hat auf dieser logitvariablen einen wert
+### standardabweichung der vorhergesagten logits + (pi^2) / 3 wird genutzt, um varianz der latenten variable zu bestimmen
+### unstandardisierten logits werden durch varianz der lat. variablen geteilt, um standardisierte zu erhalten   
+### Achtung: negelkerke wird irgendwie falsch berechnet, keine Ahnung woran es liegt, wird ausgeschlossen
+getOutputIfSingularT1<- function ( glmRes) {
+                       coefs <- na.omit(coef(glmRes))
+                       pred  <- sd ( glmRes$linear.predictors ) +  (pi^2)/3
+                       coefs <- coefs/pred
+                       rnagel<- unlist(fmsb::NagelkerkeR2(glmRes))
+                       names(rnagel) <- c("Nvalid", "R2nagel")
+                       rnagel<- rnagel[1]
+                       coefs <- c(coefs, R2 = var(glmRes$fitted.values)/var(glmRes$y), rnagel)
+                       return(coefs)}
+                       
 
 desk <- function(variable,na=NA, p.weights = NULL, na.rm = FALSE) {
          variable <- as.numeric.if.possible( data.frame(as.matrix(variable),stringsAsFactors = FALSE), verbose = FALSE )

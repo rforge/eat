@@ -11,7 +11,8 @@ of the \code{'survey'} package.
 jk2.glm(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, 
         nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), 
         group.delimiter = "_", formula, family=gaussian, 
-        forceSingularityTreatment = FALSE, doCheck = TRUE, na.rm = FALSE )}
+        forceSingularityTreatment = FALSE, 
+        glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE )}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -72,6 +73,11 @@ A description of the error distribution and link function to be used in the mode
   \item{forceSingularityTreatment}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Logical: Forces the function to use the workaround to handle singularities in regression models.
+}
+  \item{glmTransformation}{
+Optional: Allows for transformation of parameters from linear regression and logistic regression before pooling.
+Useful to compare parameters from different glm models, see Mood (2010). Note: This argument applies only if 
+forceSingularityTreatment is set to 'TRUE'.
 }
   \item{doCheck}{
 Logical: Check the data for consistency before analysis? If \code{TRUE} groups with insufficient data are excluded from

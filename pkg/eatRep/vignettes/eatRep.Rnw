@@ -35,13 +35,13 @@
   was designed mainly to supply replications methods in R. Such methods are appropriate to analyze both 
   clustered and multiple imputed data as well. To date, only the Jackknife-2 (JK2) and the balanced 
   repeated replicates (BRR) methods are supported. Some functions overlap with methods provided in 
-  the computer software WesVar \citet{Westat2000}---in this case the package only allows for executing
+  the computer software WesVar \citep{Westat2000}---in this case the package only allows for executing
   these analyses in R, which may be easier to implement due to a syntax related interface. Some methods 
   in WesVar are not implemented in \code{eatRep} yet, for example bootstrapping methods or even JK1. 
   For bootstrapping, alternative \code{R} packages (e.g. \code{boot}) may be used. However, some methods are only 
   implemented in \code{eatRep}, for example analyses for nested imputed data or linear logistic regression models.\\ 
   
-  \code{eatRep} heavily relies on the \code{survey} package \citet{Lumley2012} which functions has been extended by methods 
+  \code{eatRep} heavily relies on the \code{survey} package \citep{Lumley2012} which functions has been extended by methods 
   for multiple imputed data. While the functional principle of \code{survey} is based on replication of conventional 
   analyses, \code{eatRep} is based on replication of \code{survey} analyses to take multiple imputed data into account.
   %%  The following tutorial does not intend to give theoretical foundations nor a critical review of those methods or of anything else. Also, this is 
@@ -111,10 +111,10 @@ severely than indicated by the factor $n/(n-1)$. To estimate the relationship be
 necessary to estimate the variance explained by the cluster.\\
 
 Without taking the cluster structure into account, we would not only obtain biased variance estimates but biased 
-standard errors, too \citet{luke2009}. This problem occurs in the same way for estimation of frequency tables, 
+standard errors, too \citep{luke2009}. This problem occurs in the same way for estimation of frequency tables, 
 quantiles or estimates of (linear) regression models. To gain unbiased estimates, several replication methods 
 were introduced, which based on the same principle: To estimate the proportion by which the variance in the 
-sample is underestimated due to a clustered structure \citet{Lumley2004}. In the Jackknife-2 (JK2) procedure 
+sample is underestimated due to a clustered structure \citep{Lumley2004}. In the Jackknife-2 (JK2) procedure 
 this is implemented by reproducing the original sample to several replicates. In each replicate one clustering 
 unit (e.g. one class) of only one primary sampling unit (PSU) is replaced by another class, which therefore 
 occurs two times in the sample. Each replicate is analyzed if it would have been a completely random sample. 
@@ -136,7 +136,7 @@ samples (with replacement) from our original sample, each of $N=1000$, and compu
 deviation of the 100 mean estimates is the standard error of the mean. Of course, this bootstrap method is far to 
 cumbersome, as in a random sample the standard error can be estimated in a much more easier way. However, in a 
 clustered sample, an extension of this bootstrap method is appropriate indeed.
-Several software \citet{Westat2000} and free R packages such as \code{survey} \citet{Lumley2012}
+Several software \citep{Westat2000} and free R packages such as \code{survey} \citep{Lumley2012}
 do allow for several replication methods.\\
 
 The situation is becoming still more complicated when the variables in the data to be analysed occur as (multiple) 
@@ -159,6 +159,8 @@ obtained from a Item response Theory (IRT) marginal model are included as plausi
 recognized as an imputation of the latent competence construct. The data are represented in the long format.\\ 
 
 <<reading_writingdef>>=
+library(eatRep)
+data(reading)
 str(reading)
 @
 
@@ -170,7 +172,7 @@ which other unit in which replicate of the original data. \code{"income"} is eac
 two variables, \code{"nest"} and \code{"imputation"} describe the multiple imputed structure of the data. The data 
 stem from a nested multiple imputation model with 2 nests and 3 imputations in each nest. The princiles of nested
 imputations will be elucidated later; for the moment, we may content ourself with data from the first nest only, 
-i.e. wo split the data and only cosider cases for which $nest=1$. We may think of \code{"score"} as the the 
+i.e. we split the data and only cosider cases for which $nest=1$. We may think of \code{"score"} as the the 
 plausible value estimate for the reading competence. Hence, if $nest=1$ and $imputation=3$, the value in the 
 \code{"score"} columns refers to the third plausible value in the first nest for the reading competence. 
 Please note that the three imputations of the reading competence occur as one variable in the data set. 
@@ -232,7 +234,6 @@ estimate and the corresponding standard error) the corresponding value is given.
 the output rather is appropriate for further processing as for clear arragement, as the 
 values are displayed in the long format as well as in exponential notation, for example. 
 To display the results in the more common wide format, use the \code{reshape2} package. 
-A possible call would be \code{reshape2::dcast(means, group ~ parameter+coefficient, value.var = "value")}. 
 Alternatively, an abbreviated display of the results is provided by the \code{dM} 
 function (whereas dM stands for ``display means''). You may think of \code{dM} as 
 a simple summary function which is not intended for saving results or further processing
@@ -267,7 +268,7 @@ dM(means, omitTerms = c("var", "Ncases","NcasesValid", "meanGroupDiff") )
 @
 
 If we additionally decide to ignore the imputations and treat, for example, the first plausible value as it would have been 
-a fully observed estimator of the latent competency, the function call would be the following:\\
+a fully observed measure of the latent competency, the function call would be the following:\\
 
 <<readingMeansByCountry4def>>=
 means <- jk2.mean(datL = subset(readN1,imputation==1),  ID = "idstud", 
@@ -292,7 +293,7 @@ additionally are computed. If \code{group.splits} is \code{0:2}, descriptives al
 
 The second feature is about mean differences. Suppose you are interested in sex differences \emph{within} each 
 country. The grouping variable for which mean differences should be computed has to be specified in 
-the \code{group.differences.by} argument. For a grouping variable with $K$ levels, all $K!/(2!*(K-2)!)$ comparisons
+the \code{group.differences.by} argument. For a grouping variable with $K$ levels, all $K!/(2!\times(K-2)!)$ comparisons
 are computed. It is important that the group defined in \code{group.differences.by} also has to occur in the \code{groups} 
 statement, otherwise \code{group.differences.by} will be ignored. To estimate sex differences \emph{within each 
 country}, sex and country have to be part of the \code{groups} statement, whereas only sex has to be
@@ -319,7 +320,7 @@ dM(means, omitTerms = c("var","Ncases", "NcasesValid"))
 
 The output now changed slightly: additionally to several group columns, one column for group membership is provided. 
 The last line labelled \code{wholeGroup} provides results concerning the whole population. The line labelled 
-\code{LandC\_male} contains values for the males in LandC. Moreover, three mean differences were computed. In each
+\code{male\_LandC} contains values for the males in LandC. Moreover, three mean differences were computed. In each
 federal state, the difference between males and females is given. \\
 
 \subsection{Frequency tables}
@@ -360,7 +361,7 @@ before, these analyses may be conducted without considering clustered structure.
 the standard errors will change.\\ 
 
 Let's devote little attention to the problem of missing values. In the example mentioned above, 
-it does not seem plausible to assume missnig values on the \code{"passed"} variable. Without
+it does not seem plausible to assume missing values on the \code{"passed"} variable. Without
 available data for an examinee, the case will be excluded from the data previously. But consider 
 a questionnaire where pupils are asked about there parents' profession, for example to compute 
 the family's highest socio-economical income (HISEI). Some examinees might have choosen the 
@@ -372,7 +373,7 @@ HISEI information then will be considered as a separate group in the analyses. A
 cases appear as ``NA'' values, it is possible to define them as a distince category for which 
 relative frequencies can be computed. Only for illustration, let us generate some missing values 
 in some of the imputations and repeat the analysis subsequently. You will see that a new category 
-has joined to the output, which is labelled \code{"missing"}. \\
+has joined to the output, which is labelled \code{"<NA>"}. \\
 
 <<redefineValues2def>>=
 readN1[,"passedNA"] <- readN1[,"passed"]
@@ -394,12 +395,14 @@ See the examples in the help file of \code{jk2.quantile()}.\\
 \section{Generalized linear models}
 \label{sec:ex2}
 
-Considering multiple imputations and clustered structure in the estimation of generalized linear models is based on the same 
-principes mentioned before. However, some additional comments due to specific characteristics of regression models have to be 
-made. First we now have another type of variable---independent variables, which may occur as multiple imputed variables, too.
-Second, we have to specify the regression expression, as in \code{glm()}, for example. Third, we will 
-have to specify the kind of regression we propose to estimate, for example linear or logistic regression. 
-We start with a simple example using the same data as before.\\
+Considering multiple imputations and clustered structure in the estimation of generalized 
+linear models is based on the same principles as aforementioned. However, some additional 
+comments due to specific characteristics of regression models have to be made. First we 
+now have another type of variable---independent variables, which may occur as multiple 
+imputed variables, too. Second, we have to specify the regression expression, as in 
+\code{glm()}, for example. Third, we will have to specify the kind of regression we 
+propose to estimate, for example linear or logistic regression. We start with a simple 
+example using the same data as before.\\
 
 <<regression1def>>=
 mod1  <- jk2.glm(datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
@@ -411,7 +414,7 @@ As we might have expected, the outcome is a single data frame in the long format
 And long really means long! For our purpose, it may be sufficient to content ourself 
 with the summary provided by \code{dG}. But beforehand let us consider how many regression 
 analyses are conducted and how many results we expect to find. The message on the console 
-speaks of about ``1 analysis overall'' according to two \code{'group.splits = 1'}. 
+speaks of about ``1 analysis overall'' according to two \code{group.splits = 1}. 
 But strictly speaking, we have estimated three regression analyses, as the model is 
 fitted in each group separately. As we specified one group variable dividing the data into 
 three distinct groups, for which we instruct \code{jk2.glm()} to fit the regression model 
@@ -432,14 +435,14 @@ now has to be defined explicitly to be of class factor! Otherwise, albeit gender
 coded as 0/1, it would be treated to be a continuous numeric variable. With only two levels---male 
 and female---this may have no effect on the results, but consider a factor variable with three 
 levels, which may be coded 0, 1 and 2. We are interested in two coefficients which correspond to 
-the effect of level 1 vs. level 0 and the effect of level 2 vs. level 0. If we miss to define the 
-variable to be of class factor, only one coefficient is computed, and the variable is assumed to 
+the effect of level 1 vs. level 0 and the effect of level 2 vs. level 0. If we refrain from defining 
+the variable to be of class factor, only one coefficient is computed, and the variable is assumed to 
 be continuous. What we see additionally is that R implicitly defined the female group to be the 
 reference---the regression parameter was labelled \code{gendermale}.\\ 
 
 Now we try something different. First we define \code{"passed"} to be our dependent variable. 
 This leads to a binomial regression model which models whether the probability of pass/fail 
-depends on certain independetn variables. Secondly, we also use country as a predictor (instead 
+depends on certain independent variables. Secondly, we also use country as a predictor (instead 
 of a grouping variable). This is to test whether the effect of sex varies across countries. 
 To simplify displaying the results, we use the same workaround as in the example before. \\
 
@@ -452,8 +455,10 @@ dG(mod1)
 
 Inspecting the output, we found that the probability of success significantly depends on the 
 country an examinee stems from and on an examinee's sex. The probability of passing the test
-is significantly lower for males and for examinees who stem from \code{"LandB"}. Moreover, 
-the disadvantage of boys is not consistent across countries: In \code{"LandB"}, this difference
+is significantly lower for males and for examinees who stem from \code{"LandB"}. Examinees 
+who stem from \code{"LandC"} do not significanty differ in their probability of passing the test 
+from examinees who stem from the reference country, \code{"LandA"}. Moreover, the disadvantage of 
+boys is not consistent across countries: In \code{"LandB"}, this difference
 is significantly less substantial.\\
 Please note that---although we have only defined one independent variable---we obtain two 
 regression coefficients for the two categories of the country variable. Again, R choosed its 
@@ -472,20 +477,17 @@ In \code{LandB} the odds ratio to pass is 0.58 times the corresponding odds rati
 
 As we saw in the preceding section, R choosed the reference group of factor variables 
 by itself. Persuading R to meet our needs is easier said than done. The essentially 
-easiest way is a rather dummy method: recode the variable so that your favourite
-reference group occurs at first when ordered alphabetically. We will demonstrate 
-this procedure about the gender variable in our fictitious data set. Remember the 
-first example in section 3---R choosed the females to be the reference. Why? Simply 
-because female comes before male in the alphabet. Let's use the \code{recode()} 
-function from the \code{car} package to define a new variable \code{sexRecoded}:\\
+easiest way is to redefine the factor variable and choose its levels manually. We will 
+demonstrate this procedure about the gender variable in our fictitious data set. Remember 
+the first example in section 3---R choosed the females to be the reference. Why? Simply 
+because female comes before male in the alphabet. Let's redefine the gender variable:\\
 
 <<recodeSexdef>>=
-readN1[,"sexRecoded"] <- car::recode(readN1[,"sex"], "'male' = '_male'")
+readN1[,"sexRecoded"] <- factor(readN1[,"sex"], levels = c("male", "female") )
 @
 
-The simple trick of adding a \code{"\_"} sign to the \code{"male"} label provokes R to sort \code{"\_male"}
-before \code{"female"} alphabetically. Consequently, \code{"male"} is used as reference group when repeating 
-the last example:\\
+The simple intervention provokes R to use the first label mentioned in the 
+\code{levels}-argument as reference group when repeating the last example:\\
 
 <<regressionReplicationdef>>=
 mod1  <- jk2.glm(datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
