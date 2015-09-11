@@ -1,5 +1,5 @@
 
-splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "qMatrix" , "person.groups" ) , add = NULL , cross = NULL , all.persons = TRUE , all.persons.lab = "all" , full.model.names = TRUE , model.name.elements = c ( "dim" , "group" , "cross" ) , include.var.name = FALSE , env = FALSE , verbose = TRUE ) {
+splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "qMatrix" , "person.groups" ) , add = NULL , cross = NULL , all.persons = TRUE , all.persons.lab = "all" , person.split.depth = 0:length(person.groups[,-1,drop=FALSE]), full.model.names = TRUE , model.name.elements = c ( "dim" , "group" , "cross" ) , include.var.name = FALSE , env = FALSE , verbose = TRUE ) {
 		
 		# Funktion: person.groups nach person.grouping
 		pg2pgr <- function ( x , nam ) {
@@ -144,34 +144,61 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 				# Spaltenreihenfolge zurueckaendern
 				p <- p[,rev(colnames(p)),drop = FALSE ]
 				
-				# person.groups reduzieren/listen
-				p2 <- list ()
-				f1 <- function ( z , all.persons.lab ) {
-
-						# nur nicht all.persons.lab
-						b2 <- !z %in% all.persons.lab
-						z2 <- z [ b2 ]
-						if ( ! identical ( names ( z2 ) , character(0) ) ) {
-								str2 <- paste0 ( "person.groups$" , names ( z2 ) , " %in% '" , z2 , "'" )
-						} else {
-								str2 <- NULL
+				# person.split.depth
+				# muss innerhalb 0:length(person.groups[,-1,drop=FALSE]) liegen, alle anderen ignorieren
+				if ( is.numeric ( person.split.depth ) ) {
+						person.split.depth <- as.integer ( round ( person.split.depth ) )
+						person.split.depth <- person.split.depth[person.split.depth %in% 0:length(person.groups[,-1,drop=FALSE])]
+						if ( identical ( person.split.depth , integer(0) ) | any ( is.na ( person.split.depth ) ) ) {
+								person.split.depth <- 0:length(person.groups[,-1,drop=FALSE])
+								warning ( paste0 ( "splitModels: parameter person.split.depth is out of range and will be defaulted to " , person.split.depth[1] , ":" , person.split.depth[length(person.split.depth)] ) , call. = FALSE )
 						}
-						
-						# alle all.persons.lab
-						# hier NAs loeschen
-						b3 <- !b2
-						z3 <- z [ b3 ]
-						if ( ! identical ( names ( z3 ) , character(0) ) ) {
-								str3 <- paste0 ( "! is.na ( person.groups$" , names ( z3 ) , " )" )
-						} else {
-								str3 <- NULL
+				} else {
+						person.split.depth <- 0:length(person.groups[,-1,drop=FALSE])
+						if ( !is.null ( person.groups ) ) {
+								warning ( paste0 ( "splitModels: parameter person.split.depth is falsely set and will be defaulted to " , person.split.depth[1] , ":" , person.split.depth[length(person.split.depth)] ) , call. = FALSE )						
 						}
-		
-						paste0 ( "person.groups[ " , paste ( c ( str2 , str3 ) , collapse = " & " ) , ",]" )
 				}
-				do1 <- apply ( p , 1 , f1 , all.persons.lab )
-				do1 <- paste0 ( paste0 ( "p2[[" , seq ( along = do1 ) , "]] <- " ) , do1 ) 
-				eval ( parse ( text = do1 ) )
+
+				# Tiefe berechnen
+				depth <- ncol ( p ) - apply ( p , 1 , function ( z , all.persons.lab ) sum ( z %in% all.persons.lab ) , all.persons.lab )
+				# alle rausnehmen, die nicht die richtige Tiefe haben
+				p <- p[ depth %in% person.split.depth , , drop = FALSE ]
+			
+				# wenn alle rausgenommen wurden, p2 als list(NULL) setzen
+				if ( nrow ( p ) %in% 0 ) {
+						p2 <- list(NULL)
+				} else {
+				
+						# person.groups reduzieren/listen
+						p2 <- list ()
+						f1 <- function ( z , all.persons.lab ) {
+
+								# nur nicht all.persons.lab
+								b2 <- !z %in% all.persons.lab
+								z2 <- z [ b2 ]
+								if ( ! identical ( names ( z2 ) , character(0) ) ) {
+										str2 <- paste0 ( "person.groups$" , names ( z2 ) , " %in% '" , z2 , "'" )
+								} else {
+										str2 <- NULL
+								}
+								
+								# alle all.persons.lab
+								# hier NAs loeschen
+								b3 <- !b2
+								z3 <- z [ b3 ]
+								if ( ! identical ( names ( z3 ) , character(0) ) ) {
+										str3 <- paste0 ( "! is.na ( person.groups$" , names ( z3 ) , " )" )
+								} else {
+										str3 <- NULL
+								}
+				
+								paste0 ( "person.groups[ " , paste ( c ( str2 , str3 ) , collapse = " & " ) , ",]" )
+						}
+						do1 <- apply ( p , 1 , f1 , all.persons.lab )
+						do1 <- paste0 ( paste0 ( "p2[[" , seq ( along = do1 ) , "]] <- " ) , do1 ) 
+						eval ( parse ( text = do1 ) )
+				}
 		} else if ( ! "person.groups" %in% split & !is.null ( person.groups ) ) {
 				p <- data.frame ( matrix ( rep ( all.persons.lab , ncol ( person.groups ) - 1 ) , ncol = ncol ( person.groups ) - 1 ) , stringsAsFactors = FALSE )
 				colnames ( p ) <- colnames ( person.groups )[-1]
@@ -203,10 +230,10 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 				names ( p3 ) <- ""
 		}
 		
-		### kreuzen 
+		# Item- und Personendatensaetze zum spaeteren kreuzen
 		i.dfr <- data.frame ( "dim" = names ( i ) , stringsAsFactors = FALSE )
 		p.dfr <- data.frame ( "group" = names ( p3 ) , stringsAsFactors = FALSE )
-
+		
 		# Abgleich von cross und add
 		# cross gewinnt, d.h. wenn in cross, wirds aus add rausgenommen
 		if ( !is.null ( cross ) & !is.null ( add ) ) {

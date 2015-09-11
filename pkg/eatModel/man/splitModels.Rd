@@ -10,7 +10,7 @@ With \code{splitModels} several models can be set up.
 The output of \code{splitModels} can be directly passed to the \code{splittedModels} argument of \code{\link{defineModel}}
 }
 \usage{
-splitModels ( qMatrix = NULL , person.groups = NULL , split = c ( "qMatrix" , "person.groups" ) , add = NULL , cross = NULL , all.persons = TRUE , all.persons.lab = "all" , full.model.names = TRUE , model.name.elements = c ( "dim" , "group" , "cross" ) , include.var.name = FALSE , env = FALSE , verbose = TRUE )
+splitModels ( qMatrix = NULL , person.groups = NULL , split = c ( "qMatrix" , "person.groups" ) , add = NULL , cross = NULL , all.persons = TRUE , all.persons.lab = "all" , person.split.depth = 0:length(person.groups[,-1,drop=FALSE]) , full.model.names = TRUE , model.name.elements = c ( "dim" , "group" , "cross" ) , include.var.name = FALSE , env = FALSE , verbose = TRUE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -48,6 +48,9 @@ logical (default: TRUE), for each group variable in \code{person.groups} an "all
   }
   \item{all.persons.lab}{
 character, name of the "all" category 
+  }
+  \item{person.split.depth}{
+integer, depth of group splits, 0: global all persons are included, 1: groups of all variables are included, 2: groups of all pairs of variables are included, n: groups of n variables are included. Can be a vector with more than one argument, e.g. for 3 variables, the full number of splits (which is also the default) can be obtained by c(0,1,2,3); this creates a model with all persons (0), all groups of all variables (1), groups from pairs of variables (2), and groups from combining all 3 variables (3). Using \code{person.split.depth} usually makes most sense if \code{all.persons=TRUE}; if \code{all.persons=FALSE} the depth equals the number of variables (if another depth is set, no splits will be performed).
   }
   \item{full.model.names}{
 logical (default: TRUE), model names are derived from \code{model.name.elements}; if FALSE models are numbered ascendingly
