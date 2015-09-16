@@ -44,14 +44,16 @@
   
   Historically, \code{eatModel} is a \sQuote{reboot} of the package \code{eatRest} formerly known as
   \code{eat}. The functionality of both packages is quite identical, whereas \code{eatModel} uses some
-  more efficient routines, though.
+  more efficient routines, though. Important note: For consistency reasons, some functions in \code{eatModel} 
+  have identical names as the corresponding function in \code{eatRest}, for example 'get.shw'. It is strongly
+  recommended to \emph{not} have both packages attached simultaneously in one R session. 
 }
 \details{
 \tabular{ll}{
 Package: \tab eatModel\cr
 Type: \tab Package\cr
-Version: \tab 0.2.0\cr
-Date: \tab 2015-08-26\cr
+Version: \tab 0.2.1\cr
+Date: \tab 2015-09-16\cr
 License: \tab GPL(>=2)
 }
 }

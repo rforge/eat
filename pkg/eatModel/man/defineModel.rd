@@ -14,7 +14,7 @@ defineModel (dat, items, id, splittedModels = NULL,
    check.for.linking = TRUE, boundary = 6, remove.boundary = FALSE, remove.no.answers = TRUE,
    remove.missing.items = TRUE, remove.constant.items = TRUE, remove.failures = FALSE, 
    remove.vars.DIF.missing = TRUE, remove.vars.DIF.constant = TRUE, verbose=TRUE, 
-   software = c("conquest","tam"), dir = NULL, analysis.name,
+   software = c("conquest","tam"), dir = NULL, analysis.name, withDescriptives = TRUE, 
    model.statement = "item",  compute.fit = TRUE, n.plausible=5,
    seed = NULL, conquest.folder=NULL,constraints=c("cases","none","items"),
    std.err=c("quick","full","none"), distribution=c("normal","discrete"),
@@ -139,6 +139,10 @@ Applies only if \code{software = "conquest"}. An already existsing directory in 
 %%     ~~Describe \code{dif.term} here~~
 Applies only if \code{software = "conquest"}. A character string specifying the analysis name.
 All Conquest input and output files will named \code{analysis.name} with their corresponding extensions.
+}
+  \item{withDescriptives}{
+%%     ~~Describe \code{dif.term} here~~
+Logical: Compute descriptives (e.g., p values, number of valid items, empirical discrimination)?
 }
   \item{model.statement}{
 %%     ~~Describe \code{dif.term} here~~
