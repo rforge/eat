@@ -393,7 +393,7 @@ plotDevianceTAM(run2T2)
 # define person grouping
 pers  <- data.frame ( idstud = datW[,"id"] , group1 = datW[,"sex"], group2 = datW[,"grade"], stringsAsFactors = FALSE )
 # define 18 models
-l1    <- eatModel:::splitModels ( item.grouping = qMat, person.groups = pers)
+l1    <- splitModels ( item.grouping = qMat, person.groups = pers)
 # run 'defineModel' for each model in 'l1'
 modMul<- defineModel(dat = datW, items = qMat[,1], id = "id", check.for.linking = TRUE, splittedModels = l1, software = "tam")
 # run all models 

@@ -357,8 +357,10 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
      ### Sektion 'Hintergrundvariablen auf Konsistenz zu sich selbst und zu den Itemdaten pruefen'. Ausserdem Stelligkeit (Anzahl der benoetigten character) fuer jede Variable herausfinden ###
                       weg.dif <- NULL; weg.hg <- NULL; weg.weight <- NULL; weg.group <- NULL
                       if(length(all.Names$HG.var)>0)    {
-                         hg.info <- lapply(all.Names$HG.var, FUN = function(ii) {.checkContextVars(x = dat[,ii], varname=ii, type="HG", itemdaten=dat[,all.Names[["variablen"]], drop = FALSE])})
+                         hg.info <- lapply(all.Names[["HG.var"]], FUN = function(ii) {.checkContextVars(x = dat[,ii], varname=ii, type="HG", itemdaten=dat[,all.Names[["variablen"]], drop = FALSE], suppressAbort = TRUE )})
                          for ( i in 1:length(hg.info)) { dat[, hg.info[[i]]$varname ] <- hg.info[[i]]$x }
+                         wegVar  <- unlist(lapply(hg.info, FUN = function ( uu ) { uu[["toRemove"]] }))
+                         if(length(wegVar)>0) { all.Names[["HG.var"]] <- setdiff ( all.Names[["HG.var"]], wegVar) }
                          weg.hg  <- unique(unlist(lapply(hg.info, FUN = function ( y ) {y$weg})))
                          if(length(weg.hg)>0)                                   ### untere Zeile: dies geschieht erst etwas spaeter, wenn datensatz zusammengebaut ist
                            {cat(paste("Remove ",length(weg.hg)," cases with missings on at least one HG variable.\n",sep=""))}
@@ -517,7 +519,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
 
 
 ### Hilfsfunktionen fuer prep.conquest
-.checkContextVars <- function(x, varname, type, itemdaten)   {
+.checkContextVars <- function(x, varname, type, itemdaten, suppressAbort = FALSE)   {
                      if(missing(varname))  {varname <- "ohne Namen"}
                      if(class(x) != "numeric")  {                               ### ist Variable numerisch?
                         if (type == "weight") {stop(paste(type, " variable has to be 'numeric' necessarily. Automatic transformation is not recommended. Please transform by yourself.\n",sep=""))}
@@ -529,34 +531,51 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                         cat(paste("    '", varname, "' was converted into numeric variable of ",length(table(x))," categories. Please check whether this was intended.\n",sep=""))
                         if(length(table(x)) < 12 ) { cat(paste("    Values of '", varname, "' are: ",paste(names(table(x)), collapse = ", "),"\n",sep=""))}
                      }
+                     toRemove<- NULL
                      mis     <- length(table(x))
-                     if(mis == 0 )  {stop(paste("Error: ",type," Variable '",varname,"' without any values.",sep=""))}
-                     if(mis == 1 )  {stop(paste("Error: ",type," Variable '",varname,"' is a constant.",sep=""))}
+                     if(mis == 0 )  {
+                        if ( suppressAbort == FALSE ) { 
+                             stop(paste("Error: ",type," Variable '",varname,"' without any values.",sep=""))
+                        }  else  { 
+                             cat(paste("Warning: ",type," Variable '",varname,"' without any values. '",varname,"' will be removed.\n",sep=""))
+                             toRemove <- varname
+                        }
+                     }        
+                     if(mis == 1 )  {
+                        if ( suppressAbort == FALSE ) { 
+                             stop(paste("Error: ",type," Variable '",varname,"' is a constant.",sep=""))
+                        }  else  { 
+                             cat(paste("Warning: ",type," Variable '",varname,"' is a constant. '",varname,"' will be removed.\n",sep=""))
+                             toRemove <- varname
+                        }
+                     }        
                      if(type == "DIF" | type == "group") {if(mis > 10)   {cat(paste("Serious warning: ",type," Variable '",varname,"' with more than 10 categories. Recommend recoding. \n",sep=""))}}
-                     char    <- max(nchar(as.character(na.omit(x))))
-                     weg     <- which(is.na(x))
-                     if(length(weg) > 0 ) {cat(paste("Warning: Found ",length(weg)," cases with missing on ",type," variable '",varname,"'. Conquest probably will collapse unless cases are not deleted.\n",sep=""))}
-                     wegDifMis <- NULL; wegDifConst <- NULL
-                     if(type == "DIF" ) {
-                                   if(mis > 2 )   {cat(paste(type, " Variable '",varname,"' does not seem to be dichotomous.\n",sep=""))}
-                                   n.werte <- lapply(itemdaten, FUN=function(iii){by(iii, INDICES=list(x), FUN=table)})
-                                   completeMissingGroupwise <- data.frame(t(sapply(n.werte, function(ll){lapply(ll, FUN = function (uu) { length(uu[uu>0])}  )})), stringsAsFactors = FALSE)
-                                   for (iii in seq(along=completeMissingGroupwise)) {
-                                        missingCat.i <- which(completeMissingGroupwise[,iii] == 0)
-                                        if(length(missingCat.i) > 0) {
-                                           cat(paste("Warning: Following items with no values in ",type," variable '",varname,"', group ",iii,": \n",sep=""))
-                                           wegDifMis <- c(wegDifMis, rownames(completeMissingGroupwise)[missingCat.i] )
-                                           cat(paste(rownames(completeMissingGroupwise)[missingCat.i],collapse=", ")); cat("\n")
+                     wegDifMis <- NULL; wegDifConst <- NULL; char <- 1; weg <- which(is.na(1:12))
+                     if ( is.null(toRemove)) {
+                          char    <- max(nchar(as.character(na.omit(x))))
+                          weg     <- which(is.na(x))
+                          if(length(weg) > 0 ) {cat(paste("Warning: Found ",length(weg)," cases with missing on ",type," variable '",varname,"'. Conquest probably will collapse unless cases are not deleted.\n",sep=""))}
+                          if(type == "DIF" ) {
+                                        if(mis > 2 )   {cat(paste(type, " Variable '",varname,"' does not seem to be dichotomous.\n",sep=""))}
+                                        n.werte <- lapply(itemdaten, FUN=function(iii){by(iii, INDICES=list(x), FUN=table)})
+                                        completeMissingGroupwise <- data.frame(t(sapply(n.werte, function(ll){lapply(ll, FUN = function (uu) { length(uu[uu>0])}  )})), stringsAsFactors = FALSE)
+                                        for (iii in seq(along=completeMissingGroupwise)) {
+                                             missingCat.i <- which(completeMissingGroupwise[,iii] == 0)
+                                             if(length(missingCat.i) > 0) {
+                                                cat(paste("Warning: Following items with no values in ",type," variable '",varname,"', group ",iii,": \n",sep=""))
+                                                wegDifMis <- c(wegDifMis, rownames(completeMissingGroupwise)[missingCat.i] )
+                                                cat(paste(rownames(completeMissingGroupwise)[missingCat.i],collapse=", ")); cat("\n")
+                                             }
+                                             constantCat.i <- which(completeMissingGroupwise[,iii] == 1)
+                                             if(length(constantCat.i) > 0) {
+                                                cat(paste("Warning: Following items are constants in ",type," variable '",varname,"', group ",iii,":\n",sep=""))
+                                                wegDifConst <- c(wegDifConst, rownames(completeMissingGroupwise)[constantCat.i] )
+                                                cat(paste(rownames(completeMissingGroupwise)[constantCat.i],collapse=", ")); cat("\n")
+                                             }
                                         }
-                                        constantCat.i <- which(completeMissingGroupwise[,iii] == 1)
-                                        if(length(constantCat.i) > 0) {
-                                           cat(paste("Warning: Following items are constants in ",type," variable '",varname,"', group ",iii,":\n",sep=""))
-                                           wegDifConst <- c(wegDifConst, rownames(completeMissingGroupwise)[constantCat.i] )
-                                           cat(paste(rownames(completeMissingGroupwise)[constantCat.i],collapse=", ")); cat("\n")
-                                        }
-                                   }
-                     }
-                     return(list(x = x, char = char, weg = weg, varname=varname, wegDifMis = wegDifMis, wegDifConst = wegDifConst))}
+                          }
+                     }     
+                     return(list(x = x, char = char, weg = weg, varname=varname, wegDifMis = wegDifMis, wegDifConst = wegDifConst, toRemove = toRemove))}
 
 
 .existsBackgroundVariables <- function(dat, variable )  {
