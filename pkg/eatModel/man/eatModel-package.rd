@@ -52,7 +52,7 @@
 \tabular{ll}{
 Package: \tab eatModel\cr
 Type: \tab Package\cr
-Version: \tab 0.2.2\cr
+Version: \tab 0.2.3\cr
 Date: \tab 2015-09-17\cr
 License: \tab GPL(>=2)
 }
