@@ -72,7 +72,7 @@ readDaemonXlsx <- function(filename) {
 	}
 	
 	
-	# paar ueberfluessige Umbenennungen für Folgefunktionen
+	# paar ueberfluessige Umbenennungen fuer Folgefunktionen
 	names(inL)[which(names(inL) == "sav-files")] <- "savFiles"
 	names(inL)[which(names(inL) == "params")] <- "newID"
 	names(inL)[which(names(inL) == "aggregate-missings")] <- "aggrMiss"

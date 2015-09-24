@@ -7,7 +7,7 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
             correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL, 
             missing.rule = list(mvi = 0, mnr = 0, mci = 0, mbd = NA, mir = 0, mbi = 0), verbose=FALSE) {
 							 
-		### Funktionsname für Meldungen
+		### Funktionsname fuer Meldungen
 		f. <- "automateDataPreparation"
 		f.n <- paste ( f. , ":" , sep = "" )
 
@@ -17,7 +17,7 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 		folder.aDP <- file.path ( path , "_eat_writeSPSS_" )
 		if ( ! file.exists ( folder.aDP ) ) { dir.create ( folder.aDP , recursive = TRUE ) }		
 	
-		### Begrüßung
+		### Begruessung
 		if(verbose) cat ( "\n" )
 		if(verbose) cat ( paste (f.n , "Starting automateDataPreparation", Sys.time(), "\n" ) ) 
 		
@@ -96,7 +96,7 @@ automateDataPreparation <- function(datList = NULL, inputList, path = NULL,
 			if(verbose) cat ( paste ( f.n , "Check has been skipped\n" ) )}
 
 		# ne Warnung wenn
-		# mergeData=FALSE ist, aber mehrere Datensätze in der Liste
+		# mergeData=FALSE ist, aber mehrere Datensaetze in der Liste
 		if ( !mergeData & length ( datList ) > 1 ) {
 				warning ( "More than one data.frame has been loaded, a list of datasets will be returned \n" )
 		} 

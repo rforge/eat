@@ -7,10 +7,10 @@ makeCodebookInput <- function (codebook){
   # arguments: 
   #     codebook (data.frame) ... IQB-Codebook, ohne die erste leere Zeile
   # 
-  # returns:  Liste mit den Einträgen:
-  #     values (data.frame)   ... ZKD-Inputtabelle für Codes, siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx             
-  #     subunits (data.frame) ... ZKD-Inputtabelle für Subunits (Subitems), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
-  #     units (data.frame)    ... ZKD-Inputtabelle für Units (Items), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
+  # returns:  Liste mit den Eintraegen:
+  #     values (data.frame)   ... ZKD-Inputtabelle fuer Codes, siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx             
+  #     subunits (data.frame) ... ZKD-Inputtabelle fuer Subunits (Subitems), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
+  #     units (data.frame)    ... ZKD-Inputtabelle fuer Units (Items), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
 
  # check arguments
   if (missing(codebook)){
@@ -34,7 +34,7 @@ makeCodebookInput <- function (codebook){
 }
  
 #-----------------------------------------------------------------------------------------
-# Subfunktion, um fehlende Einträge im Kodierbuch zu ergänzen.
+# Subfunktion, um fehlende Eintraege im Kodierbuch zu ergaenzen.
 
 .fillVarRows <- function(variable) {
  # variable: variable, in which entries have to be filled
@@ -88,7 +88,7 @@ makeCodebookInput <- function (codebook){
   if(all(rowSums(bew == "") == ncol(bew))== TRUE ) {
     bewString <- ""
   } else {
-    # hier könnten ein paar Erläuterungen nicht schaden.
+    # hier könnten ein paar Erlaeuterungen nicht schaden.
     bewTabelle <- cbind(c( lag(bew[ , 2], 1), "lo"), c("hi", bew[ , 2]), c(bew[ , 1], "0"))
     bewString <- paste( paste("'", bewTabelle[ , 1], "':'", bewTabelle[ , 2], "'='", bewTabelle[ , 3], "'", sep = ""), collapse =";")
     bewString <- gsub("'hi'", "hi", bewString)

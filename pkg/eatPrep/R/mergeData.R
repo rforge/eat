@@ -42,7 +42,7 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, verbos
 					colID <- match(newID, colnames(partialData))
 #					partialData <- partialData[order(partialData[colID]),]
 
-					# wenn mehrere Einträge mit gleicher ID gefunden wurden.... 
+					# wenn mehrere Eintraege mit gleicher ID gefunden wurden.... 
 					if( length(na.omit ( partialData[[colID]]) ) != length(na.omit ( unique(partialData[[colID]])) ) ) {
 						
 						# total columns and rows for the targetData dataframe
@@ -84,11 +84,11 @@ mergeData <- function ( newID="ID", datList, oldIDs=NULL, addMbd = FALSE, verbos
   							}	
               }
   				}
-					# Daten für nur einmal vorkommende IDs in targetData schreiben
+					# Daten fuer nur einmal vorkommende IDs in targetData schreiben
 					ind <- seq ( length(multipleCases)+1,  nrow(targetData), 1)		
 					targetData[ ind ,  ] <- partialData[ which( ! partialData[[colID]] %in% multipleCases ),  ]	
 					} else {
-						# Wenn keine mehrfachen IDs vorkommen, dann einfach gemergten Datensatz übernehmen
+						# Wenn keine mehrfachen IDs vorkommen, dann einfach gemergten Datensatz uebernehmen
 						targetData <- partialData
 					}
 					mergedData <- targetData

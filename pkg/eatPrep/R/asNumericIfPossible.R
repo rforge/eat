@@ -14,9 +14,9 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ### macht Spalten in data.frames numerisch, wenn es geht (oder liefert TRUE-FALSE, ob es geht)
-### set.numeric: soll transformierter Datensatz zurückgegeben werden (DEFAULT), oder TRUE-FALSE-Vektor, ob es geht
+### set.numeric: soll transformierter Datensatz zurueckgegeben werden (DEFAULT), oder TRUE-FALSE-Vektor, ob es geht
 ### transform.factors: sollen auch Faktorvariablen in metrische Variablen transformiert werden?
-### maintain.factor.scores: wenn Faktoren auch transformiert werden sollen, sollen ihre Faktorwerte übernommen werden?
+### maintain.factor.scores: wenn Faktoren auch transformiert werden sollen, sollen ihre Faktorwerte uebernommen werden?
 
 
 asNumericIfPossible <- function(dat, set.numeric=TRUE, transform.factors=FALSE, maintain.factor.scores = TRUE, verbose=TRUE)   {
@@ -51,7 +51,7 @@ asNumericIfPossible <- function(dat, set.numeric=TRUE, transform.factors=FALSE, 
                             }
                             return(ret)
                             })
-  options(warn = originWarnLevel)                                     ### danach: schalte Warnungen zurück in Ausgangszustand
+  options(warn = originWarnLevel)                                     ### danach: schalte Warnungen zurueck in Ausgangszustand
   changeVariables <- colnames(dat)[numericable[1,]]
   changeFactorWithIndices   <- NULL
   if(transform.factors == TRUE & maintain.factor.scores == TRUE)   {
@@ -60,14 +60,14 @@ asNumericIfPossible <- function(dat, set.numeric=TRUE, transform.factors=FALSE, 
     changeVariables           <- setdiff(changeVariables, changeFactorWithIndices)
   }
   
-  ### hier werden alle Variablen (auch Faktoren, wenn maintain.factor.scores = FALSE) ggf. geändert
+  ### hier werden alle Variablen (auch Faktoren, wenn maintain.factor.scores = FALSE) ggf. geaendert
   if(length(changeVariables) > 0)   {                                  
     do <- paste(mapply(function(ii) {
       paste("try(dat$'", ii , "' <- as.numeric(dat$'",ii, "'), silent=TRUE)" , sep = "" )}, changeVariables), collapse = ";" )
     eval(parse(text = do))
   }
   
-  ### hier werden ausschließlich FAKTOREN, wenn maintain.factor.scores = TRUE, ggf. geändert
+  ### hier werden ausschließlich FAKTOREN, wenn maintain.factor.scores = TRUE, ggf. geaendert
   if(length(changeFactorWithIndices) >0)   {                          
     do <- paste(mapply(function(ii){
       paste("try(dat$'", ii , "' <- as.numeric(as.character(dat$'",ii, "')), silent=TRUE)", sep = "")}, changeFactorWithIndices), collapse = ";" )

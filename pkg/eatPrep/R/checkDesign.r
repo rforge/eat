@@ -56,7 +56,7 @@ checkDesign <- function(dat, booklets, blocks, rotation, sysMis="NA", id="ID", s
 		}
 	}
 
-	# Für jedes TH SysmisPattern checken
+	# Fuer jedes TH SysmisPattern checken
 	.bookletPatternCheck <- function(TH) {
 		subunits <- .subunitsInBooklet(TH)
 		subunitsN <- setdiff(names(dat), c(subunits, id))

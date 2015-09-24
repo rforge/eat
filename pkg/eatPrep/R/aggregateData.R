@@ -2,15 +2,15 @@
 #
 # function:    aggregateData(dat, subunits, units, aggregatemissings = "use.default", rename = FALSE, recodedData = TRUE)
 #
-# Description: rekodiert Datensätze
+# Description: rekodiert Datensaetze
 #
 # arguments:
 #     dat (data.frame)          ... Datensatz mit ID-Variablen und (mindestens) allen Variablen, die rekodiert werden sollen
-#     subunits (data.frame)     ... ZKD-Inputtabelle für Subunits (Subitems), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx
-#     units (data.frame)        ... ZKD-Inputtabelle für Units (Items), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx
-#     aggregatemissings(matrix) ... Wenn default überschrieben werden soll, muss eine Matrix übergeben werden, aus der hervorgeht, was passieren soll, wenn zu aggregierende Subunits Missings haben
+#     subunits (data.frame)     ... ZKD-Inputtabelle fuer Subunits (Subitems), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx
+#     units (data.frame)        ... ZKD-Inputtabelle fuer Units (Items), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx
+#     aggregatemissings(matrix) ... Wenn default ueberschrieben werden soll, muss eine Matrix uebergeben werden, aus der hervorgeht, was passieren soll, wenn zu aggregierende Subunits Missings haben
 #     rename (logical)          ... Sollen Units, die nur ein Subunit haben, mit dem Unit- oder dem Subunit-Namen im aggregierten Datensatz stehen (default = FALSE)
-#     recodedData(logical)      ... Soll rekodierter oder Rohdatensatz aggregiert werden (wichtig für Erstellung der Aggregateinfo)
+#     recodedData(logical)      ... Soll rekodierter oder Rohdatensatz aggregiert werden (wichtig fuer Erstellung der Aggregateinfo)
 #
 # Version: 	1.2.0
 # Status: alpha
@@ -26,10 +26,10 @@
 # * 1.2.0 (2011-11-22, NH): bugfix in aggregatemissings
 # * 1.0.0 (2011-11-04, NH): auf ZKD-Inputtabellen angepasst
 #              Scoring komplett rausgenommen
-#              Option rename eingefügt
+#              Option rename eingefuegt
 # * 0.1.1 (2011-10-08, NH): modularisiert, aggregieren und scoren sind getrennte Funktionen
 # * 0.1.0: kein Abbruch bei fehlerhafter Bewertungsvorschrift
-# * 0.0.2: Pattern Matching vektorwertig, kosmetische Änderungen (NH)
+# * 0.0.2: Pattern Matching vektorwertig, kosmetische Aenderungen (NH)
 # * 0.0.4: Aggregierung von Missings variabel nach Definition im Deamon
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -97,7 +97,7 @@ aggregateData <- function (dat, subunits, units, aggregatemissings = NULL, renam
 	warning("Matrix used for missing aggregation is not symmetrical. This may lead to unexpected results.")
   }
 
-  # füge eine Spalte und eine Zeile mit "err" an -> egal, was auf "err" trifft, es soll immer "err" rauskommen
+  # fuege eine Spalte und eine Zeile mit "err" an -> egal, was auf "err" trifft, es soll immer "err" rauskommen
   am <- cbind(am, err = "err") ;  am <- rbind(am, err = "err")
 
   # which subunits should be aggregated?
@@ -110,7 +110,7 @@ aggregateData <- function (dat, subunits, units, aggregatemissings = NULL, renam
 
   ### ACHTUNG: IST EHER EXPERIMENTELL!
   if (rename == TRUE) {
-  # prüfen, welche Units nur ein Subunit haben
+  # pruefen, welche Units nur ein Subunit haben
 	if (recodedData == TRUE) {
 		oneSubunitUnits <- subunits[subunits$subunitRecoded %in% subunitsToKeep, c("unit", "subunitRecoded")]
 		oneSubunitUnits <- oneSubunitUnits [na.omit(match(colnames(dat), oneSubunitUnits$subunitRecoded)), ]
@@ -148,13 +148,13 @@ aggregateData <- function (dat, subunits, units, aggregatemissings = NULL, renam
 # aggregiert mehrere Spalten eines Datensatzes nach der in aggregatemissings vorgegebenen Vorschrift
 
 .makeMissingind <- function ( dat, aggregatemissings ) {
-	### wenn gültige Werte, setze sie auf "vc"!
+	### wenn gueltige Werte, setze sie auf "vc"!
 	dat <- data.frame(apply(dat, 2, function (ll) {gsub("[[:digit:]]", "vc", ll)}), stringsAsFactors = FALSE)
 
-	# initialisiere missing-Rückgabe
+	# initialisiere missing-Rueckgabe
 	agg <- dat [ , 1]
 
-	# Missingaggregierung für alle Spalten vornehmen
+	# Missingaggregierung fuer alle Spalten vornehmen
 	for (i in seq(along = dat)) {
 		agg <- .aggmiss(dat [ , i] , agg, aggregatemissings)
 	}
@@ -184,7 +184,7 @@ aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, 
   if ( !is.character ( aggRule ) ) {
 		aggRule <- "SUM"
   }
-  # Warnung wenn nicht eine standardmäßige aggRule
+  # Warnung wenn nicht eine standardmaeßige aggRule
   if ( !aggRule %in% c("SUM","MEAN","") ) {
 		warning ( paste ( "Unit " , unitName , " has potentially problematic aggregation rule (\"" , aggRule , "\"). Please check.\n" , sep = "" ) )
   }
@@ -199,7 +199,7 @@ aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, 
   	stop(paste(funVersion, "Subunits", paste(setdiff(unitVars, colnames(dat)), collapse = ", "), "not in 'dat'.\n"))
   }
 
-  # gebe Teildatensatz für i-tes unit
+  # gebe Teildatensatz fuer i-tes unit
   unitDat        <- dat[ , unitVars]
 
   # check: Datensatz darf keine NAs enthalten. -> werden in mbd umgewandelt
@@ -211,14 +211,14 @@ aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, 
 
   agg <- .makeMissingind(unitDat, aggregatemissings)
 
-  # initialisiere Rückgabe des aggregierten units
+  # initialisiere Rueckgabe des aggregierten units
   unitAggregated <- unname(agg)
 
   options(warn = -1)
   
   ## AGGREGIEREN DER VALIDEN CODES JE NACH REGEL
 
-  # prüfen, ob überhaupt valide Codes in der aggregierten Variable stehen
+  # pruefen, ob ueberhaupt valide Codes in der aggregierten Variable stehen
   unitDat.vc <- unitDat[ unitAggregated == "vc", , drop = FALSE ]
   if ( nrow ( unitDat.vc ) > 0 ) {
 		  if( aggRule == "SUM" ) {

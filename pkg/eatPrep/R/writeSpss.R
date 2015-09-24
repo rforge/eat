@@ -10,15 +10,15 @@
 #
 # arguments:
 #     dat (data.frame)      ... Datensatz
-#     values (data.frame)   ... ZKD-Inputtabelle für Codes, siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx             
-#     subunits (data.frame) ... ZKD-Inputtabelle für Subunits (Subitems), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
-#     units (data.frame)    ... ZKD-Inputtabelle für Units (Items), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx  
-#     filedat (character)   ... (optional) Name des Files, in das Daten für SPSS geschrieben werden sollen
+#     values (data.frame)   ... ZKD-Inputtabelle fuer Codes, siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx             
+#     subunits (data.frame) ... ZKD-Inputtabelle fuer Subunits (Subitems), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
+#     units (data.frame)    ... ZKD-Inputtabelle fuer Units (Items), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx  
+#     filedat (character)   ... (optional) Name des Files, in das Daten fuer SPSS geschrieben werden sollen
 #     filesps (character)   ... (optional) Name des Files, in das SPSS-Syntax geschrieben werden soll.
 #     missing.rule (list)   ... (optional) Welche Missing-Typen werden zu was rekodiert?
-#     path (character)      ... (optional) Pfad, in den Files für SPSS geschrieben werden sollen
-#     dec (character)       ... (optional) Dezimaltrennzeichen, das in Daten für SPSS verwendet werden soll
-#     sep (character)       ... (optional) Spaltentrenner, der in Daten für SPSS verwendet werden soll
+#     path (character)      ... (optional) Pfad, in den Files fuer SPSS geschrieben werden sollen
+#     dec (character)       ... (optional) Dezimaltrennzeichen, das in Daten fuer SPSS verwendet werden soll
+#     sep (character)       ... (optional) Spaltentrenner, der in Daten fuer SPSS verwendet werden soll
 #     verbose (logical)      ... (optional) Wenn TRUE, werden Namen von codefile und datafile mit Pfad auf Konsole ausgegeben
 
 
@@ -34,7 +34,7 @@
 # 2012-09-04 NH
 # CHANGED: removed calls to 'eatTools:::sunk'
 # 0000-00-00 AA
-# * 0.2.0 (2011-11-04, NH): SPSS-Format-Statement für numerische Variablen mit Dezimalstellen angepasst
+# * 0.2.0 (2011-11-04, NH): SPSS-Format-Statement fuer numerische Variablen mit Dezimalstellen angepasst
 #
 # * 0.1.0 (2011-10-27, NH): erstellt
 #
@@ -45,7 +45,7 @@
 # source("P:/ZKD/development/collapseMissings_0.2.0.R")
 
 ################## TO DO #######
-# Definition von Missings für SPSS
+# Definition von Missings fuer SPSS
 
 
 #-----------------------------------------------------------------------------------------

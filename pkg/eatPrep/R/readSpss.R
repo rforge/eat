@@ -24,9 +24,9 @@
 
 ### file                 ... Name der SPSS-Datei, die eingelesen werden soll
 ### correctDigits        ... optional: Stelligkeitskorrektur 
-### truncateSpaceChar    ... optional: entfernt für alle Spalten vorangehende und abschließende Leerzeichen ( mit 'crop')
+### truncateSpaceChar    ... optional: entfernt fuer alle Spalten vorangehende und abschliessende Leerzeichen ( mit 'crop')
                           
-### ACHTUNG! read.spss liest Dateinamen manchmal durchgaengig in Groß-, manchmal in Kleinbuchstaben ein. Problem!
+### ACHTUNG! read.spss liest Dateinamen manchmal durchgaengig in Gross-, manchmal in Kleinbuchstaben ein. Problem!
 
 readSpss <- function (file, correctDigits=FALSE, truncateSpaceChar = TRUE, oldID = NULL, newID = NULL ) {
 

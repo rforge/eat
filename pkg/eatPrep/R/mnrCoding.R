@@ -14,13 +14,13 @@ mnrCoding <- function ( dat , pid , rotation.id , blocks , booklets , breaks , s
 		cn1 <- cn %in% blocks$subunit
 		check1 <- all ( cn1 )
 		if ( !check1 ) {
-				# geht natürlich nur wenn subunits da ist
+				# geht natuerlich nur wenn subunits da ist
 				if ( !is.null ( subunits ) ) {
 						cn2 <- cn[! cn %in% blocks$subunits]
 						
 						# jetzt versuchen, herauszufinden ob das rekodierte Variablen sind
 						check2 <- any ( cn2 %in% subunits$subunitRecoded )
-						# für diese in blocks den Rekodierungsnamen setzen
+						# fuer diese in blocks den Rekodierungsnamen setzen
 						if ( check2 ) {
 								cn3 <- cn2[cn2 %in% subunits$subunitRecoded]
 								# Rekodierungsnamen
@@ -31,7 +31,7 @@ mnrCoding <- function ( dat , pid , rotation.id , blocks , booklets , breaks , s
 								check4 <- any ( blocks$subunit %in% names(rn) )
 								if ( check4 ) {
 										cn4 <- blocks$subunit[blocks$subunit %in% names(rn)]
-										# die können jetzt gesetzt werden
+										# die koennen jetzt gesetzt werden
 										blocks$subunit[blocks$subunit %in% cn4] <- unname ( rn[cn4] )
 								}
 						}
@@ -97,7 +97,7 @@ mnrCoding <- function ( dat , pid , rotation.id , blocks , booklets , breaks , s
 				bookl.long$abschnitt <- as.integer ( bookl.long$abschnitt )
 				# bookl.long <- bookl.long[ order ( bookl.long$booklet , bookl.long$abschnitt , bookl.long$blockpos ) , ]
 
-				# neue ID bilden aus booklet und abschnitt, das sind dann jeweils die units über deren Items mnr bestimmt werden muss
+				# neue ID bilden aus booklet und abschnitt, das sind dann jeweils die units ueber deren Items mnr bestimmt werden muss
 				bookl.long$ba <- paste ( bookl.long$booklet , bookl.long$abschnitt , sep = "_" )
 				bookl.long <- bookl.long[ order ( bookl.long$ba , bookl.long$blockpos ) , ]
 
@@ -116,7 +116,7 @@ mnrCoding <- function ( dat , pid , rotation.id , blocks , booklets , breaks , s
 						# Teildaten
 						d <- dat[ dat[,rotation.id] == unique ( abschn$booklet ) , c ( pid , abschn$subunit ) ]
 						
-						# Zeilenweise über Teildaten
+						# Zeilenweise ueber Teildaten
 						fun2 <- function ( z , nMbi , mbiCode , invalidCodes ) {
 
 								# reversen, also alles von vorn
@@ -125,7 +125,7 @@ mnrCoding <- function ( dat , pid , rotation.id , blocks , booklets , breaks , s
 								
 								# bestimmen welche Werte alles mbi
 								z2.mbi <- z2 %in% mbiCode
-								# %in% löscht die names (== nicht)
+								# %in% loescht die names (== nicht)
 								names(z2.mbi) <- names ( z2 )
 							
 								# bestimmen ob alles mbi oder invalid
@@ -156,7 +156,7 @@ mnrCoding <- function ( dat , pid , rotation.id , blocks , booklets , breaks , s
 								names ( x ) <- d[,pid]
 								x <- x [ ! sapply ( x , is.null ) ]
 
-								# MH 14.01.2013: zu viel Müll :-)
+								# MH 14.01.2013: zu viel Muell :-)
 								# if ( verbose ) {
 										# l <- sapply ( x , length )
 										# cat ( paste ( paste ( paste ( "  " , l , " items for case " , names ( l ) , sep = "" ) , collapse = "\n" ) ) , "\n" , sep = "" )
@@ -184,8 +184,8 @@ mnrCoding <- function ( dat , pid , rotation.id , blocks , booklets , breaks , s
 				da <- da[!sapply ( da , is.null)]
 				da <- do.call ( "rbind" , da )
 				
-				# da gründlich checken, nur weiter wenn valide bzw. Zeilen im Data.frame
-				# hier könnte man auch noch nen bisschen verbosieren/warnen
+				# da gruendlich checken, nur weiter wenn valide bzw. Zeilen im Data.frame
+				# hier koennte man auch noch nen bisschen verbosieren/warnen
 				weiter <- FALSE
 				if ( ! ( is.null ( da ) | identical ( da , list() ) ) ) {
 						if ( is.data.frame ( da ) ) {
@@ -197,7 +197,7 @@ mnrCoding <- function ( dat , pid , rotation.id , blocks , booklets , breaks , s
 				
 				if ( weiter ) {
 						
-						# da aufhübschen
+						# da aufhuebschen
 						da <- da [ order ( da$item ) , ]		
 						rownames(da) <- seq ( along = rownames ( da ) )
 						
@@ -255,7 +255,7 @@ mnrCoding <- function ( dat , pid , rotation.id , blocks , booklets , breaks , s
 								do <- unname ( do )
 						} 
 						
-						# Rekodierung durchführen
+						# Rekodierung durchfuehren
 						if ( verbose ) {
 								cat ( "start recoding (item-wise)\n" )
 						}

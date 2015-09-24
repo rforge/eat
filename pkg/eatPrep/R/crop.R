@@ -28,7 +28,7 @@ crop <- function ( x , char = " " ) {
 # ( crop ( "\\bla/blubb\\" , "\\" ) )
 # ( crop ( c ( "\\bla\\" , "\\blubb\\\\" ) , "\\" ) )
 # ( crop(c("1 ","5","  12"," 3 ",NA,"12")) )
-# ( crop ( "aaaKFLSJFÖKJaa" , "a" ) )
+# ( crop ( "aaaKFLSJFKJaa" , "a" ) )
 # ( crop ( "+++sdfa+sdafsdfa++" , "+" ) )
 # ( crop ( "^^sdfa+sdafsdfa^^" , "^" ) )
 

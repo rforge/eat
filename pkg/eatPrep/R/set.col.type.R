@@ -45,7 +45,7 @@ set.col.type <- function ( dat , col.type = list ( "character" = NULL ) , verbos
 						col.type <- col.type [ -del ]
 				}
 				
-				# wenn noch was übrig dann umwandeln
+				# wenn noch was uebrig dann umwandeln
 				if ( length ( col.type ) > 0 ) {
 
 						# genamten Vektor erzeugen

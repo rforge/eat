@@ -3,12 +3,12 @@
 #
 # function:    recodeData (dat, values, subunits)
 #
-# Description: rekodiert Datensätze
+# Description: rekodiert Datensaetze
 # 
 # arguments: 
 #     dat (data.frame)      ... Datensatz mit ID-Variablen und (mindestens) allen Variablen, die rekodiert werden sollen
-#     values (data.frame)   ... ZKD-Inputtabelle für Codes, siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx             
-#     subunits (data.frame) ... ZKD-Inputtabelle für Subunits (Subitems), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
+#     values (data.frame)   ... ZKD-Inputtabelle fuer Codes, siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx             
+#     subunits (data.frame) ... ZKD-Inputtabelle fuer Subunits (Subitems), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
 #
 # Version: 	1.1.0
 # Status: alpha
@@ -23,20 +23,20 @@
 # 0000-00-00 AA
 #
 # * 1.1.0  (2011-11-23, ZKD) stabilisiert
-# * 1.0.1 (2011-11-21, KS) auch positive Rückmeldung (welche Var rekodiert)
-# * 1.0.0 (2011-11-03, NH) überarbeitet und auf neue ZKD-Inputtabellen angepasst, 
-#               überflüssig gewordene Checks rausgenommen 
-# 02.08.11 "mbd" aus Prüfung auf unvollständige Rekodierungsvorschrift rausgenommen
-# 12.07.11 kein Abbruch bei unvollständigen Rekodierungsvorschriften, nur Warnung
-# 01.07.11 Unvollständige Rekodierungsvorschrift:
+# * 1.0.1 (2011-11-21, KS) auch positive Rueckmeldung (welche Var rekodiert)
+# * 1.0.0 (2011-11-03, NH) ueberarbeitet und auf neue ZKD-Inputtabellen angepasst, 
+#               ueberfluessig gewordene Checks rausgenommen 
+# 02.08.11 "mbd" aus Pruefung auf unvollstaendige Rekodierungsvorschrift rausgenommen
+# 12.07.11 kein Abbruch bei unvollstaendigen Rekodierungsvorschriften, nur Warnung
+# 01.07.11 Unvollstaendige Rekodierungsvorschrift:
 #				bugfix
-#				Ausgabe für welche Werte ( je Variable ) die Rekodierungsvorschriften fehlt
-#				Abbruch bei unvollständigen Rekodierungsvorschriften
+#				Ausgabe fuer welche Werte ( je Variable ) die Rekodierungsvorschriften fehlt
+#				Abbruch bei unvollstaendigen Rekodierungsvorschriften
 # 24.05.11 Anpassungen nach zkd-Sitzung
-#			für zu rekodierende Variablen:	
+#			fuer zu rekodierende Variablen:	
 #				Der Variablen-Typ (nach neuer Def.) wird durchgeschleift.
 #				Das Transformationsniveau wird auf entsprechenden Wert gesetzt.
-#				Das Value-Label rekodierter Variablen wird gelöscht.
+#				Das Value-Label rekodierter Variablen wird geloescht.
 #				Plausicheck: bei surjektiven Abbildungen mit missings stoppt Funktion (Fall nicht vorgesehen)
 #			nicht zu rekodierende Variablen werden (wie bisher) durchgeschleift
 #

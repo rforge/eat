@@ -1,6 +1,6 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # catPbc
-# Description: berechnet Kategorientrennschärfen
+# Description: berechnet Kategorientrennschaerfen
 # Version: 	0.1.0
 # Status: alpha
 # Release Date: 2012-06-11, 2012-07-27 implemented in eat
@@ -32,7 +32,7 @@ catPbc <- function(datRaw, datRec, idRaw, idRec, context.vars, values, subunits,
 ## xlsx:	     full path of excel to be written
 
 
-	# Prüfen, ob IDs in beiden Datensätzen übereinstimmen
+	# Pruefen, ob IDs in beiden Datensaetzen uebereinstimmen
 	idrec <- datRec [ , idRec ]
 	idraw <- datRaw  [ , idRaw ]
 	if ( ! setequal(idrec, idraw) ) {
@@ -57,7 +57,7 @@ catPbc <- function(datRaw, datRec, idRaw, idRec, context.vars, values, subunits,
     recodeinfo <- makeInputRecodeData (values = values, subunits = subunits)
     varinfo    <- .makeVarinfoRaw (values, subunits)
 
-#		Kontextvariablen ausschließen
+#		Kontextvariablen ausschliessen
     if(is.numeric(context.vars)) {
       context.vars <- colnames(datRaw)[context.vars]
     }
@@ -78,7 +78,7 @@ catPbc <- function(datRaw, datRec, idRaw, idRec, context.vars, values, subunits,
 		rel.score1 <- apply(rel.score1, 2, as.numeric )
 		rel.score <- rowMeans(  rel.score1, na.rm=T )
 
-		# Kategorientrennschärfen berechnen
+		# Kategorientrennschaerfen berechnen
 		dfr1 <- NULL
 
 		for (vv in seq( along = vars ) ){
@@ -90,7 +90,7 @@ catPbc <- function(datRaw, datRec, idRaw, idRec, context.vars, values, subunits,
       valuesToNA <- c( "mbd", "mci", names(valueTypes) [ valueTypes %in% c("mbd", "mci") ] )
 			dat.vv [ dat.vv %in% valuesToNA] <- NA
 
-			# Häufigkeitsverteilung der Codes, ohne mbd & mci
+			# Haeufigkeitsverteilung der Codes, ohne mbd & mci
 			tvv <- table( dat.vv )
 			kat.vv <- names(tvv)
 			additionalCodes <- setdiff(validCodes, kat.vv)

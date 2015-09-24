@@ -7,7 +7,7 @@
 #     rekodiert verschiedene Missingtypen zu NA oder "0"
 #
 # arguments:
-#      dat (data.frame) :  aufgelöster zkd-Dataset finished
+#      dat (data.frame) :  aufgeloester zkd-Dataset finished
 #     (optional) missing.rule : welche Missingtypen werden zu NA, welche zu "0"
 #
 # Version: 	0.2.0
@@ -20,7 +20,7 @@
 # 2012-02-14 KS
 # ADDED: default item.names, short missing.rule extention
 # 0000-00-00 AA
-# 03.11.2011 KS: nicht-character-Spalten überspringen
+# 03.11.2011 KS: nicht-character-Spalten ueberspringen
 # 17.08.2011 MH: auf stable gesetzt wegen besserer Sourcebarkeit
 # 05.08.2011 MH : 	auf Speed optimiert
 #					nur noch Testitems werden rekodiert
@@ -55,7 +55,7 @@ collapseMissings <- function( dat , missing.rule = NULL , items = NULL){
 	
 	if (is.null (items)) {items <- colnames(dat)}
 
-	# Plausicheck: Dataframe übergeben?
+	# Plausicheck: Dataframe uebergeben?
 		stopifnot ( is.data.frame ( dat ) )
 		stopifnot ( !identical ( dat , data.frame() ) )
 		# for ( spalte in colnames(dat) ) {

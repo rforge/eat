@@ -3,16 +3,16 @@
 # 
 # function:    checkData (dat, values, subunits, units)
 #
-# Description: checkt Datensätze auf einige grundlegende Dinge:
+# Description: checkt Datensaetze auf einige grundlegende Dinge:
 #              - Personen und/oder Variablen mit nur Missings
-#              - fehlende oder doppelte Einträge in ID-Variable
+#              - fehlende oder doppelte Eintraege in ID-Variable
 #              - Vorhandensein von invaliden Codes
 # 
 # arguments: 
-#     dat (data.frame)      ... Datensatz mit ID-Variablen und allen Variablen, die geprüft werden sollen
-#     values (data.frame)   ... ZKD-Inputtabelle für Codes, siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx             
-#     subunits (data.frame) ... ZKD-Inputtabelle für Subunits (Subitems), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
-#     units (data.frame)    ... ZKD-Inputtabelle für Units (Items), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
+#     dat (data.frame)      ... Datensatz mit ID-Variablen und allen Variablen, die geprueft werden sollen
+#     values (data.frame)   ... ZKD-Inputtabelle fuer Codes, siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx             
+#     subunits (data.frame) ... ZKD-Inputtabelle fuer Subunits (Subitems), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
+#     units (data.frame)    ... ZKD-Inputtabelle fuer Units (Items), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
 #
 # Version:   1.1.0
 # Status: alpha
@@ -30,16 +30,16 @@
 # KS: Da muss unbedingt noch ausgegeben werden, welcher Datensatz hier gerade gecheckt wird.
 
 # * 1.2.0 (2011-11-22, NH): bugfix 
-#   + check auf Missing Values und Invalid Codes deaktiviert, wenn für keine Variable aus Datensatz varinfo vorliegt.
+#   + check auf Missing Values und Invalid Codes deaktiviert, wenn fuer keine Variable aus Datensatz varinfo vorliegt.
 #
 # * 1.1.0 (2011-11-03, NH): modularisiert
 #
-# * 1.0.0 (2011-11-02, NH): komplett überarbeitet und auf neue ZKD-Struktur angepasst. 
-#   + Meldungen werden jetzt per 'eatTools:::sunk' übergeben
+# * 1.0.0 (2011-11-02, NH): komplett ueberarbeitet und auf neue ZKD-Struktur angepasst. 
+#   + Meldungen werden jetzt per 'eatTools:::sunk' uebergeben
 #   + Input sind ZKD-Inputtabellen: values, subunits und units   
 #
 # * zu 0.6.4 (AL & MH)
-#	  + "data <- " eingefügt vor recode-Statement
+#	  + "data <- " eingefuegt vor recode-Statement
 # * zu 0.5.3 (NH)
 #	  + bugfix in Missing-Check
 #	  + Funktion identifiziert sich bei Fehlermeldungen
@@ -51,15 +51,15 @@
 # * zu 0.4.4
 #   + behandelt im Unterschied zu 0.4.3 validCodes als numerisch, d.h. "01" wird zu "1" 
 # * zu 0.4.0
-#   + Check auf invalide Codes implementiert: für alle Variablen, für die in 
+#   + Check auf invalide Codes implementiert: fuer alle Variablen, fuer die in 
 #     varinfo Codes vergeben werden, werden entsprechende Variablen gecheckt
 # * zu 0.2.0
 #   + TRUE statt T
-#   + zkdDatasetCheck_run gibt Bool zurück; TRUE, wenn fortgesetzt werden kann
-#   + Übergabe auch der varinfo
+#   + zkdDatasetCheck_run gibt Bool zurueck; TRUE, wenn fortgesetzt werden kann
+#   + uebergabe auch der varinfo
 #   + ID wird jetzt aus varinfo genommen
 # * zu 0.1.0
-#   + jetzt Datensatz als Funktionsparameter übergeben, nicht mehr globale
+#   + jetzt Datensatz als Funktionsparameter uebergeben, nicht mehr globale
 #     Variable
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -100,7 +100,7 @@
 
 getID <- function(varinfo) {
   # erkennt am Typ in Varinfo, welche Variable die ID ist
-  # gibt String mit Name dieser Variable zurück
+  # gibt String mit Name dieser Variable zurueck
   
   funVersion <- "getID: "
   
@@ -182,7 +182,7 @@ checkMissings <- function (dat, varinfo, idvarname, verbose) {
     if(verbose) cat(paste(funVersion, "Found no variable informations for any of the variables in 'dat'. Check for missing values will be skipped.\n", sep = ""))
   } else {
     
-  	# Indikatordatensatz für Missings initialisieren	
+  	# Indikatordatensatz fuer Missings initialisieren	
     missingInd <- matrix(data = NA, nrow = nrow(dat), ncol = length(vars) + 1)
   	
     colnames(missingInd) <- c( idvarname, vars)
