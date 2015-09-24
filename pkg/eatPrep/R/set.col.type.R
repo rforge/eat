@@ -1,10 +1,3 @@
-
-# 2011-12-28 MH
-# CHANGED: option "numeric.if.possible" added to function "set.col.type"
-# 2011-12-18 MH
-# NEW: function set.col.type
-# 0000-00-00 AA
-
 set.col.type <- function ( dat , col.type = list ( "character" = NULL ) , verbose = FALSE , ... ) {
 		# Definitionen
 		d <- dat

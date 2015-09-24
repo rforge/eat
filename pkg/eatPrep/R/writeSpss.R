@@ -1,55 +1,8 @@
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# function:
-#     writeSpss(dat, values, subunits, units, filedat = "zkddata.txt", filesps = "readZkdData.sps",
-#	              missing.rule = list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 ), 
-#               path = getwd(), sep = "\t", dec = ",", verbose = FALSE) 
-#
-# description: schreibt Datensatz gelabelt nach SPSS (soweit Informationen vorhanden sind)
-# 				      angepasste Version von writeForeignSPSS aus dem foreign-Package bzw.
-#               mids2spss aus dem mice-Package 
-#
-# arguments:
-#     dat (data.frame)      ... Datensatz
-#     values (data.frame)   ... ZKD-Inputtabelle fuer Codes, siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx             
-#     subunits (data.frame) ... ZKD-Inputtabelle fuer Subunits (Subitems), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
-#     units (data.frame)    ... ZKD-Inputtabelle fuer Units (Items), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx  
-#     filedat (character)   ... (optional) Name des Files, in das Daten fuer SPSS geschrieben werden sollen
-#     filesps (character)   ... (optional) Name des Files, in das SPSS-Syntax geschrieben werden soll.
-#     missing.rule (list)   ... (optional) Welche Missing-Typen werden zu was rekodiert?
-#     path (character)      ... (optional) Pfad, in den Files fuer SPSS geschrieben werden sollen
-#     dec (character)       ... (optional) Dezimaltrennzeichen, das in Daten fuer SPSS verwendet werden soll
-#     sep (character)       ... (optional) Spaltentrenner, der in Daten fuer SPSS verwendet werden soll
-#     verbose (logical)      ... (optional) Wenn TRUE, werden Namen von codefile und datafile mit Pfad auf Konsole ausgegeben
-
-
-# Version: 	0.2.0
-# Depends: car, foreign, collapseMissings  aus automateModels, Funktionen aus makeInput
-# Status: release
-# Release Date:
-# Author:  Nicole Haag
-#
-# Change Log:
-# 2012-12-17 NH
-# CHANGED: removed definition of and calls to 'makeNumeric', using 'asNumericIfPossible' instead.
-# 2012-09-04 NH
-# CHANGED: removed calls to 'eatTools:::sunk'
-# 0000-00-00 AA
-# * 0.2.0 (2011-11-04, NH): SPSS-Format-Statement fuer numerische Variablen mit Dezimalstellen angepasst
-#
-# * 0.1.0 (2011-10-27, NH): erstellt
-#
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# library(car)
-# library(foreign)
-# source("P:/ZKD/development/collapseMissings_0.2.0.R")
-
 ################## TO DO #######
 # Definition von Missings fuer SPSS
 
-
 #-----------------------------------------------------------------------------------------
-quoteForeign <- function (x){ 
+autoQuote <- function (x){ 
 paste("\"", x, "\"", sep = "")}
 
 writeSpss <- function (dat, values, subunits, units, filedat = "mydata.txt", filesps = "readmydata.sps",
@@ -157,12 +110,12 @@ zkdWriteForeignSPSS <- function(dat, varinfo, datafile, codefile,
       freefield <- " free (TAB)\n"
   if (sep != "\t")
       freefield <- cat(" free (\"", sep, "\")\n", sep = "")
-  cat("DATA LIST FILE=", quoteForeign(datafile), freefield,
+  cat("DATA LIST FILE=", autoQuote(datafile), freefield,
       file = codefile)
   cat(" /", dl.varnames, ".\n\n", file = codefile, append = TRUE,
       fill = 60, labels = " ")
   cat("VARIABLE LABELS\n", file = codefile, append = TRUE)
-  cat(" ", paste(varnames, quoteForeign(varlabels), "\n"), ".\n",
+  cat(" ", paste(varnames, autoQuote(varlabels), "\n"), ".\n",
       file = codefile, append = TRUE)
 
   # get value labels from varinfo
@@ -187,7 +140,7 @@ zkdWriteForeignSPSS <- function(dat, varinfo, datafile, codefile,
         valueLabels <- substring(valueLabels, 1, 120)
         }   
       cat(paste("  ", names(valueLabels),
-      quoteForeign(valueLabels),"\n",  sep = " "), file = codefile,
+      autoQuote(valueLabels),"\n",  sep = " "), file = codefile,
       append = TRUE)
     }
     cat(" .\n", file = codefile, append = TRUE)

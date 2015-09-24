@@ -1,36 +1,4 @@
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# catPbc
-# Description: berechnet Kategorientrennschaerfen
-# Version: 	0.1.0
-# Status: alpha
-# Release Date: 2012-06-11, 2012-07-27 implemented in eat
-# Author:  Nicole Haag
-#
-# Change Log:
-# 2012-08-28 NH
-# ADDED: catPbc provides information about all valid codes
-# 2012-08-23 NH
-# ADDED: Argument 'context.vars' in catPbc
-# 0000-00-00 AA
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-## TO DO:
-## auch mit aggregiertem und bewertetem Datensatz nutzbar machen (Wunsch Alex Roppelt)
-## vgl. recodeData(dat=dat, values=inputList$unitRecodings, subunits=inputList$units)
-
-###############################################################################
-
 catPbc <- function(datRaw, datRec, idRaw, idRec, context.vars, values, subunits, xlsx = NULL) {
-
-## datRaw:     unrecoded dataset
-## datRec:     the same dataset as datRaw, in recoded form
-## idRaw:      name or number of id in unrecoded dataset
-## idRec:      name or number of id in recoded dataset
-## context.vars: name or column numbers of context vars, must be identical in both datasets!
-## values:     input table values
-## subunits:   input table subunits
-## xlsx:	     full path of excel to be written
-
 
 	# Pruefen, ob IDs in beiden Datensaetzen uebereinstimmen
 	idrec <- datRec [ , idRec ]

@@ -1,38 +1,3 @@
-# aggregateData - formerly known as zkdDatasetAggregate
-#
-# function:    aggregateData(dat, subunits, units, aggregatemissings = "use.default", rename = FALSE, recodedData = TRUE)
-#
-# Description: rekodiert Datensaetze
-#
-# arguments:
-#     dat (data.frame)          ... Datensatz mit ID-Variablen und (mindestens) allen Variablen, die rekodiert werden sollen
-#     subunits (data.frame)     ... ZKD-Inputtabelle fuer Subunits (Subitems), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx
-#     units (data.frame)        ... ZKD-Inputtabelle fuer Units (Items), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx
-#     aggregatemissings(matrix) ... Wenn default ueberschrieben werden soll, muss eine Matrix uebergeben werden, aus der hervorgeht, was passieren soll, wenn zu aggregierende Subunits Missings haben
-#     rename (logical)          ... Sollen Units, die nur ein Subunit haben, mit dem Unit- oder dem Subunit-Namen im aggregierten Datensatz stehen (default = FALSE)
-#     recodedData(logical)      ... Soll rekodierter oder Rohdatensatz aggregiert werden (wichtig fuer Erstellung der Aggregateinfo)
-#
-# Version: 	1.2.0
-# Status: alpha
-# Release Date:
-# Author:  Nicole Haag, Anna Lenski, Sebastian Weirich
-#
-# Change Log:
-# 2015-03-21 MH: debugged, aggregation rule auf "SUM" defaultet
-# 2012-09-05 NH
-# CHANGED: removed calls to 'eatTools:::sunk'
-# 0000-00-00 AA
-#
-# * 1.2.0 (2011-11-22, NH): bugfix in aggregatemissings
-# * 1.0.0 (2011-11-04, NH): auf ZKD-Inputtabellen angepasst
-#              Scoring komplett rausgenommen
-#              Option rename eingefuegt
-# * 0.1.1 (2011-10-08, NH): modularisiert, aggregieren und scoren sind getrennte Funktionen
-# * 0.1.0: kein Abbruch bei fehlerhafter Bewertungsvorschrift
-# * 0.0.2: Pattern Matching vektorwertig, kosmetische Aenderungen (NH)
-# * 0.0.4: Aggregierung von Missings variabel nach Definition im Deamon
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 ### TO DO
 # - Pattern aggregation implementieren
 # - wenn rename = TRUE: auch nach unrekodiertem Subitemnamen suchen

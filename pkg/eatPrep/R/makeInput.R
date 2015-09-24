@@ -1,69 +1,5 @@
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# makeInput
-# Description: erstellt von Daemon gebrauchte Inputdateien aus Codebook 
-#               bzw. Tabellen im ZKD-Inputformat
-# Version:   0.6.0
-# Status: alpha
-# Release Date:
-# depends: Funktion crop aus Package automateModels
-# Author:  Nicole Haag
-#
-# 2011-12-08 NH
-# FIXED: bug in makeInputCheckData
-# 0000-00-00 AA
-
-# Change Log:
-# * 0.5.0 (2011-11-23, NH): hotfix in makeInputRecodeData: wenn units-Dataframe uebergeben wird, dann tu so, als ob es subunits-Dataframe waere
-
-# * 0.2.0 (2011-11-12, NH): in checkInput Warnung fuer fehlende Subunits fuer Units mit unitType = "ID" entfernt
-#                           in .makeAggregateinfo Parameter recodedData ergaenzt: sollen Subunitbezeichungen 
-#                                            die aus rekodiertem oder die aus Rohdatensatz sein?
-
-# * 0.1.0 (2011-11-03, NH): Dokus fuer Hauptfunktionen hinzugefuegt
-#                           
-# * 0.0.3 (2011-11-02, NH): Begriffe items, subitems durch units, subunits ersetzt
-#           checkInput kann flexibel angewendet werden, je nach dem ob values und/oder units gecheckt werden soll
-#
-# * 0.0.2 (2011-10-27, NH): Erstellen von varinfo fuer rekodierten Datensatz und fuer Itemdatensatz
-#
-# * 0.0.1 (2011-10-20, NH): bis jetzt implementiert: 
-#           Erstellen von ZKD-Input-Tabellen values, subunits, units aus Codebook (makeCodebookInput)
-#           Checken von Inputtabellen und ggf. Erstellen von Defaults, wenn Tabellen fehlen (checkInput)
-#           Erstellen von ZKD-Inputlisten: varinfo fuer Rohdaten, recodeinfo, aggregateinfo (makeInputLists)
-#
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# source("P:/ZKD/development/crop_0.2.0.R")
-# library(xlsReadWrite)
-# codebook <- read.xls ( "N:/ZKD/V3-2012_Ma_Kodierbuch_2011-07-27.XLS", from = 2, colClasses = "character")
-# unitdefstring <- "[[:alnum:]]{1}$"
-# codebook$unit <- gsub(unitdefstring, "", codebook$variable.name)
-
-#### To Do #######################################################
-# Missingtypes variabel gestalten
-# Probleme mit ID in makeCodebookInput und makeInputLists beheben (vor allem bei varinfo fuer check)
-##################################################################
-#-----------------------------------------------------------------------------------------
-## Alle ZKD-Input-Listen auf einmal erstellen
 
 makeInputLists <- function (values, subunits, units, recodedData = TRUE) {
-
-# Description: prueft ZKD-Inputtabellen mittels checkInput und ueberfuehrt sie in ZKD-Listenformate
-#              hat diverse spin-offs, die in checkData usw. aufgerufen werden koennen 
-#              und jeweils nur die benoetigten Listen erstellen
-# 
-# arguments: 
-#     values (data.frame)   ... ZKD-Inputtabelle fuer Codes, siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx             
-#     subunits (data.frame) ... ZKD-Inputtabelle fuer Subunits (Subitems), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
-#     units (data.frame)    ... ZKD-Inputtabelle fuer Units (Items), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
-#     recodedData (logical) ... wird Aggregierung fuer rekodierten oder Rohdatensatz durchgefuehrt (wichtig fuer Erstellung der aggregateinfo) 
-# 
-# returns:  Liste mit folgenden Eintraegen:
-#     varinfoRaw (list)       ... ZKD-Varinfo fuer Rohdatensaetze
-#     varinfoRecoded (list)   ... ZKD-Varinfo fuer recodierte Datensaetze
-#     varinfoAggregated (list)... ZKD-Varinfo fuer aggregierte Datensaetze
-#     recodeinfo (list)       ... ZKD-Liste mit zur Rekodierung benoetigten Infos
-#     aggregateinfo (list)    ... ZKD-Liste mit zur Aggregierung benoetigten Infos
 
   checkedInput  <- checkInput(values, subunits, units)
   
@@ -141,25 +77,6 @@ makeInputAggregateData <- function (subunits, units, recodedData = TRUE) {
 
 #-----------------------------------------------------------------------------------------
 checkInput <- function ( values, subunits, units, checkValues = TRUE, checkUnits = TRUE ) {
-
-# Description: prueft ZKD-Inputtabellen auf Konsistenz und defaulted, wenn was fehlt
-# 
-# arguments: 
-#     values (data.frame)   ... ZKD-Inputtabelle fuer Codes, siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx             
-#     subunits (data.frame) ... ZKD-Inputtabelle fuer Subunits (Subitems), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
-#     units (data.frame)    ... ZKD-Inputtabelle fuer Units (Items), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
-#     checkValues (logical) ... Soll values-Tabelle in Check einbezogen werden?
-#     checkUnits (logical)  ... Soll units-Tabelle in Check einbezogen werden?
-# 
-# returns:  Liste mit 2 oder 3 der folgenden Eintraege:
-#     values (data.frame)   ... gepruefte ZKD-Inputtabelle fuer Codes, siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx             
-#     subunits (data.frame) ... gepruefte ZKD-Inputtabelle fuer Subunits (Subitems), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
-#     units (data.frame)    ... gepruefte ZKD-Inputtabelle fuer Units (Items), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
-#
-#     wenn checkValues = FALSE, wird values-Tabelle nicht ausgegeben
-#     wenn checkUnits = FALSE, wird units-Tabelle nicht ausgegeben
-#     mindestens eins von beiden muss TRUE sein (sonst macht Konsistenzcheck auch keinen Sinn)
-
 
   if (checkValues == FALSE & checkUnits == FALSE) {
     stop("Please specify whether values, units or both should be checked.")

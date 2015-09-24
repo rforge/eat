@@ -1,98 +1,31 @@
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# checkData - formerly known as zkdDatasetCheck
-# 
-# function:    checkData (dat, values, subunits, units)
-#
-# Description: checkt Datensaetze auf einige grundlegende Dinge:
-#              - Personen und/oder Variablen mit nur Missings
-#              - fehlende oder doppelte Eintraege in ID-Variable
-#              - Vorhandensein von invaliden Codes
-# 
-# arguments: 
-#     dat (data.frame)      ... Datensatz mit ID-Variablen und allen Variablen, die geprueft werden sollen
-#     values (data.frame)   ... ZKD-Inputtabelle fuer Codes, siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx             
-#     subunits (data.frame) ... ZKD-Inputtabelle fuer Subunits (Subitems), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
-#     units (data.frame)    ... ZKD-Inputtabelle fuer Units (Items), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
-#
-# Version:   1.1.0
-# Status: alpha
-# Release Date:
-# depends: Funktionen aus makeInput
-# Author:  Nicole Haag, Anna Lenski
-#
-# Change Log
-# 2012-09-04 NH
-# CHANGED: removed calls to 'eatTools:::sunk'
-# 2011-12-08 NH
-# FIXED: error message in getID corresponds with colnames in 'units'
-# 0000-00-00 AA
-# 
-# KS: Da muss unbedingt noch ausgegeben werden, welcher Datensatz hier gerade gecheckt wird.
-
-# * 1.2.0 (2011-11-22, NH): bugfix 
-#   + check auf Missing Values und Invalid Codes deaktiviert, wenn fuer keine Variable aus Datensatz varinfo vorliegt.
-#
-# * 1.1.0 (2011-11-03, NH): modularisiert
-#
-# * 1.0.0 (2011-11-02, NH): komplett ueberarbeitet und auf neue ZKD-Struktur angepasst. 
-#   + Meldungen werden jetzt per 'eatTools:::sunk' uebergeben
-#   + Input sind ZKD-Inputtabellen: values, subunits und units   
-#
-# * zu 0.6.4 (AL & MH)
-#	  + "data <- " eingefuegt vor recode-Statement
-# * zu 0.5.3 (NH)
-#	  + bugfix in Missing-Check
-#	  + Funktion identifiziert sich bei Fehlermeldungen
-# * zu 0.5.1 (NH)
-#   + Missing-Check von NA auf ZKD-Missings erweitert
-#   + Helper "zkdHelpers_getID" eingebaut
-# * zu 0.5.0 (KS)
-#   + Message zu NA-Check ausgebessert
-# * zu 0.4.4
-#   + behandelt im Unterschied zu 0.4.3 validCodes als numerisch, d.h. "01" wird zu "1" 
-# * zu 0.4.0
-#   + Check auf invalide Codes implementiert: fuer alle Variablen, fuer die in 
-#     varinfo Codes vergeben werden, werden entsprechende Variablen gecheckt
-# * zu 0.2.0
-#   + TRUE statt T
-#   + zkdDatasetCheck_run gibt Bool zurueck; TRUE, wenn fortgesetzt werden kann
-#   + uebergabe auch der varinfo
-#   + ID wird jetzt aus varinfo genommen
-# * zu 0.1.0
-#   + jetzt Datensatz als Funktionsparameter uebergeben, nicht mehr globale
-#     Variable
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-#-----------------------------------------------------------------------------------------
-
-	checkData <- function (dat, datnam, values, subunits, units, verbose = TRUE) {
-	  funVersion <- "checkData: "	 
-		varinfo <- makeInputCheckData (values, subunits, units)
-		
-		if(verbose) cat(paste("\n", funVersion, "Checking dataset ", datnam, " \n", sep = ""))
-		
-		if (class(dat) != "data.frame") {
-			stop (paste(funVersion, "dat must be a data.frame.", sep = ""))
-		}
-	 
-		# ID-Check <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-	  # find ID - stop if ID cannot be found
-		#	eatTools:::sunk(paste(funVersion, "Checking IDs", sep =""))
-	  idvarname <- getID(varinfo)
-	  checkID (dat, idvarname, verbose)
-
-	  
-		# Variables-Check <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-	  #	eatTools:::sunk(paste(funVersion, "Checking variables", sep = ""))
-	  checkVars(dat, varinfo, verbose)
-		
-		# check missing values
-	  checkMissings(dat, varinfo, idvarname, verbose)
-
-	  # check for invalid codes
-	  checkCodes(dat, varinfo, idvarname, verbose)
-	  
+checkData <- function (dat, datnam, values, subunits, units, verbose = TRUE) {
+  funVersion <- "checkData: "	 
+	varinfo <- makeInputCheckData (values, subunits, units)
+	
+	if(verbose) cat(paste("\n", funVersion, "Checking dataset ", datnam, " \n", sep = ""))
+	
+	if (class(dat) != "data.frame") {
+		stop (paste(funVersion, "dat must be a data.frame.", sep = ""))
 	}
+ 
+	# ID-Check <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  # find ID - stop if ID cannot be found
+	#	eatTools:::sunk(paste(funVersion, "Checking IDs", sep =""))
+  idvarname <- getID(varinfo)
+  checkID (dat, idvarname, verbose)
+
+  
+	# Variables-Check <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+  #	eatTools:::sunk(paste(funVersion, "Checking variables", sep = ""))
+  checkVars(dat, varinfo, verbose)
+	
+	# check missing values
+  checkMissings(dat, varinfo, idvarname, verbose)
+
+  # check for invalid codes
+  checkCodes(dat, varinfo, idvarname, verbose)
+  
+}
 
 
 

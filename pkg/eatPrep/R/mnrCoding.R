@@ -1,4 +1,3 @@
-
 mnrCoding <- function ( dat , pid , rotation.id , blocks , booklets , breaks , subunits = NULL , nMbi = 2 , mbiCode = "mbi" , mnrCode = "mnr" , invalidCodes = c ( "mbd", "mir", "mci" ) , verbose = FALSE ) {
 		
 		# Startzeit

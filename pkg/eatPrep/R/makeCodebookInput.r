@@ -2,16 +2,6 @@
 
 makeCodebookInput <- function (codebook){
 
-  # Description: erstellt ZKD-Inputtabellen aus IQB-Codebook (bzw. Kodierbuch)
-  # 
-  # arguments: 
-  #     codebook (data.frame) ... IQB-Codebook, ohne die erste leere Zeile
-  # 
-  # returns:  Liste mit den Eintraegen:
-  #     values (data.frame)   ... ZKD-Inputtabelle fuer Codes, siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx             
-  #     subunits (data.frame) ... ZKD-Inputtabelle fuer Subunits (Subitems), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
-  #     units (data.frame)    ... ZKD-Inputtabelle fuer Units (Items), siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx   
-
  # check arguments
   if (missing(codebook)){
     stop("Missing argument: codebook")

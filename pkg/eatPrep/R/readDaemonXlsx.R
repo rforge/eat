@@ -1,32 +1,3 @@
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# readDaemonXlsx
-# Description: automates data preparation
-# Version: 	0.4.0
-# Status: 
-# Release Date: 	2011-11-22 
-# Author:    Karoline Sachse
-# Change Log:
-# 2012-10-05 KS
-# CHANGED: adapt to Daemon
-# Change Log:
-# 2011-11-25 KS
-# CHANGED: sheets 1-3 are compulsory, 4-10 optional in readDaemonXlsx
-# 0000-00-00 AA
-# 2011-11-22 (KS): Fkt erstellt
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# function:
-# 		readDaemonXlsx ( inputDat, inL )
-#
-# description:
-#		read .xlsx from ZKDaemon
-#
-# arguments:
-#		filename: A character string containing path, name and extension of .xlsx from ZKDaemon
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
 readDaemonXlsx <- function(filename) {
 
 	inL <- list() 

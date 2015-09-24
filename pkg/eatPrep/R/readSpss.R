@@ -1,31 +1,3 @@
-####################################################################################################################
-#
-# readSpss
-# based on function loadSav: liest SPSS-Datendateien (*.sav) ein, macht Stelligkeitskorrektur bei Bedarf
-#
-#
-# Version: 	0.1.0
-# Imports:
-# Published:
-# Author:   Sebastian Weirich, Nicole Haag
-# Maintainer:
-#
-# Change Log:
-# 2012-09-03 NH
-# ADDED: new function readSpss based on loadSav
-# 2012-12-18 NH
-# ADDED: optional renaming of IDs
-# 0000-00-00 AA
-# 2011-11-23 ZKD: stabilisiert
-# 2011_11_04 KS: unique (Z. 61), stringsAsFactors=FALSE (Z. 60)
-# 2011-11-11 NH: umbenannt auf loadSav (style guide-konform)
-#
-####################################################################################################################
-
-### file                 ... Name der SPSS-Datei, die eingelesen werden soll
-### correctDigits        ... optional: Stelligkeitskorrektur 
-### truncateSpaceChar    ... optional: entfernt fuer alle Spalten vorangehende und abschliessende Leerzeichen ( mit 'crop')
-                          
 ### ACHTUNG! read.spss liest Dateinamen manchmal durchgaengig in Gross-, manchmal in Kleinbuchstaben ein. Problem!
 
 readSpss <- function (file, correctDigits=FALSE, truncateSpaceChar = TRUE, oldID = NULL, newID = NULL ) {
