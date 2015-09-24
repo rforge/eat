@@ -49,8 +49,8 @@
 makeInputLists <- function (values, subunits, units, recodedData = TRUE) {
 
 # Description: prueft ZKD-Inputtabellen mittels checkInput und ueberfuehrt sie in ZKD-Listenformate
-#              hat diverse spin-offs, die in checkData usw. aufgerufen werden können 
-#              und jeweils nur die benötigten Listen erstellen
+#              hat diverse spin-offs, die in checkData usw. aufgerufen werden koennen 
+#              und jeweils nur die benoetigten Listen erstellen
 # 
 # arguments: 
 #     values (data.frame)   ... ZKD-Inputtabelle fuer Codes, siehe P:\ZKD\01_Organisation\Konzepte\InputStruktur_Konzept.xlsx             
@@ -62,8 +62,8 @@ makeInputLists <- function (values, subunits, units, recodedData = TRUE) {
 #     varinfoRaw (list)       ... ZKD-Varinfo fuer Rohdatensaetze
 #     varinfoRecoded (list)   ... ZKD-Varinfo fuer recodierte Datensaetze
 #     varinfoAggregated (list)... ZKD-Varinfo fuer aggregierte Datensaetze
-#     recodeinfo (list)       ... ZKD-Liste mit zur Rekodierung benötigten Infos
-#     aggregateinfo (list)    ... ZKD-Liste mit zur Aggregierung benötigten Infos
+#     recodeinfo (list)       ... ZKD-Liste mit zur Rekodierung benoetigten Infos
+#     aggregateinfo (list)    ... ZKD-Liste mit zur Aggregierung benoetigten Infos
 
   checkedInput  <- checkInput(values, subunits, units)
   
@@ -80,7 +80,7 @@ makeInputLists <- function (values, subunits, units, recodedData = TRUE) {
 }
 
 #-----------------------------------------------------------------------------------------
-## fuer checkData benötigte Inputs erstellen: alle Varinfos, die es gibt
+## fuer checkData benoetigte Inputs erstellen: alle Varinfos, die es gibt
 ## doppelte Eintraege fliegen raus
 
 makeInputCheckData <- function (values, subunits, units) {
@@ -101,7 +101,7 @@ makeInputCheckData <- function (values, subunits, units) {
 }
 
 #-----------------------------------------------------------------------------------------
-## fuer recodeData benötigte Inputs erstellen
+## fuer recodeData benoetigte Inputs erstellen
 ### ACHTUNG: HOTFIX!!!
 
 makeInputRecodeData <- function (values, subunits) {
@@ -128,7 +128,7 @@ makeInputRecodeData <- function (values, subunits) {
 }
 
 #-----------------------------------------------------------------------------------------
-## fuer aggregateData benötigte Inputs erstellen
+## fuer aggregateData benoetigte Inputs erstellen
 
 makeInputAggregateData <- function (subunits, units, recodedData = TRUE) {
   checkedInput  <- checkInput(subunits = subunits, units = units, checkValues = FALSE)

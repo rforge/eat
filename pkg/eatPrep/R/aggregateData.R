@@ -184,7 +184,7 @@ aggregateData.aggregate <- function(unitName, aggregateinfo, aggregatemissings, 
   if ( !is.character ( aggRule ) ) {
 		aggRule <- "SUM"
   }
-  # Warnung wenn nicht eine standardmaeßige aggRule
+  # Warnung wenn nicht eine standardmaessige aggRule
   if ( !aggRule %in% c("SUM","MEAN","") ) {
 		warning ( paste ( "Unit " , unitName , " has potentially problematic aggregation rule (\"" , aggRule , "\"). Please check.\n" , sep = "" ) )
   }

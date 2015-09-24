@@ -88,7 +88,7 @@ makeCodebookInput <- function (codebook){
   if(all(rowSums(bew == "") == ncol(bew))== TRUE ) {
     bewString <- ""
   } else {
-    # hier könnten ein paar Erlaeuterungen nicht schaden.
+    # hier koennten ein paar Erlaeuterungen nicht schaden.
     bewTabelle <- cbind(c( lag(bew[ , 2], 1), "lo"), c("hi", bew[ , 2]), c(bew[ , 1], "0"))
     bewString <- paste( paste("'", bewTabelle[ , 1], "':'", bewTabelle[ , 2], "'='", bewTabelle[ , 3], "'", sep = ""), collapse =";")
     bewString <- gsub("'hi'", "hi", bewString)

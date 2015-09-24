@@ -67,7 +67,7 @@ asNumericIfPossible <- function(dat, set.numeric=TRUE, transform.factors=FALSE, 
     eval(parse(text = do))
   }
   
-  ### hier werden ausschließlich FAKTOREN, wenn maintain.factor.scores = TRUE, ggf. geaendert
+  ### hier werden ausschliesslich FAKTOREN, wenn maintain.factor.scores = TRUE, ggf. geaendert
   if(length(changeFactorWithIndices) >0)   {                          
     do <- paste(mapply(function(ii){
       paste("try(dat$'", ii , "' <- as.numeric(as.character(dat$'",ii, "')), silent=TRUE)", sep = "")}, changeFactorWithIndices), collapse = ";" )
