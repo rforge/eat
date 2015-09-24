@@ -7,8 +7,9 @@ Recode Missing by Intention to Missing not Reached
 \code{mnrCoding} converts missing responses coded as missing by intention at the end of a block of items to missing not reached.
 }
 
-\usage{
-	mnrCoding (dat, pid, rotation.id, blocks, booklets, breaks, subunits = NULL, nMbi = 2, mbiCode = "mbi", mnrCode = "mnr", invalidCodes = c("mbd", "mir", "mci"), verbose = FALSE)
+\usage{mnrCoding (dat, pid, rotation.id, blocks, booklets, breaks, 
+    subunits = NULL, nMbi = 2, mbiCode = "mbi", mnrCode = "mnr", 
+    invalidCodes = c("mbd", "mir", "mci"), verbose = FALSE)
 }
 
 \arguments{
@@ -16,10 +17,10 @@ Recode Missing by Intention to Missing not Reached
 		A dataset. Missing by intention needs to be coded \code{mbi}.
 	}
 	\item{pid}{
-		Name or column number of identifier (ID) variable in dataset.
+		Name or column number of identifier (ID) variable in \code{dat}
 	}
 	\item{rotation.id}{
-		Name of rotation indicator (e.g. "booklet") in \code{dat}.
+		A character vector of length 1 indicating the column name of the test booklet identfier in \code{dat}.
 	}	
 	\item{blocks}{
 		A data frame containing the sequence of subunits in each block in long format. The column names need to be \code{subunit, block, subunitBlockPosition}. 
@@ -70,13 +71,17 @@ A data frame with missing not reached coded as \code{mnr}. For each person with 
 data(inputDat)
 data(inputList)
 
-prepDat <- automateDataPreparation (inputList = inputList, datList = inputDat,
-           readSpss = FALSE, checkData=FALSE, mergeData = TRUE, recodeData=TRUE, 
-		   aggregateData=FALSE, scoreData= FALSE, writeSpss=FALSE, verbose = TRUE)
+prepDat <- automateDataPreparation (inputList = inputList, 
+    datList = inputDat, readSpss = FALSE, checkData=FALSE, 
+    mergeData = TRUE, recodeData=TRUE, aggregateData=FALSE, 
+    scoreData= FALSE, writeSpss=FALSE, verbose = TRUE)
 		   
 prepDat2 <- mergeData("ID", list(prepDat, inputList$rotation))		   
 			   
-mnrDat <- mnrCoding (dat = prepDat2, pid = "ID", booklets = inputList$booklets, 
-          blocks = inputList$blocks, rotation.id = "booklet", breaks = c(1, 2), subunits = inputList$subunits, nMbi = 2, mbiCode = "mbi", mnrCode = "mnr", invalidCodes = c("mbd", "mir", "mci"), verbose = TRUE)
-
+mnrDat <- mnrCoding (dat = prepDat2, pid = "ID", 
+    booklets = inputList$booklets, blocks = inputList$blocks, 
+    rotation.id = "booklet", breaks = c(1, 2), 
+    subunits = inputList$subunits, nMbi = 2, mbiCode = "mbi", 
+    mnrCode = "mnr", invalidCodes = c("mbd", "mir", "mci"), 
+    verbose = TRUE)
 }

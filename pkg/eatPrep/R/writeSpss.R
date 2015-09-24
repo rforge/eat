@@ -49,6 +49,8 @@
 
 
 #-----------------------------------------------------------------------------------------
+quoteForeign <- function (x){ 
+paste("\"", x, "\"", sep = "")}
 
 writeSpss <- function (dat, values, subunits, units, filedat = "mydata.txt", filesps = "readmydata.sps",
   missing.rule = list ( mvi = 0 , mnr = 0 , mci = NA , mbd = NA , mir = 0 , mbi = 0 ), 
@@ -155,12 +157,12 @@ zkdWriteForeignSPSS <- function(dat, varinfo, datafile, codefile,
       freefield <- " free (TAB)\n"
   if (sep != "\t")
       freefield <- cat(" free (\"", sep, "\")\n", sep = "")
-  cat("DATA LIST FILE=", foreign:::adQuote(datafile), freefield,
+  cat("DATA LIST FILE=", quoteForeign(datafile), freefield,
       file = codefile)
   cat(" /", dl.varnames, ".\n\n", file = codefile, append = TRUE,
       fill = 60, labels = " ")
   cat("VARIABLE LABELS\n", file = codefile, append = TRUE)
-  cat(" ", paste(varnames, foreign:::adQuote(varlabels), "\n"), ".\n",
+  cat(" ", paste(varnames, quoteForeign(varlabels), "\n"), ".\n",
       file = codefile, append = TRUE)
 
   # get value labels from varinfo
@@ -185,7 +187,7 @@ zkdWriteForeignSPSS <- function(dat, varinfo, datafile, codefile,
         valueLabels <- substring(valueLabels, 1, 120)
         }   
       cat(paste("  ", names(valueLabels),
-      foreign:::adQuote(valueLabels),"\n",  sep = " "), file = codefile,
+      quoteForeign(valueLabels),"\n",  sep = " "), file = codefile,
       append = TRUE)
     }
     cat(" .\n", file = codefile, append = TRUE)

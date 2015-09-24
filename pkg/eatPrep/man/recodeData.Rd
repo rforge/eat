@@ -1,44 +1,35 @@
 \name{recodeData}
 \alias{recodeData}
 
-\title{Recode Datasets with Missing Values
+\title{Recode Datasets with Several Kinds of Missing Values
 }
-\description{Recode datasets with special consideration of missing values.
+\description{Recode datasets with special consideration of missing values. See \code{\link{collapseMissings}} for supported types of missing values.
 }
 \usage{
 recodeData(dat, values, subunits, verbose = FALSE)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{A data frame}
-  \item{values}{A data frame with code information. See 'Details'.}
-  \item{subunits}{A data frame with subunit information. See 'Details'.}
+  \item{values}{A data frame with code information. See \sQuote{Details}.}
+  \item{subunits}{A data frame with subunit information. See \sQuote{Details}.}
    \item{verbose}{Logical. If \code{TRUE} additional information is printed.
 }
 }
 \details{
-\code{recodeData} recodes data frames with special consideration of missing values. The results of \code{recodeData} will be written to a protocol file with \code{sunk}. \code{recodeData} will give warnings, if missing or incomplete recode informations are found. Values without recode information will NOT be recoded!
+\code{recodeData} recodes data frames with special consideration of missing values. \code{recodeData} will give warnings, if missing or incomplete recode informations are found. Values without recode information will not be recoded.
 
 Examples of data frames \code{values} and \code{subunits} can be found via \code{data(\link{inputList})}.
 
 }
 \value{
-A data frame with recoded variables according to the specifications in \code{values} and \code{subunits}. Colnames will be the names specified in \code{subunits$subunitRecoded}. 
-}
-\references{
-http://code.google.com/p/zkdlib/wiki/MissingHandling
+A data frame with recoded variables according to the specifications in \code{values} and \code{subunits}. The columns will be named according to the specifications in \code{subunits$subunitRecoded}. 
 }
 \author{
 Martin Hecht, Christiane Penk, Nicole Haag
 }
-\note{
-%%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-	\code{\link{aggregateData}}, \code{\link{checkData}}
+	\code{\link{aggregateData}},  \code{\link{automateDataPreparation}}, \code{\link{inputList}}
 }
 \examples{
 data(inputDat)
@@ -47,5 +38,4 @@ data(inputList)
 dat1 <- inputDat[[1]]  # get first dataset from inputDat
 datRec <- recodeData(dat1, inputList$values, inputList$subunits, verbose = TRUE)
 str(datRec)
-
 }

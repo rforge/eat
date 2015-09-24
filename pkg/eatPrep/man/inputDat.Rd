@@ -17,12 +17,12 @@ This list contains 3 data frames, each with the following columns:
 }
 \details{code, subunit and unit descriptions are stored in dataset \code{\link{inputList}}.
 }
-\source{
+%\source{
 %%  ~~ reference to a publication or URL from which the data were obtained ~~
-}
-\references{
+%}
+%\references{
 %%  ~~ possibly secondary sources and usages ~~
-}
+%}
 \examples{
 data(inputDat)
 str(inputDat)

@@ -1,48 +1,36 @@
 \name{mergeData}
 \alias{mergeData}
-\title{Merge Data Frames and fill NA gaps}
-\description{Merges data frames using one key variable. Fills NA gaps.}
+\title{Merge Data Frames, Check For Inconsistencies, and Replace NA Values}
+\description{This function merges a list of data frames, checks whether cases with the same value on the identifier variable have different values in different datasets. Additionally, \code{NA} resulting from the merge (e.g., in repeated block designs) can be replaced with a customed character missing to facilitate future data preparation of the merged dataset. See \code{\link{collapseMissings}} for details on supported character missings for other functions in the \code{eatPrep} package. 
+}
 \usage{
 mergeData(newID = "ID", datList, oldIDs=NULL, addMbd = FALSE, verbose=FALSE)
 }
-%- maybe also 'usage' for other objects documented here.
+
 \arguments{
-  \item{newID}{
-character string containing the ID variable's name in the future merged dataset
+  \item{newID}{A character vector of length 1 indicating the name of the identifier variable in the merged dataset.
 }
   \item{datList}{
-list of data frames to be merged
+A list of data frames to be merged
 }
   \item{oldIDs}{
-character vector OR numeric vector containing either names of the key variables in datList or their column number in each dataframe in datList
-Default is a vector containing replicates of the value of \code{newID}.
+A character vector or a numeric vector containing either the names of the identifier variables in datList or their column number in each data frame in datList. Default is a vector containing \code{length(datList)} replicates of the value of \code{newID}.
 }
   \item{addMbd}{
-logical. If \code{TRUE} \code{NA} is replaced by "mbd" (missing by desgin).
+logical. If \code{TRUE}, \code{NA} is replaced by "mbd" (missing by design) in the merged dataset.
 }
   \item{verbose}{
-logical. If \code{TRUE} progress is printed.
+logical. If \code{TRUE}, progress is printed.
 }
 }
 %\details{
 %}
 \value{
-a data frame containing unique cases and unique variables. All cases and all variables that could be identified in the original data frames will be kept and matched.
-}
-\references{
-%% ~put references to the literature/web site here ~
+A data frame containing unique cases and unique variables. All cases and all variables from the original datasets will be kept and matched.
 }
 \author{Karoline Sachse, Nicole Haag
 }
-\note{
-%%  ~~further notes~~
-}
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
 data(inputDat)
 str(inputDat)

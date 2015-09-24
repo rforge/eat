@@ -27,7 +27,7 @@ A list with three data frames:
       \item{unitDescription}{Unit description.}
       \item{unitAggregateRule}{Aggregate rule for unit:
         \code{SUM}; \code{MEAN}.}
-      \item{unitScoreRule}{Scoring rule for unit (not sure how this will be used in the future.)}
+      \item{unitScoreRule}{not currently in use}
     }
 
   \item subunits: Subunit information, contains the following columns:
@@ -35,7 +35,7 @@ A list with three data frames:
 	\describe{
       \item{unit}{Unit name, for which subunits are given.}
       \item{subunit}{Subunit name.}
-      \item{subunitType}{Subunit types:\code{'?'}.}
+      \item{subunitType}{Subunit types:\code{C1} = multiple choice; \code{C2} = short answer; \code{C3} = constructed response; \code{T} = transcript.}
       \item{subunitLabel}{Subunit label, to be used by \code{\link{writeSpss}}.}
       \item{subunitDescription}{Subunit descriptions.}
       \item{subunitPosition}{Subunit position in test booklet (e.g., line 1).}
@@ -121,15 +121,15 @@ A list with three data frames:
 
 }
 }
-\details{
+%\details{
 
-}
-\source{
+%}
+%\source{
 %%  ~~ reference to a publication or URL from which the data were obtained ~~
-}
-\references{
+%}
+%\references{
 %%  ~~ possibly secondary sources and usages ~~
-}
+%}
 \examples{
 data(inputList)
 str(inputList)

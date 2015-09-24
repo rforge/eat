@@ -51,34 +51,17 @@ A data frame with the discrimination values for each category of categorical var
  \item{recodevalue}{Recode value for the category}
  \item{subunitType}{Type of subunit, see \code{\link{inputList}} for details}
 }
-
-\references{
-
-}
 \author{
 Nicole Haag
 }
-\note{
-%%  ~~further notes~~
-}
-
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
-
 \examples{
 data(inputDat)
 data(inputList)
 
 datRaw <- mergeData(newID = "ID", datList = inputDat, addMbd = TRUE)
-datRec <- recodeData(datRaw, values = inputList$values, subunits=inputList$subunits)
-pbcs   <- catPbc(datRaw, datRec, idRaw = "ID", idRec = "ID", context.vars = "hisei",
-                  values = inputList$values, subunits = inputList$subunits)
-
-
+datRec <- recodeData(datRaw, values = inputList$values, 
+    subunits=inputList$subunits)
+pbcs   <- catPbc(datRaw, datRec, idRaw = "ID", idRec = "ID", 
+    context.vars = "hisei", values = inputList$values, 
+    subunits = inputList$subunits)
 }
-
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-%\keyword{ ~kwd1 }
-%\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
