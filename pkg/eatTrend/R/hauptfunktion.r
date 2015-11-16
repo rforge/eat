@@ -192,7 +192,7 @@ writeCsv=FALSE, path=NULL, plots=FALSE) {
 				for(uu in names(seres)) {
 					vv <- round(cor(seres[[uu]][[3]],seres[[uu]][[4]],use="pairwise.complete.obs"),2)
 					
-					plot(seres[[uu]][[4]][1:50], type="l", lty=3, main = paste0("Länder-DIF LV 2009 vs. 2015: ", uu, " (Teil 1), r = ", vv), xlab="Item", ylab="DIF", ylim=c(-1.4,1.4),xaxt = "n")
+					plot(seres[[uu]][[4]][1:50], type="l", lty=3, main = paste0("Länder-DIF LV 2009 vs. 2015: ", uu, " (Teil 1), r_ges = ", vv), xlab="Item", ylab="DIF", ylim=c(-1.4,1.4),xaxt = "n")
 					abline(h=0, col="grey50")
 					abline(v=1:length(seres[[uu]][[3]][1:50]), col="grey80")
 					lines(seres[[uu]][[3]][1:50], col="gray30",  type="l")
@@ -201,7 +201,7 @@ writeCsv=FALSE, path=NULL, plots=FALSE) {
 					legend("topleft", lty=c(3,1), col=c("black","gray30"), c("2015", "2009"), lwd=1, cex=1)
 					
 					if(length(seres[[uu]][[4]])>51) {
-						plot(seres[[uu]][[4]][51:100], type="l", lty=3, main = paste0("Länder-DIF LV 2009 vs. 2015: ", uu, " (Teil 2), r = ", vv), xlab="Item", ylab="DIF", ylim=c(-1.4,1.4),xaxt = "n")
+						plot(seres[[uu]][[4]][51:100], type="l", lty=3, main = paste0("Länder-DIF LV 2009 vs. 2015: ", uu, " (Teil 2), r_ges = ", vv), xlab="Item", ylab="DIF", ylim=c(-1.4,1.4),xaxt = "n")
 						abline(h=0, col="grey50")
 						abline(v=1:length(seres[[uu]][[3]][51:100]), col="grey80")
 						lines(seres[[uu]][[3]][51:100], col="gray30",  type="l")
