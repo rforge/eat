@@ -7,7 +7,7 @@ Imports: SDMTools, eatPrep, reshape2, sirt
 Date: 2015-10-06
 Author: Karoline Sachse
 Maintainer: Karoline Sachse <karoline.sachse@iqb.hu-berlin.de>
-Description: Linking and Standard Error Pooling for Estimating National Trends in International Large-scale Assessments. 
+Description: Linking and Standard Error Pooling for Estimating National Trends in International Large-Scale Assessments. 
 License: GPL (>= 2)
 LazyLoad: yes
 LazyData: yes
