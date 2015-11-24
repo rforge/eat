@@ -1,10 +1,10 @@
 Package: eatPrep
 Type: Package
 Title: Prepare Data for IRT Analyses
-Version: 0.2.5
+Version: 0.2.6
 Depends: R (>= 2.14.0), xlsx, car, foreign, reshape2 
-Date: 2015-09-24
-Author: Nicole Haag, Karoline Sachse, Martin Hecht, Sebastian Weirich
+Date: 2015-11-24
+Author: Nicole Haag, Karoline Sachse
 Maintainer: Karoline Sachse <karoline.sachse@iqb.hu-berlin.de>
 Description: Prepare test item data for IRT analyses. 
 License: GPL (>= 2)

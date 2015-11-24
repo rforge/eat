@@ -8,7 +8,7 @@ Calculate Item Discrimination for Each Category of Categorical Variables
 }
 
 \usage{
-catPbc(datRaw, datRec, idRaw, idRec, context.vars, values, subunits, xlsx = NULL)
+catPbc(datRaw, datRec, idRaw, idRec, context.vars = NULL, values, subunits, file.name = NULL, verbose = F)
 }
 
 \arguments{
@@ -33,8 +33,11 @@ catPbc(datRaw, datRec, idRaw, idRec, context.vars, values, subunits, xlsx = NULL
 	\item{subunits}{
 		Data frame with information about subunits, see \code{\link{inputList}} for details.
 	}
-	\item{xlsx}{
-  Optional: Full path of Excel file for results.
+	\item{file.name}{
+  Optional: Full path of csv file for results.
+	}
+		\item{verbose}{
+  logical. If \code{TRUE} additional diagnostics are printed.
 	}
 }
 \details{
