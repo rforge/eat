@@ -38,6 +38,14 @@ catPbc <- function(datRaw, datRec, idRaw, idRec, context.vars = NULL, values, su
     if(is.numeric(idRaw)) {
       idRaw <- colnames(datRaw)[idRaw]
     }
+	    
+    # Variablen mit nur missings ausschliessen
+    if(any(colMeans(is.na(datRaw)) == 1)){
+      raus <- colnames(datRaw)[colMeans(is.na(datRaw)) == 1]
+      datRaw <- datRaw[ , -which(colnames(datRaw) %in% raus)]
+      datRec <- datRec[ , -which(colnames(datRec) %in% paste0(raus, "R"))]
+    }
+
     vars <- setdiff(colnames(datRaw), idRec)
 
     # relative Punktzahl
