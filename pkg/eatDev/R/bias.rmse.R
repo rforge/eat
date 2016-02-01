@@ -249,17 +249,21 @@ bias.rmse <- function ( true , est , id.col , val.col , repl.col = NULL , group.
 								if ( verbose ) {
 										cat ( paste0 ( "Meaning over " , nrow ( res3 ) , " rows" , "\n\n" ) )
 								}
+	
+								if ( !is.null ( res3 ) ) {
+										# Mitteln
+										res4 <- res3[1,,drop=FALSE]
+										res4$bias <- mean ( res3$bias )
+										res4$biasfree.sd <- mean ( res3$biasfree.sd )
+										res4$MSE <- mean ( res3$MSE )
+										res4$RMSE <- mean ( res3$RMSE )
+										res4$cor <- mean ( res3$cor )
+										# replicates Spalte rausschmeissen
+										res4 <- res4[,!colnames(res4) %in% repl.col, drop=FALSE]
+								} else {
+										res4 <- NULL
+								}
 								
-								# Mitteln
-								res4 <- res3[1,,drop=FALSE]
-								res4$bias <- mean ( res3$bias )
-								res4$biasfree.sd <- mean ( res3$biasfree.sd )
-								res4$MSE <- mean ( res3$MSE )
-								res4$RMSE <- mean ( res3$RMSE )
-								res4$cor <- mean ( res3$cor )
-								# replicates Spalte rausschmeissen
-								res4 <- res4[,!colnames(res4) %in% repl.col]
-							
 								return ( res4 )
 						}
 						res1.l <- mapply ( f2 , e4 , names ( e4 ) , seq ( along = e4 ) , MoreArgs = list ( repl.col , val.col , group.col , length ( e4 ) , method ) , SIMPLIFY = FALSE )				
