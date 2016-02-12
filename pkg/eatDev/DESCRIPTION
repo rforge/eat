@@ -6,7 +6,7 @@ Depends: R (>= 3.0.0)
 Suggests: 
 Date: 2016-02-01
 Author: everybody
-Maintainer: nobody
+Maintainer: Not me <anonymous@mail.world>
 Description: development platform, no documentation, no guaranties
 License: GPL (>= 2)
 LazyLoad: yes
