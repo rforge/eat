@@ -5,11 +5,12 @@
 This function processes LSA data and returns trend estimates in latent variable 
 means and proficiency level frequencies.
 }
-\usage{eatTrend(itParsIntT1, PVsT1, countriesT1, 
-itParsNatT1=NULL, jkzoneT1, jkrepT1, weightsT1=NULL, itParsIntT2, PVsT2, 
-countriesT2, itParsNatT2=NULL, weightsT2=NULL, jkzoneT2, jkrepT2, 
-transfTo500=TRUE, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL, type =c("FCIP", "MM"), 
-writeCsv=FALSE, path=NULL, plots=FALSE)}
+\usage{eatTrend(itParsIntT1, PVsT1, countriesT1, itParsNatT1=NULL, 
+jkzoneT1=NULL, jkrepT1=NULL, weightsT1=NULL, itParsIntT2, PVsT2, 
+countriesT2, itParsNatT2=NULL, weightsT2=NULL, jkzoneT2=NULL, jkrepT2=NULL, 
+testletNam = NULL, transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, 
+sdRefPop=NULL, cutScores=NULL, type =c("FCIP", "MM"), writeCsv=FALSE, 
+path=NULL, plots=FALSE)}
 \arguments{
   \item{itParsIntT1}{
   A data frame containing the international item parameter estimates at time 1. 
@@ -31,11 +32,13 @@ writeCsv=FALSE, path=NULL, plots=FALSE)}
 }
   \item{jkzoneT1}{
   A vector containing the primary sampling unit at time 1. The order 
-  has to correspond to the ID column in \code{PVsT1}.
+  has to correspond to the ID column in \code{PVsT1}. If empty a nonsene default
+  will be set.
 }
   \item{jkrepT1}{
   A vector containing the jackknife replicate ID at time 1. The order 
-  has to correspond to the ID column in \code{PVsT1}.
+  has to correspond to the ID column in \code{PVsT1}. If empty a nonsene default
+  will be set.
 }
   \item{weightsT1}{
 A vector containing the case weights at time 1. The order 
@@ -61,15 +64,27 @@ A vector containing the case weights at time 1. The order
 }
   \item{jkzoneT2}{
   A vector containing the primary sampling unit at time 2. The order 
-  has to correspond to the ID column in \code{PVsT2}.
+  has to correspond to the ID column in \code{PVsT2}. If empty a nonsene default
+  will be set.
 }
   \item{jkrepT2}{
   A vector containing the jackknife replicate ID at time 2. The order 
-  has to correspond to the ID column in \code{PVsT2}.
+  has to correspond to the ID column in \code{PVsT2}. If empty a nonsene default
+  will be set.
 }
   \item{weightsT2}{
-A vector containing the case weights at time 2. The order 
-  has to correspond to the ID column in \code{PVsT2}.
+  A vector containing the case weights at time 2. The order 
+  has to correspond to the ID column in \code{PVsT2}. 
+}
+  \item{testletNam}{
+  Character vector containing the names of the units/testlets in which items are
+  clustered.
+}
+  \item{mtT}{
+Numeric. Mean of arbitrary metric to which parameters are transformed.
+}
+  \item{sdtT}{
+Numeric. Standard deviation of arbitrary metric to which parameters are transformed.
 }
   \item{transfTo500}{
 Logical. If \code{TRUE}, the function \code{\link{transformTo500}} will be called.

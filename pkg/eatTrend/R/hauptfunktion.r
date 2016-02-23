@@ -1,10 +1,9 @@
 
 # evtl.CDIFplot noch 
 eatTrend <- function(itParsIntT1, PVsT1, countriesT1, 
-itParsNatT1=NULL, jkzoneT1, jkrepT1, weightsT1=NULL, itParsIntT2, PVsT2, 
-countriesT2, itParsNatT2=NULL, weightsT2=NULL, jkzoneT2, jkrepT2, 
-transfTo500=TRUE, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL, type =c("FCIP", "MM"), 
-writeCsv=FALSE, path=NULL, plots=FALSE) {
+itParsNatT1=NULL, jkzoneT1=NULL, jkrepT1=NULL, weightsT1=NULL, itParsIntT2, PVsT2, 
+countriesT2, itParsNatT2=NULL, weightsT2=NULL, jkzoneT2=NULL, jkrepT2=NULL, testletNam=NULL,
+transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL, type =c("FCIP", "MM"), writeCsv=FALSE, path=NULL, plots=FALSE) {
 
 	cat ( paste ("Hi! ", Sys.time(), "\n" ) ) 
 	stopifnot(class(itParsIntT1) == "data.frame")
@@ -15,6 +14,37 @@ writeCsv=FALSE, path=NULL, plots=FALSE) {
 	stopifnot(dim(PVsT2)[1] == length(countriesT2))
 	# die anderen Argumente werden erst dann durchgecheckt, wenn sie benutzt werden
 	
+	if(is.null(jkzoneT1)) {cat("Warning! jkzoneT1 is empty and will be defaulted to nonsense values \n"); jkzoneT1 <- paste0(countriesT1, sample(c(0,1,2,3), length(countriesT1), replace = TRUE))}
+	if(is.null(jkzoneT2)) {cat("Warning! jkzoneT2 is empty and will be defaulted to nonsense values \n"); jkzoneT2 <- paste0(countriesT2, sample(c(0,1,2,3), length(countriesT2), replace = TRUE))}
+	if(is.null(jkrepT1)) {cat("Warning! jkrepT1 is empty and will be defaulted to nonsense values \n"); jkrepT1 <- rbinom(length(countriesT1),1,.5)}
+	if(is.null(jkrepT2)) {cat("Warning! jkrepT2 is empty and will be defaulted to nonsense values \n"); jkrepT2 <- rbinom(length(countriesT2),1,.5)} 
+	
+	
+	if(writeCsv & is.null(path)) {stop("please specify path if 'writeCsv=TRUE'")}
+	if(plots & is.null(path)) {stop("please specify path if 'plots=TRUE'")}
+	
+	if(!identical(dir(path), character(0))) {
+	   cat(paste("Data already exists in: ", path, ", which might be overwritten. Press 'Esc' to cancel.\n", sep =""))
+	   temp <- mapply ( function ( nr ) {
+			cat ( paste ( nr , " " , sep="" ) )
+			flush.console ( )
+			Sys.sleep ( 1 )
+		} , 5:1 )
+		cat("\n")
+	}
+	
+	# Pfad checken & anlegen
+	if(inherits(ret <- try(dir.create(path, showWarnings = FALSE, recursive=TRUE)),"try-error")) {
+		stop("Error while creating folder.")
+	}
+		
+	# Schreibrechte vorhanden?
+	if(unname ( file.access(path, mode = 2 ) )  == 0 ) {
+	   ret <- TRUE
+	   } else {
+		stop(paste("No writing access", path))
+	}
+
 	itParsIntT1 <- eatPrep:::set.col.type(itParsIntT1, list(character=names(itParsIntT1)[1], numeric=names(itParsIntT1)[2:dim(itParsIntT1)[2]]))
 	itParsIntT2 <- eatPrep:::set.col.type(itParsIntT2, list(character=names(itParsIntT2)[1], numeric=names(itParsIntT2)[2:dim(itParsIntT2)[2]]))
 	PVsT1 <- eatPrep:::set.col.type(PVsT1, list(character=names(PVsT1)[1], numeric=names(PVsT1)[2:dim(PVsT1)[2]]))
@@ -23,6 +53,8 @@ writeCsv=FALSE, path=NULL, plots=FALSE) {
 	
 	if(type == "MM") {
 
+		cat("Warning! If items are clustered in units (testlets), the linkerror will be underestimated! Adjustment for type='MM' is not yet implemented. \n")
+	
 		stopifnot(class(itParsNatT1) == "data.frame" || class(itParsNatT1) == "list")
 		stopifnot(class(itParsNatT2) == "data.frame" || class(itParsNatT2) == "list")
 		
@@ -56,18 +88,41 @@ writeCsv=FALSE, path=NULL, plots=FALSE) {
 		
 		if(transfTo500) {
 			
-			PV500T1 <- transformTo500(pars=PV500T1, wgts=weightsT1, type="persPar", cutScores=cutScores)
-			PV500T2 <- transformTo500(pars=PVsT2, mRefPop=mRefPop, sdRefPop=sdRefPop, type="persPar", cutScores=cutScores)
+			PV500T1 <- transformTo500(pars=PV500T1, mtT=mtT, sdtT=sdtT, wgts=weightsT1, type="persPar", cutScores=cutScores)
+			PV500T2 <- transformTo500(pars=PVsT2, mtT=mtT, sdtT=sdtT, mRefPop=mRefPop, sdRefPop=sdRefPop, type="persPar", cutScores=cutScores)
 					
 		} 
 		
 	} else {
 		if(type == "FCIP") {
-		
+
 			Link3 <- sirt:::equating.rasch(itParsIntT1,itParsIntT2)
+			
+			if(is.null(testletNam)) {
+				cat("Warning! If items are clustered in units (testlets), the linkerror will be underestimated unless argument 'testletNam' is specified! \n")
+				flush.console ( )
+				seres <- Link3$descriptives$linkerror
+			} else {
+				stopifnot(class(testletNam) == "character")
+				testletNam <- unique(testletNam)
+				names(itParsIntT2)[2] <- "b.2"
+				pd <- mergeData("item", list(itParsIntT1, itParsIntT2))
+				tl1 <- lapply(testletNam, function(xx) grep(xx, pd$item))
+				names(tl1) <- testletNam
+				pd$testlet <- unname(unlist(sapply(unlist(tl1), function(bb) testletNam[unlist(as.logical(lapply(tl1, function(uu) sum(grepl(paste0("^",bb,"$"), uu)))))])))
+				if(any(is.na(pd$testlet))) {
+					cat("Please specify all testlets/item units in testletNam.\n")
+					pd$testlet[is.na(pd$testlet)] <- pd$item[is.na(pd$testlet)]
+				}
+				pd <- reinsort.col(pd, c("b", "b.2", "item"), "testlet")
+				pd <- reinsort.col(pd, "item", "b.2")		
+				Link3b <- equating.rasch.jackknife(pars.data=pd, display = TRUE,
+				se.linkerror = FALSE, alpha1 = 0, alpha2 = 0)
+				seres <- Link3b$descriptives$linkerror
+			}
+			
 			Link3MM <- Link3$B.est[1]
 			
-			seres <- Link3$descriptives$linkerror
 		
 			PV500T1 <- PVsT1
 			PV500T2 <- PVsT2
@@ -75,8 +130,8 @@ writeCsv=FALSE, path=NULL, plots=FALSE) {
 		
 			if(transfTo500) {
 			
-				PV500T1 <- transformTo500(pars=PV500T1, wgts=weightsT1, type="persPar", cutScores=cutScores)
-				PV500T2 <- transformTo500(pars=PVsT2, mRefPop=mRefPop, sdRefPop=sdRefPop, type="persPar", cutScores=cutScores)
+				PV500T1 <- transformTo500(pars=PV500T1, mtT=mtT, sdtT=sdtT, wgts=weightsT1, type="persPar", cutScores=cutScores)
+				PV500T2 <- transformTo500(pars=PV500T2, mtT=mtT, sdtT=sdtT, mRefPop=mRefPop, sdRefPop=sdRefPop, type="persPar", cutScores=cutScores)
 					
 			}
 				
@@ -247,7 +302,23 @@ writeCsv=FALSE, path=NULL, plots=FALSE) {
 	resCuts <- resCuts[,c(2,1,3,4,5,6)]
 	resCuts <- resCuts[order(resCuts$country),]
 	resCuts$estTrend <- resCuts$estT2 - resCuts$estT1
-	resCuts$seTrendUNTERVORBEHALT <- sqrt(resCuts$seT2^2 + resCuts$seT1^2)
+	resCuts$seTrendUnderestimated <- sqrt(resCuts$seT2^2 + resCuts$seT1^2)
+	linkerror <- mean(sqrt(resMeans$seTrendpisa^2-(resMeans$seT1^2+resMeans$seT2^2)), na.rm=TRUE)
+	M2 <- SD2 <- NULL	
+	for(i in 6:max(which(unlist(lapply(PV500T2,class))=="numeric"))) {
+		M2 <- c(M2, SDMTools:::wt.mean(PV500T2[,i],as.numeric(PV500T2$weightsT2)))
+		SD2 <- c(SD2, SDMTools:::wt.sd(PV500T2[,i],as.numeric(PV500T2$weightsT2)))
+	}
+	M2 <- mean(M2)
+	SD2 <- mean(SD2)
+	M1 <- SD1 <- NULL	
+	for(i in 6:max(which(unlist(lapply(PV500T1,class))=="numeric"))) {
+		M1 <- c(M1, SDMTools:::wt.mean(PV500T1[,i],as.numeric(PV500T1$weightsT1)))
+		SD1 <- c(SD1, SDMTools:::wt.sd(PV500T1[,i],as.numeric(PV500T1$weightsT1)))
+	}
+	M1 <- mean(M1)
+	SD1 <- mean(SD1)
+	resCuts <- seKompstuf(resCuts, cutScores, M1 , SD1 , M2 , SD2 , linkerror)
 	
 	if(writeCsv) {
 		stopifnot(!is.null(path))

@@ -4,8 +4,8 @@
 \description{
 This function transforms IRT parameters to an arbitrary metric.
 }
-\usage{transformTo500(pars, mRefPop=NULL, sdRefPop=NULL, wgts=NULL, 
-type=c("itPar", "persPar"), cutScores=NULL)}
+\usage{transformTo500(pars, mRefPop=NULL, sdRefPop=NULL, mtT=500, sdtT=100, 
+wgts=NULL, type=c("itPar", "persPar"), cutScores=NULL)}
 \arguments{
   \item{pars}{
    A data frame containing the parameter estimates. The first column has to 
@@ -16,6 +16,12 @@ Numeric. The mean of the reference population.
 }
   \item{sdRefPop}{
 Numeric. The standard deviation in the reference population.
+}
+  \item{mtT}{
+Numeric. Mean of arbitrary metric to which parameters are transformed.
+}
+  \item{sdtT}{
+Numeric. Standard deviation of arbitrary metric to which parameters are transformed.
 }
   \item{wgts}{
   A vector containing the case weights.
