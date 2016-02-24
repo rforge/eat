@@ -116,7 +116,7 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 				}
 				pd <- reinsort.col(pd, c("b", "b.2", "item"), "testlet")
 				pd <- reinsort.col(pd, "item", "b.2")		
-				Link3b <- equating.rasch.jackknife(pars.data=pd, display = TRUE,
+				Link3b <- sirt:::equating.rasch.jackknife(pars.data=pd, display = TRUE,
 				se.linkerror = FALSE, alpha1 = 0, alpha2 = 0)
 				seres <- Link3b$descriptives$linkerror
 			}

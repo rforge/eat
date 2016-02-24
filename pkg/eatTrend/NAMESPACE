@@ -1,7 +1,7 @@
 importFrom("SDMTools", wt.mean, wt.sd)
 importFrom("eatPrep", set.col.type, mergeData)
 importFrom("reshape2", melt, dcast)
-importFrom("sirt", equating.rasch)
+importFrom("sirt", equating.rasch, equating.rasch.jackknife)
 export(eatTrend)
 export(addCuts)
 export(transformTo500)
