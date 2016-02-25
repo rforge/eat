@@ -131,7 +131,7 @@ transfTo500=TRUE, mtT=500, sdtT=100, sdRefPop=NULL, cutScores=NULL, type =c("FCI
 			if(transfTo500) {
 			
 				PV500T1 <- transformTo500(pars=PV500T1, mtT=mtT, sdtT=sdtT, wgts=weightsT1, type="persPar", cutScores=cutScores)
-				PV500T2 <- transformTo500(pars=PV500T2, mtT=mtT, sdtT=sdtT, type="persPar", cutScores=cutScores)
+				PV500T2 <- transformTo500(pars=PV500T2, mtT=mtT, sdtT=sdtT, wgts=weightsT2, type="persPar", cutScores=cutScores)
 					
 			}
 				
