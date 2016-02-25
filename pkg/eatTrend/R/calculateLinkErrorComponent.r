@@ -1,7 +1,7 @@
 
 calculateLinkErrorComponent <- function(intParsT1, intParsT2, natParsT1, natParsT2) {
 	
-	# cat("Warning! If items are clustered in units (testlets), the linkerror will be underestimated! \n")
+	cat("Warning! If items are clustered in units (testlets), the linkerror will be underestimated! \n")
 	
 	res <- list()
 	anc <- intersect(intersect(intParsT1$item, intParsT2$item), intersect(natParsT1$item, natParsT2$item))

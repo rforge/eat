@@ -3,7 +3,7 @@
 eatTrend <- function(itParsIntT1, PVsT1, countriesT1, 
 itParsNatT1=NULL, jkzoneT1=NULL, jkrepT1=NULL, weightsT1=NULL, itParsIntT2, PVsT2, 
 countriesT2, itParsNatT2=NULL, weightsT2=NULL, jkzoneT2=NULL, jkrepT2=NULL, testletNam=NULL,
-transfTo500=TRUE, mtT=500, sdtT=100, cutScores=NULL, type =c("FCIP", "MM"), writeCsv=FALSE, path=NULL, plots=FALSE) {
+transfTo500=TRUE, mtT=500, sdtT=100, sdRefPop=NULL, cutScores=NULL, type =c("FCIP", "MM"), writeCsv=FALSE, path=NULL, plots=FALSE) {
 
 	cat ( paste ("Hi! ", Sys.time(), "\n" ) ) 
 	stopifnot(class(itParsIntT1) == "data.frame")

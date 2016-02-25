@@ -14,7 +14,7 @@ seKompstuf <- function(resCuts, cutScores, M1 , SD1 , M2 , SD2 , linkerror  ){
 		komp <- NULL
 		komp[1] <- cutScores[resCuts1$parameter[i]]
 		if(which(cutScores %in% cutScores[resCuts1$parameter[i]]) =="1") {
-			komp[2] <- 10000 } else {
+			komp[2] <- 100000000 } else {
 			komp[2] <- unname(cutScores[which(cutScores %in% cutScores[resCuts1$parameter[i]])-1])
 		}
 		a1 <- sum( dnorm( ( komp - M1 ) / SD1 ) * c(-1,1) / SD1 ) 
