@@ -8,8 +8,9 @@ means and proficiency level frequencies.
 \usage{eatTrend(itParsIntT1, PVsT1, countriesT1, itParsNatT1=NULL, 
 jkzoneT1=NULL, jkrepT1=NULL, weightsT1=NULL, itParsIntT2, PVsT2, 
 countriesT2, itParsNatT2=NULL, weightsT2=NULL, jkzoneT2=NULL, jkrepT2=NULL, 
-testletNam = NULL, transfTo500=TRUE, mtT=500, sdtT=100, sdRefPop=NULL, 
-cutScores=NULL, type =c("FCIP", "MM"), writeCsv=FALSE, path=NULL, plots=FALSE)}
+testletNam = NULL, transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, 
+sdRefPop=NULL, cutScores=NULL, type =c("FCIP", "MM"), writeCsv=FALSE, path=NULL, 
+plots=FALSE)}
 \arguments{
   \item{itParsIntT1}{
   A data frame containing the international item parameter estimates at time 1. 
@@ -87,6 +88,9 @@ Numeric. Mean of arbitrary metric to which parameters are transformed.
 }
   \item{sdtT}{
 Numeric. Standard deviation of arbitrary metric to which parameters are transformed.
+}
+  \item{mRefPop}{
+Numeric. The mean of the reference population.
 }
   \item{sdRefPop}{
 Numeric. The standard deviation in the reference population.

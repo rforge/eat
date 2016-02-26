@@ -1,6 +1,6 @@
 
 transformTo500 <- function(pars, mRefPop=NULL, sdRefPop=NULL, mtT=500, sdtT=100, wgts=NULL, type=c("itPar", "persPar"), cutScores=NULL) {
-	
+
 	wgts <-as.numeric(wgts)
 	res <- pars
 	

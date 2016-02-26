@@ -3,7 +3,7 @@
 eatTrend <- function(itParsIntT1, PVsT1, countriesT1, 
 itParsNatT1=NULL, jkzoneT1=NULL, jkrepT1=NULL, weightsT1=NULL, itParsIntT2, PVsT2, 
 countriesT2, itParsNatT2=NULL, weightsT2=NULL, jkzoneT2=NULL, jkrepT2=NULL, testletNam=NULL,
-transfTo500=TRUE, mtT=500, sdtT=100, sdRefPop=NULL, cutScores=NULL, type =c("FCIP", "MM"), writeCsv=FALSE, path=NULL, plots=FALSE) {
+transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL, type =c("FCIP", "MM"), writeCsv=FALSE, path=NULL, plots=FALSE) {
 
 	cat ( paste ("Hi! ", Sys.time(), "\n" ) ) 
 	stopifnot(class(itParsIntT1) == "data.frame")
@@ -89,7 +89,7 @@ transfTo500=TRUE, mtT=500, sdtT=100, sdRefPop=NULL, cutScores=NULL, type =c("FCI
 		if(transfTo500) {
 			
 			PV500T1 <- transformTo500(pars=PV500T1, mtT=mtT, sdtT=sdtT, wgts=weightsT1, type="persPar", cutScores=cutScores)
-			PV500T2 <- transformTo500(pars=PVsT2, mtT=mtT, sdtT=sdtT, type="persPar", cutScores=cutScores)
+			PV500T2 <- transformTo500(pars=PVsT2, mtT=mtT, sdtT=sdtT, mRefPop=mRefPop, sdRefPop=sdRefPop, type="persPar", cutScores=cutScores)
 					
 		} 
 		
@@ -127,12 +127,12 @@ transfTo500=TRUE, mtT=500, sdtT=100, sdRefPop=NULL, cutScores=NULL, type =c("FCI
 			PV500T1 <- PVsT1
 			PV500T2 <- PVsT2
 			PV500T2[,-1] <- apply(PV500T2[,-1],2,function(u) "-"(u,as.numeric(unname(Link3MM)))) 
-		
+
 			if(transfTo500) {
 			
 				PV500T1 <- transformTo500(pars=PV500T1, mtT=mtT, sdtT=sdtT, wgts=weightsT1, type="persPar", cutScores=cutScores)
-				PV500T2 <- transformTo500(pars=PV500T2, mtT=mtT, sdtT=sdtT, wgts=weightsT2, type="persPar", cutScores=cutScores)
-					
+				PV500T2 <- transformTo500(pars=PV500T2, mtT=mtT, sdtT=sdtT, mRefPop=mRefPop, sdRefPop=sdRefPop, type="persPar", cutScores=cutScores)
+	
 			}
 				
 		} else {
