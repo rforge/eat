@@ -1,7 +1,12 @@
 
 seKompstuf <- function(resCuts, cutScores, M1 , SD1 , M2 , SD2 , linkerror  ){
 
-	resCuts1 <- resCuts[-which(is.na(resCuts[,1])),]
+	if(any(is.na(resCuts[,1]))) {
+		resCuts1 <- resCuts[-which(is.na(resCuts[,1])),]
+	} else {
+		resCuts1 <- resCuts
+	}
+	
 
 	for(i in 1:dim(resCuts1)[1]) {
 		# Anteil Studie 1
