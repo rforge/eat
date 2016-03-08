@@ -59,8 +59,12 @@ addCuts <- function(valVec, cutVec) {
 	b <- paste0(rep(")", length(cutVec)),collapse="")
 	a <- paste0(a, collapse="")
 
-	ep <- parse(text = paste0(a, "\"0\"", b))
+	ep <- parse(text = paste0(a, "\"ERR\"", b))
 	res <- eval(ep)
+	
+	if(any(res == "ERR")) {
+		cat(paste("Warning! No cutscore defined for parameter value",  valVec[which(res == "ERR")] ,"in line:", which(res == "ERR"), "\n"))
+	}
 
 	return(res)
 }
