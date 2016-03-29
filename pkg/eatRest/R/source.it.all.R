@@ -116,7 +116,7 @@ source.it.all <- function ( folder="p:/ZKD/development" , use.zkd.conv = TRUE , 
 	}
 	
 	# excluden
-	if (!is.null(exclude)) tosource <- tosource [ !grepl ( exclude , tosource , fixed = TRUE ) ]
+	if (!is.null(exclude)) tosource <- tosource [ !tosource %in% exclude ]
 
 	# File finden
 	tosource <- unname ( mapply ( function ( tosource , files ) {
