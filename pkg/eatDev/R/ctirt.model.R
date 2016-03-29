@@ -9,7 +9,6 @@
 
 ctirt.model <- function ( d, id=NULL, manifestNames=NULL, timepoint.sep="_", lagNames=NULL, LAMBDA=NULL, verbose=TRUE ) {
 
-# browser()
 		# new environment
 		env <- new.env()
 		
@@ -19,11 +18,14 @@ ctirt.model <- function ( d, id=NULL, manifestNames=NULL, timepoint.sep="_", lag
 		# data preparation
 		invisible( prep.data( env ) )
 		
+		# checks
+		if( !get("F",env)==2 ) stop( "Only two latent variables are currently supported." )
 		
+		# create jags syntax
+		invisible( create.jags.syntax( env ) )
 		
-		
-		
-		
+# browser()		
+		# get("syntax",env )
 		
 }
 

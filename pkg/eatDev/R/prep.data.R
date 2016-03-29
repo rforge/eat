@@ -211,14 +211,16 @@ prep.data <- function ( env ) {
 		### console output ###
 		if ( verbose ) {
 				cat("preparing data\n")
-				cat( paste0( "                persons: ", J ,"\n") )
-				cat( paste0( "                  items: ", I ,"\n") )
-				cat( paste0( "       latent variables: ", F ,"\n") )
-				cat( paste0( "            time points: ", T ,"\n") )
-				cat( paste0( "              responses: ", R ," (missings excluded)\n") )
+				cat( paste0( "                      persons: ", J ,"\n") )
+				cat( paste0( "                        items: ", I ,"\n") )
+				cat( paste0( "             latent variables: ", F ,"\n") )
+				cat( paste0( "                  time points: ", T ,"\n") )
+				cat( paste0( " responses (without missings): ", R ,"\n") )
 				Tj.string <- ifelse( sd(Tj)==0, as.character(T), paste0("M=", formatC(mean(Tj),format="f",digits=2), " min=", min(Tj), " max=", max(Tj)) )
-				cat( paste0( " time points per person: ", Tj.string, "\n") )
-				cat( paste0( "            lag pattern: ", nrow(Lpat),"\n") )
+				cat( paste0( "       time points per person: ", Tj.string, "\n") )
+				cat( paste0( "                 lag patterns: ", nrow(Lpat),"\n") )
 		}
 		
+		# return
+		TRUE
 }
