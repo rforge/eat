@@ -221,8 +221,8 @@ create.jags.syntax <- function ( env ) {
 		
 		
 		### (over)write relevant variables to environment ###
-		syntax <- x
-		obj <- c( "syntax" )
+		jags.syntax <- x
+		obj <- c( "jags.syntax" )
 		eval( parse ( text=paste0( "assign( '",obj, "' , get('",obj,"') , envir=env )" ) ) )
 
 		# return
