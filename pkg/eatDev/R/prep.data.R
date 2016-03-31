@@ -137,27 +137,35 @@ prep.data <- function ( env ) {
 		### Stuff for measurement model ###
 		## initialize default measurement parameters (if not set by user)
 		
-		# default of LAMBDA: each item mapped on one latent variable
-		if( is.null( LAMBDA ) ) {
+		# default of Lambda: each item mapped on one latent variable
+		if( is.null( Lambda ) ) {
 				Lambda <- array( dim=c(I,I,T) )
 				eval( parse( text = paste0( "Lambda[,,",1:T,"] <- diag( I )" ) ) )
 				rownames( Lambda ) <- item.names
 				colnames( Lambda ) <- item.names
+
+				# output
+				default[length(default)+1] <- paste0( "                          loading matrix Lambda: IxFxT (", I, "x", I, "x", T, ") matrix, each manifest variable to one latent variable (so no measurement model is specified) " )
+				#                                                                                                         no error here, F is not yet set
 		} else {
 
-				# if LAMBDA is set by user, make it time variant if not
-				if ( length( dim( LAMBDA ) ) < 3 ) {
-						Lambda <- array( dim=c( dim( LAMBDA ),T) )
-						# eval( parse( text = paste0( "Lambda[,,",1:T,"] <- LAMBDA" ) ) )
-						Lambda[,,] <- LAMBDA
+				# if Lambda is set by user, make it time variant if not
+				if ( length( dim( Lambda ) ) < 3 ) {
+						
+						Lambda2 <- Lambda
+
+						# to constrain parameters over time if only one Lambda matrix is provided
+						Lambda2 <- label.pars(Lambda2,"Lambda")
+						
+						Lambda <- array( dim=c( dim( Lambda2 ),T) )
+						# eval( parse( text = paste0( "Lambda[,,",1:T,"] <- Lambda2" ) ) )
+						Lambda[,,] <- Lambda2
 						
 						# set row- and colnames if exist
-						rownames( Lambda ) <- rownames( LAMBDA )
-						colnames( Lambda ) <- colnames( LAMBDA )
-				} else {
-						Lambda <- LAMBDA
-				}
-
+						rownames( Lambda ) <- rownames( Lambda2 )
+						colnames( Lambda ) <- colnames( Lambda2 )
+				} 
+				
 				# if rownames are set then sort according to data set, important!!!
 				if ( !is.null( rownames( Lambda ) ) ) {
 						
@@ -180,18 +188,29 @@ prep.data <- function ( env ) {
 				# }
 				
 				# if no colnames are set, default to thetaX
-				if ( is.null( colnames( Lambda ) ) ) colnames( Lambda ) <- paste0( "theta", formatC( 1:ncol(Lambda), format="fg", flag="0", width=max(sapply(1:ncol(Lambda),nchar)) ) )
+				# if ( is.null( colnames( Lambda ) ) ) colnames( Lambda ) <- paste0( "theta", formatC( 1:ncol(Lambda), format="fg", flag="0", width=max(sapply(1:ncol(Lambda),nchar)) ) )
 		}
-
+		# NAs to labeled parameters
+		Lambda <- label.pars(Lambda,"Lambda")
+		
 		# number of latent variables (factors)
 		F <- ncol( Lambda )
+		# names of latent variables
+		latent.names <- colnames( Lambda )
 		
 		# intercepts/difficulty of manifest variables
-		if ( !exists("beta",inherits=FALSE) | is.null(beta) ) {
+		if ( !exists("beta",inherits=FALSE) || is.null(beta) ) {
 				
-				# default beta
-				beta <- matrix( paste0( item.names, "_beta"), nrow=I, ncol=T )
-				rownames( beta ) <- item.names
+				# default beta (constrained equal over time)
+				beta2 <- rep( NA, I )
+				names( beta2 ) <- item.names
+				# to constrain parameters over time if only one Lambda matrix is provided
+				beta2 <- label.pars(beta2,"beta")
+				beta <- matrix( beta2, nrow=I, ncol=T )
+				
+				# maybe set col/rownames, dont know
+				# rownames( beta ) <- item.names
+				# colnames( beta ) <- item.names
 
 				# set first beta per latent variable and time point to 0
 				inds <- do.call( "rbind", sapply( 1:T, function( t ) apply( Lambda[,,t], 2, function( col ) which( !col==0 )[1] ), simplify=FALSE ) )
@@ -199,7 +218,7 @@ prep.data <- function ( env ) {
 				eval( parse( text=do ) )
 				
 				# output
-				default[length(default)+1] <- paste0( "      manifest intercept/difficulty vector beta: IxT (", I, "x", T, ") matrix, first item per latent variable set to 0, all betas constrained to be equal across time. " )
+				default[length(default)+1] <- paste0( "      manifest intercept/difficulty vector beta: IxT (", I, "x", T, ") matrix, first item per latent variable set to 0, all betas constrained to be equal across time " )
 
 		} else {
 
@@ -212,7 +231,9 @@ prep.data <- function ( env ) {
 								names( beta2 ) <- item.names
 						}
 						# set parameters to be estimated
-						beta2[is.na(beta2)] <- paste0( names(beta2[is.na(beta2)]), "_beta" )
+						# beta2[is.na(beta2)] <- paste0( names(beta2[is.na(beta2)]), "_beta" )
+						# to constrain parameters over time if only one Lambda matrix is provided
+						beta2 <- label.pars(beta2,"beta")
 						
 						beta <- matrix( NA, nrow=length(beta), ncol=T )
 						# eval( parse( text = paste0( "Lambda[,,",1:T,"] <- LAMBDA" ) ) )
@@ -230,7 +251,9 @@ prep.data <- function ( env ) {
 						rownames( beta ) <- item.names
 				}
 		}
-
+		# NAs to labeled parameters
+		beta <- label.pars(beta,"beta")
+		
 		# if gaussian, error var/cov matrix
 		### TODO: time variant epsilon
 		if ( measurement.model$family == "gaussian" ) {
@@ -240,7 +263,8 @@ prep.data <- function ( env ) {
 		} else {
 				prec.eps <- NULL
 		}
-
+		# NAs to labeled parameters
+		prec.eps <- label.pars(prec.eps,"prec.eps")
 		
 		### Stuff for continuous time model ###		
 		
@@ -249,7 +273,7 @@ prep.data <- function ( env ) {
 
 		# I2 (diagonal matrix, for ct error calculation)
 		# n^2,n^2 with n of drift matrix (Oud/Delsing, 2010, p. 219)
-		I2 <- diag( F^F )
+		I2 <- diag( F^2 )
 
 		# for Kronecker product
 		# width of drift matrix A 
@@ -268,18 +292,28 @@ prep.data <- function ( env ) {
 				A <- matrix( NA, nrow=F, ncol=F )
 				default[length(default)+1] <- paste0( "                                 drift matrix A: freely estimable FxF (", F, "x", F, ") matrix" )
 		}
+		# NAs to labeled parameters
+		A <- label.pars(A,"A")
+	
 		# process error matrix Q
 		if ( !exists("Q",inherits=FALSE) || is.null(Q) ) {
 				Q <- matrix( NA, nrow=F, ncol=F )
 				default[length(default)+1] <- paste0( "                         process error matrix Q: freely estimable symmetric FxF (", F, "x", F, ") matrix" )
 		}
+		# NAs to labeled parameters
+		Q. <- label.pars(Q,"Q")		
+		# make Q (potentially) symmetric again (do not overwrite user specific labeled parameters, even if unsymmetric matrix
+		Q.[upper.tri(Q.)][ is.na( Q[upper.tri(Q)] ) ]  <- Q.[lower.tri(Q.)][ is.na( Q[lower.tri(Q)] ) ]  
+		Q <- Q.
+		
 		# ct intercepts b
 		if ( !exists("b",inherits=FALSE) || is.null(b) ) {
 				b <- rep( NA, F )
 				default[length(default)+1] <- paste0( "             continuous time intercept vector b: freely estimable vector of length F (", F, ") matrix" )
 
 		}
-		
+		# NAs to labeled parameters
+		b <- label.pars(b,"b")		
 
 		### (over)write relevant variables to environment ###
 		obj <- c( "d", "col.y", "col.id", "col.item", "col.time", "R", "J", "I", "T", "Tj", "P", "Tp", "L", "Lpat", "Lpat.group", "Lambda", "beta", "prec.eps", "F", "I1", "I2", "Aw", "I1w", "Qt.prec.replace", "A", "b", "Q" )
@@ -306,7 +340,30 @@ prep.data <- function ( env ) {
 						cat("\n")
 				}
 		}
-		
+
 		# return
 		TRUE
+}
+
+# NAs to labeled parameters
+label.pars <- function(m,m.name) {
+
+		if( is.null(dim(m)) ) {
+				# vector
+				if ( is.null( names( m ) ) ) nams <- seq(along=m)[is.na(m)] else nams <- names( m )
+				m[is.na(m)] <- paste0( m.name, "_", nams )
+		} else {
+				# arrays
+				m. <- eval(parse(text=paste0( "Reduce(function(x, y) merge(x, y, by=NULL, all=TRUE),list(", paste( paste0( "1:", dim(m) ), collapse="," ), "),accumulate=FALSE )" )))
+				att <- attributes(m)$dimnames
+				if ( is.null( att ) ) att <- sapply( seq(along=dim(m)), function(x) NULL, simplify=FALSE )
+				do <- paste0( "if ( is.null( att[[",seq(along=dim(m)),"]] ) )   att[[",seq(along=dim(m)),"]] <- as.character( 1:",dim(m)," ) " )
+				eval( parse( text = do ) )
+				nams <- apply( Reduce(function(x, y) merge(x, y, by=NULL, all=TRUE), att, accumulate=FALSE ), 1, function (z) paste( z, collapse="" ) )
+				m.[,ncol(m.)+1] <- 1:nrow(m.)
+				do <- apply( m. , 1, function ( z ) paste0( "if( is.na( m[", paste(z[-length(z)],collapse=",") ,"] ) ) m[", paste(z[-length(z)],collapse=",") ,"] <- paste0( '", m.name, "_', nams[", paste(z[length(z)],collapse=","), "] ) " )  )
+				eval(parse(text=do))
+		}
+
+		return(m)
 }
