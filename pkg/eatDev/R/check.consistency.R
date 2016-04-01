@@ -8,7 +8,7 @@ check.consistency <- function ( env ) {
 		error <- character(0)
 		
 		# console output
-		if ( verbose ) cat("checking consistency\n")
+		if ( verbose ) cat("checking consistency\n\n")
 
 
 		# F
@@ -18,29 +18,29 @@ check.consistency <- function ( env ) {
 				
 		### measurement stuff ###
 		# Lambda
-		if ( verbose ) cat( paste0( "         loading matrix Lambda is IxFxT (", I, "x", F, "x", T, "): "  ) )
-		if ( identical( dim(Lambda), c(I,F,T) ) ) { if ( verbose ) cat( "OK\n" ) } 
-		   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "loading matrix Lambda is not IxFxT (", I, "x", F, "x", T, ") | check Lambda matrix" ) }		
+		if ( verbose ) cat( paste0( "             loading matrix Lambda is IxF (", I, "x", F, "): "  ) )
+		if ( identical( dim(Lambda), c(I,F) ) ) { if ( verbose ) cat( "OK\n" ) } 
+		   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "loading matrix Lambda is not IxFxT (", I, "x", F, ") | check Lambda matrix" ) }		
 
 		# beta
-		if ( verbose ) cat( paste0( "   manifest int./diff. vector beta is IxT (", I, "x", T, "): "  ) )
-		if ( identical( dim(beta), c(I,T) ) ) { if ( verbose ) cat( "OK\n" ) } 
-		   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "manifest intercept vector beta is not IxT (", I, "x", T, ") | check data and/or beta vector" ) }		
+		if ( verbose ) cat( paste0( "       manifest int./diff. vector beta is I (", I, "): "  ) )
+		if ( length(beta)==I ) { if ( verbose ) cat( "OK\n" ) } 
+		   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "manifest intercept vector beta is not of length I (", I, ") | check data and/or beta vector" ) }
 
-	   # prec.eps
+	   # Epsilon
 		if ( measurement.model$family == "gaussian" ) {		
 				# IxI
-				if ( verbose ) cat( paste0( " measurement error matrix prec.eps is IxI (", I, "x", I, "): "  ) )
-				if ( identical( dim(prec.eps), c(I,I) ) ) { if ( verbose ) cat( "OK\n" ) } 
-				   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "measurement error matrix prec.eps is not IxI (", I, "x", I, ") | check data and/or prec.eps matrix" ) }						
+				if ( verbose ) cat( paste0( "  measurement error matrix Epsilon is IxI (", I, "x", I, "): "  ) )
+				if ( identical( dim(Epsilon), c(I,I) ) ) { if ( verbose ) cat( "OK\n" ) } 
+				   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "measurement error matrix Epsilon is not IxI (", I, "x", I, ") | check data and/or Epsilon matrix" ) }						
 				# symmetric matrix
-				if ( verbose ) cat( paste0( "                          prec.eps is symmetric: "  ) )
-				if ( identical( prec.eps[lower.tri( prec.eps )], prec.eps[upper.tri( prec.eps )] ) ) { if ( verbose ) cat( "OK\n" ) } 
-				   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "measurement error matrix prec.eps is not symmetric | check prec.eps" ) }
+				if ( verbose ) cat( paste0( "                           Epsilon is symmetric: "  ) )
+				if ( identical( Epsilon[lower.tri( Epsilon )], Epsilon[upper.tri( Epsilon )] ) ) { if ( verbose ) cat( "OK\n" ) } 
+				   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "measurement error matrix Epsilon is not symmetric | check Epsilon" ) }
 				   # uncorrelated errors
 				if ( verbose ) cat( paste0( "                uncorrelated measurement errors: "  ) )
-				if ( all( c( prec.eps[lower.tri( prec.eps )], prec.eps[upper.tri( prec.eps )] ) == 0 ) ) { if ( verbose ) cat( "OK\n" ) } 
-				   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "off-diagonal elements of measurement error matrix are not 0 (correlated errors are currently not supported) | check prec.eps matrix" ) }		
+				if ( all( c( Epsilon[lower.tri( Epsilon )], Epsilon[upper.tri( Epsilon )] ) == 0 ) ) { if ( verbose ) cat( "OK\n" ) } 
+				   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "off-diagonal elements of measurement error matrix are not 0 (correlated errors are currently not supported) | check Epsilon matrix" ) }		
 		}
 		
 		### continuous time stuff ###
@@ -60,16 +60,10 @@ check.consistency <- function ( env ) {
 		if ( verbose ) cat( paste0( "    continuous time intercept vector b is F (", F, "): "  ) )
 		if ( identical( length(b), F ) ) { if ( verbose ) cat( "OK\n" ) } 
 		   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "continuous time intercept vector b is not of length F (", F, ") | check Lambda and/or b vector" ) }		
-		
-			
-		# independent of verbose, output errors to console
-		if( length(error)>0 ) {
-				cat( paste0( "\nERRORS occured:\n" ) )
-				cat( paste0( paste( paste0("[",seq(along=error),"] ",error), collapse="\n" ), "\n" ) )
-				cat( paste0( "\nDO NOT RUN THE MODEL\n" ) )
-		}
-		
-		# if any errors return FALSE	
-		if( length(error)>0 ) return( FALSE ) else return( TRUE )
+		# at the end line break
+		if ( verbose ) cat( paste0( "\n" ) )
+
+	
+		return( error )
 
 }

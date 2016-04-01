@@ -11,22 +11,22 @@ prep.data <- function ( env ) {
 		# default vector for console output
 		default <- character(0)
 		
-		# lagNames
-		if ( is.null( lagNames ) ) {
+		# lag.names
+		if ( is.null( lag.names ) ) {
 				# search for standard named lag variables
 				l <- grepl( "^dT\\d+$", colnames(d) )
 				if ( any(l) ) {
-						lagNames <- colnames(d)[l]
+						lag.names <- colnames(d)[l]
 				} 
 		}
 		
 		# number of lags
-		L <- length( lagNames )
+		L <- length( lag.names )
 		
 		# move lags to a matrix and delete from d
-		if ( !is.null( lagNames ) ) {
-				Lags <- as.matrix( d[,lagNames,drop=FALSE] )
-				d <- d[,!colnames(d) %in% lagNames,drop=FALSE]
+		if ( !is.null( lag.names ) ) {
+				Lags <- as.matrix( d[,lag.names,drop=FALSE] )
+				d <- d[,!colnames(d) %in% lag.names,drop=FALSE]
 		} else {
 				Lags <- NULL
 		}
@@ -102,11 +102,11 @@ prep.data <- function ( env ) {
 
 		# stop if no lags and more than one time point
 		if ( T > 1 & is.null( Lags ) ) {
-				stop( "No time lags specified. Check or explicitely set argument lagNames ." , call. = TRUE )
+				stop( "No time lags specified. Check or explicitely set argument lag.names ." , call. = TRUE )
 		}
 		# stop if number of lags does not match number of time points minus 1
 		if ( T > 1 & L!=T-1 ) {
-				stop( "Number of time lags is not equal to number of time points minus 1. Check colnames of data, arguments timepoint.sep, and lagNames" , call. = TRUE )
+				stop( "Number of time lags is not equal to number of time points minus 1. Check colnames of data, arguments timepoint.sep, and lag.names" , call. = TRUE )
 		}		
 		
 		# different lag patterns
@@ -136,65 +136,47 @@ prep.data <- function ( env ) {
 		
 		### Stuff for measurement model ###
 		## initialize default measurement parameters (if not set by user)
-		
-		# default of Lambda: each item mapped on one latent variable
+
+		## default of Lambda: each item mapped on one latent variable
 		if( is.null( Lambda ) ) {
-				Lambda <- array( dim=c(I,I,T) )
-				eval( parse( text = paste0( "Lambda[,,",1:T,"] <- diag( I )" ) ) )
+				
+				# diagonal matrix
+				Lambda <- diag( 1, I )
+				
+				# rownames are item names
 				rownames( Lambda ) <- item.names
-				colnames( Lambda ) <- item.names
+				
+				# default colnames to thetaX
+				colnames( Lambda ) <- paste0( "theta", formatC( 1:ncol(Lambda), format="fg", flag="0", width=max(sapply(1:ncol(Lambda),nchar)) ) )
 
 				# output
-				default[length(default)+1] <- paste0( "                          loading matrix Lambda: IxFxT (", I, "x", I, "x", T, ") matrix, each manifest variable to one latent variable (so no measurement model is specified) " )
-				#                                                                                                         no error here, F is not yet set
-		} else {
-
-				# if Lambda is set by user, make it time variant if not
-				if ( length( dim( Lambda ) ) < 3 ) {
-						
-						Lambda2 <- Lambda
-
-						# to constrain parameters over time if only one Lambda matrix is provided
-						Lambda2 <- label.pars(Lambda2,"Lambda")
-						
-						Lambda <- array( dim=c( dim( Lambda2 ),T) )
-						# eval( parse( text = paste0( "Lambda[,,",1:T,"] <- Lambda2" ) ) )
-						Lambda[,,] <- Lambda2
-						
-						# set row- and colnames if exist
-						rownames( Lambda ) <- rownames( Lambda2 )
-						colnames( Lambda ) <- colnames( Lambda2 )
-				} 
+				default[length(default)+1] <- paste0( "                          loading matrix Lambda: IxF (", I, "x", I, ") matrix, each manifest variable to one latent variable (so no measurement model is specified) " )
+				#                                                                                                           no error here, F is not yet set
 				
+
+		
+		} else {
+				## Lambda is set by user ##
+
 				# if rownames are set then sort according to data set, important!!!
 				if ( !is.null( rownames( Lambda ) ) ) {
-						
-						eval( parse( text = paste0( "Lambda[,,",1:T,"] <- Lambda[match( item.names, rownames( Lambda[,,",1:T,"] ) ),,",1:T,"] " ) ) )
-						rownames( Lambda ) <- item.names
-						# actually not necessary to loop over T, as rownames are always the same, still works too
-						
-				} else {
+						Lambda <- Lambda[ match( item.names, rownames( Lambda ) ), ]
+				} #else {
 						# if no rownames are set, assume that LAMBDA is sorted as occurrence of variables in data set
-						rownames( Lambda ) <- item.names
-				}
+				#		rownames( Lambda ) <- item.names
+				#}
 				
-				# if colnames are set, then sort them consistently over time
-				# should be sorted by user, just to be sure
-				# !!!actually, matrices cannot have different colnames!!! -> not necessary
-				# if ( !is.null( colnames( Lambda ) ) ) {
-						# consistent.cn <- unique( do.call("c", sapply( 1:dim(Lambda)[3], function(x) colnames( Lambda[,,x] ), simplify=FALSE ) ) )
-						# eval( parse( text = paste0( "Lambda[,,",1:T,"] <- Lambda[,match( consistent.cn, colnames( Lambda[,,",1:T,"] ) ),",1:T,"] " ) ) )
-						# colnames( Lambda ) <- consistent.cn
-				# }
-				
-				# if no colnames are set, default to thetaX
-				# if ( is.null( colnames( Lambda ) ) ) colnames( Lambda ) <- paste0( "theta", formatC( 1:ncol(Lambda), format="fg", flag="0", width=max(sapply(1:ncol(Lambda),nchar)) ) )
 		}
+		# mode: manifest to latent 1:1
+		# if ( all( sd(dim(Lambda))==0 ) & all( Lambda[lower.tri( Lambda )] == 0 ) & all( Lambda[upper.tri( Lambda )] == 0 ) & all( diag( Lambda ) == 1 )
+		man2lat <- ifelse ( sd(dim(Lambda))==0 & identical( Lambda, diag(1,dim(Lambda)[1]) ) , TRUE, FALSE )
+		
 		# NAs to labeled parameters
 		Lambda <- label.pars(Lambda,"Lambda")
 		
 		# number of latent variables (factors)
 		F <- ncol( Lambda )
+		
 		# names of latent variables
 		latent.names <- colnames( Lambda )
 		
@@ -202,70 +184,65 @@ prep.data <- function ( env ) {
 		if ( !exists("beta",inherits=FALSE) || is.null(beta) ) {
 				
 				# default beta (constrained equal over time)
-				beta2 <- rep( NA, I )
-				names( beta2 ) <- item.names
-				# to constrain parameters over time if only one Lambda matrix is provided
-				beta2 <- label.pars(beta2,"beta")
-				beta <- matrix( beta2, nrow=I, ncol=T )
-				
-				# maybe set col/rownames, dont know
-				# rownames( beta ) <- item.names
-				# colnames( beta ) <- item.names
-
-				# set first beta per latent variable and time point to 0
-				inds <- do.call( "rbind", sapply( 1:T, function( t ) apply( Lambda[,,t], 2, function( col ) which( !col==0 )[1] ), simplify=FALSE ) )
-				do <- do.call( "c", mapply( function( t, row ) paste0( "beta[",row,",",1:length(t), "] <- 0" ) , data.frame(inds), 1:ncol(inds), SIMPLIFY=FALSE ) )
+				beta <- rep( NA, I )
+				names( beta ) <- item.names
+	
+				# set first beta per latent variable to 0
+				inds <- apply( Lambda, 2, function( col ) which( !col==0 )[1] )
+				do <- paste0( "beta[",inds,"] <- 0" )
 				eval( parse( text=do ) )
 				
 				# output
-				default[length(default)+1] <- paste0( "      manifest intercept/difficulty vector beta: IxT (", I, "x", T, ") matrix, first item per latent variable set to 0, all betas constrained to be equal across time " )
+				default[length(default)+1] <- paste0( "      manifest intercept/difficulty vector beta: I (", I, ") vector, first item per latent variable set to 0 " )
 
 		} else {
+				## beta is set by user ##
 
-				# if beta is set by user, make it time variant if not
-				if ( is.null( dim( beta ) ) ) {
-
-						beta2 <- beta
+				# if names are set by user then sort according to data set, important!!!
+				if ( !is.null( names( beta ) ) ) {
+						beta <- beta[ match( item.names, names( beta ) ) ]
+				} #else {
 						# if no names are set, assume that beta is sorted as occurrence of variables in data set
-						if ( is.null( names( beta2 ) ) ) {
-								names( beta2 ) <- item.names
-						}
-						# set parameters to be estimated
-						# beta2[is.na(beta2)] <- paste0( names(beta2[is.na(beta2)]), "_beta" )
-						# to constrain parameters over time if only one Lambda matrix is provided
-						beta2 <- label.pars(beta2,"beta")
-						
-						beta <- matrix( NA, nrow=length(beta), ncol=T )
-						# eval( parse( text = paste0( "Lambda[,,",1:T,"] <- LAMBDA" ) ) )
-						beta[,] <- beta2
-						
-						# set item names
-						rownames( beta ) <- names( beta2 )
-				} 
-
-				# if rownames are set then sort according to data set, important!!!
-				if ( !is.null( rownames( beta ) ) ) {
-						beta <- beta[ match( item.names, rownames( beta ) ), ]
-				} else {
-						# if no rownames are set, assume that beta is sorted as occurrence of variables in data set
-						rownames( beta ) <- item.names
-				}
+				#		names( beta ) <- item.names
+				#}
 		}
 		# NAs to labeled parameters
 		beta <- label.pars(beta,"beta")
-		
+
 		# if gaussian, error var/cov matrix
-		### TODO: time variant epsilon
 		if ( measurement.model$family == "gaussian" ) {
-				if ( !exists("prec.eps",inherits=FALSE) || is.null(prec.eps) ) {
-						prec.eps <- diag( NA, I )
+				
+				# default of Epsilon
+				if ( !exists("Epsilon",inherits=FALSE) || is.null(Epsilon) ) {
+						
+						if ( man2lat ) {
+								# if manifest are mapped to latent, all 0
+								Epsilon <- diag( 0, I )
+						} else {
+								# uncorrelated errors
+								Epsilon <- diag( NA, I )
+						}
+						rownames( Epsilon ) <- colnames( Epsilon ) <- item.names
+				
+				} else {
+						## Epsilon is set by user ##
+
+						# if names are set by user then sort according to data set, important!!!
+						if ( !is.null( colnames( Epsilon ) ) ) {
+								Epsilon <- Epsilon[ , match( item.names, colnames( Epsilon ) ) ]
+						}
+						if ( !is.null( rownames( Epsilon ) ) ) {
+								Epsilon <- Epsilon[ match( item.names, rownames( Epsilon ) ) , ]
+						}
+
 				}
 		} else {
-				prec.eps <- NULL
+				Epsilon <- NULL
 		}
 		# NAs to labeled parameters
-		prec.eps <- label.pars(prec.eps,"prec.eps")
+		Epsilon <- label.pars(Epsilon,"Epsilon")
 		
+
 		### Stuff for continuous time model ###		
 		
 		# I1 (diagonal matrix, same structure as drift matrix)
@@ -290,6 +267,7 @@ prep.data <- function ( env ) {
 		# drift matrix A
 		if ( !exists("A",inherits=FALSE) || is.null(A) ) {
 				A <- matrix( NA, nrow=F, ncol=F )
+				if ( !is.null( latent.names ) ) colnames( A ) <- rownames( A ) <- latent.names
 				default[length(default)+1] <- paste0( "                                 drift matrix A: freely estimable FxF (", F, "x", F, ") matrix" )
 		}
 		# NAs to labeled parameters
@@ -298,6 +276,7 @@ prep.data <- function ( env ) {
 		# process error matrix Q
 		if ( !exists("Q",inherits=FALSE) || is.null(Q) ) {
 				Q <- matrix( NA, nrow=F, ncol=F )
+				if ( !is.null( latent.names ) ) colnames( Q ) <- rownames( Q ) <- latent.names
 				default[length(default)+1] <- paste0( "                         process error matrix Q: freely estimable symmetric FxF (", F, "x", F, ") matrix" )
 		}
 		# NAs to labeled parameters
@@ -309,6 +288,7 @@ prep.data <- function ( env ) {
 		# ct intercepts b
 		if ( !exists("b",inherits=FALSE) || is.null(b) ) {
 				b <- rep( NA, F )
+				if ( !is.null( latent.names ) ) names( b ) <- latent.names
 				default[length(default)+1] <- paste0( "             continuous time intercept vector b: freely estimable vector of length F (", F, ") matrix" )
 
 		}
@@ -316,13 +296,13 @@ prep.data <- function ( env ) {
 		b <- label.pars(b,"b")		
 
 		### (over)write relevant variables to environment ###
-		obj <- c( "d", "col.y", "col.id", "col.item", "col.time", "R", "J", "I", "T", "Tj", "P", "Tp", "L", "Lpat", "Lpat.group", "Lambda", "beta", "prec.eps", "F", "I1", "I2", "Aw", "I1w", "Qt.prec.replace", "A", "b", "Q" )
+		obj <- c( "d", "col.y", "col.id", "col.item", "col.time", "R", "J", "I", "T", "Tj", "P", "Tp", "L", "Lpat", "Lpat.group", "Lambda", "beta", "Epsilon", "F", "I1", "I2", "Aw", "I1w", "Qt.prec.replace", "A", "b", "Q" )
 		eval( parse ( text=paste0( "assign( '",obj, "' , get('",obj,"') , envir=env )" ) ) )
 
 		
 		### console output ###
 		if ( verbose ) {
-				cat("preparing data\n")
+				cat("preparing data\n\n")
 				cat( paste0( "                                    persons (J): ", J ,"\n") )
 				cat( paste0( "                                      items (I): ", I ,"\n") )
 				cat( paste0( "                           latent variables (F): ", F ,"\n") )
@@ -334,11 +314,14 @@ prep.data <- function ( env ) {
 				Tp.string <- ifelse( all(Tp==Tp[1]), as.character(Tp[1]), paste0("M=", formatC(mean(Tp),format="f",digits=2), " min=", min(Tp), " max=", max(Tp)) )
 				cat( paste0( "                   time points per pattern (Tp): ", Tp.string, "\n") )
 				cat("\n")
+				cat( paste0( "setting defaults\n\n" ) )
 				if( length(default)>0 ) {
-						cat( paste0( "\nsetting defaults\n" ) )
 						cat( paste0( paste( default, collapse="\n" ), "\n" ) )
 						cat("\n")
+				} else {
+						cat( "                     no defaults set, everything is entirely user specified\n\n" )
 				}
+				
 		}
 
 		# return
@@ -349,18 +332,29 @@ prep.data <- function ( env ) {
 label.pars <- function(m,m.name) {
 
 		if( is.null(dim(m)) ) {
-				# vector
-				if ( is.null( names( m ) ) ) nams <- seq(along=m)[is.na(m)] else nams <- names( m )
+				## vector
+				if ( is.null( names( m ) ) ) nams <- seq(along=m)[is.na(m)] else nams <- names( m )[is.na(m)]
 				m[is.na(m)] <- paste0( m.name, "_", nams )
 		} else {
-				# arrays
+				## arrays
 				m. <- eval(parse(text=paste0( "Reduce(function(x, y) merge(x, y, by=NULL, all=TRUE),list(", paste( paste0( "1:", dim(m) ), collapse="," ), "),accumulate=FALSE )" )))
 				att <- attributes(m)$dimnames
 				if ( is.null( att ) ) att <- sapply( seq(along=dim(m)), function(x) NULL, simplify=FALSE )
 				do <- paste0( "if ( is.null( att[[",seq(along=dim(m)),"]] ) )   att[[",seq(along=dim(m)),"]] <- as.character( 1:",dim(m)," ) " )
 				eval( parse( text = do ) )
-				nams <- apply( Reduce(function(x, y) merge(x, y, by=NULL, all=TRUE), att, accumulate=FALSE ), 1, function (z) paste( z, collapse="" ) )
+				nams.dfr <- Reduce(function(x, y) merge(x, y, by=NULL, all=TRUE), att, accumulate=FALSE )
+				
+				# parameter names
+				nams <- apply( nams.dfr, 1, function (z) paste( z, collapse="_" ) )
+
+				# if all names equal then only one name
+				eq <- apply( nams.dfr, 1, function(x) all( x==x[1] ) )
+				if ( any( eq ) ) nams[eq] <- as.character( nams.dfr[eq,1] )
+				
+				# add indicator as additional column
 				m.[,ncol(m.)+1] <- 1:nrow(m.)
+				
+				# set name if cell is NA
 				do <- apply( m. , 1, function ( z ) paste0( "if( is.na( m[", paste(z[-length(z)],collapse=",") ,"] ) ) m[", paste(z[-length(z)],collapse=",") ,"] <- paste0( '", m.name, "_', nams[", paste(z[length(z)],collapse=","), "] ) " )  )
 				eval(parse(text=do))
 		}
