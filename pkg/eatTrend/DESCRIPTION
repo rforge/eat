@@ -1,10 +1,10 @@
 Package: eatTrend
 Type: Package
 Title: Estimate National Trends in International Large-Scale Assessments
-Version: 0.0.12
-Depends: R (>= 3.2.1), eatRep
+Version: 0.0.13
+Depends: R (>= 3.2.2), eatRep
 Imports: SDMTools, eatPrep, reshape2, sirt
-Date: 2016-03-08
+Date: 2016-04-11
 Author: Karoline Sachse
 Maintainer: Karoline Sachse <karoline.sachse@iqb.hu-berlin.de>
 Description: Linking and Standard Error Pooling for Estimating National Trends in International Large-Scale Assessments. 
