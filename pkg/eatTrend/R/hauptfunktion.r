@@ -3,9 +3,16 @@
 eatTrend <- function(itParsIntT1, PVsT1, countriesT1, 
 itParsNatT1=NULL, jkzoneT1=NULL, jkrepT1=NULL, weightsT1=NULL, itParsIntT2, PVsT2, 
 countriesT2, itParsNatT2=NULL, weightsT2=NULL, jkzoneT2=NULL, jkrepT2=NULL, testletNam=NULL,
-transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL, type =c("FCIP", "MM"), writeCsv=FALSE, path=NULL, plots=FALSE) {
+transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL, type =c("FCIP", "MM"), writeCsv=FALSE, path=NULL, plots=FALSE, backwards=FALSE) {
 
 	cat ( paste ("Hi! ", Sys.time(), "\n" ) ) 
+	if(backwards) {
+		if(type=="MM") {
+			stop("'backwards' is not yet implemented for type=MM \n")
+		} else {
+			cat("'backwards' is beta. please be cautious \n")
+		}
+	}
 	stopifnot(class(itParsIntT1) == "data.frame")
 	stopifnot(class(PVsT1) == "data.frame")
 	stopifnot(class(itParsIntT2) == "data.frame")
@@ -129,6 +136,14 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 			PV500T2[,-1] <- apply(PV500T2[,-1],2,function(u) "-"(u,as.numeric(unname(Link3MM)))) 
 
 			if(transfTo500) {
+
+				if(backwards) {
+				datBB <- subset(PVsT2, substr(PVsT2[,1],1,2) == "19" | substr(PVsT2[,1],1,2) == "59")
+					mPop2 <- mean(apply(PVsT2[,-1],2,SDMTools:::wt.mean,as.numeric(weightsT2)))
+					sdPop2 <- mean(apply(PVsT2[,-1],2,SDMTools:::wt.sd,as.numeric(weightsT2)))
+					logitCutsT2 <- (((cutScores-mtT)/sdtT)*sdPop2)+mPop2
+					cutScores <- ((logitCutsT2-as.numeric(unname(Link3MM))-mRefPop)/sdRefPop)*sdtT+mtT					
+				}
 			
 				PV500T1 <- transformTo500(pars=PV500T1, mtT=mtT, sdtT=sdtT, wgts=weightsT1, type="persPar", cutScores=cutScores)
 				PV500T2 <- transformTo500(pars=PV500T2, mtT=mtT, sdtT=sdtT, mRefPop=mRefPop, sdRefPop=sdRefPop, type="persPar", cutScores=cutScores)
@@ -318,6 +333,37 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 	}
 	M1 <- mean(M1)
 	SD1 <- mean(SD1)
+	
+	
+	seKompstuf <- function(resCuts, cutScores, M1 , SD1 , M2 , SD2 , linkerror  ){
+		if(any(is.na(resCuts[,1]))) {
+			resCuts1 <- resCuts[-which(is.na(resCuts[,1])),]
+		} else {
+			resCuts1 <- resCuts
+		}	
+		for(i in 1:dim(resCuts1)[1]) {
+			# Anteil Studie 1
+			p1 <- resCuts1$estT1[i]
+			# Anteil Studie 2
+			p2 <- resCuts1$estT2[i]
+			# Kompetenzstufenverteilungsdifferenz
+			delta <- p2 - p1 
+			# Varianz von delta
+			komp <- NULL
+			komp[1] <- cutScores[resCuts1$parameter[i]]
+			if(which(cutScores %in% cutScores[resCuts1$parameter[i]]) =="1") {
+				komp[2] <- 100000000 } else {
+				komp[2] <- unname(cutScores[which(cutScores %in% cutScores[resCuts1$parameter[i]])-1])
+			}
+			a1 <- sum( dnorm( ( komp - M1 ) / SD1 ) * c(-1,1) / SD1 ) 
+			a2 <- sum( dnorm( ( komp - M2 ) / SD2 ) * c(-1,1) / SD2 ) 
+			var_delta <- (  a1^2 + a2^2 ) * linkerror^2 / 2  
+			# Linkfehler = sqrt( var_delta )
+			resCuts1$seTrend[i] <- sqrt(resCuts1$seT1[i]^2+resCuts1$seT2[i]^2+ var_delta )  
+		}	
+		return( resCuts1 )          
+		}
+	
 	resCuts <- seKompstuf(resCuts, cutScores, M1 , SD1 , M2 , SD2 , linkerror)
 	
 	if(writeCsv) {

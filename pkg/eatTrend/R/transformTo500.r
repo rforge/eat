@@ -61,10 +61,10 @@ addCuts <- function(valVec, cutVec) {
 
 	ep <- parse(text = paste0(a, "\"ERR\"", b))
 	res <- eval(ep)
-	
-	if(any(res == "ERR")) {
-		cat(paste("Warning! No cutscore defined for parameter value",  valVec[which(res == "ERR")] ,"in line:", which(res == "ERR"), "\n"))
-	}
+
+	# if(any(res == "ERR")) {
+		# cat(paste("Warning! No cutscore defined for parameter value",  valVec[which(res == "ERR")] ,"in line:", which(res == "ERR"), "\n"))
+	# }
 
 	return(res)
 }

@@ -10,7 +10,7 @@ jkzoneT1=NULL, jkrepT1=NULL, weightsT1=NULL, itParsIntT2, PVsT2,
 countriesT2, itParsNatT2=NULL, weightsT2=NULL, jkzoneT2=NULL, jkrepT2=NULL, 
 testletNam = NULL, transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, 
 sdRefPop=NULL, cutScores=NULL, type =c("FCIP", "MM"), writeCsv=FALSE, path=NULL, 
-plots=FALSE)}
+plots=FALSE, backwards=FALSE)}
 \arguments{
   \item{itParsIntT1}{
   A data frame containing the international item parameter estimates at time 1. 
@@ -115,6 +115,9 @@ A character string containing the path for the output files.
 }
  \item{plots}{
 Logical. If \code{TRUE}, country DIF will be plotted.
+}
+ \item{backwards}{
+Logical. IQB internal option to transform cutScores internally.
 }
 }
 
