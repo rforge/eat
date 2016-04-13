@@ -411,7 +411,7 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 			}
 		
 		resCuts <- seKompstuf(resCuts, cutScores, M1 , SD1 , M2 , SD2 , linkerror)
-		resCuts[,c(3:8)] <- resCuts[,c(3:8)]*100
+		resCuts[,c(3:9)] <- resCuts[,c(3:9)]*100
 
 		if(writeCsv) {
 			stopifnot(!is.null(path))
@@ -661,7 +661,7 @@ cutScores=NULL, seres) {
 		}
 	
 	resCutsG <- seKompstuf(resCutsG, cutScores, M1 , SD1 , M2 , SD2 , linkerror)
-	resCutsG[,c(3:8)] <- resCutsG[,c(3:8)]*100
+	resCutsG[,c(3:9)] <- resCutsG[,c(3:9)]*100
 	
 	return(list(resMeansG, resCutsG))
 }
