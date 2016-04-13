@@ -168,6 +168,9 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 		meansT1  <- eatRep:::jk2.mean(datL = PV500T1m, ID="idstud", wgt="weightsT1", type = "JK2", 
                 PSU = "jkzoneT1", repInd = "jkrepT1", imp="variable", groups = "countriesT1", 
                 dependent = "value", na.rm=FALSE, doCheck=TRUE)
+		deuT1  <- eatRep:::jk2.mean(datL = PV500T1m, ID="idstud", wgt="weightsT1", type = "JK2", 
+                PSU = "jkzoneT1", repInd = "jkrepT1", imp="variable",  
+                dependent = "value", na.rm=FALSE, doCheck=TRUE)
 	} else {
 		PV500T1m <- eatPrep:::set.col.type(PV500T1m, list(character = "variable", numeric = "value"))
 		if(any(is.na(c(PV500T1m$jkzoneT1,PV500T1m$jkrepT1)))) {
@@ -175,6 +178,9 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 		}
 		meansT1  <- eatRep:::jk2.mean(datL = PV500T1m, ID="idstud", type = "JK2", 
                 PSU = "jkzoneT1", repInd = "jkrepT1", imp="variable", groups = "countriesT1", 
+                dependent = "value", na.rm=FALSE, doCheck=TRUE)
+		deuT1  <- eatRep:::jk2.mean(datL = PV500T1m, ID="idstud", type = "JK2", 
+                PSU = "jkzoneT1", repInd = "jkrepT1", imp="variable", 
                 dependent = "value", na.rm=FALSE, doCheck=TRUE)
 	}
 	if(!is.null(cutScores)) {
@@ -187,6 +193,9 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 			cutsT1  <- eatRep:::jk2.table(datL = PV500T1c, ID="idstud", wgt="weightsT1", type = "JK2", 
 					PSU = "jkzoneT1", repInd = "jkrepT1", imp="variable", groups = "countriesT1", 
 					dependent = "value", na.rm=FALSE, doCheck=TRUE)
+			cutdT1  <- eatRep:::jk2.table(datL = PV500T1c, ID="idstud", wgt="weightsT1", type = "JK2", 
+					PSU = "jkzoneT1", repInd = "jkrepT1", imp="variable", 
+					dependent = "value", na.rm=FALSE, doCheck=TRUE)
 		} else {
 			PV500T1c <- eatPrep:::set.col.type(PV500T1c, list(character = "variable"))
 			if(any(is.na(c(PV500T1c$jkzoneT1,PV500T1c$jkrepT1)))) {
@@ -195,10 +204,21 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 			cutsT1  <- eatRep:::jk2.table(datL = PV500T1c, ID="idstud", type = "JK2", 
 					PSU = "jkzoneT1", repInd = "jkrepT1", imp="variable", groups = "countriesT1", 
 					dependent = "value", na.rm=FALSE, doCheck=TRUE)
+			cutdT1  <- eatRep:::jk2.table(datL = PV500T1c, ID="idstud", type = "JK2", 
+					PSU = "jkzoneT1", repInd = "jkrepT1", imp="variable", 
+					dependent = "value", na.rm=FALSE, doCheck=TRUE)
 		}
+		cutdT1$countriesT1 <- "GES"
+		cutsT1 <- rbind(cutsT1,cutdT1)
 		resCutsT1 <- reshape2:::dcast(cutsT1[,-c(1:3)], parameter+countriesT1 ~ coefficient,margins="value")
 	}
-	resMeanT1 <- reshape2:::dcast(subset(meansT1[,-c(1:3)], meansT1$parameter == "mean"), parameter+countriesT1 ~ coefficient,margins="value")
+	resMeanT1 <- reshape2:::dcast(subset(meansT1[,-c(1:3)], meansT1$parameter == "mean"), parameter+countriesT1 ~ coefficient,margins="value")[,-1]
+	names(resMeanT1) <- c("country", "meanT1", "seT1")
+	resSDT1 <- reshape2:::dcast(subset(meansT1[,-c(1:3)], meansT1$parameter == "sd"), parameter+countriesT1 ~ coefficient,margins="value")[,2:3]
+	names(resSDT1) <- c("country", "sdT1")
+	resMeanT1 <- mergeData("country", list(resMeanT1, resSDT1))
+	resDeuT1 <- c("GES", deuT1$value[deuT1$parameter == "mean"], deuT1$value[deuT1$parameter == "sd" & deuT1$coefficient == "est"]) 
+	resMeanT1 <- rbind(resMeanT1, resDeuT1)
 	
 	#T2
 	PV500T2 <- eatPrep:::mergeData("idstud", list(data.frame(idstud=PVsT2[,1], countriesT2, jkzoneT2, jkrepT2, weightsT2, stringsAsFactors=FALSE),PV500T2))
@@ -213,6 +233,9 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 		meansT2  <- eatRep:::jk2.mean(datL = PV500T2m, ID="idstud", wgt="weightsT2", type = "JK2", 
                 PSU = "jkzoneT2", repInd = "jkrepT2", imp="variable", groups = "countriesT2", 
                 dependent = "value", na.rm=FALSE, doCheck=TRUE)
+		deuT2  <- eatRep:::jk2.mean(datL = PV500T2m, ID="idstud", wgt="weightsT2", type = "JK2", 
+                PSU = "jkzoneT2", repInd = "jkrepT2", imp="variable",  
+                dependent = "value", na.rm=FALSE, doCheck=TRUE)
 	} else {
 		PV500T2m <- eatPrep:::set.col.type(PV500T2m, list(character = "variable", numeric = "value"))
 		if(any(is.na(c(PV500T2m$jkzoneT2,PV500T2m$jkrepT2)))) {
@@ -220,6 +243,9 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 		}
 		meansT2  <- eatRep:::jk2.mean(datL = PV500T2m, ID="idstud", type = "JK2", 
                 PSU = "jkzoneT2", repInd = "jkrepT2", imp="variable", groups = "countriesT2", 
+                dependent = "value", na.rm=FALSE, doCheck=TRUE)
+		deuT2  <- eatRep:::jk2.mean(datL = PV500T2m, ID="idstud", type = "JK2", 
+                PSU = "jkzoneT2", repInd = "jkrepT2", imp="variable", 
                 dependent = "value", na.rm=FALSE, doCheck=TRUE)
 	}
 	if(!is.null(cutScores)) {
@@ -232,6 +258,9 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 			cutsT2  <- eatRep:::jk2.table(datL = PV500T2c, ID="idstud", wgt="weightsT2", type = "JK2", 
 					PSU = "jkzoneT2", repInd = "jkrepT2", imp="variable", groups = "countriesT2", 
 					dependent = "value", na.rm=FALSE, doCheck=TRUE)
+			cutdT2  <- eatRep:::jk2.table(datL = PV500T2c, ID="idstud", wgt="weightsT2", type = "JK2", 
+					PSU = "jkzoneT2", repInd = "jkrepT2", imp="variable", 
+					dependent = "value", na.rm=FALSE, doCheck=TRUE)
 		} else {
 			PV500T2c <- eatPrep:::set.col.type(PV500T2c, list(character = "variable"))
 			if(any(is.na(c(PV500T2c$jkzoneT2,PV500T2c$jkrepT2)))) {
@@ -240,16 +269,26 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 			cutsT2  <- eatRep:::jk2.table(datL = PV500T2c, ID="idstud", type = "JK2", 
 					PSU = "jkzoneT2", repInd = "jkrepT2", imp="variable", groups = "countriesT2", 
 					dependent = "value", na.rm=FALSE, doCheck=TRUE)
+			cutdT2  <- eatRep:::jk2.table(datL = PV500T2c, ID="idstud", type = "JK2", 
+					PSU = "jkzoneT2", repInd = "jkrepT2", imp="variable", 
+					dependent = "value", na.rm=FALSE, doCheck=TRUE)
 		}
+		cutdT2$countriesT2 <- "GES"
+		cutsT2 <- rbind(cutsT2,cutdT2)
 		resCutsT2 <- reshape2:::dcast(cutsT2[,-c(1:3)], parameter+countriesT2 ~ coefficient,margins="value")
 	}
-	resMeanT2 <- reshape2:::dcast(subset(meansT2[,-c(1:3)], meansT2$parameter == "mean"), parameter+countriesT2 ~ coefficient,margins="value")
+	resMeanT2 <- reshape2:::dcast(subset(meansT2[,-c(1:3)], meansT2$parameter == "mean"), parameter+countriesT2 ~ coefficient,margins="value")[,-1]
+	names(resMeanT2) <- c("country", "meanT2", "seT2")
+	resSDT2 <- reshape2:::dcast(subset(meansT2[,-c(1:3)], meansT2$parameter == "sd"), parameter+countriesT2 ~ coefficient,margins="value")[,2:3]
+	names(resSDT2) <- c("country", "sdT2")
+	resMeanT2 <- mergeData("country", list(resMeanT2, resSDT2))
+	resDeuT2 <- c("GES", deuT2$value[deuT2$parameter == "mean"], deuT2$value[deuT2$parameter == "sd" & deuT2$coefficient == "est"]) 
+	resMeanT2 <- rbind(resMeanT2, resDeuT2)
 	
-	names(resMeanT1) <- c("x", "country", "meanT1", "seT1")
-	names(resMeanT2) <- c("x", "country", "meanT2", "seT2")
-	
-	resMeans <- eatPrep:::mergeData("country", list(resMeanT1[,-1], resMeanT2[,-1]))
+	resMeans <- eatPrep:::mergeData("country", list(resMeanT1, resMeanT2))
+	resMeans <- eatPrep:::set.col.type(resMeans, list(numeric = names(resMeans)[-1]))
 	resMeans$meanTrend <- resMeans$meanT2 - resMeans$meanT1
+	
 	if(type == "MM") {
 		l3d <- data.frame(country=names(unlist(lapply(seres,function(tt) tt[[1]]))),seTrendL3D=unlist(lapply(seres,function(tt) tt[[1]])))
 		pisa <- data.frame(country=names(unlist(lapply(seres,function(tt) tt[[2]]))),seTrendpisa=unlist(lapply(seres,function(tt) tt[[2]])))
@@ -303,10 +342,11 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 		
 	}	else {
 	
-		seres <- data.frame(country=unique(countriesT2), seTrendpisa=seres, stringsAsFactors=FALSE)
+		seres <- data.frame(country=c(unique(countriesT2), "GES"), seTrendpisa=seres, stringsAsFactors=FALSE)
 		resMeans <- eatPrep:::mergeData("country", list(resMeans, seres))
 		resMeans$seTrendpisa <- sqrt(resMeans$seT1^2+resMeans$seT2^2+((resMeans$seTrendpisa/sdRefPop)*100)^2)
 	}
+	
 	resCutsT2$id <- paste(resCutsT2$parameter, resCutsT2$countriesT2)
 	names(resCutsT2)[3:4] <- c("estT2", "seT2")
 	resCutsT1$id <- paste(resCutsT1$parameter, resCutsT1$countriesT1)
@@ -333,7 +373,6 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 	}
 	M1 <- mean(M1)
 	SD1 <- mean(SD1)
-	
 	
 	seKompstuf <- function(resCuts, cutScores, M1 , SD1 , M2 , SD2 , linkerror  ){
 		if(any(is.na(resCuts[,1]))) {
@@ -365,6 +404,7 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 		}
 	
 	resCuts <- seKompstuf(resCuts, cutScores, M1 , SD1 , M2 , SD2 , linkerror)
+	resCuts[,c(3:8)] <- resCuts[,c(3:8)]*100
 	
 	if(writeCsv) {
 		stopifnot(!is.null(path))
