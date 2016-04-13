@@ -424,7 +424,7 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 	}
 	
 	if(is.null(testletNam)) {eres <- Link3$descriptives$linkerror} else {
-		eres <- Link3$descriptives$linkerror
+		eres <- Link3b$descriptives$linkerror
 	}
 	
 	groups <- list()
