@@ -1,7 +1,7 @@
 Package: eatTrend
 Type: Package
 Title: Estimate National Trends in International Large-Scale Assessments
-Version: 0.0.15
+Version: 0.0.16
 Depends: R (>= 3.2.2), eatRep
 Imports: SDMTools, eatPrep, reshape2, sirt
 Date: 2016-04-13

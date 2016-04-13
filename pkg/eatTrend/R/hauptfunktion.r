@@ -1,8 +1,8 @@
 
 # evtl.CDIFplot noch 
 eatTrend <- function(itParsIntT1, PVsT1, countriesT1, 
-itParsNatT1=NULL, jkzoneT1=NULL, jkrepT1=NULL, weightsT1=NULL, itParsIntT2, PVsT2, 
-countriesT2, itParsNatT2=NULL, weightsT2=NULL, jkzoneT2=NULL, jkrepT2=NULL, testletNam=NULL,
+itParsNatT1=NULL, jkzoneT1=NULL, jkrepT1=NULL, weightsT1=NULL, groupsT1=NULL, itParsIntT2, PVsT2, 
+countriesT2, itParsNatT2=NULL, weightsT2=NULL, jkzoneT2=NULL, jkrepT2=NULL, groupsT2=NULL, GES=TRUE, testletNam=NULL, 
 transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL, type =c("FCIP", "MM"), writeCsv=FALSE, path=NULL, plots=FALSE, backwards=FALSE) {
 
 	cat ( paste ("Hi! ", Sys.time(), "\n" ) ) 
@@ -18,7 +18,12 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 	stopifnot(class(itParsIntT2) == "data.frame")
 	stopifnot(class(PVsT2) == "data.frame")
 	stopifnot(dim(PVsT1)[1] == length(countriesT1))
+	if(!is.null(groupsT1)) stopifnot(dim(groupsT1 <- data.frame(groupsT1))[1] == length(countriesT1))
+	if(!is.null(groupsT1)) stopifnot(!is.null(groupsT2))
 	stopifnot(dim(PVsT2)[1] == length(countriesT2))
+	if(!is.null(groupsT2)) stopifnot(dim(groupsT2 <- data.frame(groupsT2))[1] == length(countriesT2))
+	if(!is.null(groupsT2)) stopifnot(!is.null(groupsT1))
+	stopifnot(dim(groupsT1)[2] == dim(groupsT2)[2])
 	# die anderen Argumente werden erst dann durchgecheckt, wenn sie benutzt werden
 	
 	if(is.null(jkzoneT1)) {cat("Warning! jkzoneT1 is empty and will be defaulted to nonsense values \n"); jkzoneT1 <- paste0(countriesT1, sample(c(0,1,2,3), length(countriesT1), replace = TRUE))}
@@ -155,11 +160,316 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 		}
 	}
 	
-	#T1
+	if(GES) {
+	
+		#T1
+		PV500T1 <- eatPrep:::mergeData("idstud", list(data.frame(idstud=PVsT1[,1], countriesT1, jkzoneT1, jkrepT1, weightsT1, stringsAsFactors=FALSE),PV500T1))
+		dp2 <- dim(data.frame(idstud=PVsT1[,1], countriesT1, jkzoneT1, jkrepT1, weightsT1, stringsAsFactors=FALSE))[2]
+		if(!is.null(cutScores)) {dp3 <- (dim(PV500T1)[2] - dp2)/2} else {dp3 <- (dim(PV500T1)[2] - dp2)}
+		PV500T1m <- reshape2:::melt(PV500T1[,c(1:dp2,(dp2+1):(dp2+dp3))], id=1:dp2)
+		if(!is.null(weightsT1)) {
+			PV500T1m <- eatPrep:::set.col.type(PV500T1m, list(character = "variable", numeric = c("weightsT1", "value")))
+			if(any(is.na(c(PV500T1m$jkzoneT1,PV500T1m$jkrepT1,PV500T1m$weightsT1)))) {
+				PV500T1m <- PV500T1m[-c(which(is.na(PV500T1m$jkzoneT1)|is.na(PV500T1m$jkrepT1)|is.na(PV500T1m$weightsT1))),]
+			}	
+			meansT1  <- eatRep:::jk2.mean(datL = PV500T1m, ID="idstud", wgt="weightsT1", type = "JK2", 
+					PSU = "jkzoneT1", repInd = "jkrepT1", imp="variable", groups = "countriesT1", 
+					dependent = "value", na.rm=FALSE, doCheck=TRUE)
+			deuT1  <- eatRep:::jk2.mean(datL = PV500T1m, ID="idstud", wgt="weightsT1", type = "JK2", 
+					PSU = "jkzoneT1", repInd = "jkrepT1", imp="variable",  
+					dependent = "value", na.rm=FALSE, doCheck=TRUE)
+		} else {
+			PV500T1m <- eatPrep:::set.col.type(PV500T1m, list(character = "variable", numeric = "value"))
+			if(any(is.na(c(PV500T1m$jkzoneT1,PV500T1m$jkrepT1)))) {
+				PV500T1m <- PV500T1m[-c(which(is.na(PV500T1m$jkzoneT1)|is.na(PV500T1m$jkrepT1))),]
+			}
+			meansT1  <- eatRep:::jk2.mean(datL = PV500T1m, ID="idstud", type = "JK2", 
+					PSU = "jkzoneT1", repInd = "jkrepT1", imp="variable", groups = "countriesT1", 
+					dependent = "value", na.rm=FALSE, doCheck=TRUE)
+			deuT1  <- eatRep:::jk2.mean(datL = PV500T1m, ID="idstud", type = "JK2", 
+					PSU = "jkzoneT1", repInd = "jkrepT1", imp="variable", 
+					dependent = "value", na.rm=FALSE, doCheck=TRUE)
+		}
+		if(!is.null(cutScores)) {
+			PV500T1c <- reshape2:::melt(PV500T1[,c(1:dp2,(dp2+dp3+1):(dp2+dp3+dp3))], id=1:dp2)
+			if(!is.null(weightsT1)) {
+				PV500T1c <- eatPrep:::set.col.type(PV500T1c, list(character = "variable", numeric = "weightsT1"))
+				if(any(is.na(c(PV500T1c$jkzoneT1,PV500T1c$jkrepT1,PV500T1c$weightsT1)))) {
+					PV500T1c <- PV500T1c[-c(which(is.na(PV500T1c$jkzoneT1)|is.na(PV500T1c$jkrepT1)|is.na(PV500T1c$weightsT1))),]
+				}
+				cutsT1  <- eatRep:::jk2.table(datL = PV500T1c, ID="idstud", wgt="weightsT1", type = "JK2", 
+						PSU = "jkzoneT1", repInd = "jkrepT1", imp="variable", groups = "countriesT1", 
+						dependent = "value", na.rm=FALSE, doCheck=TRUE)
+				cutdT1  <- eatRep:::jk2.table(datL = PV500T1c, ID="idstud", wgt="weightsT1", type = "JK2", 
+						PSU = "jkzoneT1", repInd = "jkrepT1", imp="variable", 
+						dependent = "value", na.rm=FALSE, doCheck=TRUE)
+			} else {
+				PV500T1c <- eatPrep:::set.col.type(PV500T1c, list(character = "variable"))
+				if(any(is.na(c(PV500T1c$jkzoneT1,PV500T1c$jkrepT1)))) {
+					PV500T1c <- PV500T1c[-c(which(is.na(PV500T1c$jkzoneT1)|is.na(PV500T1c$jkrepT1))),]
+				}
+				cutsT1  <- eatRep:::jk2.table(datL = PV500T1c, ID="idstud", type = "JK2", 
+						PSU = "jkzoneT1", repInd = "jkrepT1", imp="variable", groups = "countriesT1", 
+						dependent = "value", na.rm=FALSE, doCheck=TRUE)
+				cutdT1  <- eatRep:::jk2.table(datL = PV500T1c, ID="idstud", type = "JK2", 
+						PSU = "jkzoneT1", repInd = "jkrepT1", imp="variable", 
+						dependent = "value", na.rm=FALSE, doCheck=TRUE)
+			}
+			cutdT1$countriesT1 <- "GES"
+			cutsT1 <- rbind(cutsT1,cutdT1)
+			resCutsT1 <- reshape2:::dcast(cutsT1[,-c(1:3)], parameter+countriesT1 ~ coefficient,margins="value")
+		}
+		resMeanT1 <- reshape2:::dcast(subset(meansT1[,-c(1:3)], meansT1$parameter == "mean"), parameter+countriesT1 ~ coefficient,margins="value")[,-1]
+		names(resMeanT1) <- c("country", "meanT1", "seT1")
+		resSDT1 <- reshape2:::dcast(subset(meansT1[,-c(1:3)], meansT1$parameter == "sd"), parameter+countriesT1 ~ coefficient,margins="value")[,2:3]
+		names(resSDT1) <- c("country", "sdT1")
+		resMeanT1 <- mergeData("country", list(resMeanT1, resSDT1))
+		resDeuT1 <- c("GES", deuT1$value[deuT1$parameter == "mean"], deuT1$value[deuT1$parameter == "sd" & deuT1$coefficient == "est"]) 
+		resMeanT1 <- rbind(resMeanT1, resDeuT1)
+		
+		#T2
+		PV500T2 <- eatPrep:::mergeData("idstud", list(data.frame(idstud=PVsT2[,1], countriesT2, jkzoneT2, jkrepT2, weightsT2, stringsAsFactors=FALSE),PV500T2))
+		dp2 <- dim(data.frame(idstud=PVsT2[,1], countriesT2, jkzoneT2, jkrepT2, weightsT2, stringsAsFactors=FALSE))[2]
+		if(!is.null(cutScores)) {dp3 <- (dim(PV500T2)[2] - dp2)/2} else {dp3 <- (dim(PV500T2)[2] - dp2)}
+		PV500T2m <- reshape2:::melt(PV500T2[,c(1:dp2,(dp2+1):(dp2+dp3))], id=1:dp2)
+		if(!is.null(weightsT2)) {
+			PV500T2m <- eatPrep:::set.col.type(PV500T2m, list(character = "variable", numeric = c("weightsT2", "value")))
+			if(any(is.na(c(PV500T2m$jkzoneT2,PV500T2m$jkrepT2,PV500T2m$weightsT2)))) {
+				PV500T2m <- PV500T2m[-c(which(is.na(PV500T2m$jkzoneT2)|is.na(PV500T2m$jkrepT2)|is.na(PV500T2m$weightsT2))),]
+			}
+			meansT2  <- eatRep:::jk2.mean(datL = PV500T2m, ID="idstud", wgt="weightsT2", type = "JK2", 
+					PSU = "jkzoneT2", repInd = "jkrepT2", imp="variable", groups = "countriesT2", 
+					dependent = "value", na.rm=FALSE, doCheck=TRUE)
+			deuT2  <- eatRep:::jk2.mean(datL = PV500T2m, ID="idstud", wgt="weightsT2", type = "JK2", 
+					PSU = "jkzoneT2", repInd = "jkrepT2", imp="variable",  
+					dependent = "value", na.rm=FALSE, doCheck=TRUE)
+		} else {
+			PV500T2m <- eatPrep:::set.col.type(PV500T2m, list(character = "variable", numeric = "value"))
+			if(any(is.na(c(PV500T2m$jkzoneT2,PV500T2m$jkrepT2)))) {
+				PV500T2m <- PV500T2m[-c(which(is.na(PV500T2m$jkzoneT2)|is.na(PV500T2m$jkrepT2))),]
+			}
+			meansT2  <- eatRep:::jk2.mean(datL = PV500T2m, ID="idstud", type = "JK2", 
+					PSU = "jkzoneT2", repInd = "jkrepT2", imp="variable", groups = "countriesT2", 
+					dependent = "value", na.rm=FALSE, doCheck=TRUE)
+			deuT2  <- eatRep:::jk2.mean(datL = PV500T2m, ID="idstud", type = "JK2", 
+					PSU = "jkzoneT2", repInd = "jkrepT2", imp="variable", 
+					dependent = "value", na.rm=FALSE, doCheck=TRUE)
+		}
+		if(!is.null(cutScores)) {
+			PV500T2c <- reshape2:::melt(PV500T2[,c(1:dp2,(dp2+dp3+1):(dp2+dp3+dp3))], id=1:dp2)
+			if(!is.null(weightsT2)) {
+				PV500T2c <- eatPrep:::set.col.type(PV500T2c, list(character = "variable", numeric = "weightsT2"))
+				if(any(is.na(c(PV500T2c$jkzoneT2,PV500T2c$jkrepT2,PV500T2c$weightsT2)))) {
+					PV500T2c <- PV500T2c[-c(which(is.na(PV500T2c$jkzoneT2)|is.na(PV500T2c$jkrepT2)|is.na(PV500T2c$weightsT2))),]
+				}
+				cutsT2  <- eatRep:::jk2.table(datL = PV500T2c, ID="idstud", wgt="weightsT2", type = "JK2", 
+						PSU = "jkzoneT2", repInd = "jkrepT2", imp="variable", groups = "countriesT2", 
+						dependent = "value", na.rm=FALSE, doCheck=TRUE)
+				cutdT2  <- eatRep:::jk2.table(datL = PV500T2c, ID="idstud", wgt="weightsT2", type = "JK2", 
+						PSU = "jkzoneT2", repInd = "jkrepT2", imp="variable", 
+						dependent = "value", na.rm=FALSE, doCheck=TRUE)
+			} else {
+				PV500T2c <- eatPrep:::set.col.type(PV500T2c, list(character = "variable"))
+				if(any(is.na(c(PV500T2c$jkzoneT2,PV500T2c$jkrepT2)))) {
+					PV500T2c <- PV500T2c[-c(which(is.na(PV500T2c$jkzoneT2)|is.na(PV500T2c$jkrepT2))),]
+				}
+				cutsT2  <- eatRep:::jk2.table(datL = PV500T2c, ID="idstud", type = "JK2", 
+						PSU = "jkzoneT2", repInd = "jkrepT2", imp="variable", groups = "countriesT2", 
+						dependent = "value", na.rm=FALSE, doCheck=TRUE)
+				cutdT2  <- eatRep:::jk2.table(datL = PV500T2c, ID="idstud", type = "JK2", 
+						PSU = "jkzoneT2", repInd = "jkrepT2", imp="variable", 
+						dependent = "value", na.rm=FALSE, doCheck=TRUE)
+			}
+			cutdT2$countriesT2 <- "GES"
+			cutsT2 <- rbind(cutsT2,cutdT2)
+			resCutsT2 <- reshape2:::dcast(cutsT2[,-c(1:3)], parameter+countriesT2 ~ coefficient,margins="value")
+		}
+		resMeanT2 <- reshape2:::dcast(subset(meansT2[,-c(1:3)], meansT2$parameter == "mean"), parameter+countriesT2 ~ coefficient,margins="value")[,-1]
+		names(resMeanT2) <- c("country", "meanT2", "seT2")
+		resSDT2 <- reshape2:::dcast(subset(meansT2[,-c(1:3)], meansT2$parameter == "sd"), parameter+countriesT2 ~ coefficient,margins="value")[,2:3]
+		names(resSDT2) <- c("country", "sdT2")
+		resMeanT2 <- mergeData("country", list(resMeanT2, resSDT2))
+		resDeuT2 <- c("GES", deuT2$value[deuT2$parameter == "mean"], deuT2$value[deuT2$parameter == "sd" & deuT2$coefficient == "est"]) 
+		resMeanT2 <- rbind(resMeanT2, resDeuT2)
+		
+		resMeans <- eatPrep:::mergeData("country", list(resMeanT1, resMeanT2))
+		resMeans <- eatPrep:::set.col.type(resMeans, list(numeric = names(resMeans)[-1]))
+		resMeans$meanTrend <- resMeans$meanT2 - resMeans$meanT1
+		
+		if(type == "MM") {
+			l3d <- data.frame(country=names(unlist(lapply(seres,function(tt) tt[[1]]))),seTrendL3D=unlist(lapply(seres,function(tt) tt[[1]])))
+			pisa <- data.frame(country=names(unlist(lapply(seres,function(tt) tt[[2]]))),seTrendpisa=unlist(lapply(seres,function(tt) tt[[2]])))
+			resMeans <- eatPrep:::mergeData("country", list(resMeans, l3d, pisa))
+			resMeans$seTrendL3D <- sqrt(resMeans$seT1^2+resMeans$seT2^2+((resMeans$seTrendL3D/sdRefPop)*100)^2)
+			resMeans$seTrendpisa <- sqrt(resMeans$seT1^2+resMeans$seT2^2+((resMeans$seTrendpisa/sdRefPop)*100)^2)
+		
+			if(plots) {
+				pdf(file =paste0(path, "/CountryDIF_", Sys.Date(), ".pdf"))
+					for(uu in names(seres)) {
+						vv <- round(cor(seres[[uu]][[3]],seres[[uu]][[4]],use="pairwise.complete.obs"),2)
+						
+						plot(seres[[uu]][[4]][1:50], type="l", lty=3, main = paste0("Laender-DIF LV 2009 vs. 2015: ", uu, " (Teil 1), r_ges = ", vv), xlab="Item", ylab="DIF", ylim=c(-1.4,1.4),xaxt = "n")
+						abline(h=0, col="grey50")
+						abline(v=1:length(seres[[uu]][[3]][1:50]), col="grey80")
+						lines(seres[[uu]][[3]][1:50], col="gray30",  type="l")
+						lines(seres[[uu]][[4]][1:50], type="l", lty=3)
+						axis(1, at=1:length(seres[[uu]][[3]][1:50]), labels=names(seres[[uu]][[3]][1:50]), las=3)#, cex.axis=0.5)
+						legend("topleft", lty=c(3,1), col=c("black","gray30"), c("2015", "2009"), lwd=1, cex=1)
+						
+						if(length(seres[[uu]][[4]])>51) {
+							plot(seres[[uu]][[4]][51:100], type="l", lty=3, main = paste0("Laender-DIF LV 2009 vs. 2015: ", uu, " (Teil 2), r_ges = ", vv), xlab="Item", ylab="DIF", ylim=c(-1.4,1.4),xaxt = "n")
+							abline(h=0, col="grey50")
+							abline(v=1:length(seres[[uu]][[3]][51:100]), col="grey80")
+							lines(seres[[uu]][[3]][51:100], col="gray30",  type="l")
+							lines(seres[[uu]][[4]][51:100], type="l", lty=3)
+							axis(1, at=1:length(seres[[uu]][[3]][51:100]), labels=names(seres[[uu]][[3]][51:100]), las=3)#, cex.axis=0.5)
+							legend("topleft", lty=c(3,1), col=c("black","gray30"), c("2015", "2009"), lwd=1, cex=1)
+						}
+						if(length(seres[[uu]][[4]])>101) {
+							plot(seres[[uu]][[4]][101:150], type="l", lty=3, main = paste0("Laender-DIF LV 2009 vs. 2015: ", uu, " (Teil 3), r_ges = ", vv), xlab="Item", ylab="DIF", ylim=c(-1.4,1.4),xaxt = "n")
+							abline(h=0, col="grey50")
+							abline(v=1:length(seres[[uu]][[3]][101:150]), col="grey80")
+							lines(seres[[uu]][[3]][101:150], col="gray30",  type="l")
+							lines(seres[[uu]][[4]][101:150], type="l", lty=3)
+							axis(1, at=1:length(seres[[uu]][[3]][101:150]), labels=names(seres[[uu]][[3]][101:150]), las=3)#, cex.axis=0.5)
+							legend("topleft", lty=c(3,1), col=c("black","gray30"), c("2015", "2009"), lwd=1, cex=1)
+						}	
+						if(length(seres[[uu]][[4]])>151) {					
+							plot(seres[[uu]][[4]][151:length(seres[[uu]][[3]])], type="l", lty=3, main = paste0("Laender-DIF LV 2009 vs. 2015: ", uu, " (Teil 4), r_ges = ", vv), xlab="Item", ylab="DIF", ylim=c(-1.4,1.4),xaxt = "n")
+							abline(h=0, col="grey50")
+							abline(v=1:length(seres[[uu]][[3]][151:length(seres[[uu]][[3]])]), col="grey80")
+							lines(seres[[uu]][[3]][151:length(seres[[uu]][[3]])], col="gray30",  type="l")
+							lines(seres[[uu]][[4]][151:length(seres[[uu]][[3]])], type="l", lty=3)
+							axis(1, at=1:length(seres[[uu]][[3]][151:length(seres[[uu]][[3]])]), labels=names(seres[[uu]][[3]][151:length(seres[[uu]][[3]])]), las=3)#, cex.axis=0.5)
+							legend("topleft", lty=c(3,1), col=c("black","gray30"), c("2015", "2009"), lwd=1, cex=1)
+						}
+					}
+				dev.off()					
+			}
+			
+		}	else {
+		
+			seres <- data.frame(country=c(unique(countriesT2), "GES"), seTrendpisa=seres, stringsAsFactors=FALSE)
+			resMeans <- eatPrep:::mergeData("country", list(resMeans, seres))
+			resMeans$seTrendpisa <- sqrt(resMeans$seT1^2+resMeans$seT2^2+((resMeans$seTrendpisa/sdRefPop)*100)^2)
+		}
+		
+		resCutsT2$id <- paste(resCutsT2$parameter, resCutsT2$countriesT2)
+		names(resCutsT2)[3:4] <- c("estT2", "seT2")
+		resCutsT1$id <- paste(resCutsT1$parameter, resCutsT1$countriesT1)
+		names(resCutsT1)[3:4] <- c("estT1", "seT1")
+		resCuts <- eatPrep:::mergeData("id", list(resCutsT1, resCutsT2))
+		resCuts <- resCuts[,-c(2,6)]
+		names(resCuts)[2] <- "country"
+		resCuts <- resCuts[,c(2,1,3,4,5,6)]
+		resCuts <- resCuts[order(resCuts$country),]
+		resCuts$estTrend <- resCuts$estT2 - resCuts$estT1
+		resCuts$seTrendUnderestimated <- sqrt(resCuts$seT2^2 + resCuts$seT1^2)
+		linkerror <- mean(sqrt(resMeans$seTrendpisa^2-(resMeans$seT1^2+resMeans$seT2^2)), na.rm=TRUE)
+		M2 <- SD2 <- NULL	
+		for(i in 6:max(which(unlist(lapply(PV500T2,class))=="numeric"))) {
+			M2 <- c(M2, SDMTools:::wt.mean(PV500T2[,i],as.numeric(PV500T2$weightsT2)))
+			SD2 <- c(SD2, SDMTools:::wt.sd(PV500T2[,i],as.numeric(PV500T2$weightsT2)))
+		}
+		M2 <- mean(M2)
+		SD2 <- mean(SD2)
+		M1 <- SD1 <- NULL	
+		for(i in 6:max(which(unlist(lapply(PV500T1,class))=="numeric"))) {
+			M1 <- c(M1, SDMTools:::wt.mean(PV500T1[,i],as.numeric(PV500T1$weightsT1)))
+			SD1 <- c(SD1, SDMTools:::wt.sd(PV500T1[,i],as.numeric(PV500T1$weightsT1)))
+		}
+		M1 <- mean(M1)
+		SD1 <- mean(SD1)
+		
+		seKompstuf <- function(resCuts, cutScores, M1 , SD1 , M2 , SD2 , linkerror  ){
+			if(any(is.na(resCuts[,1]))) {
+				resCuts1 <- resCuts[-which(is.na(resCuts[,1])),]
+			} else {
+				resCuts1 <- resCuts
+			}	
+			for(i in 1:dim(resCuts1)[1]) {
+				# Anteil Studie 1
+				p1 <- resCuts1$estT1[i]
+				# Anteil Studie 2
+				p2 <- resCuts1$estT2[i]
+				# Kompetenzstufenverteilungsdifferenz
+				delta <- p2 - p1 
+				# Varianz von delta
+				komp <- NULL
+				komp[1] <- cutScores[resCuts1$parameter[i]]
+				if(which(cutScores %in% cutScores[resCuts1$parameter[i]]) =="1") {
+					komp[2] <- 100000000 } else {
+					komp[2] <- unname(cutScores[which(cutScores %in% cutScores[resCuts1$parameter[i]])-1])
+				}
+				a1 <- sum( dnorm( ( komp - M1 ) / SD1 ) * c(-1,1) / SD1 ) 
+				a2 <- sum( dnorm( ( komp - M2 ) / SD2 ) * c(-1,1) / SD2 ) 
+				var_delta <- (  a1^2 + a2^2 ) * linkerror^2 / 2  
+				# Linkfehler = sqrt( var_delta )
+				resCuts1$seTrend[i] <- sqrt(resCuts1$seT1[i]^2+resCuts1$seT2[i]^2+ var_delta )  
+			}	
+			return( resCuts1 )          
+			}
+		
+		resCuts <- seKompstuf(resCuts, cutScores, M1 , SD1 , M2 , SD2 , linkerror)
+		resCuts[,c(3:8)] <- resCuts[,c(3:8)]*100
+
+		if(writeCsv) {
+			stopifnot(!is.null(path))
+			write.csv2(PV500T1, file=paste0(path, "/PV500T1_", type, "_", Sys.Date(), ".csv"), row.names=FALSE)
+			write.csv2(PV500T2, file=paste0(path, "/PV500T2_", type, "_", Sys.Date(), ".csv"), row.names=FALSE)
+			write.csv2(resCuts, file=paste0(path, "/levelTrend_", type, "_", Sys.Date(), ".csv"), row.names=FALSE)
+			write.csv2(resMeans, file=paste0(path, "/meanTrend_", type, "_", Sys.Date(), ".csv"), row.names=FALSE)
+			write.csv2(cutScores, file=paste0(path, "/cutScores_", Sys.Date(), ".csv"), row.names=FALSE)
+		}
+	}
+	
+	groups <- list()
+	for(i in 1:dim(groupsT1)[2]) {
+		groups[[i]] <- groupe(PV500T1=PV500T1, PVsT1=PVsT1, countriesT1=countriesT1,jkzoneT1=jkzoneT1, jkrepT1=jkrepT1, weightsT1=weightsT1, groupsT1=groupsT1[,i], PV500T2=PV500T2, PVsT2=PVsT2, countriesT2=countriesT2, weightsT2=weightsT2, jkzoneT2=jkzoneT2, jkrepT2=jkrepT2, groupsT2=groupsT2[,i], GES=GES, cutScores=cutScores, seres=seres)
+	}
+		
+	if(GES) {
+		if(!is.null(cutScores)) {
+			erg <- list(resMeans, resCuts, PV500T1, PV500T2)
+			names(erg) <- c("resMeans", "resCuts", "PV500T1", "PV500T2")
+		} else {
+			erg <- list(resMeans, PV500T1, PV500T2)
+			names(erg) <- c("resMeans", "PV500T1", "PV500T2")
+			}
+	} else {
+		erg <- list(PV500T1, PV500T2)
+		names(erg) <- c("PV500T1", "PV500T2")
+	}
+	if(length(groups) > 0) {
+		erg <- list(erg,groups)
+			if(writeCsv) {
+				stopifnot(!is.null(path))
+				for(i in 1:dim(groupsT1)[2]) {
+					write.csv2(groups[[i]][[2]], file=paste0(path, "/levelTrend_", type, "_group", i, "_", Sys.Date(), ".csv"), row.names=FALSE)
+					write.csv2(groups[[i]][[1]], file=paste0(path, "/meanTrend_", type, "_group", i, "_", Sys.Date(), ".csv"), row.names=FALSE)
+				}
+			}
+		}
+			
+		
+	return(erg)
+	
+	cat ( paste ("Bye! ", Sys.time(), "\n" ) )
+	
+}
+
+
+
+groupe <- function(PV500T1, PVsT1, countriesT1, 
+jkzoneT1, jkrepT1, weightsT1, groupsT1, PV500T2, PVsT2, 
+countriesT2, weightsT2, jkzoneT2, jkrepT2, groupsT2, GES=TRUE, 
+cutScores=NULL, seres) {
+
 	PV500T1 <- eatPrep:::mergeData("idstud", list(data.frame(idstud=PVsT1[,1], countriesT1, jkzoneT1, jkrepT1, weightsT1, stringsAsFactors=FALSE),PV500T1))
+	PV500T1g <- PV500T1[groupsT1 == "1",]
 	dp2 <- dim(data.frame(idstud=PVsT1[,1], countriesT1, jkzoneT1, jkrepT1, weightsT1, stringsAsFactors=FALSE))[2]
 	if(!is.null(cutScores)) {dp3 <- (dim(PV500T1)[2] - dp2)/2} else {dp3 <- (dim(PV500T1)[2] - dp2)}
-	PV500T1m <- reshape2:::melt(PV500T1[,c(1:dp2,(dp2+1):(dp2+dp3))], id=1:dp2)
+	PV500T1m <- reshape2:::melt(PV500T1g[,c(1:dp2,(dp2+1):(dp2+dp3))], id=1:dp2)
 	if(!is.null(weightsT1)) {
 		PV500T1m <- eatPrep:::set.col.type(PV500T1m, list(character = "variable", numeric = c("weightsT1", "value")))
 		if(any(is.na(c(PV500T1m$jkzoneT1,PV500T1m$jkrepT1,PV500T1m$weightsT1)))) {
@@ -184,7 +494,7 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
                 dependent = "value", na.rm=FALSE, doCheck=TRUE)
 	}
 	if(!is.null(cutScores)) {
-		PV500T1c <- reshape2:::melt(PV500T1[,c(1:dp2,(dp2+dp3+1):(dp2+dp3+dp3))], id=1:dp2)
+		PV500T1c <- reshape2:::melt(PV500T1g[,c(1:dp2,(dp2+dp3+1):(dp2+dp3+dp3))], id=1:dp2)
 		if(!is.null(weightsT1)) {
 			PV500T1c <- eatPrep:::set.col.type(PV500T1c, list(character = "variable", numeric = "weightsT1"))
 			if(any(is.na(c(PV500T1c$jkzoneT1,PV500T1c$jkrepT1,PV500T1c$weightsT1)))) {
@@ -222,9 +532,10 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 	
 	#T2
 	PV500T2 <- eatPrep:::mergeData("idstud", list(data.frame(idstud=PVsT2[,1], countriesT2, jkzoneT2, jkrepT2, weightsT2, stringsAsFactors=FALSE),PV500T2))
+	PV500T2g <- PV500T2[groupsT2 == "1",]
 	dp2 <- dim(data.frame(idstud=PVsT2[,1], countriesT2, jkzoneT2, jkrepT2, weightsT2, stringsAsFactors=FALSE))[2]
 	if(!is.null(cutScores)) {dp3 <- (dim(PV500T2)[2] - dp2)/2} else {dp3 <- (dim(PV500T2)[2] - dp2)}
-	PV500T2m <- reshape2:::melt(PV500T2[,c(1:dp2,(dp2+1):(dp2+dp3))], id=1:dp2)
+	PV500T2m <- reshape2:::melt(PV500T2g[,c(1:dp2,(dp2+1):(dp2+dp3))], id=1:dp2)
 	if(!is.null(weightsT2)) {
 		PV500T2m <- eatPrep:::set.col.type(PV500T2m, list(character = "variable", numeric = c("weightsT2", "value")))
 		if(any(is.na(c(PV500T2m$jkzoneT2,PV500T2m$jkrepT2,PV500T2m$weightsT2)))) {
@@ -249,7 +560,7 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
                 dependent = "value", na.rm=FALSE, doCheck=TRUE)
 	}
 	if(!is.null(cutScores)) {
-		PV500T2c <- reshape2:::melt(PV500T2[,c(1:dp2,(dp2+dp3+1):(dp2+dp3+dp3))], id=1:dp2)
+		PV500T2c <- reshape2:::melt(PV500T2g[,c(1:dp2,(dp2+dp3+1):(dp2+dp3+dp3))], id=1:dp2)
 		if(!is.null(weightsT2)) {
 			PV500T2c <- eatPrep:::set.col.type(PV500T2c, list(character = "variable", numeric = "weightsT2"))
 			if(any(is.na(c(PV500T2c$jkzoneT2,PV500T2c$jkrepT2,PV500T2c$weightsT2)))) {
@@ -285,80 +596,26 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 	resDeuT2 <- c("GES", deuT2$value[deuT2$parameter == "mean"], deuT2$value[deuT2$parameter == "sd" & deuT2$coefficient == "est"]) 
 	resMeanT2 <- rbind(resMeanT2, resDeuT2)
 	
-	resMeans <- eatPrep:::mergeData("country", list(resMeanT1, resMeanT2))
-	resMeans <- eatPrep:::set.col.type(resMeans, list(numeric = names(resMeans)[-1]))
-	resMeans$meanTrend <- resMeans$meanT2 - resMeans$meanT1
+	resMeansG <- eatPrep:::mergeData("country", list(resMeanT1, resMeanT2))
+	resMeansG <- eatPrep:::set.col.type(resMeansG, list(numeric = names(resMeansG)[-1]))
+	resMeansG$meanTrend <- resMeansG$meanT2 - resMeansG$meanT1
 	
-	if(type == "MM") {
-		l3d <- data.frame(country=names(unlist(lapply(seres,function(tt) tt[[1]]))),seTrendL3D=unlist(lapply(seres,function(tt) tt[[1]])))
-		pisa <- data.frame(country=names(unlist(lapply(seres,function(tt) tt[[2]]))),seTrendpisa=unlist(lapply(seres,function(tt) tt[[2]])))
-		resMeans <- eatPrep:::mergeData("country", list(resMeans, l3d, pisa))
-		resMeans$seTrendL3D <- sqrt(resMeans$seT1^2+resMeans$seT2^2+((resMeans$seTrendL3D/sdRefPop)*100)^2)
-		resMeans$seTrendpisa <- sqrt(resMeans$seT1^2+resMeans$seT2^2+((resMeans$seTrendpisa/sdRefPop)*100)^2)
-	
-		if(plots) {
-			pdf(file =paste0(path, "/CountryDIF_", Sys.Date(), ".pdf"))
-				for(uu in names(seres)) {
-					vv <- round(cor(seres[[uu]][[3]],seres[[uu]][[4]],use="pairwise.complete.obs"),2)
-					
-					plot(seres[[uu]][[4]][1:50], type="l", lty=3, main = paste0("Laender-DIF LV 2009 vs. 2015: ", uu, " (Teil 1), r_ges = ", vv), xlab="Item", ylab="DIF", ylim=c(-1.4,1.4),xaxt = "n")
-					abline(h=0, col="grey50")
-					abline(v=1:length(seres[[uu]][[3]][1:50]), col="grey80")
-					lines(seres[[uu]][[3]][1:50], col="gray30",  type="l")
-					lines(seres[[uu]][[4]][1:50], type="l", lty=3)
-					axis(1, at=1:length(seres[[uu]][[3]][1:50]), labels=names(seres[[uu]][[3]][1:50]), las=3)#, cex.axis=0.5)
-					legend("topleft", lty=c(3,1), col=c("black","gray30"), c("2015", "2009"), lwd=1, cex=1)
-					
-					if(length(seres[[uu]][[4]])>51) {
-						plot(seres[[uu]][[4]][51:100], type="l", lty=3, main = paste0("Laender-DIF LV 2009 vs. 2015: ", uu, " (Teil 2), r_ges = ", vv), xlab="Item", ylab="DIF", ylim=c(-1.4,1.4),xaxt = "n")
-						abline(h=0, col="grey50")
-						abline(v=1:length(seres[[uu]][[3]][51:100]), col="grey80")
-						lines(seres[[uu]][[3]][51:100], col="gray30",  type="l")
-						lines(seres[[uu]][[4]][51:100], type="l", lty=3)
-						axis(1, at=1:length(seres[[uu]][[3]][51:100]), labels=names(seres[[uu]][[3]][51:100]), las=3)#, cex.axis=0.5)
-						legend("topleft", lty=c(3,1), col=c("black","gray30"), c("2015", "2009"), lwd=1, cex=1)
-					}
-					if(length(seres[[uu]][[4]])>101) {
-						plot(seres[[uu]][[4]][101:150], type="l", lty=3, main = paste0("Laender-DIF LV 2009 vs. 2015: ", uu, " (Teil 3), r_ges = ", vv), xlab="Item", ylab="DIF", ylim=c(-1.4,1.4),xaxt = "n")
-						abline(h=0, col="grey50")
-						abline(v=1:length(seres[[uu]][[3]][101:150]), col="grey80")
-						lines(seres[[uu]][[3]][101:150], col="gray30",  type="l")
-						lines(seres[[uu]][[4]][101:150], type="l", lty=3)
-						axis(1, at=1:length(seres[[uu]][[3]][101:150]), labels=names(seres[[uu]][[3]][101:150]), las=3)#, cex.axis=0.5)
-						legend("topleft", lty=c(3,1), col=c("black","gray30"), c("2015", "2009"), lwd=1, cex=1)
-					}	
-					if(length(seres[[uu]][[4]])>151) {					
-						plot(seres[[uu]][[4]][151:length(seres[[uu]][[3]])], type="l", lty=3, main = paste0("Laender-DIF LV 2009 vs. 2015: ", uu, " (Teil 4), r_ges = ", vv), xlab="Item", ylab="DIF", ylim=c(-1.4,1.4),xaxt = "n")
-						abline(h=0, col="grey50")
-						abline(v=1:length(seres[[uu]][[3]][151:length(seres[[uu]][[3]])]), col="grey80")
-						lines(seres[[uu]][[3]][151:length(seres[[uu]][[3]])], col="gray30",  type="l")
-						lines(seres[[uu]][[4]][151:length(seres[[uu]][[3]])], type="l", lty=3)
-						axis(1, at=1:length(seres[[uu]][[3]][151:length(seres[[uu]][[3]])]), labels=names(seres[[uu]][[3]][151:length(seres[[uu]][[3]])]), las=3)#, cex.axis=0.5)
-						legend("topleft", lty=c(3,1), col=c("black","gray30"), c("2015", "2009"), lwd=1, cex=1)
-					}
-				}
-			dev.off()					
-		}
-		
-	}	else {
-	
-		seres <- data.frame(country=c(unique(countriesT2), "GES"), seTrendpisa=seres, stringsAsFactors=FALSE)
-		resMeans <- eatPrep:::mergeData("country", list(resMeans, seres))
-		resMeans$seTrendpisa <- sqrt(resMeans$seT1^2+resMeans$seT2^2+((resMeans$seTrendpisa/sdRefPop)*100)^2)
-	}
+	seres <- data.frame(country=c(unique(countriesT2), "GES"), seTrendpisa=seres, stringsAsFactors=FALSE)
+	resMeansG <- eatPrep:::mergeData("country", list(resMeansG, seres))
+	resMeansG$seTrendpisa <- sqrt(resMeansG$seT1^2+resMeansG$seT2^2+((resMeansG$seTrendpisa/sdRefPop)*100)^2)
 	
 	resCutsT2$id <- paste(resCutsT2$parameter, resCutsT2$countriesT2)
 	names(resCutsT2)[3:4] <- c("estT2", "seT2")
 	resCutsT1$id <- paste(resCutsT1$parameter, resCutsT1$countriesT1)
 	names(resCutsT1)[3:4] <- c("estT1", "seT1")
-	resCuts <- eatPrep:::mergeData("id", list(resCutsT1, resCutsT2))
-	resCuts <- resCuts[,-c(2,6)]
-	names(resCuts)[2] <- "country"
-	resCuts <- resCuts[,c(2,1,3,4,5,6)]
-	resCuts <- resCuts[order(resCuts$country),]
-	resCuts$estTrend <- resCuts$estT2 - resCuts$estT1
-	resCuts$seTrendUnderestimated <- sqrt(resCuts$seT2^2 + resCuts$seT1^2)
-	linkerror <- mean(sqrt(resMeans$seTrendpisa^2-(resMeans$seT1^2+resMeans$seT2^2)), na.rm=TRUE)
+	resCutsG <- eatPrep:::mergeData("id", list(resCutsT1, resCutsT2))
+	resCutsG <- resCutsG[,-c(2,6)]
+	names(resCutsG)[2] <- "country"
+	resCutsG <- resCutsG[,c(2,1,3,4,5,6)]
+	resCutsG <- resCutsG[order(resCutsG$country),]
+	resCutsG$estTrend <- resCutsG$estT2 - resCutsG$estT1
+	resCutsG$seTrendUnderestimated <- sqrt(resCutsG$seT2^2 + resCutsG$seT1^2)
+	linkerror <- mean(sqrt(resMeansG$seTrendpisa^2-(resMeansG$seT1^2+resMeansG$seT2^2)), na.rm=TRUE)
 	M2 <- SD2 <- NULL	
 	for(i in 6:max(which(unlist(lapply(PV500T2,class))=="numeric"))) {
 		M2 <- c(M2, SDMTools:::wt.mean(PV500T2[,i],as.numeric(PV500T2$weightsT2)))
@@ -403,20 +660,8 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 		return( resCuts1 )          
 		}
 	
-	resCuts <- seKompstuf(resCuts, cutScores, M1 , SD1 , M2 , SD2 , linkerror)
-	resCuts[,c(3:8)] <- resCuts[,c(3:8)]*100
+	resCutsG <- seKompstuf(resCutsG, cutScores, M1 , SD1 , M2 , SD2 , linkerror)
+	resCutsG[,c(3:8)] <- resCutsG[,c(3:8)]*100
 	
-	if(writeCsv) {
-		stopifnot(!is.null(path))
-		write.csv2(PV500T1, file=paste0(path, "/PV500T1_", type, "_", Sys.Date(), ".csv"), row.names=FALSE)
-		write.csv2(PV500T2, file=paste0(path, "/PV500T2_", type, "_", Sys.Date(), ".csv"), row.names=FALSE)
-		write.csv2(resCuts, file=paste0(path, "/levelTrend_", type, "_", Sys.Date(), ".csv"), row.names=FALSE)
-		write.csv2(resMeans, file=paste0(path, "/meanTrend_", type, "_", Sys.Date(), ".csv"), row.names=FALSE)
-	}
-	
-	cat ( paste ("Bye! ", Sys.time(), "\n" ) ) 
-	
-	if(!is.null(cutScores)) {return(list(resMeans, resCuts)) } else {
-	return(list(resMeans))}
-	
+	return(list(resMeansG, resCutsG))
 }
