@@ -428,8 +428,10 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 	}
 	
 	groups <- list()
-	for(i in 1:dim(groupsT1)[2]) {
-		groups[[i]] <- groupe(PV500T1=PV500T1, PVsT1=PVsT1, countriesT1=countriesT1,jkzoneT1=jkzoneT1, jkrepT1=jkrepT1, weightsT1=weightsT1, groupsT1=groupsT1[,i], PV500T2=PV500T2, PVsT2=PVsT2, countriesT2=countriesT2, weightsT2=weightsT2, jkzoneT2=jkzoneT2, jkrepT2=jkrepT2, groupsT2=groupsT2[,i], GES=GES, cutScores=cutScores, seres=eres)
+	if(!is.null(groupsT1)) {
+		for(i in 1:dim(groupsT1)[2]) {
+			groups[[i]] <- groupe(PV500T1=PV500T1, PVsT1=PVsT1, countriesT1=countriesT1,jkzoneT1=jkzoneT1, jkrepT1=jkrepT1, weightsT1=weightsT1, groupsT1=groupsT1[,i], PV500T2=PV500T2, PVsT2=PVsT2, countriesT2=countriesT2, weightsT2=weightsT2, jkzoneT2=jkzoneT2, jkrepT2=jkrepT2, groupsT2=groupsT2[,i], GES=GES, cutScores=cutScores, seres=eres)
+		}
 	}
 		
 	if(GES) {
