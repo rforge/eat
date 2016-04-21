@@ -1,5 +1,5 @@
 
-splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "qMatrix" , "person.groups" ) , add = NULL , cross = NULL , all.persons = TRUE , all.persons.lab = "all" , person.split.depth = 0:length(person.groups[,-1,drop=FALSE]), full.model.names = TRUE , model.name.elements = c ( "dim" , "group" , "cross" ) , include.var.name = FALSE , env = FALSE , verbose = TRUE ) {
+splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "qMatrix" , "person.groups" ) , add = NULL , cross = NULL , all.persons = TRUE , all.persons.lab = "all" , person.split.depth = 0:length(person.groups[,-1,drop=FALSE]), full.model.names = TRUE , model.name.elements = c ( "dim" , "group" , "cross" ) , include.var.name = FALSE , env = FALSE , nCores=NULL , GBcore=NULL , verbose = TRUE ) {
 		
 		# Funktion: person.groups nach person.grouping
 		pg2pgr <- function ( x , nam ) {
@@ -351,10 +351,10 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 
 		# Modellname
 		if ( full.model.names & !is.null ( model.name.elements ) ) {
-				
+
 				# Elemente aus denen Modellname gebildet werden soll raussuchen
 				fx <- function ( el , add , cross ) {
-					if ( el %in% c("add","cross") ) eval ( parse ( text = paste0 ( "names ( ",el," )" ) ) ) else el
+						if ( el %in% c("add","cross") ) eval ( parse ( text = paste0 ( "names ( ",el," )" ) ) ) else el
 				}
 				mne <- unname ( do.call ( "c" , sapply ( model.name.elements, fx , add , cross , simplify = FALSE ) ) )
 				
@@ -538,13 +538,14 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 		}
 		do3 <- unname ( sapply ( apply ( m , 1 , f3 , env , cross , add , include.var.name ) , c ) )
 		eval ( parse ( text = do3 ) )
-		
+
 		# Modell-Dataframe noch an Rueckgabe ranhaengen
 		# Leerstrings zu NA
 		do.leer <- paste0 ( "m$" , colnames(m) , "[m$", colnames(m) , " %in% ''] <- NA" )
 		eval ( parse ( text = do.leer ) )
+
 		# anhaengen
-		r <- list ( "models" = m , "models.splitted" = r )
+		r <- list ( "models" = m , "models.splitted" = r , "nCores" = chooseCores( cores = nCores, GBcore = GBcore ) )
 		
 		# Ausgabe auf console
 		if ( verbose ) {

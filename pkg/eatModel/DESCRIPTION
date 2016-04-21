@@ -1,10 +1,10 @@
 Package: eatModel
 Type: Package
 Title: eatModel
-Version: 0.2.9
+Version: 0.2.91
 Depends: R (>= 3.0.0), TAM, reshape2
-Imports: car, gdata, plyr, date, Hmisc
-Date: 2016-04-16
+Imports: car, gdata, plyr, date, Hmisc, parallel
+Date: 2016-04-21
 Author: Sebastian Weirich, Martin Hecht
 Maintainer: Sebastian Weirich <sebastian.weirich@iqb.hu-berlin.de>
 Description: framework to run IRT models within R
