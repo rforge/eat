@@ -1,5 +1,5 @@
 
-chooseCores <- function(cores = NULL, GBcore = NULL) {
+chooseCores <- function(cores = NULL, GBcore = NULL, max.cores = NULL ) {
              if(!exists("detectCores"))   {library(parallel)}
              n.cores <- detectCores()
              if(is.na(n.cores))     {cat("Cannot detect cores. Computer does not seem to be suited for multicore analysis.\n")}
@@ -21,4 +21,9 @@ chooseCores <- function(cores = NULL, GBcore = NULL) {
                 use.cores.new <- (ramGB) / GBcore
                 if(use.cores.new < use.cores ) {use.cores <- use.cores.new}
              }
-             return( use.cores ) }
+
+			 if (!is.null(max.cores)) {
+					use.cores <- min( use.cores, max.cores )
+			 } 
+			 
+			 return( use.cores ) }

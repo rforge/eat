@@ -545,7 +545,7 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 		eval ( parse ( text = do.leer ) )
 
 		# anhaengen
-		r <- list ( "models" = m , "models.splitted" = r , "nCores" = chooseCores( cores = nCores, GBcore = GBcore ) )
+		r <- list ( "models" = m , "models.splitted" = r , "nCores" = chooseCores( cores = nCores, GBcore = GBcore, max.cores = nrow(m) ) )
 		
 		# Ausgabe auf console
 		if ( verbose ) {
