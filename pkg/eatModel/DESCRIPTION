@@ -1,7 +1,7 @@
 Package: eatModel
 Type: Package
 Title: eatModel
-Version: 0.2.91
+Version: 0.3.0
 Depends: R (>= 3.0.0), TAM, reshape2
 Imports: car, gdata, plyr, date, Hmisc, parallel
 Date: 2016-04-21

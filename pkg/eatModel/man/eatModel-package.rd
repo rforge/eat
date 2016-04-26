@@ -33,7 +33,9 @@
   compilation of several models in only one call. To define the compilation of multiple models, use
   the function \code{splitModels}, which returns a list which may be assigned to the 'splittedModels'
   argument in \code{defineModel}. In that case, not only one but several models are defined, called and 
-  evaluated. 
+  evaluated. The estimation of these models may be accelerated using multicore processing. Depending 
+  on the number of available logical CPUs, several models may be estimated simultaneously. See the examples
+  of \code{splitModels} for further details. 
   
   Basically, \code{eatModel} is useful for Conquest analyses calling from R. For a short time the R package
   \code{TAM} allows to estimate parameters of the mixed-Coefficients Multinomial Logit Model solely in an
@@ -52,7 +54,7 @@
 \tabular{ll}{
 Package: \tab eatModel\cr
 Type: \tab Package\cr
-Version: \tab 0.2.9\cr
+Version: \tab 0.3.0\cr
 Date: \tab 2016-04-16\cr
 License: \tab GPL(>=2)
 }

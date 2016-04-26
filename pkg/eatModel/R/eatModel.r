@@ -67,29 +67,41 @@ getResults <- function ( runModelObj, overwrite = FALSE, abs.dif.bound = 0.6, si
                }}   
 
 runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.console = TRUE, wait = TRUE) {
-            if ("defineMultiple" %in% class( defineModelObj ) ) {               ### erstmal fuer den Multimodellfall
-                res <- lapply(defineModelObj, FUN = function ( r ) { 
-                       ret <- runModel ( defineModelObj = r, show.output.on.console = show.output.on.console, show.dos.console = show.dos.console, wait = wait)
-                       return(ret)})
+            if ("defineMultiple" %in% class( defineModelObj ) ) {               ### erstmal fuer den Multimodellfall: nur dafuer wird single core und multicore unterschieden
+                if(is.null ( attr(defineModelObj, "nCores") ) | attr(defineModelObj, "nCores") == 1 ) {         
+                   res <- lapply(defineModelObj, FUN = function ( r ) {         ### erstmal: single core 
+                          ret <- runModel ( defineModelObj = r, show.output.on.console = show.output.on.console, show.dos.console = show.dos.console, wait = wait)
+                          return(ret)})
+                }  else  {                                                      ### multicore
+                   # if(!exists("detectCores"))   {library(parallel)}
+                   doIt<- function (laufnummer,  ... ) { 
+                          if(!exists("runModel"))  { library(eatModel) }
+                          ret <- runModel ( defineModelObj = defineModelObj[[laufnummer]], show.output.on.console = show.output.on.console, show.dos.console = show.dos.console, wait = TRUE)
+                          return(ret) }
+                   beg <- Sys.time()
+                   cl  <- makeCluster(attr(defineModelObj, "nCores"), type = "SOCK")
+                   res <- clusterApply(cl = cl, x = 1:length(defineModelObj), fun = doIt , show.output.on.console = show.output.on.console, show.dos.console = show.dos.console, wait = wait)
+                   stopCluster(cl)
+                   cat(paste ( length(defineModelObj), " analyses finished: ", sep="")); print( Sys.time() - beg)
+                }   
                 class(res) <- c("runMultiple", "list")
                 return(res)
-            } else {    
-                if("defineConquest" %in% class(defineModelObj)) {               ### ab hier fuer den single model Fall 
+            } else {                                                            ### ab hier fuer den single model Fall 
+                if("defineConquest" %in% class(defineModelObj)) {               ### hier fuer conquest
                    oldPfad <- getwd()
                    setwd(defineModelObj$dir)
-                   options(warn = -1)
                    system(paste(defineModelObj$conquest.folder," ",defineModelObj$input,sep=""),invisible=!show.dos.console,show.output.on.console=show.output.on.console, wait=wait) 
-                   options(warn = 0)
-                   setwd(oldPfad)                                                   ### untere Zeile: Rueckgabeobjekt definieren: Conquest
+                   if(wait == FALSE) { Sys.sleep(0.2) }
+                   setwd(oldPfad)                                               ### untere Zeile: Rueckgabeobjekt definieren: Conquest
                    class(defineModelObj) <- c("runConquest", "list")
                    return ( defineModelObj )
                 }
-                if("defineTam" %in% class(defineModelObj)) {                        ### exportiere alle Objekte aus defineModelObj in environment 
+                if("defineTam" %in% class(defineModelObj)) {                    ### exportiere alle Objekte aus defineModelObj in environment 
                    for ( i in names( defineModelObj )) { assign(i, defineModelObj[[i]]) } 
                    if ( show.output.on.console == TRUE ) { control$progress <- TRUE } 
-#                   if(!exists("tam.mml"))       {library(TAM, quietly = TRUE)}      ### March, 2, 2013: fuer's erste ohne DIF, ohne polytome Items, ohne mehrgruppenanalyse, ohne 2PL
+                  # if(!exists("tam.mml"))       {library(TAM, quietly = TRUE)}  ### March, 2, 2013: fuer's erste ohne DIF, ohne polytome Items, ohne mehrgruppenanalyse, ohne 2PL
                    if(!is.null(anchor)) { 
-                       stopifnot(ncol(anchor) == 2 )                                ### Untere Zeile: Wichtig! Sicherstellen, dass Reihenfolge der Items in Anker-Statement
+                       stopifnot(ncol(anchor) == 2 )                            ### Untere Zeile: Wichtig! Sicherstellen, dass Reihenfolge der Items in Anker-Statement
                        notInData   <- setdiff(anchor[,1], all.Names[["variablen"]])
                        if(length(notInData)>0)  {
                           cat(paste("Found following ", length(notInData)," item(s) in anchor list which are not in the data:\n",sep=""))
@@ -169,7 +181,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
      ### Sektion 'multiple models handling': jedes Modell einzeln von 'defineModel' aufbereiten lassen 
      ### Hier wird jetzt erstmal nur die bescheuerte Liste aus 'splitModels' aufbereitet (wenn der Nutzer sie verhunzt hat)
                   if(!is.null(splittedModels)) {
-                     if(length(splittedModels) == 2 & !is.null(splittedModels[[1]]) &  length(nrow( splittedModels[[1]]) > 0)>0 ) { 
+                     if(length(splittedModels) == 3 & !is.null(splittedModels[[1]]) &  length(nrow( splittedModels[[1]]) > 0)>0 ) { 
                         if(nrow(splittedModels[[1]])>0) { 
                            mods   <- intersect(splittedModels[["models"]][,"model.no"], unlist(lapply(splittedModels[["models.splitted"]], FUN = function ( l ) {l[["model.no"]]})))
                         }  else  { 
@@ -179,6 +191,11 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                         mods <- unlist(lapply(splittedModels[["models.splitted"]], FUN = function ( l ) {l[["model.no"]]})) 
                      }
                      if(length(mods) == 0) { stop("Inconsistent model specification in 'splittedModels'.\n") } else { if(verbose == TRUE) { cat(paste("\nSpecification of 'qMatrix' and 'person.groups' results in ",length(mods)," model(s).\n",sep="")) } }
+                     if(!is.null(splittedModels[["nCores"]] ) ) {
+                         if( splittedModels[["nCores"]] > 1 ) { 
+                             cat(paste ( "Use multicore processing. Models are allocated to ",splittedModels[["nCores"]]," cores.\n",sep=""))
+                         }   
+                     }    
      ### Jetzt wird die aufbereitete Liste aus 'splitModels' abgearbeitet 
      ### ACHTUNG: Argumente in 'splittedModels' ueberschreiben default- und vom Nutzer gesetzte Argumente in 'defineModel'!
                      models <- lapply( mods, FUN = function ( m ) { 
@@ -231,7 +248,8 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                                ret    <- eval(parse(text=toCall))
                                return(ret)                                                             
                                })
-                  class(models) <- c("defineMultiple", "list")
+                  attr(models, "nCores") <- splittedModels[["nCores"]]
+                  class(models)      <- c("defineMultiple", "list")
                   return(models)                                                ### Das ist die Rueckgabe fuer den Mehrmodellfall
                   }  else  { 
      ### ACHTUNG: hier beginnt jetzt der 'single model Fall' von 'defineModel' ### 
