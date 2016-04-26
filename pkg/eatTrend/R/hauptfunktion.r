@@ -3,7 +3,7 @@
 eatTrend <- function(itParsIntT1, PVsT1, countriesT1, 
 itParsNatT1=NULL, jkzoneT1=NULL, jkrepT1=NULL, weightsT1=NULL, groupsT1=NULL, itParsIntT2, PVsT2, 
 countriesT2, itParsNatT2=NULL, weightsT2=NULL, jkzoneT2=NULL, jkrepT2=NULL, groupsT2=NULL, GES=TRUE, testletNam=NULL, 
-transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL, type =c("FCIP", "MM"), writeCsv=FALSE, path=NULL, plots=FALSE, backwards=FALSE) {
+transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL, type =c("FCIP", "MM"), writeCsv=FALSE, path=NULL, plots=FALSE, backwards=FALSE, groupNam = NULL, landNam=TRUE) {
 
 	cat ( paste ("Hi! ", Sys.time(), "\n" ) ) 
 	if(backwards) {
@@ -415,10 +415,14 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 
 		if(writeCsv) {
 			stopifnot(!is.null(path))
+			if(landNam) {
+				resCuts[,1] <- landerNam(resCuts[,1])
+				resMeans[,1] <- landerNam(resMeans[,1])
+			}
 			write.csv2(PV500T1, file=paste0(path, "/PV500T1_", type, "_", Sys.Date(), ".csv"), row.names=FALSE)
 			write.csv2(PV500T2, file=paste0(path, "/PV500T2_", type, "_", Sys.Date(), ".csv"), row.names=FALSE)
-			write.csv2(resCuts, file=paste0(path, "/levelTrend_", type, "_", Sys.Date(), ".csv"), row.names=FALSE)
-			write.csv2(resMeans, file=paste0(path, "/meanTrend_", type, "_", Sys.Date(), ".csv"), row.names=FALSE)
+			write.csv2(resCuts, file=paste0(path, "/levelTrend_", type, "_GES_", Sys.Date(), ".csv"), row.names=FALSE)
+			write.csv2(resMeans, file=paste0(path, "/meanTrend_", type, "_GES_", Sys.Date(), ".csv"), row.names=FALSE)
 			write.csv2(cutScores, file=paste0(path, "/cutScores_", Sys.Date(), ".csv"), row.names=FALSE)
 		}
 	}
@@ -446,13 +450,23 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 		erg <- list(PV500T1, PV500T2)
 		names(erg) <- c("PV500T1", "PV500T2")
 	}
+	
 	if(length(groups) > 0) {
+		if(!is.null(groupNam)) {
+			names(groups) <- groupNam
+			} else {
+			groupNam <- paste0("group", 1:dim(groupsT1)[2])
+			}
 		erg <- list(erg,groups)
 			if(writeCsv) {
 				stopifnot(!is.null(path))
 				for(i in 1:dim(groupsT1)[2]) {
-					write.csv2(groups[[i]][[2]], file=paste0(path, "/levelTrend_", type, "_group", i, "_", Sys.Date(), ".csv"), row.names=FALSE)
-					write.csv2(groups[[i]][[1]], file=paste0(path, "/meanTrend_", type, "_group", i, "_", Sys.Date(), ".csv"), row.names=FALSE)
+					if(landNam) {
+						groups[[i]][[2]][,1] <- landerNam(groups[[i]][[2]][,1])
+						groups[[i]][[1]][,1] <- landerNam(groups[[i]][[1]][,1])
+					}
+					write.csv2(groups[[i]][[2]], file=paste0(path, "/levelTrend_", type, "_", groupNam[i], "_", Sys.Date(), ".csv"), row.names=FALSE)
+					write.csv2(groups[[i]][[1]], file=paste0(path, "/meanTrend_", type, "_", groupNam[i], "_", Sys.Date(), ".csv"), row.names=FALSE)
 				}
 			}
 		}
