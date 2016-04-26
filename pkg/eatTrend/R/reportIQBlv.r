@@ -161,19 +161,19 @@ reportIQBlv <- function(path, chapter=c("4", "5", "5b"),domain="Englisch Lesever
 				resTabs[[co]][9,jj] <- -subset(fileList[["MSA"]],fileList[["MSA"]]$country == co & fileList[["MSA"]]$parameter == jj)$estTrend
 				resTabs[[co]][9,paste("SE", jj)] <- subset(fileList[["MSA"]],fileList[["MSA"]]$country == co & fileList[["MSA"]]$parameter == jj)$seTrend
 				
-				resTabs[[co]][1,jj] <- subset(fileList[["MSAoGY"]],fileList[["MSAoGY"]]$country == co & fileList[["MSAoGY"]]$parameter == jj)$estT1
-				resTabs[[co]][1,paste("SE", jj)] <- subset(fileList[["MSAoGY"]],fileList[["MSAoGY"]]$country == co & fileList[["MSAoGY"]]$parameter == jj)$seT1
-				resTabs[[co]][2,jj] <- subset(fileList[["MSAoGY"]],fileList[["MSAoGY"]]$country == co & fileList[["MSAoGY"]]$parameter == jj)$estT2
-				resTabs[[co]][2,paste("SE", jj)] <- subset(fileList[["MSAoGY"]],fileList[["MSAoGY"]]$country == co & fileList[["MSAoGY"]]$parameter == jj)$seT2
-				resTabs[[co]][3,jj] <- -subset(fileList[["MSAoGY"]],fileList[["MSAoGY"]]$country == co & fileList[["MSAoGY"]]$parameter == jj)$estTrend
-				resTabs[[co]][3,paste("SE", jj)] <- subset(fileList[["MSAoGY"]],fileList[["MSAoGY"]]$country == co & fileList[["MSAoGY"]]$parameter == jj)$seTrend
+				resTabs[[co]][10,jj] <- subset(fileList[["MSAoGY"]],fileList[["MSAoGY"]]$country == co & fileList[["MSAoGY"]]$parameter == jj)$estT1
+				resTabs[[co]][10,paste("SE", jj)] <- subset(fileList[["MSAoGY"]],fileList[["MSAoGY"]]$country == co & fileList[["MSAoGY"]]$parameter == jj)$seT1
+				resTabs[[co]][11,jj] <- subset(fileList[["MSAoGY"]],fileList[["MSAoGY"]]$country == co & fileList[["MSAoGY"]]$parameter == jj)$estT2
+				resTabs[[co]][11,paste("SE", jj)] <- subset(fileList[["MSAoGY"]],fileList[["MSAoGY"]]$country == co & fileList[["MSAoGY"]]$parameter == jj)$seT2
+				resTabs[[co]][12,jj] <- -subset(fileList[["MSAoGY"]],fileList[["MSAoGY"]]$country == co & fileList[["MSAoGY"]]$parameter == jj)$estTrend
+				resTabs[[co]][12,paste("SE", jj)] <- subset(fileList[["MSAoGY"]],fileList[["MSAoGY"]]$country == co & fileList[["MSAoGY"]]$parameter == jj)$seTrend
 				
-				resTabs[[co]][1,jj] <- subset(fileList[["HSA"]],fileList[["HSA"]]$country == co & fileList[["HSA"]]$parameter == jj)$estT1
-				resTabs[[co]][1,paste("SE", jj)] <- subset(fileList[["HSA"]],fileList[["HSA"]]$country == co & fileList[["HSA"]]$parameter == jj)$seT1
-				resTabs[[co]][2,jj] <- subset(fileList[["HSA"]],fileList[["HSA"]]$country == co & fileList[["HSA"]]$parameter == jj)$estT2
-				resTabs[[co]][2,paste("SE", jj)] <- subset(fileList[["HSA"]],fileList[["HSA"]]$country == co & fileList[["HSA"]]$parameter == jj)$seT2
-				resTabs[[co]][3,jj] <- -subset(fileList[["HSA"]],fileList[["HSA"]]$country == co & fileList[["HSA"]]$parameter == jj)$estTrend
-				resTabs[[co]][3,paste("SE", jj)] <- subset(fileList[["HSA"]],fileList[["HSA"]]$country == co & fileList[["HSA"]]$parameter == jj)$seTrend		
+				resTabs[[co]][13,jj] <- subset(fileList[["HSA"]],fileList[["HSA"]]$country == co & fileList[["HSA"]]$parameter == jj)$estT1
+				resTabs[[co]][13,paste("SE", jj)] <- subset(fileList[["HSA"]],fileList[["HSA"]]$country == co & fileList[["HSA"]]$parameter == jj)$seT1
+				resTabs[[co]][14,jj] <- subset(fileList[["HSA"]],fileList[["HSA"]]$country == co & fileList[["HSA"]]$parameter == jj)$estT2
+				resTabs[[co]][14,paste("SE", jj)] <- subset(fileList[["HSA"]],fileList[["HSA"]]$country == co & fileList[["HSA"]]$parameter == jj)$seT2
+				resTabs[[co]][15,jj] <- -subset(fileList[["HSA"]],fileList[["HSA"]]$country == co & fileList[["HSA"]]$parameter == jj)$estTrend
+				resTabs[[co]][15,paste("SE", jj)] <- subset(fileList[["HSA"]],fileList[["HSA"]]$country == co & fileList[["HSA"]]$parameter == jj)$seTrend		
 			}
 		}
 		resTab <- do.call("rbind", resTabs)
