@@ -6,7 +6,7 @@ chooseCores <- function(cores = NULL, GBcore = NULL, max.cores = NULL ) {
              ram     <- memory.limit()
              if(!is.null(cores)) {
                 use.cores <- as.integer(cores)
-                if(use.cores == 1 ) {cat("Not useful to choose 1 core in multicore option.\n")}
+                # if(use.cores == 1 ) {cat("Not useful to choose 1 core in multicore option.\n")}
                 if(use.cores > n.cores) {
                    cat(paste("Fail to use ", use.cores," cores. Found only ",n.cores," cores which will now be purposed to use.\n",sep=""))
                    use.cores <- n.cores

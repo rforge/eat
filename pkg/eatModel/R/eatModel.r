@@ -1,10 +1,27 @@
 getResults <- function ( runModelObj, overwrite = FALSE, abs.dif.bound = 0.6, sig.dif.bound = 0.3, p.value = 0.9, simplify = TRUE ) { 
-            if( "runMultiple" %in% class(runModelObj)) {                        ### Mehrmodellfall
-               res <- lapply( runModelObj, FUN = function ( r ) { 
-                      ret <- getResults (runModelObj = r, overwrite = overwrite, abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value, simplify = simplify ) 
-                      att <- list ( list ( model.name = ret[1,"model"], all.Names = attr(ret, "all.Names"), dif.settings = attr(ret, "dif.settings") ))
-                      stopifnot ( length(unique(ret[1,"model"])) == 1 )         ### grosser scheiss: baue Hilfsobjekt fuer Attribute (intern notwendige Zusatzinformationen) separat zusammen
-                      return(list ( ret = ret, att = att))})                    ### schlimmer Code, darf nie jemand sehen!!
+            if("runMultiple" %in% class(runModelObj)) {                         ### Mehrmodellfall
+                if(is.null ( attr(runModelObj, "nCores") ) | attr(runModelObj, "nCores") == 1 ) {         
+                   res <- lapply( runModelObj, FUN = function ( r ) {           ### erstmal single core auswertung
+                          ret <- getResults (runModelObj = r, overwrite = overwrite, abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value, simplify = simplify ) 
+                          att <- list ( list ( model.name = ret[1,"model"], all.Names = attr(ret, "all.Names"), dif.settings = attr(ret, "dif.settings") ))
+                          stopifnot ( length(unique(ret[1,"model"])) == 1 )     ### grosser scheiss: baue Hilfsobjekt fuer Attribute (intern notwendige Zusatzinformationen) separat zusammen
+                          return(list ( ret = ret, att = att))})                ### schlimmer Code, darf nie jemand sehen!!
+                   }  else  {                                                   ### jetzt multicore: muss dasselbe Objekt zurueckgeben!
+                   if(!exists("detectCores"))   {library(parallel)}
+                   doIt<- function (laufnummer,  ... ) { 
+                          if(!exists("getResults"))  { library(eatModel) }
+                          if(!exists("tam.mml") & length(grep("tam.", class(runModelObj[[1]])))>0 ) {library(TAM, quietly = TRUE)} 
+                          if(!exists("melt"))   {library(reshape2)}
+                          ret <- getResults (runModelObj = runModelObj[[laufnummer]], overwrite = overwrite, abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value, simplify = simplify ) 
+                          att <- list ( list ( model.name = ret[1,"model"], all.Names = attr(ret, "all.Names"), dif.settings = attr(ret, "dif.settings") ))
+                          stopifnot ( length(unique(ret[1,"model"])) == 1 )
+                          return(list ( ret = ret, att = att))}
+                   beg <- Sys.time()
+                   cl  <- makeCluster(attr(runModelObj, "nCores"), type = "SOCK")
+                   res <- clusterApply(cl = cl, x = 1:length(runModelObj), fun = doIt , overwrite = overwrite, abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value, simplify = simplify ) 
+                   stopCluster(cl)
+                   cat(paste ( "Results of ",length(runModelObj), " analyses processed: ", sep="")); print( Sys.time() - beg)
+                   }
                att <- lapply(res, FUN = function ( yy ) { return ( yy[["att"]] ) } )
                res <- do.call("rbind", lapply ( res, FUN = function ( yy ) { return ( yy[["ret"]] ) } ) ) 
                attr(res, "att") <- att
@@ -76,7 +93,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                    # if(!exists("detectCores"))   {library(parallel)}
                    doIt<- function (laufnummer,  ... ) { 
                           if(!exists("runModel"))  { library(eatModel) }
-                          if(!exists("tam.mml"))       {library(TAM, quietly = TRUE)} 
+                          if(!exists("tam.mml") & defineModelObj[[1]][["software"]] == "tam")   {library(TAM, quietly = TRUE)} 
                           ret <- runModel ( defineModelObj = defineModelObj[[laufnummer]], show.output.on.console = show.output.on.console, show.dos.console = show.dos.console, wait = TRUE)
                           return(ret) }
                    beg <- Sys.time()
@@ -86,6 +103,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                    cat(paste ( length(defineModelObj), " analyses finished: ", sep="")); print( Sys.time() - beg)
                 }   
                 class(res) <- c("runMultiple", "list")
+                attr(res, "nCores") <- attr(defineModelObj, "nCores")
                 return(res)
             } else {                                                            ### ab hier fuer den single model Fall 
                 if("defineConquest" %in% class(defineModelObj)) {               ### hier fuer conquest
@@ -199,7 +217,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                      }    
      ### Jetzt wird die aufbereitete Liste aus 'splitModels' abgearbeitet 
      ### ACHTUNG: Argumente in 'splittedModels' ueberschreiben default- und vom Nutzer gesetzte Argumente in 'defineModel'!
-                     models <- lapply( mods, FUN = function ( m ) { 
+                     doAufb <- function ( m ) { 
                                matchL <- match(m, unlist(lapply(splittedModels[["models.splitted"]], FUN = function ( l ) { l[["model.no"]] } )))
                                if(!is.null(splittedModels[["models.splitted"]][[matchL]][["qMatrix"]])) {
                                   itemMis<- setdiff ( splittedModels[["models.splitted"]][[matchL]][["qMatrix"]][,1], colnames(dat))
@@ -246,11 +264,51 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                                if(verbose == TRUE ) {
                                   cat(paste("\n\n",paste(rep("=",times = nDots), sep="", collapse=""),"\nModel No. ",m, paste(txt,sep="", collapse=""), "\n",paste(rep("=",times = nDots), sep="", collapse=""),"\n\n", sep=""))
                                }   
-                               ret    <- eval(parse(text=toCall))
-                               return(ret)                                                             
-                               })
+     ### Achtung! Rueckgabe haengt davon ab, ob multicore Handling stattfinden soll! zuerst single core 
+                               if(is.null ( splittedModels[["nCores"]] ) | splittedModels[["nCores"]] == 1 ) {                                   
+                                  ret    <- eval(parse(text=toCall))            ### single core handling: die verschiedenen Modelle werden 
+                               }  else  {                                       ### bereits jetzt an "defineModel" zurueckgegeben und seriell verarbeitet
+                                  retMul <- paste( overwr1[,"arg"], overwr1[,"val"], sep=" = ", collapse=", ")
+                                  retMul <- paste("list ( ", retMul, ")", sep="")## multicore: die verschiedenen Modelle werden noch nicht weiter verarbeitet,
+                                  ret    <- eval(parse(text=retMul))            ### es wird lediglich der Modellaufruf generiert, der dann spaeter an die einzelnen
+                               }                                                ### cores weitergegeben wird
+                               return(ret) }                                    ### hier endet "doAufb"
+     ### Der Funktionsaufruf variiert je nach single- oder multicore handling. hier: single core
+                     if(is.null ( splittedModels[["nCores"]] ) | splittedModels[["nCores"]] == 1 ) {                                   
+                        models <- lapply( mods, FUN = doAufb)                   ### single core handling: Funktion "doAufb" wird seriell fuer alle "mods" aufgerufen
+     ### wenn multicore handling, dann wird das Objekt "model" an cores verteilt und dort weiter verarbeitet. Ausserdem werden Konsolenausgaben in stringobjekt "txt" weitergeleitet
+                     }  else  { 
+                        txt    <- capture.output ( models <- lapply( mods, FUN = doAufb))
+                        if(!exists("detectCores"))   {library(parallel)}
+                        doIt<- function (laufnummer,  ... ) { 
+                               if(!exists("getResults"))  { library(eatModel) }
+                               if(!exists("melt"))        { library(reshape2) }
+                               strI<- paste(unlist(lapply ( names ( models[[laufnummer]]) , FUN = function ( nameI ) { paste ( nameI, " = models[[laufnummer]][[\"",nameI,"\"]]", sep="")})), collapse = ", ")
+                               strI<- paste("capture.output( res <- defineModel(",strI,"))",sep="")
+                               txt <- eval(parse(text=strI))
+                               return(list ( res=res, txt=txt)) }
+                        beg <- Sys.time()
+                        cl  <- makeCluster(splittedModels[["nCores"]], type = "SOCK")
+                        mods<- clusterApply(cl = cl, x = 1:length(models), fun = doIt)
+                        stopCluster(cl)
+                        cat(paste ( length(models), " models were prepared for estimation: ", sep="")); print( Sys.time() - beg)
+     ### Trenne Aufbereitungsergebnisse von Konsolennachrichten
+                        models <- lapply(mods, FUN = function ( m ) { m[["res"]] } )
+     ### multicore gibt keine Ausgaben auf die Konsole, die muessen ueber "capture.output" eingefangen und separat ausgegeben werden                         
+                        txts<- lapply(mods, FUN = function ( m ) { m[["txt"]] } )   
+                        luec<- which(txt == "")
+                        pos <- luec[which ( diff(luec) == 1 )]
+                        pos <- c(pos, length(txt)+1)
+                        txtP<- lapply ( 1:(length(pos)-1), FUN = function ( u ) { txt[ pos[u] : (pos[u+1]-1) ] })
+                        txtG<- NULL
+                        stopifnot(length(txtP) == length(txts))
+                        for ( j in 1:length(txtP) ) { 
+                              txtG <- c(txtG, txtP[[j]], txts[[j]])
+                        }      
+                        cat(txtG, sep="\n")
+                     }                                                          
                   attr(models, "nCores") <- splittedModels[["nCores"]]
-                  class(models)      <- c("defineMultiple", "list")
+                  class(models)    <- c("defineMultiple", "list")
                   return(models)                                                ### Das ist die Rueckgabe fuer den Mehrmodellfall
                   }  else  { 
      ### ACHTUNG: hier beginnt jetzt der 'single model Fall' von 'defineModel' ### 
