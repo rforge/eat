@@ -76,6 +76,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                    # if(!exists("detectCores"))   {library(parallel)}
                    doIt<- function (laufnummer,  ... ) { 
                           if(!exists("runModel"))  { library(eatModel) }
+                          if(!exists("tam.mml"))       {library(TAM, quietly = TRUE)} 
                           ret <- runModel ( defineModelObj = defineModelObj[[laufnummer]], show.output.on.console = show.output.on.console, show.dos.console = show.dos.console, wait = TRUE)
                           return(ret) }
                    beg <- Sys.time()
@@ -170,7 +171,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
 defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
                qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL, anchor = NULL, check.for.linking = TRUE, boundary = 6, 
                remove.boundary = FALSE, remove.no.answers = TRUE, remove.missing.items = TRUE, remove.constant.items = TRUE, remove.failures = FALSE, 
-               remove.vars.DIF.missing = TRUE, remove.vars.DIF.constant = TRUE, verbose=TRUE, software = c("conquest","lme4", "tam"), dir = NULL, 
+               remove.vars.DIF.missing = TRUE, remove.vars.DIF.constant = TRUE, verbose=TRUE, software = c("conquest","tam"), dir = NULL, 
                analysis.name, withDescriptives = TRUE, model.statement = "item",  compute.fit = TRUE, n.plausible=5, seed = NULL, conquest.folder=NULL,
                constraints=c("cases","none","items"),std.err=c("quick","full","none"), distribution=c("normal","discrete"), 
                method=c("gauss", "quadrature", "montecarlo"), n.iterations=2000,nodes=NULL, p.nodes=2000, f.nodes=2000,converge=0.001,deviancechange=0.0001, 

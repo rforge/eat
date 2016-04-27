@@ -24,7 +24,7 @@ defineModel (dat, items, id, splittedModels = NULL,
    allowAllScoresEverywhere = TRUE, guessMat = NULL, est.slopegroups = NULL,
    progress = FALSE, increment.factor=1 , fac.oldxsi=0, 
    export = list(logfile = TRUE, systemfile = FALSE, history = TRUE,
-   covariance = TRUE, reg_coefficients = TRUE, designmatrix = FALSE)}
+   covariance = TRUE, reg_coefficients = TRUE, designmatrix = FALSE))}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{dat}{
