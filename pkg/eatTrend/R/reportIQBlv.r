@@ -1,7 +1,3 @@
-
-# test
-# path <- "R:\\LV\\2015\\41_Auswertung\\02_ENG\\11_Trend\\test\\ELstandard\\"
-
 reportIQBlv <- function(path, chapter=c("4", "5a", "5b"),domain="Englisch Leseverstehen") {
 
 	if(chapter == "4") {
@@ -67,7 +63,7 @@ reportIQBlv <- function(path, chapter=c("4", "5a", "5b"),domain="Englisch Leseve
 		for(co in countries) {
 			resTabs[[co]] <- data.frame(country=rep(co,19), stringsAsFactors=FALSE)
 			resTabs[[co]]$domain <- rep(domain,19)
-			resTabs[[co]]$gruppe <- c("9. Jg. insgesamt 2015", "9. Jg. insgesamt 2015 ohne SuS mit SPF", "9. Jg. insgesamt 2009 ohne SuS mit SPF", "9. Jg. insgesamt ohne SuS mit SPF: Differenz 2015 - 2009", "Gymnasium 2015 ohne SuS mit SPF", "Gymnasium 2009 ohne SuS mit SPF", "Gymnasium ohne SuS mit SPF: Differenz 2015 - 2009","MSA insgesamt 2015", "MSA insgesamt 2015 ohne SuS mit SPF", "MSA insgesamt 2009 ohne SuS mit SPF", "MSA insgesamt ohne SuS mit SPF: Differenz 2015 - 2009","HSA insgesamt 2015", "HSA insgesamt 2015 ohne SuS mit SPF", "HSA insgesamt 2009 ohne SuS mit SPF", "HSA insgesamt ohne SuS mit SPF: Differenz 2015 - 2009","MSA ohne Gymnasium 2015", "MSA ohne Gymnasium 2015 ohne SuS mit SPF", "MSA ohne Gymnasium 2009 ohne SuS mit SPF", "MSA ohne Gymnasium ohne SuS mit SPF: Differenz 2015 - 2009")
+			resTabs[[co]]$gruppe <- c("9. Jg. insgesamt 2015", "9. Jg. insgesamt 2015 ohne SuS mit SPF", "9. Jg. insgesamt 2009 ohne SuS mit SPF", "9. Jg. insgesamt ohne SuS mit SPF: Differenz 2015 - 2009", "Gymnasium 2015", "Gymnasium 2009", "Gymnasium: Differenz 2015 - 2009","MSA insgesamt 2015", "MSA insgesamt 2015 ohne SuS mit SPF", "MSA insgesamt 2009 ohne SuS mit SPF", "MSA insgesamt ohne SuS mit SPF: Differenz 2015 - 2009","HSA insgesamt 2015", "HSA insgesamt 2015 ohne SuS mit SPF", "HSA insgesamt 2009 ohne SuS mit SPF", "HSA insgesamt ohne SuS mit SPF: Differenz 2015 - 2009","MSA ohne Gymnasium 2015", "MSA ohne Gymnasium 2015 ohne SuS mit SPF", "MSA ohne Gymnasium 2009 ohne SuS mit SPF", "MSA ohne Gymnasium ohne SuS mit SPF: Differenz 2015 - 2009")
 			for(jj in stufen) {
 				resTabs[[co]][1,jj] <- subset(fileList[["GES"]],fileList[["GES"]]$country == co & fileList[["GES"]]$parameter == jj)$estT1
 				resTabs[[co]][2,jj] <- subset(fileList[["GESoSPF"]],fileList[["GESoSPF"]]$country == co & fileList[["GESoSPF"]]$parameter == jj)$estT1
@@ -147,7 +143,7 @@ reportIQBlv <- function(path, chapter=c("4", "5a", "5b"),domain="Englisch Leseve
 		for(co in countries) {
 			resTabs[[co]] <- data.frame(country=rep(co,19), stringsAsFactors=FALSE)
 			resTabs[[co]]$domain <- rep(domain,19)
-			resTabs[[co]]$gruppe <- c("9. Jg. insgesamt 2015", "9. Jg. insgesamt 2015 ohne SuS mit SPF", "9. Jg. insgesamt 2009 ohne SuS mit SPF", "9. Jg. insgesamt ohne SuS mit SPF: Differenz 2015 - 2009", "Gymnasium 2015 ohne SuS mit SPF", "Gymnasium 2009 ohne SuS mit SPF", "Gymnasium ohne SuS mit SPF: Differenz 2015 - 2009","MSA insgesamt 2015", "MSA insgesamt 2015 ohne SuS mit SPF", "MSA insgesamt 2009 ohne SuS mit SPF", "MSA insgesamt ohne SuS mit SPF: Differenz 2015 - 2009","HSA insgesamt 2015", "HSA insgesamt 2015 ohne SuS mit SPF", "HSA insgesamt 2009 ohne SuS mit SPF", "HSA insgesamt ohne SuS mit SPF: Differenz 2015 - 2009","MSA ohne Gymnasium 2015", "MSA ohne Gymnasium 2015 ohne SuS mit SPF", "MSA ohne Gymnasium 2009 ohne SuS mit SPF", "MSA ohne Gymnasium ohne SuS mit SPF: Differenz 2015 - 2009")
+			resTabs[[co]]$gruppe <- c("9. Jg. insgesamt 2015", "9. Jg. insgesamt 2015 ohne SuS mit SPF", "9. Jg. insgesamt 2009 ohne SuS mit SPF", "9. Jg. insgesamt ohne SuS mit SPF: Differenz 2015 - 2009", "Gymnasium 2015", "Gymnasium 2009", "Gymnasium: Differenz 2015 - 2009","MSA insgesamt 2015", "MSA insgesamt 2015 ohne SuS mit SPF", "MSA insgesamt 2009 ohne SuS mit SPF", "MSA insgesamt ohne SuS mit SPF: Differenz 2015 - 2009","HSA insgesamt 2015", "HSA insgesamt 2015 ohne SuS mit SPF", "HSA insgesamt 2009 ohne SuS mit SPF", "HSA insgesamt ohne SuS mit SPF: Differenz 2015 - 2009","MSA ohne Gymnasium 2015", "MSA ohne Gymnasium 2015 ohne SuS mit SPF", "MSA ohne Gymnasium 2009 ohne SuS mit SPF", "MSA ohne Gymnasium ohne SuS mit SPF: Differenz 2015 - 2009")
 			for(jj in stufen) {
 				resTabs[[co]][1,jj] <- subset(fileList[["GES"]],fileList[["GES"]]$country == co & fileList[["GES"]]$parameter == jj)$estT1
 				resTabs[[co]][2,jj] <- subset(fileList[["GESoSPF"]],fileList[["GESoSPF"]]$country == co & fileList[["GESoSPF"]]$parameter == jj)$estT1
@@ -211,7 +207,3 @@ landerNam <- function(kurzelVec) {
 }
 
 
-
-
-# test
-# path <- "R:\\LV\\2015\\41_Auswertung\\02_ENG\\11_Trend\\test\\ER\\"
