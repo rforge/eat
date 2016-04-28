@@ -447,7 +447,7 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 						pg <- NULL.char
 						gr <- NULL.char
 				} else {
-						pg <- paste0 ( "p3$" , z["group"] )
+						pg <- paste0 ( "p3$'" , z["group"], "'" )
 						gr <- z["group"]
 				}
 						
@@ -549,7 +549,7 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 		
 		# Ausgabe auf console
 		if ( verbose ) {
-				out.str <- paste0 ( "\nsee <returned>$models\n-------------------------------",paste(rep("-",nchar ( as.character ( nrow ( m ) ) )),collapse=""),zus,"\n" )
+				out.str <- paste0 ( "\nsee <returned>$models\nnumber of cores: ",r$nCores,"\n-------------------------------",paste(rep("-",nchar ( as.character ( nrow ( m ) ) )),collapse=""),zus,"\n" )
 				cat ( out.str )
 				flush.console()
 		}
