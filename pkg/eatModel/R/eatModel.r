@@ -213,6 +213,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                      if(!is.null(splittedModels[["nCores"]] ) ) {
                          if( splittedModels[["nCores"]] > 1 ) { 
                              cat(paste ( "Use multicore processing. Models are allocated to ",splittedModels[["nCores"]]," cores.\n",sep=""))
+                             flush.console()
                          }   
                      }    
      ### Jetzt wird die aufbereitete Liste aus 'splitModels' abgearbeitet 
@@ -265,7 +266,9 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                                   cat(paste("\n\n",paste(rep("=",times = nDots), sep="", collapse=""),"\nModel No. ",m, paste(txt,sep="", collapse=""), "\n",paste(rep("=",times = nDots), sep="", collapse=""),"\n\n", sep=""))
                                }   
      ### Achtung! Rueckgabe haengt davon ab, ob multicore Handling stattfinden soll! zuerst single core 
-                               if(is.null ( splittedModels[["nCores"]] ) | splittedModels[["nCores"]] == 1 ) {                                   
+     ### stable: multicore desaktiviert 
+                               # if(is.null ( splittedModels[["nCores"]] ) | splittedModels[["nCores"]] == 1 ) {                                   
+                               if ( 1 == 1 ) { 
                                   ret    <- eval(parse(text=toCall))            ### single core handling: die verschiedenen Modelle werden 
                                }  else  {                                       ### bereits jetzt an "defineModel" zurueckgegeben und seriell verarbeitet
                                   retMul <- paste( overwr1[,"arg"], overwr1[,"val"], sep=" = ", collapse=", ")
@@ -274,7 +277,9 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                                }                                                ### cores weitergegeben wird
                                return(ret) }                                    ### hier endet "doAufb"
      ### Der Funktionsaufruf variiert je nach single- oder multicore handling. hier: single core
-                     if(is.null ( splittedModels[["nCores"]] ) | splittedModels[["nCores"]] == 1 ) {                                   
+     ### ACHTUNG: damit es stabil laeuft, wird das hier desaktiviert, nur in Testversion wird es multicore
+                     # if(is.null ( splittedModels[["nCores"]] ) | splittedModels[["nCores"]] == 1 ) {                                   
+                     if ( 1 == 1 ) { 
                         models <- lapply( mods, FUN = doAufb)                   ### single core handling: Funktion "doAufb" wird seriell fuer alle "mods" aufgerufen
      ### wenn multicore handling, dann wird das Objekt "model" an cores verteilt und dort weiter verarbeitet. Ausserdem werden Konsolenausgaben in stringobjekt "txt" weitergeleitet
                      }  else  { 
@@ -298,6 +303,8 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                         txts<- lapply(mods, FUN = function ( m ) { m[["txt"]] } )   
                         luec<- which(txt == "")
                         pos <- luec[which ( diff(luec) == 1 )]
+                        dif2<- which(diff(pos) == 1)                            ### Hotfix!
+                        if(length(dif2)>0) { pos <- pos [ -dif2 ] }
                         pos <- c(pos, length(txt)+1)
                         txtP<- lapply ( 1:(length(pos)-1), FUN = function ( u ) { txt[ pos[u] : (pos[u+1]-1) ] })
                         txtG<- NULL
