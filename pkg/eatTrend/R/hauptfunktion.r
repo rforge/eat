@@ -150,7 +150,7 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 					cutScores <- ((logitCutsT2-as.numeric(unname(Link3MM))-mRefPop)/sdRefPop)*sdtT+mtT					
 				}
 			
-				PV500T1 <- transformTo500(pars=PV500T1, mtT=mtT, sdtT=sdtT, wgts=weightsT1, type="persPar", cutScores=cutScores)
+				PV500T1 <- transformTo500(pars=PV500T1, mtT=mtT, sdtT=sdtT, mRefPop=mRefPop, sdRefPop=sdRefPop, wgts=weightsT1, type="persPar", cutScores=cutScores)
 				PV500T2 <- transformTo500(pars=PV500T2, mtT=mtT, sdtT=sdtT, mRefPop=mRefPop, sdRefPop=sdRefPop, type="persPar", cutScores=cutScores)
 	
 			}
