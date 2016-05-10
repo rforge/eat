@@ -327,7 +327,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                         options(scipen = 20)                                    ### setze Option für Anzahl der Nachkommastellen
                         if(missing(analysis.name)) {stop("Please specify 'analysis.name' or use 'software = \"tam\"'\n")} 
                      }  else  { 
-                        if(missing(analysis.name)) {analysis.name <- NULL} 
+                        if(missing(analysis.name)) {analysis.name <- "not_specified"} 
                      }   
                      if(length(model.statement)!=1)            {stop("'model.statement' has to be of length 1.\n")}
                      if(class(model.statement)!="character")   {stop("'model.statement' has to be of class 'character'.\n")}
@@ -823,7 +823,7 @@ getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Name
              drin <- allID[which(allID %in% colnames(itn))]
              # itn1 <- data.frame ( model = model.name, source = "conquest", var1 = itnS[,"item.name"], var2 = NA , type = "fixed", indicator.group = "items", group = qL[match(qL[,varName],itnS[,"item.name"]),"dimensionName"], par = "itemP",  derived.par = NA, value = as.numeric(itnS[,"item.p"]), stringsAsFactors = FALSE)
              # itn2 <- data.frame ( model = model.name, source = "conquest", var1 = itnS[,"item.name"], var2 = NA , type = "fixed", indicator.group = "items", group = qL[match(qL[,varName],itnS[,"item.name"]),"dimensionName"], par = "Nvalid",  derived.par = NA, value = as.numeric(itnS[,"n.valid"]), stringsAsFactors = FALSE)
-             itnL <- melt(itn, id.vars = drin, measure.vars = "pt.bis", value.name = "ptBis", na.rm=TRUE)
+             itnL <- melt(itn, id.vars = drin, measure.vars = "pt.bis", value.name = "ptBis", na.rm=FALSE)
              both <- merge(qL, itnL, by.x = colnames(qMatrix)[1], by.y = "item.name", all=TRUE)
              drin2<- setdiff ( drin, "item.name")
              both["var2"] <- apply(X = both, MARGIN = 1, FUN = function ( zeile ) { paste( names ( zeile[drin2]), zeile[drin2], sep="=", collapse= ", ") })
@@ -998,8 +998,9 @@ getTamResults     <- function(runModelObj) {
          ret  <- rbind(ret, shw1, shw2, shw3, shw4, shw5, shw6)                 ### Rueckgabeobjekt befuellen, danach infit auslesen
          infit<- tam.fit(runModelObj, progress=FALSE)                           ### Achtung: wenn DIF-Analyse, dann misslingt untere Zeile: Workarond!
     ### DIF-Parameter umbenennen, so dass es konsistent zu "getConquestResults" ist
-         if(inherits(try( ret  <- rbind(ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = infit$itemfit[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = qL[match(qL[,varName],rownames(runModelObj[["xsi"]])),"dimensionName"], par = "est",  derived.par = "infit", value = infit$itemfit[,"Infit"], stringsAsFactors = FALSE),
-                                             data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = infit$itemfit[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = qL[match(qL[,varName],rownames(runModelObj[["xsi"]])),"dimensionName"], par = "est",  derived.par = "outfit", value = infit$itemfit[,"Outfit"], stringsAsFactors = FALSE)) , silent = TRUE),"try-error"))  {
+         fits <- merge(infit[["itemfit"]], qL[,-match("value", colnames(qL))],  by.x = "parameter", by.y = colnames(qMatrix)[1], all = TRUE)
+         if(inherits(try( ret  <- rbind(ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = fits[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = fits[,"dimensionName"], par = "est",  derived.par = "infit", value = fits[,"Infit"], stringsAsFactors = FALSE),
+                                             data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = fits[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = fits[,"dimensionName"], par = "est",  derived.par = "outfit", value = fits[,"Outfit"], stringsAsFactors = FALSE)) , silent = TRUE),"try-error"))  {
             ret  <- rbind(ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = infit$itemfit[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = NA, par = "est",  derived.par = "infit", value = infit$itemfit[,"Infit"], stringsAsFactors = FALSE),
                                data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = infit$itemfit[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = NA, par = "est",  derived.par = "outfit", value = infit$itemfit[,"Outfit"], stringsAsFactors = FALSE) )
             ret[,"toMerge"] <- halve.string(ret[,"var1"], ":", first=TRUE)[,1]
@@ -1091,15 +1092,20 @@ eapFromRes <- function ( resultsObj ) {
                   return(res)}))
           return(sel)}        
 
-pvFromRes  <- function ( resultsObj ) { 
+pvFromRes  <- function ( resultsObj, toWideFormat = TRUE ) { 
           sel  <- resultsObj[intersect( which(resultsObj[,"par"] == "pv"),which(resultsObj[,"indicator.group"] == "persons")),]
-          sel  <- do.call("rbind", by(sel, INDICES = sel[,"group"], FUN = function ( gr ) { 
-                  res  <- dcast ( gr , var1~derived.par, value.var = "value")
-                  colnames(res)[1] <- "ID"                                      ### Spaeter eventuell die Original-ID durchschleifen?
-                  res  <- data.frame ( res[,"ID", drop=FALSE], dimension = as.character(gr[1,"group"]), res[,-1,drop=FALSE], stringsAsFactors = FALSE)
-                  return(res)}))
+          if (toWideFormat == TRUE ) { 
+              sel  <- do.call("rbind", by(sel, INDICES = sel[,"group"], FUN = function ( gr ) { 
+                      res  <- dcast ( gr , var1~derived.par, value.var = "value")
+                      colnames(res)[1] <- "ID"                                  ### Spaeter eventuell die Original-ID durchschleifen?
+                      res  <- data.frame ( res[,"ID", drop=FALSE], dimension = as.character(gr[1,"group"]), res[,-1,drop=FALSE], stringsAsFactors = FALSE)
+                      return(res)}))
+          }  else  { 
+              sel  <- sel[,c("model", "var1", "group", "derived.par", "value")] 
+              colnames(sel) <- recode ( colnames(sel), "'var1'='ID'; 'derived.par'='imp'")
+          }    
           return(sel)}        
-
+          
 itemFromRes<- function ( resultsObj ) { 
           if( "multipleResults" %in% class(resultsObj)) {                       ### Mehrmodellfall
               selM  <- do.call("rbind", by(data = resultsObj, INDICES = resultsObj[,"model"], FUN = function ( mr ) { 
