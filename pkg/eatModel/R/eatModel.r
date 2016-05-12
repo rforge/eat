@@ -333,6 +333,10 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                      if(class(model.statement)!="character")   {stop("'model.statement' has to be of class 'character'.\n")}
                      if(missing(dat))   {stop("No dataset specified.\n") }      ### 11.04.2014: nutzt Hilfsfunktionen von jk2.mean etc.
                      if(is.null(items)) {stop("Argument 'items' must not be NULL.\n",sep="")}
+                     if ( length(items) != length(unique(items)) ) { 
+                          cat("Warning: Item identifier is not unique. Only unique item identifiers will be used.\n")
+                          items <- unique(items)
+                     }     
                      allVars     <- list(ID = id, variablen=items, DIF.var=DIF.var, HG.var=HG.var, group.var=group.var, weight.var=weight.var)
                      all.Names   <- lapply(allVars, FUN=function(ii) {.existsBackgroundVariables(dat = dat, variable=ii)})
                      doppelt     <- which(duplicated(dat[,all.Names[["ID"]]]))
@@ -390,7 +394,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                          if(length(notInQ)>0) {
                             cat(paste("Following ", length(notInQ)," item(s) missed in Q matrix will removed from data: \n    ",paste(notInQ,collapse=", "),"\n",sep=""))
                          }
-                         all.Names$variablen <- qMatrix[,1]  } ;   flush.console()# Wichtig! Sicherstellen, dass Reihenfolge der Items in Q-Matrix mit Reihenfolge der Items im Data.frame uebereinstimmt!
+                         all.Names[["variablen"]] <- qMatrix[,1]  } ;   flush.console()# Wichtig! Sicherstellen, dass Reihenfolge der Items in Q-Matrix mit Reihenfolge der Items im Data.frame uebereinstimmt!
      ### Sektion 'Alle Items auf einfache Konsistenz pruefen' ###
                       namen.items.weg <- NULL
                       is.NaN <- do.call("cbind", lapply(dat[,all.Names[["variablen"]], drop = FALSE], FUN = function (uu) { is.nan(uu) } ) )
@@ -733,6 +737,7 @@ checkQmatrixConsistency <-  function(qmat) {
                         pste <- apply(qChk, 1, FUN = function ( x ) { paste(x[-1], collapse="")})
                         if( !all ( pste == pste[1] )) { cat("Inconsistent q matrix.\n"); stop()}
                         })
+                qmat <- qmat[!duplicated(qmat[,1]),]        
              }           
              zeilen<- apply(qmat, 1, FUN = function ( y ) { all ( names(table(y[-1])) == "0")  })
              weg   <- which(zeilen == TRUE)

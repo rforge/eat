@@ -38,7 +38,7 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 						not01 <- ! sapply ( qMatrix[,-1,drop=FALSE] , function ( x ) all ( x %in% c(0,1) ) )
 						
 						if ( any ( not01 ) ) {
-								warning ( paste0 ( "splitModels: column(s) " , paste ( names (not01)[not01] , collapse = ", " ) , " in qMatrix contain elements that are not 0 or 1; this/these column(s) are ignored" ) , call. = FALSE )
+								warning ( paste0 ( "splitModels: column(s) '" , paste ( names (not01)[not01] , collapse = "', '" ) , "' in qMatrix contain elements that are not 0 or 1; this/these column(s) are ignored" ) , call. = FALSE )
 								qMatrix <- qMatrix[,colnames(qMatrix)[!colnames(qMatrix) %in% names (not01)[not01]],drop=FALSE]
 						}
 				}
