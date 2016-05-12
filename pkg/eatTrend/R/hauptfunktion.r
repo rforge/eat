@@ -3,7 +3,7 @@
 eatTrend <- function(itParsIntT1, PVsT1, countriesT1, 
 itParsNatT1=NULL, jkzoneT1=NULL, jkrepT1=NULL, weightsT1=NULL, groupsT1=NULL, itParsIntT2, PVsT2, 
 countriesT2, itParsNatT2=NULL, weightsT2=NULL, jkzoneT2=NULL, jkrepT2=NULL, groupsT2=NULL, GES=TRUE, testletNam=NULL, 
-transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL, type =c("FCIP", "MM"), writeCsv=FALSE, path=NULL, plots=FALSE, backwards=FALSE, groupNam = NULL, landNam=TRUE) {
+transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL, type =c("FCIP", "MM"), writeCsv=FALSE, path=NULL, plots=FALSE, backwards=FALSE, groupNam = NULL, landNam=TRUE, FRZ=FALSE) {
 
 	cat ( paste ("Hi! ", Sys.time(), "\n" ) ) 
 	if(backwards) {
@@ -150,7 +150,11 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 					cutScores <- ((logitCutsT2-as.numeric(unname(Link3MM))-mRefPop)/sdRefPop)*sdtT+mtT					
 				}
 			
-				PV500T1 <- transformTo500(pars=PV500T1, mtT=mtT, sdtT=sdtT, mRefPop=mRefPop, sdRefPop=sdRefPop, wgts=weightsT1, type="persPar", cutScores=cutScores)
+				if(FRZ) {
+					PV500T1 <- transformTo500(pars=PV500T1, mtT=mtT, sdtT=sdtT, mRefPop=mRefPop, sdRefPop=sdRefPop, wgts=weightsT1, type="persPar", cutScores=cutScores)
+				} else {
+				PV500T1 <- transformTo500(pars=PV500T1, mtT=mtT, sdtT=sdtT, wgts=weightsT1, type="persPar", cutScores=cutScores)
+				}
 				PV500T2 <- transformTo500(pars=PV500T2, mtT=mtT, sdtT=sdtT, mRefPop=mRefPop, sdRefPop=sdRefPop, type="persPar", cutScores=cutScores)
 	
 			}

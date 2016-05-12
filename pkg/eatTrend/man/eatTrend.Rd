@@ -10,7 +10,7 @@ jkzoneT1=NULL, jkrepT1=NULL, weightsT1=NULL, groupsT1=NULL, itParsIntT2, PVsT2,
 countriesT2, itParsNatT2=NULL, weightsT2=NULL, jkzoneT2=NULL, jkrepT2=NULL, 
 groupsT2=NULL, GES=TRUE, testletNam = NULL, transfTo500=TRUE, mtT=500, sdtT=100, 
 mRefPop=NULL, sdRefPop=NULL, cutScores=NULL, type =c("FCIP", "MM"), 
-writeCsv=FALSE, path=NULL, plots=FALSE, backwards=FALSE, groupNam=NULL)}
+writeCsv=FALSE, path=NULL, plots=FALSE, backwards=FALSE, groupNam=NULL, FRZ=FALSE)}
 \arguments{
   \item{itParsIntT1}{
   A data frame containing the international item parameter estimates at time 1. 
@@ -132,6 +132,9 @@ Logical. IQB internal option to transform cutScores internally.
 }
   \item{groupNam}{
   A character vector containing group names.
+}
+  \item{FRZ}{
+ Logical. IQB FRZ specific argument.
 }
 }
 
