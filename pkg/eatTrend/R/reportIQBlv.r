@@ -6,8 +6,8 @@ reportIQBlv <- function(path, chapter=c("4", "5a", "5b", "6"),domain="Englisch L
 		for(ll in files) {
 			fileList[[ll]] <- read.csv2(file.path(path,ll), stringsAsFactors=FALSE)
 		}
-		PV500T1m <- reshape2:::melt(fileList[[2]][,c(1:20)], id=1:5)
-		PV500T1m <- eatPrep:::set.col.type(PV500T1m, list(character = "variable", numeric = c("weightsT1", "value")))
+		PV500T1m <- reshape2::melt(fileList[[2]][,c(1:20)], id=1:5)
+		PV500T1m <- eatPrep::set.col.type(PV500T1m, list(character = "variable", numeric = c("weightsT1", "value")))
 		if(any(is.na(c(PV500T1m$jkzoneT1,PV500T1m$jkrepT1,PV500T1m$weightsT1)))) {
 				PV500T1m <- PV500T1m[-c(which(is.na(PV500T1m$jkzoneT1)|is.na(PV500T1m$jkrepT1)|is.na(PV500T1m$weightsT1))),]
 			}

@@ -27,8 +27,8 @@ transformTo500 <- function(pars, mRefPop=NULL, sdRefPop=NULL, mtT=500, sdtT=100,
 					}
 				} else {
 					for(i in 2:dp) {
-						mRefPop <- SDMTools:::wt.mean(pars[,i],wgts)
-						sdRefPop <- SDMTools:::wt.sd(pars[,i],wgts)
+						mRefPop <- SDMTools::wt.mean(pars[,i],wgts)
+						sdRefPop <- SDMTools::wt.sd(pars[,i],wgts)
 						res[,i] <- ((pars[,i]-mRefPop)/sdRefPop)*sdtT+mtT
 					}
 				}
