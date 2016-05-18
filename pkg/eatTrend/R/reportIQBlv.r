@@ -1,4 +1,33 @@
-reportIQBlv <- function(path, chapter=c("4", "5a", "5b"),domain="Englisch Leseverstehen") {
+reportIQBlv <- function(path, chapter=c("4", "5a", "5b", "6"),domain="Englisch Leseverstehen") {
+
+	if(chapter == "6") {
+		files <- dir(path)[c(grep("meanTrend_FCIP_GES_", dir(path)),grep("PV500T1", dir(path)))]
+		fileList <- list()
+		for(ll in files) {
+			fileList[[ll]] <- read.csv2(file.path(path,ll), stringsAsFactors=FALSE)
+		}
+		PV500T1m <- reshape2:::melt(fileList[[2]][,c(1:20)], id=1:5)
+		PV500T1m <- eatPrep:::set.col.type(PV500T1m, list(character = "variable", numeric = c("weightsT1", "value")))
+		if(any(is.na(c(PV500T1m$jkzoneT1,PV500T1m$jkrepT1,PV500T1m$weightsT1)))) {
+				PV500T1m <- PV500T1m[-c(which(is.na(PV500T1m$jkzoneT1)|is.na(PV500T1m$jkrepT1)|is.na(PV500T1m$weightsT1))),]
+			}
+		quantiles  <- jk2.quantile(PV500T1m, ID = "idstud", wgt = "weightsT1",
+                          type = "JK2", PSU = "jkzoneT1", repInd = "jkrepT1",
+                          imp = "variable", groups = "countriesT1", dependent="value", doCheck=TRUE,
+							probs = c(0.05, 0.1, 0.25, 0.75, 0.9, 0.95))
+		quantiles  <- dcast(quantiles, group ~ parameter + coefficient)
+		quantiles2  <- jk2.quantile(PV500T1m, ID = "idstud", wgt = "weightsT1",
+                          type = "JK2", PSU = "jkzoneT1", repInd = "jkrepT1",
+                          imp = "variable", dependent="value", doCheck=TRUE,
+							probs = c(0.05, 0.1, 0.25, 0.75, 0.9, 0.95))
+		quantiles2  <- dcast(quantiles2, group ~ parameter + coefficient)
+		quantiles2[1,1] <- "GES"
+		quantiles <- rbind(quantiles, quantiles2)
+		quantiles[,1] <- landerNam(quantiles[,1])
+		resTab <- mergeData("country", list(fileList[[1]][,1:5], quantiles), c("country", "group"))
+		resTab <- resTab[,c(which(!grepl("_se", names(resTab))),which(grepl("_se", names(resTab))))]
+		write.csv2(resTab, file=paste0(path, "/chapter6_", Sys.Date(), ".csv"), row.names=FALSE)
+		}
 
 	if(chapter == "4") {
 		files <- dir(path)[grep("levelTrend", dir(path))]

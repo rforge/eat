@@ -225,10 +225,10 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 		}
 		resMeanT1 <- reshape2:::dcast(subset(meansT1[,-c(1:3)], meansT1$parameter == "mean"), parameter+countriesT1 ~ coefficient,margins="value")[,-1]
 		names(resMeanT1) <- c("country", "meanT1", "seT1")
-		resSDT1 <- reshape2:::dcast(subset(meansT1[,-c(1:3)], meansT1$parameter == "sd"), parameter+countriesT1 ~ coefficient,margins="value")[,2:3]
-		names(resSDT1) <- c("country", "sdT1")
+		resSDT1 <- reshape2:::dcast(subset(meansT1[,-c(1:3)], meansT1$parameter == "sd"), parameter+countriesT1 ~ coefficient,margins="value")[,2:4]
+		names(resSDT1) <- c("country", "sdT1", "sesdT1")
 		resMeanT1 <- mergeData("country", list(resMeanT1, resSDT1))
-		resDeuT1 <- c("GES", deuT1$value[deuT1$parameter == "mean"], deuT1$value[deuT1$parameter == "sd" & deuT1$coefficient == "est"]) 
+		resDeuT1 <- c("GES", deuT1$value[deuT1$parameter == "mean"], deuT1$value[deuT1$parameter == "sd" & deuT1$coefficient == "est"], deuT1$value[deuT1$parameter == "sd" & deuT1$coefficient == "se"]) 
 		resMeanT1 <- rbind(resMeanT1, resDeuT1)
 		
 		#T2
@@ -290,10 +290,10 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 		}
 		resMeanT2 <- reshape2:::dcast(subset(meansT2[,-c(1:3)], meansT2$parameter == "mean"), parameter+countriesT2 ~ coefficient,margins="value")[,-1]
 		names(resMeanT2) <- c("country", "meanT2", "seT2")
-		resSDT2 <- reshape2:::dcast(subset(meansT2[,-c(1:3)], meansT2$parameter == "sd"), parameter+countriesT2 ~ coefficient,margins="value")[,2:3]
-		names(resSDT2) <- c("country", "sdT2")
+		resSDT2 <- reshape2:::dcast(subset(meansT2[,-c(1:3)], meansT2$parameter == "sd"), parameter+countriesT2 ~ coefficient,margins="value")[,2:4]
+		names(resSDT2) <- c("country", "sdT2", "sesdT2")
 		resMeanT2 <- mergeData("country", list(resMeanT2, resSDT2))
-		resDeuT2 <- c("GES", deuT2$value[deuT2$parameter == "mean"], deuT2$value[deuT2$parameter == "sd" & deuT2$coefficient == "est"]) 
+		resDeuT2 <- c("GES", deuT2$value[deuT2$parameter == "mean"], deuT2$value[deuT2$parameter == "sd" & deuT2$coefficient == "est"], deuT2$value[deuT2$parameter == "sd" & deuT2$coefficient == "se"]) 
 		resMeanT2 <- rbind(resMeanT2, resDeuT2)
 		
 		resMeans <- eatPrep:::mergeData("country", list(resMeanT1, resMeanT2))
@@ -548,10 +548,10 @@ cutScores=NULL, seres) {
 	}
 	resMeanT1 <- reshape2:::dcast(subset(meansT1[,-c(1:3)], meansT1$parameter == "mean"), parameter+countriesT1 ~ coefficient,margins="value")[,-1]
 	names(resMeanT1) <- c("country", "meanT1", "seT1")
-	resSDT1 <- reshape2:::dcast(subset(meansT1[,-c(1:3)], meansT1$parameter == "sd"), parameter+countriesT1 ~ coefficient,margins="value")[,2:3]
-	names(resSDT1) <- c("country", "sdT1")
+	resSDT1 <- reshape2:::dcast(subset(meansT1[,-c(1:3)], meansT1$parameter == "sd"), parameter+countriesT1 ~ coefficient,margins="value")[,2:4]
+	names(resSDT1) <- c("country", "sdT1", "sesdT1")
 	resMeanT1 <- mergeData("country", list(resMeanT1, resSDT1))
-	resDeuT1 <- c("GES", deuT1$value[deuT1$parameter == "mean"], deuT1$value[deuT1$parameter == "sd" & deuT1$coefficient == "est"]) 
+	resDeuT1 <- c("GES", deuT1$value[deuT1$parameter == "mean"], deuT1$value[deuT1$parameter == "sd" & deuT1$coefficient == "est"], deuT1$value[deuT1$parameter == "sd" & deuT1$coefficient == "se"]) 
 	resMeanT1 <- rbind(resMeanT1, resDeuT1)
 	
 	#T2
@@ -614,10 +614,10 @@ cutScores=NULL, seres) {
 	}
 	resMeanT2 <- reshape2:::dcast(subset(meansT2[,-c(1:3)], meansT2$parameter == "mean"), parameter+countriesT2 ~ coefficient,margins="value")[,-1]
 	names(resMeanT2) <- c("country", "meanT2", "seT2")
-	resSDT2 <- reshape2:::dcast(subset(meansT2[,-c(1:3)], meansT2$parameter == "sd"), parameter+countriesT2 ~ coefficient,margins="value")[,2:3]
-	names(resSDT2) <- c("country", "sdT2")
+	resSDT2 <- reshape2:::dcast(subset(meansT2[,-c(1:3)], meansT2$parameter == "sd"), parameter+countriesT2 ~ coefficient,margins="value")[,2:4]
+	names(resSDT2) <- c("country", "sdT2", "sesdT2")
 	resMeanT2 <- mergeData("country", list(resMeanT2, resSDT2))
-	resDeuT2 <- c("GES", deuT2$value[deuT2$parameter == "mean"], deuT2$value[deuT2$parameter == "sd" & deuT2$coefficient == "est"]) 
+	resDeuT2 <- c("GES", deuT2$value[deuT2$parameter == "mean"], deuT2$value[deuT2$parameter == "sd" & deuT2$coefficient == "est"], deuT2$value[deuT2$parameter == "sd" & deuT2$coefficient == "se"]) 
 	resMeanT2 <- rbind(resMeanT2, resDeuT2)
 	
 	resMeansG <- eatPrep:::mergeData("country", list(resMeanT1, resMeanT2))
