@@ -78,7 +78,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
           # if(!exists("rbind.fill"))   {library(plyr)}
           checkForPackage (namePackage = "reshape", targetPackage = "eatRep")
           toCall<- match.arg(toCall)
-          type  <- match.arg(type)
+          type  <- match.arg(arg = toupper(type), choices = c("JK1", "JK2", "BRR"))
           glmTransformation <- match.arg(glmTransformation)
           if(forceSingularityTreatment == FALSE & glmTransformation != "none") { 
              cat("'forceSingularityTreatment' was set to 'FALSE'. Please note that 'glmTransformation' is only possible if 'forceSingularityTreatment' is 'TRUE'.\n"); flush.console()
@@ -97,11 +97,11 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
           naGr  <- c("group", "depVar", "modus", "parameter", "coefficient", "value")
           naInd <- c("(Intercept)", "Ncases", "Nvalid", "R2",  "R2nagel")       ### hier kuenftig besser: "verbotene" Variablennamen sollen automatisch umbenannt werden!
           naGr1 <- which ( allNam[["group"]] %in% naGr )
-          if(length(naGr1)>0)  {cat("Error: Following name(s) of grouping variables in data set are deemed to be unsuitable due to danger of confusion with result structure:\n"); cat(paste(allNam[["group"]][naGr1], collapse=", ")); cat("\n"); stop() }
+          if(length(naGr1)>0)  {cat("Error: Following name(s) of grouping variables in data set are deemed to be unsuitable due to danger of confusion with result structure:\n"); cat(paste(allNam[["group"]][naGr1], collapse=", ")); cat("\nPlease rename these variable(s).\n"); stop() }
           naInd1<- which ( allNam[["independent"]] %in% naInd )
-          if(length(naInd1)>0) {cat("Error: Following name(s) of independent variables in data set are deemed to be unsuitable due to danger of confusion with result structure:\n"); cat(paste(allNam[["independent"]][naInd1], collapse=", ")); cat("\n"); stop() }
+          if(length(naInd1)>0) {cat("Error: Following name(s) of independent variables in data set are deemed to be unsuitable due to danger of confusion with result structure:\n"); cat(paste(allNam[["independent"]][naInd1], collapse=", ")); cat("\nPlease rename these variable(s).\n"); stop() }
           na2   <- which ( unlist(allNam) %in% na )
-          if(length(na2)>0) {cat("Error: Following variable name(s) in data set are deemed to be unsuitable due to danger of confusion with result structure:\n"); cat(paste(unlist(allNam)[na2], collapse=", ")); cat("\n"); stop() }
+          if(length(na2)>0) {cat("Error: Following variable name(s) in data set are deemed to be unsuitable due to danger of confusion with result structure:\n"); cat(paste(unlist(allNam)[na2], collapse=", ")); cat("\nPlease rename these variable(s).\n"); stop() }
     ### Anzahl der Analysen definieren ueber den 'super splitter' und Analysen einzeln (ueber 'lapply') starten
           toAppl<- superSplitter(group = allNam[["group"]], group.splits = group.splits, group.differences.by = allNam[["group.differences.by"]], group.delimiter = group.delimiter , dependent=allNam[["dependent"]] )
           cat(paste(length(toAppl)," analyse(s) overall according to: 'group.splits = ",paste(group.splits, collapse = " ") ,"'.", sep=""))
@@ -504,14 +504,14 @@ jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, g
                             singular       <- names(glm.ii$coefficients)[which(is.na(glm.ii$coefficients))]
                             if(!is.null(repA)) {
                             #    if(!exists("svrepdesign"))      {library(survey)}
-                                typeS          <- car::recode(type, "'JK2'='JKn'")
-                                design         <- survey::svrepdesign(data = sub.dat[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = sub.dat[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repA[match(sub.dat[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, mse = TRUE)
+                                typeS          <- recode(type, "'JK2'='JKn'")
+                                design         <- svrepdesign(data = sub.dat[,c(allNam[["group"]], allNam[["independent"]], allNam[["dependent"]]) ], weights = sub.dat[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repA[match(sub.dat[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, mse = TRUE)
                                 if(length(singular) == 0 & forceSingularityTreatment == FALSE ) {
-                                   glm.ii      <- survey::svyglm(formula = formula, design = design, return.replicates = FALSE, family = glm.family)
+                                   glm.ii      <- svyglm(formula = formula, design = design, return.replicates = FALSE, family = glm.family)
                                 }
                             }
                             r.squared      <- data.frame ( r.squared = var(glm.ii$fitted.values)/var(glm.ii$y) , N = nrow(sub.dat) , N.valid = length(glm.ii$fitted.values) )
-                            r.nagelkerke   <- fmsb::NagelkerkeR2(glm.ii)
+                            r.nagelkerke   <- NagelkerkeR2(glm.ii)
                             summaryGlm     <- summary(glm.ii)
                             res.bl         <- data.frame ( group=paste(sub.dat[1,allNam[["group"]]], collapse=group.delimiter), depVar =allNam[["dependent"]],modus = "noch_leer", parameter = c(rep(c("Ncases","Nvalid",names(glm.ii$coefficients)),2),"R2","R2nagel"),
                                               coefficient = c(rep(c("est","se"),each=2+length(names(glm.ii$coefficients))),"est","est"),
@@ -602,8 +602,10 @@ dQ <- function ( object, seOmit = FALSE) {
              return(ret)}
 
 dG <- function ( object , analyses = NULL ) {
+            checkForPackage (namePackage = "reshape", targetPackage = "eatRep")
             splitData <- by ( data = object, INDICES = object[,c("group", "depVar")], FUN = function ( spl ) {return(spl)})
 			      if(is.null(analyses)) {analyses <- 1:length(splitData)}
+            retResults<- list()   
             for ( i in analyses) {
                  spl    <- splitData[[i]]
                  split2 <- spl[,"parameter"] %in% c("Ncases","Nvalid","R2","R2nagel")
@@ -611,6 +613,7 @@ dG <- function ( object , analyses = NULL ) {
                  ret[,"t.value"] <- ret[,"est"] / ret[,"se"]
                  df     <- spl[ spl[,"parameter"] == "Nvalid" & spl[,"coefficient"] == "est"  ,"value"] - nrow(ret)
                  ret[,"p.value"] <- 2*(1-pt( q = abs(ret[,"t.value"]), df = df ))
+                 retNR  <- ret
                  ret    <- data.frame ( lapply(ret, FUN = function ( y ) {if(class(y)=="numeric") {y <- round(y, digits = 3)}; return(y)}), stringsAsFactors = FALSE)
                  groupNamen <- setdiff(colnames(spl), c("group","depVar","modus", "parameter", "coefficient","value"))
                  cat ( paste( "            groups: ", paste( groupNamen, as.vector(spl[1,groupNamen]), sep=" = ", collapse = "; "),"\n",sep=""))
@@ -623,14 +626,15 @@ dG <- function ( object , analyses = NULL ) {
                  nn     <- spl[ spl[,"parameter"] == "Nvalid" & spl[,"coefficient"] =="est" ,"value"]
                  cat(paste( round(nn, digits = 2), " observations and ",round(df,digits = 2), " degrees of freedom.",sep="")); cat("\n")
                  if(i != max(analyses)) { cat("------------------------------------------------------------------\n") }
-            }}
-
+                 retResults[[i]] <- data.frame ( groups = paste( groupNamen, as.vector(spl[1,groupNamen]), sep=" = ", collapse = "; "), depVar = spl[1,"depVar"], retNR, r2 = r2[1], r2nagel = r2nagel[1], df = df)
+            }
+            return(retResults)}
 
 ### Hilfsfunktion fuer jk2.glm() wenn Regression singulaere Terme enthaelt
 ### Achtung: negelkerke wird irgendwie falsch berechnet, keine Ahnung woran es liegt, wird ausgeschlossen
 getOutputIfSingular <- function ( glmRes ) {
                        coefs <- na.omit(coef(glmRes))
-                       rnagel<- unlist(fmsb::NagelkerkeR2(glmRes))
+                       rnagel<- unlist(NagelkerkeR2(glmRes))
                        names(rnagel) <- c("Nvalid", "R2nagel")
                        rnagel<- rnagel[1]
                        coefs <- c(coefs, R2 = var(glmRes$fitted.values)/var(glmRes$y), rnagel)
@@ -646,7 +650,7 @@ getOutputIfSingularT1<- function ( glmRes) {
                        coefs <- na.omit(coef(glmRes))
                        pred  <- sd ( glmRes$linear.predictors ) +  (pi^2)/3
                        coefs <- coefs/pred
-                       rnagel<- unlist(fmsb::NagelkerkeR2(glmRes))
+                       rnagel<- unlist(NagelkerkeR2(glmRes))
                        names(rnagel) <- c("Nvalid", "R2nagel")
                        rnagel<- rnagel[1]
                        coefs <- c(coefs, R2 = var(glmRes$fitted.values)/var(glmRes$y), rnagel)

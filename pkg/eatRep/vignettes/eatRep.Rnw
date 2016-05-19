@@ -206,6 +206,7 @@ assumes an ``unnested'', i.e. a structure with three imputations. This refers to
 jackknifing zones in the JKZone variable. This information refers to the ``cluster replicates'' and implies that 
 the subsequent analysis has to be repeated 81 times \emph{for each imputation}. Overall, $3\times 81=243$ analyses are 
 run overall.\\ 
+
 In each of the 81 replication samples, one unit (e.g. school) of a certain jackknifing zone is missing and the weights 
 of the other unit of the same zone are doubled. The data in all other zones remain unchanged. The analyses are repeated 
 81 times, \emph{using the same plausible value} as the dependent variable. Only the weights vary between the 
@@ -217,6 +218,7 @@ dependent variable in 81 analyses due to the 81 ``cluster replicates''. After al
 pooled standard errors resulted which differ slightly in each ``imputation replicate''. The three estimates and 
 standard errors are pooled according to \citet{Rubin1987}. To sum up, the pooled results are pooled again to account for 
 both: multiple imputed data in a clustered sample.\\
+
 The little dots continuously appearing on the console therefore refer to ``imputation replicates'' and are intended 
 to work as a rough progress bar. Each dot represents one ``imputation replication''. When the procedure finished, 
 the results are pooled in the case of more than one imputation.\\
@@ -231,7 +233,7 @@ overview, only a few selected rows are displayed here. For each subpopulation de
 variable (here: only the reading competence), each parameter (we requested mean, variance, 
 standard deviation and sample size or population size) and each coefficient (i.e., the 
 estimate and the corresponding standard error) the corresponding value is given. However, 
-the output rather is appropriate for further processing as for clear arragement, as the 
+the output more suited for further processing than for clear arragement, as the 
 values are displayed in the long format as well as in exponential notation, for example. 
 To display the results in the more common wide format, use the \code{reshape2} package. 
 Alternatively, an abbreviated display of the results is provided by the \code{dM} 
@@ -284,7 +286,7 @@ grouping variables, namely \code{country} and \code{sex}. As we have three count
 the whole population is splitted into $3\times 2=6$ subpopulations for which descriptives can be requested. If we 
 additionally are interested in the descriptives of the whole population or the descriptives 
 \emph{within each country, but together for both sex groups}, we can use the \code{group.splits} argument to 
-particularly specify the groups we are interested in. Let us consider for example the two group variables 
+particularly specify the groups we are interested in. Let us consider for example the two grouping variables 
 \code{country} and \code{sex}. If \code{group.splits} equals 2 (the default, i.e., the number of grouping 
 variables), descriptives for the $3\times 2=6$ subpopulations are computed. If \code{group.splits} 
 is \code{1:2}, descriptives for each country (e.g., across sex) and each sex group (e.g. across countries) 
@@ -332,12 +334,13 @@ Representative for several possible analyses only one example is given below. Co
 define a cut score criterion, i.e. all persons with at least 500 points passed, the other 
 ones failed. We now may be interested whether the percentage of pass/fails differs between 
 countries. We henceforward consider the column \code{passed} as dependent variable which is 
-a simple indicator, i.e. a categorical variable. Categorical variables are often represented 
-as factors in R, which is quite straightforward. However, the \code{"passed"} variable is of 
-class numeric. This is an inconsistency which may cause annoying misinterpretations when such 
-variables are called in functions related to the generalized linear model like \code{aov()}, 
-\code{glm()} etc. For the computations of frequency tables it is not necessary to convert the
-variable class to factor.\\ 
+a simple indicator, i.e. a categorical variable with two categories (computation of frequency 
+tables for variables with more than two categories are possible, too). Categorical variables 
+are often represented as factors in R, which is quite straightforward. However, the 
+\code{"passed"} variable is of class numeric. This is an inconsistency which may cause annoying 
+misinterpretations when such variables are called in functions related to the generalized linear 
+model like \code{aov()}, \code{glm()} etc. For the computations of frequency tables it is not 
+necessary to convert the variable class to factor.\\ 
 
 We now are interested in the relative frequencies of this groups in the different countries 
 and within each country for different groups of gender. As before, we want to take the cluster 
@@ -370,7 +373,7 @@ sense to define a separate category during the data preparation, for example ``l
 ``medium HISEI'', ``highest HISEI'', ``unknown HISEI''. Families without valid
 HISEI information then will be considered as a separate group in the analyses. Applying 
 \code{jk2.table} then will give frequencies for four groups. However, if the ``Dont't know'' 
-cases appear as ``NA'' values, it is possible to define them as a distince category for which 
+cases appear as ``NA'' values, it is possible to define them as a distinct category for which 
 relative frequencies can be computed. Only for illustration, let us generate some missing values 
 in some of the imputations and repeat the analysis subsequently. You will see that a new category 
 has joined to the output, which is labelled \code{"<NA>"}. \\
@@ -438,7 +441,7 @@ levels, which may be coded 0, 1 and 2. We are interested in two coefficients whi
 the effect of level 1 vs. level 0 and the effect of level 2 vs. level 0. If we refrain from defining 
 the variable to be of class factor, only one coefficient is computed, and the variable is assumed to 
 be continuous. What we see additionally is that R implicitly defined the female group to be the 
-reference---the regression parameter was labelled \code{gendermale}.\\ 
+reference---the regression parameter was labelled \code{sexmale}.\\ 
 
 Now we try something different. First we define \code{"passed"} to be our dependent variable. 
 This leads to a binomial regression model which models whether the probability of pass/fail 
@@ -510,12 +513,12 @@ both coefficients is the programming disability of the package developer.
 
 The next to last chapter of this little tutorial is reserved to the problem of nested imputation. The general concept is described in
 \citet{Rubin2003}. At this point, only some specific aspects which are relevant in large scale assessments, are mentioned briefly. 
-Weirich et al. (in press) described the same procedure more elaboratively. Suppose you want to estimate IRT proficiencies 
-(often denoted $\theta$) in a specific domain. Applying an extensive marginal model which comprehends of items responses and 
+Weirich et al. (2014) described the same procedure more elaboratively. Suppose you want to estimate IRT proficiencies 
+(often denoted $\theta$) in a specific domain. Applying an extensive marginal model which comprehends of item responses and 
 background information as well, the posterior distribution of each examinees' $\theta$ is specified. Without any certain 
 proficiency value of a specific examinee, plausible values are drawn from the posterior of each examinee. Conceptually, 
 plausible values are multiple imputations of the inherently missing variable $\theta$ and may analyzed in standard statistic 
-procedures according to the generalized linear model. To obtain valid estimates and standard errors, the results have to be 
+procedures. To obtain valid estimates and standard errors, the results have to be 
 pooled according to \citet{Rubin1987}.\\
 
 Suppose you have missing data in the background variables as well, which have to be imputed in the first step, which may result in 
@@ -537,10 +540,10 @@ nests and the number of imputations in each nest. The above procedure sounds mor
 
 At the beginning of this little tutorial, we have created a subset of our data set which was used for all analyses so far. 
 Now it's time to consider the whole data set. The variable \code{"nest"} denotes the nest or first-stage imputation variable. 
-As we only have two nests, only two imputation were created in the first step. Within each of this two imputations, three 
+As we only have two nests, only two imputations were created in the first step. Within each of this two imputations, three 
 plausible values were drawn from the marginal (or conditioning) model. Hence, we would expect that the plausible values 
 (captured in column \code{"score"}) vary between nests \emph{and} between imputations, whereas the conditioning variables 
-(e.g. income) only vary between nests, but not between imputations with each nest! To date, the \code{eatRep} does not provide
+(e.g. income) only vary between nests, but not between imputations within each nest! To date, the \code{eatRep} does not provide
 any consistency checks whether this requirements are fulfilled.\\
 
 All analyses specified so far treated 3 imputations. Considering the nested structure now comprises  $3\times 2=6$ imputations. 
