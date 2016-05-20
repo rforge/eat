@@ -6,7 +6,8 @@
 call \code{runModel} with the argument returned by \code{defineModel} to start the estimation.
 The last step then is to create a results frame using \code{getResults}. }
 \usage{
-getResults(runModelObj, overwrite = FALSE, abs.dif.bound = 0.6,
+getResults(runModelObj, overwrite = FALSE, omitFit = FALSE, omitRegr = FALSE, 
+    omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6,
     sig.dif.bound = 0.3, p.value = 0.9, simplify = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -17,6 +18,22 @@ The object returned by \code{runModel}.
   \item{overwrite}{
 %%     ~~Describe \code{file} here~~
 Logical. Should result files be overwritten if exist?
+}
+  \item{omitFit}{
+%%     ~~Describe \code{file} here~~
+Logical. Should item fit values be included into the results?
+}
+  \item{omitRegr}{
+%%     ~~Describe \code{file} here~~
+Logical. Should regression parameters and their standard errors be included into the results?
+}
+  \item{omitWle}{
+%%     ~~Describe \code{file} here~~
+Logical. Should WLE estimates be included into the results?
+}
+  \item{omitPV}{
+%%     ~~Describe \code{file} here~~
+Logical. Should plausible values be included into the results?
 }
   \item{abs.dif.bound}{
 %%     ~~Describe \code{file} here~~

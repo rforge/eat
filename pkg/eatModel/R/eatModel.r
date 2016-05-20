@@ -1,24 +1,23 @@
-getResults <- function ( runModelObj, overwrite = FALSE, abs.dif.bound = 0.6, sig.dif.bound = 0.3, p.value = 0.9, simplify = TRUE ) { 
+getResults <- function ( runModelObj, overwrite = FALSE, omitFit = FALSE, omitRegr = FALSE, omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6, sig.dif.bound = 0.3, p.value = 0.9, simplify = TRUE ) { 
             if("runMultiple" %in% class(runModelObj)) {                         ### Mehrmodellfall
                 if(is.null ( attr(runModelObj, "nCores") ) | attr(runModelObj, "nCores") == 1 ) {         
                    res <- lapply( runModelObj, FUN = function ( r ) {           ### erstmal single core auswertung
-                          ret <- getResults (runModelObj = r, overwrite = overwrite, abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value, simplify = simplify ) 
+                          ret <- getResults (runModelObj = r, overwrite = overwrite, omitFit = omitFit, omitRegr = omitRegr, omitWle = omitWle, omitPV = omitPV, abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value, simplify = simplify ) 
                           att <- list ( list ( model.name = ret[1,"model"], all.Names = attr(ret, "all.Names"), dif.settings = attr(ret, "dif.settings") ))
                           stopifnot ( length(unique(ret[1,"model"])) == 1 )     ### grosser scheiss: baue Hilfsobjekt fuer Attribute (intern notwendige Zusatzinformationen) separat zusammen
                           return(list ( ret = ret, att = att))})                ### schlimmer Code, darf nie jemand sehen!!
                    }  else  {                                                   ### jetzt multicore: muss dasselbe Objekt zurueckgeben!
-                   if(!exists("detectCores"))   {library(parallel)}
+                   # if(!exists("detectCores"))   {library(parallel)}
                    doIt<- function (laufnummer,  ... ) { 
                           if(!exists("getResults"))  { library(eatModel) }
-                          if(!exists("tam.mml") & length(grep("tam.", class(runModelObj[[1]])))>0 ) {library(TAM, quietly = TRUE)} 
-                          if(!exists("melt"))   {library(reshape2)}
-                          ret <- getResults (runModelObj = runModelObj[[laufnummer]], overwrite = overwrite, abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value, simplify = simplify ) 
+                          if(!exists("tam.mml") &  length(grep("tam.", class(runModelObj[[1]])))>0 ) {library(TAM, quietly = TRUE)} 
+                          ret <- getResults (runModelObj = runModelObj[[laufnummer]], overwrite = overwrite, omitFit = omitFit, omitRegr = omitRegr, omitWle = omitWle, omitPV = omitPV, abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value, simplify = simplify ) 
                           att <- list ( list ( model.name = ret[1,"model"], all.Names = attr(ret, "all.Names"), dif.settings = attr(ret, "dif.settings") ))
                           stopifnot ( length(unique(ret[1,"model"])) == 1 )
                           return(list ( ret = ret, att = att))}
                    beg <- Sys.time()
                    cl  <- makeCluster(attr(runModelObj, "nCores"), type = "SOCK")
-                   res <- clusterApply(cl = cl, x = 1:length(runModelObj), fun = doIt , overwrite = overwrite, abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value, simplify = simplify ) 
+                   res <- clusterApply(cl = cl, x = 1:length(runModelObj), fun = doIt , overwrite = overwrite, omitFit = omitFit, omitRegr = omitRegr, omitWle = omitWle, omitPV = omitPV, abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value, simplify = simplify ) 
                    stopCluster(cl)
                    cat(paste ( "Results of ",length(runModelObj), " analyses processed: ", sep="")); print( Sys.time() - beg)
                    }
@@ -30,13 +29,13 @@ getResults <- function ( runModelObj, overwrite = FALSE, abs.dif.bound = 0.6, si
             }  else {                                                           ### Einmodellfall 
                isTa  <- FALSE                                                   
                if( "runConquest" %in% class(runModelObj) ) {                    ### wurde mit Conquest gerechnet?
-                    res <- getConquestResults (path = runModelObj$dir, analysis.name=runModelObj$analysis.name, model.name=runModelObj$model.name, qMatrix=runModelObj$qMatrix, all.Names = runModelObj$all.Names, abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value, simplify = simplify, deskRes = runModelObj$deskRes, discrim = runModelObj$discrim)
+                    res <- getConquestResults (path = runModelObj$dir, analysis.name=runModelObj$analysis.name, model.name=runModelObj$model.name, qMatrix=runModelObj$qMatrix, all.Names = runModelObj$all.Names, abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value, simplify = simplify, deskRes = runModelObj$deskRes, discrim = runModelObj$discrim, omitFit = omitFit, omitRegr = omitRegr, omitWle = omitWle, omitPV = omitPV)
                     dir <- runModelObj[["dir"]]
                     name<- runModelObj[["analysis.name"]]
                     attr(res, "all.Names") <- runModelObj[["all.Names"]]
                }  else  {                                                       ### Alternativ: es wurde mit TAM gerechnet 
                     isTa<- TRUE                                                 ### logisches Argument: wurde mit Tam gerechnet?
-                    res <- getTamResults (runModelObj=runModelObj)
+                    res <- getTamResults (runModelObj=runModelObj, omitFit = omitFit, omitRegr = omitRegr, omitWle = omitWle, omitPV = omitPV)
                     dir <- attr(runModelObj, "dir")
                     name<- attr(runModelObj, "analysis.name")
                     attr(res, "all.Names") <- attr(runModelObj, "all.Names")
@@ -56,22 +55,28 @@ getResults <- function ( runModelObj, overwrite = FALSE, abs.dif.bound = 0.6, si
                   }        
                   if (isTa == FALSE ) { 
                       if ( attr(res, "available")[["wle"]] == TRUE & attr(res, "available")[["pv"]] == TRUE) { 
-                           wle <- wleFromRes(res)                                        ### untere Zeilen: speichere wunschgemaess alle Personenparameter in einer Tabelle im Wideformat
-                           wleL<- melt ( wle, id.vars = c("ID", "dimension"), measure.vars = c("wle_est", "wle_se"), na.rm = TRUE)
-                           wleW<- dcast ( wleL, ID~dimension+variable, value.var = "value" )
-                           pv  <- pvFromRes(res)
-                           pvL <- melt ( pv, id.vars = c("ID", "dimension"), na.rm = TRUE)
-                           pvW <- dcast ( pvL, ID~dimension+variable, value.var = "value" )
-                           eap <- eapFromRes(res)
-                           eapL<- melt ( eap, id.vars = c("ID", "dimension"), measure.vars = c("EAP", "SE.EAP"), na.rm = TRUE)
-                           eapW<- dcast ( eapL, ID~dimension+variable, value.var = "value" )
-                           allP<- merge(eapW, pvW, by = "ID", all=TRUE)
-                           allP<- merge(allP, wleW, by = "ID", all=TRUE)
-                           if ( file.exists(file.path(dir, paste(name, "_persons.csv",sep=""))) & overwrite == FALSE) { 
-                                cat(paste("Person estimates cannot be saved, file ",  file.path(dir, paste(name, "_persons.csv",sep=""))," already exists.\n    Please remove/rename existing file or use 'overwrite=TRUE'.\n",sep=""))
-                           }  else  { 
-                                write.csv2(allP, file.path(dir, paste(name, "_persons.csv",sep="")), na="", row.names = FALSE)
-                           }    
+                           if (omitWle == FALSE ) { 
+                              wle <- wleFromRes(res)                               ### untere Zeilen: speichere wunschgemaess alle Personenparameter in einer Tabelle im Wideformat
+                              wleL<- melt ( wle, id.vars = c("ID", "dimension"), measure.vars = c("wle_est", "wle_se"), na.rm = TRUE)
+                              wleW<- dcast ( wleL, ID~dimension+variable, value.var = "value" )
+                           }
+                           if ( omitPV == FALSE ) { 
+                                pv  <- pvFromRes(res)
+                                pvL <- melt ( pv, id.vars = c("ID", "dimension"), na.rm = TRUE)
+                                pvW <- dcast ( pvL, ID~dimension+variable, value.var = "value" )
+                                eap <- eapFromRes(res)
+                                eapL<- melt ( eap, id.vars = c("ID", "dimension"), measure.vars = c("EAP", "SE.EAP"), na.rm = TRUE)
+                                eapW<- dcast ( eapL, ID~dimension+variable, value.var = "value" )
+                           }
+                           if ( omitWle == FALSE & omitPV == FALSE ) { 
+                                allP<- merge(eapW, pvW, by = "ID", all=TRUE)
+                                allP<- merge(allP, wleW, by = "ID", all=TRUE)
+                                if ( file.exists(file.path(dir, paste(name, "_persons.csv",sep=""))) & overwrite == FALSE) { 
+                                     cat(paste("Person estimates cannot be saved, file ",  file.path(dir, paste(name, "_persons.csv",sep=""))," already exists.\n    Please remove/rename existing file or use 'overwrite=TRUE'.\n",sep=""))
+                                }  else  { 
+                                     write.csv2(allP, file.path(dir, paste(name, "_persons.csv",sep="")), na="", row.names = FALSE)
+                                }    
+                           }     
                       }
                   }
                   if ( file.exists(file.path(dir, paste(name, "_resultsAll.csv",sep=""))) & overwrite == FALSE) { 
@@ -244,8 +249,12 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                                if(is.null(dir)) { dirI <- NULL }  else  { dirI   <- file.path(dir, substring(splittedModels[["models.splitted"]][[matchL]][["model.subpath"]],3)) }
                                nameI  <- splittedModels[["models.splitted"]][[matchL]][["model.name"]]
                                if(is.null (qMatrix)) { nDim <- 1 } else { nDim <- ncol(qMatrix)-1 }
-     ### Aufruf von 'defineModel' generieren
+     ### Aufruf von 'defineModel' generieren. Achtung: wenn der Nutzer eigenhaendig neue Argumente in <models>[["models"]] einfuegt, muessen die hier in <models>[["models.splitted"]] uebernommen werden!
                                overwr1<- data.frame ( arg = c("dat", "items", "qMatrix", "analysis.name", "dir", "splittedModels"), val = c("datSel", "itemSel", "qMatrix", "nameI", "dirI", "NULL"), stringsAsFactors = FALSE)
+                               overwrF<- setdiff ( colnames(splittedModels[["models"]]), c("model.no", "model.name", "model.subpath", "dim", "Ndim", "group", "Ngroup"))
+                               if(length(overwrF)>0) { 
+                                  for ( hh in overwrF ) { splittedModels[["models.splitted"]][[matchL]][[hh]] <- splittedModels[["models"]][m,hh] }
+                               }   
                                notNull<- which ( unlist(lapply(splittedModels[["models.splitted"]][[matchL]], is.null)) == FALSE ) 
                                overwr2<- setdiff ( intersect ( names(formals(defineModel)), names ( notNull)), "qMatrix")
                                if(length(overwr2)>0) {                          ### obere Zeile: qMatrix ist oben schon definiert, wird hier NICHT aus der Liste durchgeschleift 
@@ -284,9 +293,9 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
      ### wenn multicore handling, dann wird das Objekt "model" an cores verteilt und dort weiter verarbeitet. Ausserdem werden Konsolenausgaben in stringobjekt "txt" weitergeleitet
                      }  else  { 
                         txt    <- capture.output ( models <- lapply( mods, FUN = doAufb))
-                        if(!exists("detectCores"))   {library(parallel)}
+                        # if(!exists("detectCores"))   {library(parallel)}
                         doIt<- function (laufnummer,  ... ) { 
-                               if(!exists("getResults"))  { library(eatModel) }
+                               # if(!exists("getResults"))  { library(eatModel) }
                                if(!exists("melt"))        { library(reshape2) }
                                strI<- paste(unlist(lapply ( names ( models[[laufnummer]]) , FUN = function ( nameI ) { paste ( nameI, " = models[[laufnummer]][[\"",nameI,"\"]]", sep="")})), collapse = ", ")
                                strI<- paste("capture.output( res <- defineModel(",strI,"))",sep="")
@@ -501,7 +510,6 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                            {cat(paste("Remove ",length(weg.weight)," cases with missings on weight variable.\n",sep=""))}
                       }                                                         ### untere Zeile, Achtung: group- und DIF- bzw. group- und HG-Variablen dürfen sich überschneiden!
                       namen.all.hg <- unique(c(all.Names$HG.var,all.Names$group.var,all.Names$DIF.var,all.Names$weight.var))
-                      if(length(namen.all.hg)>0) {all.hg.char <- sapply(namen.all.hg, FUN=function(ii) {max(nchar(as.character(na.omit(dat[,ii]))))})} else {all.hg.char <- NULL}
                       weg.all <- unique(c(weg.dif, weg.hg, weg.weight, weg.group))
                       if(length(weg.all)>0) {
                          cat(paste("Remove",length(weg.all),"case(s) overall due to missings on at least one explicit variable.\n"))
@@ -573,6 +581,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                         }
     			           }
      ### Sektion 'Datensaetze softwarespezifisch aufbereiten: Conquest' ###
+                      if(length(namen.all.hg)>0) {all.hg.char <- sapply(namen.all.hg, FUN=function(ii) {max(nchar(as.character(na.omit(dat[,ii]))))})} else {all.hg.char <- NULL}
                       if ( software == "conquest" )   {                         ### untere Zeile: wieviele character muss ich fuer jedes Item reservieren?
                           var.char <- sapply(dat[,all.Names[["variablen"]], drop = FALSE], FUN=function(ii) {max(nchar(as.character(na.omit(ii))))})
                           no.number <- setdiff(1:length(var.char), grep("[[:digit:]]",var.char))
@@ -809,7 +818,7 @@ converged<- function (dir, logFile) {
             }
             return(isConv)}
 
-getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Names, abs.dif.bound , sig.dif.bound, p.value, simplify, deskRes, discrim) {
+getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Names, abs.dif.bound , sig.dif.bound, p.value, simplify, deskRes, discrim, omitFit, omitRegr, omitWle, omitPV ) {
          allFiles <- list.files(path=path, pattern = analysis.name, recursive = FALSE)
          qL       <- melt(qMatrix, id.vars = colnames(qMatrix)[1], variable.name = "dimensionName", na.rm=TRUE)
          qL       <- qL[which(qL[,"value"] != 0 ) , ]
@@ -925,43 +934,47 @@ getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Name
              ret  <- rbind(ret, data.frame ( model = model.name, source = "conquest", var1 = NA, var2 = NA , type = "model", indicator.group = NA, group = NA, par = c("deviance", "Npar"),  derived.par = NA, value = shw$final.deviance , stringsAsFactors = FALSE))
          }                                                                      ### schliesst die Bedingung 'shw file vorhanden'
     ### Sektion 'Personenparameter auslesen' (wle)
-         wleFile  <- paste(analysis.name, "wle", sep=".")
-         if (!wleFile %in% allFiles) {
-             cat("Cannot find Conquest WLE file.\n")
-         } else {
-             wle  <- get.wle( file.path(path, wleFile) )
-             for ( i in 1:nrow(altN)) { colnames(wle) <- gsub(  paste(".",altN[i,"nr"],"$",sep=""), paste("_", altN[i,"to"],sep="") , colnames(wle))}
-             wleL <- melt(wle, id.vars = "ID", measure.vars = colnames(wle)[-c(1:2)], na.rm=TRUE)
-             foo  <- data.frame ( do.call("rbind", strsplit(as.character(wleL[,"variable"]), "_")), stringsAsFactors = FALSE)
-             colnames(foo) <- c("par", "group")
-             foo[,"derived.par"] <- recode(foo[,"par"], "'wle'='est'; 'std.wle'='se'; else=NA")
-             foo[,"par"]         <- recode(foo[,"par"], "'wle'='wle'; 'std.wle'='wle'; 'n.solved'='NitemsSolved'; 'n.total'='NitemsTotal'")
-             wleL <- data.frame ( wleL[,-match("variable", colnames(wleL)), drop=FALSE], foo, stringsAsFactors = FALSE)
-             ret  <- rbind ( ret, data.frame ( model = model.name, source = "conquest", var1 = wleL[,"ID"], var2 = NA , type = "indicator", indicator.group = "persons", group = wleL[,"group"], par = wleL[,"par"],  derived.par = wleL[,"derived.par"], value = wleL[,"value"] , stringsAsFactors = FALSE))
-         }
+         if ( omitWle == FALSE ) { 
+              wleFile  <- paste(analysis.name, "wle", sep=".")
+              if (!wleFile %in% allFiles) {
+                  cat("Cannot find Conquest WLE file.\n")
+              } else {
+                  wle  <- get.wle( file.path(path, wleFile) )
+                  for ( i in 1:nrow(altN)) { colnames(wle) <- gsub(  paste(".",altN[i,"nr"],"$",sep=""), paste("_", altN[i,"to"],sep="") , colnames(wle))}
+                  wleL <- melt(wle, id.vars = "ID", measure.vars = colnames(wle)[-c(1:2)], na.rm=TRUE)
+                  foo  <- data.frame ( do.call("rbind", strsplit(as.character(wleL[,"variable"]), "_")), stringsAsFactors = FALSE)
+                  colnames(foo) <- c("par", "group")
+                  foo[,"derived.par"] <- recode(foo[,"par"], "'wle'='est'; 'std.wle'='se'; else=NA")
+                  foo[,"par"]         <- recode(foo[,"par"], "'wle'='wle'; 'std.wle'='wle'; 'n.solved'='NitemsSolved'; 'n.total'='NitemsTotal'")
+                  wleL <- data.frame ( wleL[,-match("variable", colnames(wleL)), drop=FALSE], foo, stringsAsFactors = FALSE)
+                  ret  <- rbind ( ret, data.frame ( model = model.name, source = "conquest", var1 = wleL[,"ID"], var2 = NA , type = "indicator", indicator.group = "persons", group = wleL[,"group"], par = wleL[,"par"],  derived.par = wleL[,"derived.par"], value = wleL[,"value"] , stringsAsFactors = FALSE))
+              }
+         }     
     ### Sektion 'Personenparameter auslesen' (PVs)
-         pvFile   <- paste(analysis.name, "pvl", sep=".")
-         if (!pvFile %in% allFiles) {
-             cat("Cannot find Conquest PV file.\n")
-         } else {
-             pv   <- get.plausible( file.path(path, pvFile), forConquestResults = TRUE )
-             rec  <- paste("'",altN[,"pv"] , "' = '" , altN[,"to"], "'" ,sep = "", collapse="; ")
-             pv$pvLong[,"variable"] <- recode( pv$pvLong[,"variable"], rec)
-             ret  <- rbind ( ret, data.frame ( model = model.name, source = "conquest", var1 = pv$pvLong[,"ID"], var2 = NA , type = "indicator", indicator.group = "persons", group = pv$pvLong[,"variable"], par = "pv",  derived.par = paste("pv", as.numeric(pv$pvLong[,"PV.Nr"]),sep=""), value = as.numeric(pv$pvLong[,"value"]) , stringsAsFactors = FALSE))
-             eaps <- melt ( data.frame ( pv$pvWide[,"ID", drop=FALSE], pv$eap, stringsAsFactors = FALSE), id.vars = "ID", na.rm=TRUE)
-             foo  <- data.frame ( do.call("rbind", strsplit(as.character(eaps[,"variable"]), "_")), stringsAsFactors = FALSE)
-             colnames(foo) <- c("par", "group")
-             foo[,"derived.par"] <- recode(foo[,"par"], "'eap'='est'; 'se.eap'='se'; else=NA")
-             foo[,"par"]         <- "eap"
-             foo[,"group"]       <- recode(tolower(foo[,"group"]), rec)
-             ret  <- rbind ( ret, data.frame ( model = model.name, source = "conquest", var1 = eaps[,"ID"], var2 = NA , type = "indicator", indicator.group = "persons", group = foo[,"group"], par = "eap",  derived.par = foo[,"derived.par"], value = eaps[,"value"] , stringsAsFactors = FALSE))
-         }
+         if ( omitPV == FALSE ) { 
+              pvFile   <- paste(analysis.name, "pvl", sep=".")
+              if (!pvFile %in% allFiles) {
+                  cat("Cannot find Conquest PV file.\n")
+              } else {
+                  pv   <- get.plausible( file.path(path, pvFile), forConquestResults = TRUE )
+                  rec  <- paste("'",altN[,"pv"] , "' = '" , altN[,"to"], "'" ,sep = "", collapse="; ")
+                  pv$pvLong[,"variable"] <- recode( pv$pvLong[,"variable"], rec)
+                  ret  <- rbind ( ret, data.frame ( model = model.name, source = "conquest", var1 = pv$pvLong[,"ID"], var2 = NA , type = "indicator", indicator.group = "persons", group = pv$pvLong[,"variable"], par = "pv",  derived.par = paste("pv", as.numeric(pv$pvLong[,"PV.Nr"]),sep=""), value = as.numeric(pv$pvLong[,"value"]) , stringsAsFactors = FALSE))
+                  eaps <- melt ( data.frame ( pv$pvWide[,"ID", drop=FALSE], pv$eap, stringsAsFactors = FALSE), id.vars = "ID", na.rm=TRUE)
+                  foo  <- data.frame ( do.call("rbind", strsplit(as.character(eaps[,"variable"]), "_")), stringsAsFactors = FALSE)
+                  colnames(foo) <- c("par", "group")
+                  foo[,"derived.par"] <- recode(foo[,"par"], "'eap'='est'; 'se.eap'='se'; else=NA")
+                  foo[,"par"]         <- "eap"
+                  foo[,"group"]       <- recode(tolower(foo[,"group"]), rec)
+                  ret  <- rbind ( ret, data.frame ( model = model.name, source = "conquest", var1 = eaps[,"ID"], var2 = NA , type = "indicator", indicator.group = "persons", group = foo[,"group"], par = "eap",  derived.par = foo[,"derived.par"], value = eaps[,"value"] , stringsAsFactors = FALSE))
+              }
+         }     
          attr(ret, "isConverged") <- isConv
-         attr(ret, "available")   <- list ( itn = itnFile %in% allFiles, shw = shwFile %in% allFiles, wle = wleFile %in% allFiles, pv = pvFile %in% allFiles)
+         attr(ret, "available")   <- list ( itn = itnFile %in% allFiles, shw = shwFile %in% allFiles, wle = (wleFile %in% allFiles) & (omitWle == FALSE), pv = (pvFile %in% allFiles) & (omitPV == FALSE))
          return(ret)}
 
-getTamResults     <- function(runModelObj) {
-         regr     <- tam.se(runModelObj)
+getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV) {
+         if( omitRegr == FALSE ) { regr     <- tam.se(runModelObj) }
          qMatrix  <- attr(runModelObj, "qMatrix")
          qL       <- melt(qMatrix, id.vars = colnames(qMatrix)[1], variable.name = "dimensionName", na.rm=TRUE)
          qL       <- qL[which(qL[,"value"] != 0 ) , ]
@@ -992,7 +1005,7 @@ getTamResults     <- function(runModelObj) {
          }  else  {
             shw5 <- NULL
          }                                                                      ### untere Zeile: Diskriminationsparameter im 2pl-Fall auslesen
-         if(attr(runModelObj, "irtmodel") %in% c("2PL", "2PL.groups", "GPCM", "3PL")) {
+         if(attr(runModelObj, "irtmodel") %in% c("2PL", "2PL.groups", "GPCM", "3PL") & omitRegr == FALSE) {
             shw6 <- do.call("rbind", lapply (  1 : length ( colnames( qMatrix ) [-1] ) , FUN = function ( dims ) {
                     shw6D <- data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = regr[["B"]][,"item"], var2 = NA , type = "fixed", indicator.group = "items", group = colnames(qMatrix)[dims+1], par = "estSlope",  derived.par = NA, value = regr[["B"]][,paste("B.Cat1.Dim",dims,sep="")], stringsAsFactors = FALSE)
                     shw6se<- data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = regr[["B"]][,"item"], var2 = NA , type = "fixed", indicator.group = "items", group = colnames(qMatrix)[dims+1], par = "estSlope",  derived.par = "se", value = regr[["B"]][,paste("se.B.Cat1.Dim",dims,sep="")], stringsAsFactors = FALSE)
@@ -1001,31 +1014,33 @@ getTamResults     <- function(runModelObj) {
             shw6 <- NULL
          }
          ret  <- rbind(ret, shw1, shw2, shw3, shw4, shw5, shw6)                 ### Rueckgabeobjekt befuellen, danach infit auslesen
-         infit<- tam.fit(runModelObj, progress=FALSE)                           ### Achtung: wenn DIF-Analyse, dann misslingt untere Zeile: Workarond!
+         if ( omitFit == FALSE ) { 
+              infit<- tam.fit(runModelObj, progress=FALSE)                      ### Achtung: wenn DIF-Analyse, dann misslingt untere Zeile: Workarond!
     ### DIF-Parameter umbenennen, so dass es konsistent zu "getConquestResults" ist
-         fits <- merge(infit[["itemfit"]], qL[,-match("value", colnames(qL))],  by.x = "parameter", by.y = colnames(qMatrix)[1], all = TRUE)
-         if(inherits(try( ret  <- rbind(ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = fits[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = fits[,"dimensionName"], par = "est",  derived.par = "infit", value = fits[,"Infit"], stringsAsFactors = FALSE),
-                                             data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = fits[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = fits[,"dimensionName"], par = "est",  derived.par = "outfit", value = fits[,"Outfit"], stringsAsFactors = FALSE)) , silent = TRUE),"try-error"))  {
-            ret  <- rbind(ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = infit$itemfit[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = NA, par = "est",  derived.par = "infit", value = infit$itemfit[,"Infit"], stringsAsFactors = FALSE),
-                               data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = infit$itemfit[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = NA, par = "est",  derived.par = "outfit", value = infit$itemfit[,"Outfit"], stringsAsFactors = FALSE) )
-            ret[,"toMerge"] <- halve.string(ret[,"var1"], ":", first=TRUE)[,1]
-            ret  <- merge(ret, qL[,c("Item", "dimensionName")], by.x = "toMerge", by.y = "Item", all.x = TRUE)
-            ret  <- ret[,-match(c("group", "toMerge"), colnames(ret))]
-            colnames(ret) <- recode(colnames(ret), "'dimensionName'='group'")
-            indD5<- setdiff( 1:nrow(ret), grep(":DIF", ret[,"var1"]))
-            indD5<- setdiff( ret[indD5,"var1"], qL[,"Item"])
-            to   <- remove.pattern(string = indD5, pattern = "DIF_")
-            to1  <- remove.numeric(to)
-            to2  <- remove.non.numeric(to)
-            indD5<- data.frame ( from = indD5, to = paste(to1, to2, sep="_"), stringsAsFactors = FALSE)
-            recSt<- paste("'",indD5[,"from"] , "' = '" , indD5[,"to"],"'", collapse="; ",sep="")
-            indD <- grep(":DIF", ret[,"var1"])
-            indD2<- halve.string(ret[indD,"var1"], pattern = ":DIF_", first=TRUE)
-            indD3<- remove.numeric(indD2[,2])
-            indD4<- remove.non.numeric(indD2[,2])
-            ret[indD,"var1"] <- paste("item_", indD2[,1], "_X_", paste(indD3, indD4, sep="_"), sep="")
-            ret[,"var1"]     <- recode(ret[,"var1"], recSt)
-         }
+              fits <- merge(infit[["itemfit"]], qL[,-match("value", colnames(qL))],  by.x = "parameter", by.y = colnames(qMatrix)[1], all = TRUE)
+              if(inherits(try( ret  <- rbind(ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = fits[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = fits[,"dimensionName"], par = "est",  derived.par = "infit", value = fits[,"Infit"], stringsAsFactors = FALSE),
+                                                  data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = fits[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = fits[,"dimensionName"], par = "est",  derived.par = "outfit", value = fits[,"Outfit"], stringsAsFactors = FALSE)) , silent = TRUE),"try-error"))  {
+                 ret  <- rbind(ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = infit$itemfit[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = NA, par = "est",  derived.par = "infit", value = infit$itemfit[,"Infit"], stringsAsFactors = FALSE),
+                                    data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = infit$itemfit[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = NA, par = "est",  derived.par = "outfit", value = infit$itemfit[,"Outfit"], stringsAsFactors = FALSE) )
+                 ret[,"toMerge"] <- halve.string(ret[,"var1"], ":", first=TRUE)[,1]
+                 ret  <- merge(ret, qL[,c("Item", "dimensionName")], by.x = "toMerge", by.y = "Item", all.x = TRUE)
+                 ret  <- ret[,-match(c("group", "toMerge"), colnames(ret))]
+                 colnames(ret) <- recode(colnames(ret), "'dimensionName'='group'")
+                 indD5<- setdiff( 1:nrow(ret), grep(":DIF", ret[,"var1"]))
+                 indD5<- setdiff( ret[indD5,"var1"], qL[,"Item"])
+                 to   <- remove.pattern(string = indD5, pattern = "DIF_")
+                 to1  <- remove.numeric(to)
+                 to2  <- remove.non.numeric(to)
+                 indD5<- data.frame ( from = indD5, to = paste(to1, to2, sep="_"), stringsAsFactors = FALSE)
+                 recSt<- paste("'",indD5[,"from"] , "' = '" , indD5[,"to"],"'", collapse="; ",sep="")
+                 indD <- grep(":DIF", ret[,"var1"])
+                 indD2<- halve.string(ret[indD,"var1"], pattern = ":DIF_", first=TRUE)
+                 indD3<- remove.numeric(indD2[,2])
+                 indD4<- remove.non.numeric(indD2[,2])
+                 ret[indD,"var1"] <- paste("item_", indD2[,1], "_X_", paste(indD3, indD4, sep="_"), sep="")
+                 ret[,"var1"]     <- recode(ret[,"var1"], recSt)
+              }
+         }      
     ### Sektion 'Populationsparameter auslesen' (shw)
          if(ncol(qMatrix) == 2) {                                               ### eindimensionaler Fall
             ret  <- rbind(ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = colnames(qMatrix)[2], var2 = NA , type = "distrpar", indicator.group = NA, group = "persons", par = "var",  derived.par = NA, value = runModelObj[["variance"]][1,1] , stringsAsFactors = FALSE))
@@ -1050,40 +1065,44 @@ getTamResults     <- function(runModelObj) {
     ### Sektion 'Modellindizes auslesen' (shw)
              ret  <- rbind(ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = NA, var2 = NA , type = "model", indicator.group = NA, group = NA, par = c("deviance", "Npar", "AIC", "BIC"), derived.par = NA, value = unlist(runModelObj[["ic"]][c("deviance", "Npars", "AIC", "BIC")]), stringsAsFactors = FALSE))
     ### Sektion 'Personenparameter auslesen' (wle)
-         wle  <- tam.wle(runModelObj, progress = FALSE)                         ### Achtung: im eindimensionalen Fall enthalten die Spaltennamen keine Benennung der Dimension
-         eind1<- ncol(wle) == 7
-         if(eind1 == TRUE) {
-            cols1<- grep("theta$", colnames(wle))
-            cols2<- grep("error$", colnames(wle))
-            stopifnot(length(cols1) ==1); stopifnot(length(cols2) ==1)
-            colnames(wle)[c(cols1,cols2)] <- paste(colnames(wle)[c(cols1,cols2)], ".Dim1", sep="")
-         }
-         weg1 <- grep("WLE.rel", colnames(wle))
-         wleL <- melt(wle, id.vars = "pid", measure.vars = colnames(wle)[-c(1:2,weg1)], na.rm=TRUE)
-         wleL[,"group"] <- colnames(qMatrix)[as.numeric(remove.pattern(string = unlist(lapply(strsplit(as.character(wleL[,"variable"]),"\\."), FUN = function (l) {l[2]})), pattern = "Dim"))+1]
-         wleL[,"par"]   <- recode(unlist(lapply(strsplit(as.character(wleL[,"variable"]),"\\."), FUN = function (l) {l[1]})), "'PersonScores'='NitemsSolved'; 'PersonMax'='NitemsTotal'; 'theta'='wle'; 'error'='wle'")
-         wleL[,"derived.par"] <- recode(unlist(lapply(strsplit(as.character(wleL[,"variable"]),"\\."), FUN = function (l) {l[1]})), "'theta'='est'; 'error'='se';else=NA")
-         ret  <- rbind ( ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = wleL[,"pid"], var2 = NA , type = "indicator", indicator.group = "persons", group = wleL[,"group"], par = wleL[,"par"],  derived.par = wleL[,"derived.par"], value = wleL[,"value"] , stringsAsFactors = FALSE))
+         if ( omitWle == FALSE ) { 
+              wle  <- tam.wle(runModelObj, progress = FALSE)                         ### Achtung: im eindimensionalen Fall enthalten die Spaltennamen keine Benennung der Dimension
+              eind1<- ncol(wle) == 7
+              if(eind1 == TRUE) {
+                 cols1<- grep("theta$", colnames(wle))
+                 cols2<- grep("error$", colnames(wle))
+                 stopifnot(length(cols1) ==1); stopifnot(length(cols2) ==1)
+                 colnames(wle)[c(cols1,cols2)] <- paste(colnames(wle)[c(cols1,cols2)], ".Dim1", sep="")
+              }
+              weg1 <- grep("WLE.rel", colnames(wle))
+              wleL <- melt(wle, id.vars = "pid", measure.vars = colnames(wle)[-c(1:2,weg1)], na.rm=TRUE)
+              wleL[,"group"] <- colnames(qMatrix)[as.numeric(remove.pattern(string = unlist(lapply(strsplit(as.character(wleL[,"variable"]),"\\."), FUN = function (l) {l[2]})), pattern = "Dim"))+1]
+              wleL[,"par"]   <- recode(unlist(lapply(strsplit(as.character(wleL[,"variable"]),"\\."), FUN = function (l) {l[1]})), "'PersonScores'='NitemsSolved'; 'PersonMax'='NitemsTotal'; 'theta'='wle'; 'error'='wle'")
+              wleL[,"derived.par"] <- recode(unlist(lapply(strsplit(as.character(wleL[,"variable"]),"\\."), FUN = function (l) {l[1]})), "'theta'='est'; 'error'='se';else=NA")
+              ret  <- rbind ( ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = wleL[,"pid"], var2 = NA , type = "indicator", indicator.group = "persons", group = wleL[,"group"], par = wleL[,"par"],  derived.par = wleL[,"derived.par"], value = wleL[,"value"] , stringsAsFactors = FALSE))
+         }      
     ### Sektion 'Personenparameter auslesen' (PVs)
-         pv   <- tam.pv(runModelObj, nplausible = attr(runModelObj, "n.plausible"), normal.approx = TRUE, ntheta = 2000, np.adj = 20 )$pv
-         pvL  <- melt(pv, id.vars = "pid", na.rm=TRUE)
-         pvL[,"PV.Nr"] <- as.numeric(remove.pattern(string = unlist(lapply(strsplit(as.character(pvL[,"variable"]),"\\."), FUN = function (l) {l[1]})), pattern = "PV"))
-         pvL[,"group"] <- colnames(qMatrix)[as.numeric(remove.pattern(string = unlist(lapply(strsplit(as.character(pvL[,"variable"]),"\\."), FUN = function (l) {l[2]})), pattern = "Dim"))+1]
-         ret  <- rbind ( ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = pvL[,"pid"], var2 = NA , type = "indicator", indicator.group = "persons", group = pvL[,"group"], par = "pv",  derived.par = paste("pv", pvL[,"PV.Nr"],sep=""), value = pvL[,"value"] , stringsAsFactors = FALSE))
-         eaps <- runModelObj[["person"]]                                        ### Achtung: im eindimensionalen Fall enthalten die Spaltennamen keine Benennung der Dimension
-         eind1<- ncol(eaps) == 7                                                ### (uneinheitlich zu pvs, wo es immer eine Benennung gibt.)
-         #eind2<- length(grep(".Dim1$", colnames(eaps))) == 0                   ### Im eindimensionalen Fall muss Benennung ergaenzt werden
-         #stopifnot ( eind1 == eind2)                                           ### zur Sicherheit werden hier zwei Indikatoren fuer Eindimensionalitaet genutzt. Fehlermeldung bei Widerspruch
-         if(eind1 == TRUE) {                                                    ### ggf. muss diese Passage nach Release neuerer TAM-Versionen korrigiert werden
-            cols <- grep("EAP$", colnames(eaps))
-            stopifnot(length(cols) == 2)
-            colnames(eaps)[cols] <- paste(colnames(eaps)[cols], ".Dim1", sep="")
-         }
-         eaps <- melt(eaps, id.vars = "pid", measure.vars = grep("EAP", colnames(eaps)), na.rm=TRUE)
-         eaps[,"group"] <- colnames(qMatrix)[as.numeric(remove.pattern ( string = halve.string(string = as.character(eaps[,"variable"]), pattern = "\\.", first = FALSE)[,"X2"], pattern = "Dim"))+1]
-         eaps[,"par"]   <- "est"
-         eaps[grep("^SD.",as.character(eaps[,"variable"])),"par"]   <- "se"
-         ret  <- rbind ( ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = eaps[,"pid"], var2 = NA , type = "indicator", indicator.group = "persons", group = eaps[,"group"], par = "eap", derived.par = eaps[,"par"], value = eaps[,"value"] , stringsAsFactors = FALSE))
+         if ( omitPV == FALSE ) { 
+              pv   <- tam.pv(runModelObj, nplausible = attr(runModelObj, "n.plausible"), normal.approx = TRUE, ntheta = 2000, np.adj = 20 )$pv
+              pvL  <- melt(pv, id.vars = "pid", na.rm=TRUE)
+              pvL[,"PV.Nr"] <- as.numeric(remove.pattern(string = unlist(lapply(strsplit(as.character(pvL[,"variable"]),"\\."), FUN = function (l) {l[1]})), pattern = "PV"))
+              pvL[,"group"] <- colnames(qMatrix)[as.numeric(remove.pattern(string = unlist(lapply(strsplit(as.character(pvL[,"variable"]),"\\."), FUN = function (l) {l[2]})), pattern = "Dim"))+1]
+              ret  <- rbind ( ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = pvL[,"pid"], var2 = NA , type = "indicator", indicator.group = "persons", group = pvL[,"group"], par = "pv",  derived.par = paste("pv", pvL[,"PV.Nr"],sep=""), value = pvL[,"value"] , stringsAsFactors = FALSE))
+              eaps <- runModelObj[["person"]]                                   ### Achtung: im eindimensionalen Fall enthalten die Spaltennamen keine Benennung der Dimension
+              eind1<- ncol(eaps) == 7                                           ### (uneinheitlich zu pvs, wo es immer eine Benennung gibt.)
+              #eind2<- length(grep(".Dim1$", colnames(eaps))) == 0              ### Im eindimensionalen Fall muss Benennung ergaenzt werden
+              #stopifnot ( eind1 == eind2)                                      ### zur Sicherheit werden hier zwei Indikatoren fuer Eindimensionalitaet genutzt. Fehlermeldung bei Widerspruch
+              if(eind1 == TRUE) {                                               ### ggf. muss diese Passage nach Release neuerer TAM-Versionen korrigiert werden
+                 cols <- grep("EAP$", colnames(eaps))
+                 stopifnot(length(cols) == 2)
+                 colnames(eaps)[cols] <- paste(colnames(eaps)[cols], ".Dim1", sep="")
+              }
+              eaps <- melt(eaps, id.vars = "pid", measure.vars = grep("EAP", colnames(eaps)), na.rm=TRUE)
+              eaps[,"group"] <- colnames(qMatrix)[as.numeric(remove.pattern ( string = halve.string(string = as.character(eaps[,"variable"]), pattern = "\\.", first = FALSE)[,"X2"], pattern = "Dim"))+1]
+              eaps[,"par"]   <- "est"
+              eaps[grep("^SD.",as.character(eaps[,"variable"])),"par"]   <- "se"
+              ret  <- rbind ( ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = eaps[,"pid"], var2 = NA , type = "indicator", indicator.group = "persons", group = eaps[,"group"], par = "eap", derived.par = eaps[,"par"], value = eaps[,"value"] , stringsAsFactors = FALSE))
+         }      
          return(ret)}
 
 
