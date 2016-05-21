@@ -253,7 +253,16 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                                overwr1<- data.frame ( arg = c("dat", "items", "qMatrix", "analysis.name", "dir", "splittedModels"), val = c("datSel", "itemSel", "qMatrix", "nameI", "dirI", "NULL"), stringsAsFactors = FALSE)
                                overwrF<- setdiff ( colnames(splittedModels[["models"]]), c("model.no", "model.name", "model.subpath", "dim", "Ndim", "group", "Ngroup"))
                                if(length(overwrF)>0) { 
-                                  for ( hh in overwrF ) { splittedModels[["models.splitted"]][[matchL]][[hh]] <- splittedModels[["models"]][m,hh] }
+                                  notAllow <- setdiff ( overwrF, names(formals(defineModel)))
+                                  if ( length ( notAllow ) > 0 ) { 
+                                       if ( m == mods[1] ) {                    ### folgende Warnung soll nur einmal erscheinen, obwohl es fuer jedes Modell geschieht (Konsole nicht mit Meldungen zumuellen)
+                                            cat(paste("Column(s) '",paste(notAllow, collapse = "' , '"),"' of 'splittedModels' definition frame do not match arguments of 'defineModel()'. Columns will be ignored.\n", sep=""))
+                                       }
+                                       overwrFS<- setdiff ( overwrF, notAllow )
+                                       if ( length ( overwrFS ) > 0 ) { 
+                                            for ( hh in overwrFS ) { splittedModels[["models.splitted"]][[matchL]][[hh]] <- splittedModels[["models"]][m,hh] }
+                                       }
+                                  }          
                                }   
                                notNull<- which ( unlist(lapply(splittedModels[["models.splitted"]][[matchL]], is.null)) == FALSE ) 
                                overwr2<- setdiff ( intersect ( names(formals(defineModel)), names ( notNull)), "qMatrix")
