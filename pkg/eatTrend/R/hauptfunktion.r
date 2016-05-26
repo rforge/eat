@@ -131,7 +131,7 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 				Link3b <- sirt::equating.rasch.jackknife(pars.data=pd, display = TRUE,
 				se.linkerror = FALSE, alpha1 = 0, alpha2 = 0)
 				seres <- Link3b$descriptives$linkerror
-				if(length(Link3b$itemsunits) == "1") {
+				if(length(Link3b$itemunits) == "1") {
 					seres <- Link3$descriptives$linkerror
 				}
 			}
