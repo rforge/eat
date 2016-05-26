@@ -436,6 +436,9 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 	
 	if(is.null(testletNam)) {eres <- Link3$descriptives$linkerror} else {
 		eres <- Link3b$descriptives$linkerror
+		if(length(Link3b$itemunits) == "1") {
+					eres <- Link3$descriptives$linkerror
+		}
 	}
 	
 	groups <- list()
