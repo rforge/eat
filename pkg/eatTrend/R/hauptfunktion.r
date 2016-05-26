@@ -131,6 +131,9 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 				Link3b <- sirt::equating.rasch.jackknife(pars.data=pd, display = TRUE,
 				se.linkerror = FALSE, alpha1 = 0, alpha2 = 0)
 				seres <- Link3b$descriptives$linkerror
+				if(length(Link3b$itemsunits) == "1") {
+					seres <- Link3$descriptives$linkerror
+				}
 			}
 			
 			Link3MM <- Link3$B.est[1]
@@ -352,7 +355,7 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 			}
 			
 		}	else {
-		
+
 			seres <- data.frame(country=c(unique(countriesT2), "GES"), seTrendpisa=seres, stringsAsFactors=FALSE)
 			resMeans <- eatPrep::mergeData("country", list(resMeans, seres))
 			resMeans$seTrendpisa <- sqrt(resMeans$seT1^2+resMeans$seT2^2+((resMeans$seTrendpisa/sdRefPop)*100)^2)
