@@ -430,7 +430,7 @@ by two variables, the group for which the model is fitted, and the dependent var
 we find information about both. The actual regression results are displayed underneath. \\
 
 <<regression1defResults1>>=
-dG(mod1, analyses = 1:2)
+res   <- dG(mod1, analyses = 1:2)
 @
 
 Remember what was said about factors in the chapter about frequency tables: The gender variable 
@@ -453,7 +453,7 @@ To simplify displaying the results, we use the same workaround as in the example
 mod1  <- jk2.glm(datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
          PSU = "JKZone", repInd = "JKrep", imp = "imputation", 
          formula = passed~country*sex, family=binomial(link="logit") )
-dG(mod1)
+res   <- dG(mod1)
 @
 
 Inspecting the output, we found that the probability of success significantly depends on the 
@@ -496,7 +496,7 @@ The simple intervention provokes R to use the first label mentioned in the
 mod1  <- jk2.glm(datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
          PSU = "JKZone", repInd = "JKrep", imp = "imputation", 
          formula = passed~country*sexRecoded, family=binomial(link="logit") )
-dG(mod1)
+res   <- dG(mod1)
 @
 
 \subsection{Which of both determination coefficients should I pay attention?}
@@ -570,7 +570,7 @@ as group variable likewise allows for investigating whether the potential effect
 mod1  <- jk2.glm(datL = reading, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
          PSU = "JKZone", repInd = "JKrep", nest="nest", imp = "imputation", 
          groups = "country", formula = score~sex+income, family=gaussian(link="identity") )
-dG(mod1)
+res   <- dG(mod1)
 @
 
 %%\section{last chapter}
