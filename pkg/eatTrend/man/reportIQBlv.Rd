@@ -4,7 +4,8 @@
 \description{
 This function returns basic IQB tables.
 }
-\usage{reportIQBlv(path, chapter=c("4", "5a", "5b", "6"),domain="Englisch Leseverstehen")}
+\usage{reportIQBlv(path, chapter=c("4", "5a", "5b", "6"),domain="Englisch Leseverstehen",
+frzRep=FALSE)}
 \arguments{
   \item{path}{
 	A character string containing eatTrend output file path.
@@ -14,6 +15,9 @@ This function returns basic IQB tables.
 }
   \item{domain}{
    Character.
+}
+  \item{frzRep}{
+   Logical.
 }
 }
 
