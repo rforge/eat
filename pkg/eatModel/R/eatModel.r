@@ -276,7 +276,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                                toCall <- paste( overwr1[,"arg"], overwr1[,"val"], sep=" = ", collapse=", ")
                                toCall <- paste("defineModel ( ", toCall, ")", sep="")
      ### sprechende Ausgaben, wenn verbose == TRUE
-                               overwr3<- rbind.fill ( data.frame ( arg = c("Model name", "Number of items", "Number of persons", "Number of dimensions"), eval = c(splittedModels[["models.splitted"]][[matchL]][["model.name"]],length(itemSel), nrow(datSel) , nDim), stringsAsFactors = FALSE)  , overwr3)
+                               overwr3<- plyr::rbind.fill ( data.frame ( arg = c("Model name", "Number of items", "Number of persons", "Number of dimensions"), eval = c(splittedModels[["models.splitted"]][[matchL]][["model.name"]],length(itemSel), nrow(datSel) , nDim), stringsAsFactors = FALSE)  , overwr3)
                                overwr3["leerz"] <- max (nchar(overwr3[,"arg"])) - nchar(overwr3[,"arg"]) + 1
                                txt    <- apply(overwr3, MARGIN = 1, FUN = function ( j ) { paste("\n    ", j[["arg"]], ":", paste(rep(" ", times = j[["leerz"]]), sep="", collapse=""), j[["eval"]], sep="")})
                                nDots  <- max(nchar(overwr3[,"arg"])) + max(nchar(overwr3[,"eval"])) + 6
@@ -284,9 +284,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                                   cat(paste("\n\n",paste(rep("=",times = nDots), sep="", collapse=""),"\nModel No. ",m, paste(txt,sep="", collapse=""), "\n",paste(rep("=",times = nDots), sep="", collapse=""),"\n\n", sep=""))
                                }   
      ### Achtung! Rueckgabe haengt davon ab, ob multicore Handling stattfinden soll! zuerst single core 
-     ### stable: multicore desaktiviert 
-                               # if(is.null ( splittedModels[["nCores"]] ) | splittedModels[["nCores"]] == 1 ) {                                   
-                               if ( 1 == 1 ) { 
+                               if(is.null ( splittedModels[["nCores"]] ) | splittedModels[["nCores"]] == 1 ) {                                   
                                   ret    <- eval(parse(text=toCall))            ### single core handling: die verschiedenen Modelle werden 
                                }  else  {                                       ### bereits jetzt an "defineModel" zurueckgegeben und seriell verarbeitet
                                   retMul <- paste( overwr1[,"arg"], overwr1[,"val"], sep=" = ", collapse=", ")
@@ -295,17 +293,14 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                                }                                                ### cores weitergegeben wird
                                return(ret) }                                    ### hier endet "doAufb"
      ### Der Funktionsaufruf variiert je nach single- oder multicore handling. hier: single core
-     ### ACHTUNG: damit es stabil laeuft, wird das hier desaktiviert, nur in Testversion wird es multicore
-                     # if(is.null ( splittedModels[["nCores"]] ) | splittedModels[["nCores"]] == 1 ) {                                   
-                     if ( 1 == 1 ) { 
+                     if(is.null ( splittedModels[["nCores"]] ) | splittedModels[["nCores"]] == 1 ) {                                   
                         models <- lapply( mods, FUN = doAufb)                   ### single core handling: Funktion "doAufb" wird seriell fuer alle "mods" aufgerufen
      ### wenn multicore handling, dann wird das Objekt "model" an cores verteilt und dort weiter verarbeitet. Ausserdem werden Konsolenausgaben in stringobjekt "txt" weitergeleitet
                      }  else  { 
                         txt    <- capture.output ( models <- lapply( mods, FUN = doAufb))
-                        # if(!exists("detectCores"))   {library(parallel)}
+                        if(!exists("detectCores"))   {library(parallel)}
                         doIt<- function (laufnummer,  ... ) { 
-                               # if(!exists("getResults"))  { library(eatModel) }
-                               if(!exists("melt"))        { library(reshape2) }
+                               if(!exists("getResults"))  { library(eatModel) }
                                strI<- paste(unlist(lapply ( names ( models[[laufnummer]]) , FUN = function ( nameI ) { paste ( nameI, " = models[[laufnummer]][[\"",nameI,"\"]]", sep="")})), collapse = ", ")
                                strI<- paste("capture.output( res <- defineModel(",strI,"))",sep="")
                                txt <- eval(parse(text=strI))
@@ -326,7 +321,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                         pos <- c(pos, length(txt)+1)
                         txtP<- lapply ( 1:(length(pos)-1), FUN = function ( u ) { txt[ pos[u] : (pos[u+1]-1) ] })
                         txtG<- NULL
-                        stopifnot(length(txtP) == length(txts))
+                        stopifnot(length(txtP) == length(txts)) 
                         for ( j in 1:length(txtP) ) { 
                               txtG <- c(txtG, txtP[[j]], txts[[j]])
                         }      
@@ -367,7 +362,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                         }
                      }      
      ### pruefen, ob es Personen gibt, die weniger als <boundary> items gesehen haben (muss VOR den Konsistenzpruefungen geschehen)
-                     datL.valid  <- melt(dat, id.vars = all.Names[["ID"]], meaure.vars = all.Names[["variablen"]], na.rm=TRUE)
+                     datL.valid  <- reshape2::melt(dat, id.vars = all.Names[["ID"]], meaure.vars = all.Names[["variablen"]], na.rm=TRUE)
                      nValid      <- table(datL.valid[,all.Names[["ID"]]])
                      inval       <- nValid[which(nValid<boundary)]
                      if(length(inval)>0) { 
@@ -386,8 +381,8 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                            sn     <- subsNam[which( subsNam$old != subsNam$new),]
                            cat("Conquest neither allows '.', '-' and '_' nor upper case letters in explicit variable names. Delete signs from variables names for explicit variables.\n"); flush.console()
                            recStr <- paste("'",sn[,"old"] , "' = '" , sn[,"new"], "'" ,sep = "", collapse="; ")
-                           colnames(dat) <- recode(colnames(dat), recStr)
-                           all.Names     <- lapply(all.Names, FUN = function ( y ) { recode(y, recStr) })
+                           colnames(dat) <- car::recode(colnames(dat), recStr)
+                           all.Names     <- lapply(all.Names, FUN = function ( y ) { car::recode(y, recStr) })
                            if(model.statement != "item") {
                               cat("    Remove deleted signs from variables names for explicit variables also in the model statement. Please check afterwards for consistency!\n")
                               for ( uu in 1:nrow(sn))  {model.statement <- gsub(sn[uu,"old"], sn[uu,"new"], model.statement)}
@@ -477,9 +472,30 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                       }   
      ### Sektion 'Hintergrundvariablen auf Konsistenz zu sich selbst und zu den Itemdaten pruefen'. Ausserdem Stelligkeit (Anzahl der benoetigten character) fuer jede Variable herausfinden ###
                       weg.dif <- NULL; weg.hg <- NULL; weg.weight <- NULL; weg.group <- NULL
-                      if(length(all.Names$HG.var)>0)    {
+                      if(length(all.Names[["HG.var"]])>0)    {
+                         varClass<- sapply(all.Names[["HG.var"]], FUN = function(ii) {class(dat[,ii])})
+                         notNum  <- which(varClass %in% c("factor", "character"))
+                         if(length(notNum)>0) { 
+                            cat(paste("Warning: Background variables '",paste(names(varClass)[notNum], collapse="', '"),"' of class \n    '",paste(varClass[notNum],collapse="', '"),"' will be converted to indicator variables.\n",sep=""))
+                            ind <- do.call("cbind", lapply ( names(varClass)[notNum], FUN = function ( yy ) {
+                                   newFr <- model.matrix( as.formula (paste("~",yy,sep="")), data = dat)[,-1,drop=FALSE]  
+                                   cat(paste("    Variable '",yy,"' was converted to ",ncol(newFr)," indicator(s) with name(s) '",paste(colnames(newFr), collapse= "', '"), ".\n",sep=""))  
+                                   flush.console()
+                                   return(newFr) }))
+                            if(software == "conquest") {                        ### ggf. fuer Conquest Namen der HG-Variablen aendern
+                               subNm <- .substituteSigns(dat=ind, variable=colnames(ind))
+                               if(!all(subNm$old == subNm$new)) {
+                                  sn  <- subNm[which( subNm$old != subNm$new),]
+                                  reSt<- paste("'",sn[,"old"] , "' = '" , sn[,"new"], "'" ,sep = "", collapse="; ")
+                                  colnames(ind) <- car::recode(colnames(ind), reSt)
+                               }                                                ### entferne Originalnamen aus all.Names[["HG.var"]] und ergaenze neue Namen
+                            }                                                   ### ergaenze neue Variablen im Datensatz
+                            all.Names[["HG.var"]] <- setdiff ( all.Names[["HG.var"]], names(varClass)[notNum])
+                            all.Names[["HG.var"]] <- c(all.Names[["HG.var"]], colnames(ind))
+                            dat <- data.frame ( dat, ind )
+                         }   
                          hg.info <- lapply(all.Names[["HG.var"]], FUN = function(ii) {.checkContextVars(x = dat[,ii], varname=ii, type="HG", itemdaten=dat[,all.Names[["variablen"]], drop = FALSE], suppressAbort = TRUE )})
-                         for ( i in 1:length(hg.info)) { dat[, hg.info[[i]]$varname ] <- hg.info[[i]]$x }
+                         for ( i in 1:length(hg.info)) { dat[, hg.info[[i]][["varname"]] ] <- hg.info[[i]]$x }
                          wegVar  <- unlist(lapply(hg.info, FUN = function ( uu ) { uu[["toRemove"]] }))
                          if(length(wegVar)>0) { all.Names[["HG.var"]] <- setdiff ( all.Names[["HG.var"]], wegVar) }
                          weg.hg  <- unique(unlist(lapply(hg.info, FUN = function ( y ) {y$weg})))
@@ -531,11 +547,11 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                          qMatrix             <- qMatrix[match(all.Names$variablen, qMatrix[,1]),]
                       }
      ### Sektion 'Personen ohne gueltige Werte identifizieren und ggf. loeschen' ###
-                      if(inherits(try(datL  <- melt(data = dat, id.vars = unique(unlist(all.Names[-match("variablen", names(all.Names))])), measure.vars = all.Names[["variablen"]], na.rm=TRUE)  ),"try-error"))  {
+                      if(inherits(try(datL  <- reshape2::melt(data = dat, id.vars = unique(unlist(all.Names[-match("variablen", names(all.Names))])), measure.vars = all.Names[["variablen"]], na.rm=TRUE)  ),"try-error"))  {
                          cat("W A R N I N G ! ! !   Error in melting for unknown reasons. Try workaround.\n"); flush.console()
                          allHG <- setdiff(unique(unlist(all.Names[-match("variablen", names(all.Names))])), all.Names[["ID"]] )
                          stopifnot(length(allHG)>0)                             ### dies ist ein Workaround, wenn "melt" fehltschlaegt (Fehler nicht reproduzierbar)
-                         datL  <- melt(data = dat, id.vars = all.Names[["ID"]], measure.vars = all.Names[["variablen"]], na.rm=TRUE)
+                         datL  <- reshape2::melt(data = dat, id.vars = all.Names[["ID"]], measure.vars = all.Names[["variablen"]], na.rm=TRUE)
                          datL  <- merge(datL, dat[,unique(unlist(all.Names[-match("variablen", names(all.Names))]))], by = all.Names[["ID"]], all=TRUE)
                       }   
                       weg   <- setdiff(dat[,all.Names[["ID"]]], unique(datL[,all.Names[["ID"]]]))
@@ -544,7 +560,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                          if( remove.no.answers == TRUE)  {cat("Cases with missings on all items will be deleted.\n"); dat <- dat[-match(weg,dat[,all.Names[["ID"]]] ) ,]  }
                          if( remove.no.answers == FALSE) {cat("Cases with missings on all items will be kept.\n")}}
      ### Sektion 'Summenscores fuer Personen pruefen' ###
-                      datW  <- dcast(datL, as.formula(paste("variable~",all.Names[["ID"]],sep="")), value.var = "value")
+                      datW  <- reshape2::dcast(datL, as.formula(paste("variable~",all.Names[["ID"]],sep="")), value.var = "value")
                       means <- colMeans(datW[,-1], na.rm=TRUE)
                       minMea<- mean(sapply(datW[,-1], min, na.rm=TRUE), na.rm=TRUE)
                       maxMea<- mean(sapply(datW[,-1], max, na.rm=TRUE), na.rm=TRUE)
@@ -598,7 +614,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                           if(use.letters == TRUE)   {                           ### sollen Buchstaben statt Ziffern beutzt werden? Dann erfolgt hier Recodierung.
                              rec.statement <- paste(0:25,"='",LETTERS,"'",sep="",collapse="; ")
                              for (i in all.Names[["variablen"]])  {             ### Warum erst hier? Weil Prüfungen (auf Dichotomität etc. vorher stattfinden sollen)
-                                  dat[,i] <- recode(dat[,i], rec.statement)}
+                                  dat[,i] <- car::recode(dat[,i], rec.statement)}
                              var.char <- rep(1,length(all.Names[["variablen"]]))}## var.char muß nun neu geschrieben werden, da nun alles wieder einstellig ist!
                       }
      ### Sektion 'deskriptive Ergebnisse berechnen und durchschleifen' ###
@@ -613,7 +629,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                       if ( software == "conquest" )   {
                           daten$ID <- gsub ( " ", "0", formatC(daten$ID, width=max(as.numeric(names(table(nchar(daten$ID)))))) )
                           fixed.width <- c(as.numeric(names(table(nchar(daten[,"ID"])))), all.hg.char, rep(max(var.char),length(var.char)))
-                          write.fwf(daten , file.path(dir,paste(analysis.name,".dat",sep="")), colnames = FALSE,rownames = FALSE, sep="",quote = FALSE,na=".", width=fixed.width)
+                          gdata::write.fwf(daten , file.path(dir,paste(analysis.name,".dat",sep="")), colnames = FALSE,rownames = FALSE, sep="",quote = FALSE,na=".", width=fixed.width)
                           test <- readLines(paste(dir,"/",analysis.name,".dat",sep=""))
                           stopifnot(length(table(nchar(test)))==1)              ### Check: hat der Resultdatensatz eine einheitliche Spaltenanzahl? Muß unbedingt sein!
                           lab <- data.frame(1:length(all.Names[["variablen"]]), all.Names[["variablen"]], stringsAsFactors = FALSE)
@@ -622,7 +638,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                           if(!is.null(conquest.folder))     {
                              batch <- paste( normalize.path(conquest.folder),paste(analysis.name,".cqc",sep=""), sep=" ")
                              write(batch, file.path(dir,paste(analysis.name,".bat",sep="")))}
-                          foo <- gen.syntax(Name=analysis.name, daten=daten, all.Names = all.Names, namen.all.hg = namen.all.hg, all.hg.char = all.hg.char, var.char= max(var.char), model=qMatrix, ANKER=anchor, pfad=dir, n.plausible=n.plausible, compute.fit = compute.fit,
+                          foo <- gen.syntax(Name=analysis.name, daten=daten, all.Names = all.Names, namen.all.hg = namen.all.hg, all.hg.char = all.hg.char, var.char= max(var.char), model=qMatrix, anchored=anchor, pfad=dir, n.plausible=n.plausible, compute.fit = compute.fit,
                                             constraints=constraints, std.err=std.err, distribution=distribution, method=method, n.iterations=n.iterations, nodes=nodes, p.nodes=p.nodes, f.nodes=f.nodes, converge=converge,deviancechange=deviancechange, equivalence.table=equivalence.table, use.letters=use.letters, model.statement=model.statement, conquest.folder = conquest.folder, allowAllScoresEverywhere = allowAllScoresEverywhere, seed = seed, export = export)
                           if(!is.null(anchor))  { 
                              ankFrame <- anker (lab = lab, prm = anchor) 
@@ -645,7 +661,6 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                           ret     <- list ( software = software, qMatrix=qMatrix, anchor=anchor,  all.Names=all.Names, daten=daten, irtmodel=irtmodel, est.slopegroups = est.slopegroups, guessMat=guessMat, control = control, n.plausible=n.plausible, dir = dir, analysis.name=analysis.name, deskRes = deskRes, discrim = discrim)
                           class(ret) <-  c("defineTam", "list")
                           return ( ret )    }   }  }
-
 
 ### Hilfsfunktionen fuer prep.conquest
 .checkContextVars <- function(x, varname, type, itemdaten, suppressAbort = FALSE)   {
@@ -1310,14 +1325,14 @@ as.numeric.if.possible <- function(dataFrame, set.numeric=TRUE, transform.factor
            }
          }
 
-get.plausible <- function(file, quiet = FALSE, forConquestResults = FALSE)  {   ### untere Zeile: hier beginnt Einlesen fuer Plausible Values aus Conquest
-                 checkForPackage (namePackage = "reshape", targetPackage = "eatRep")                                              
+get.plausible <- function(file, quiet = FALSE, forConquestResults = FALSE)  {   ### hier beginnt Einlesen für Plausible Values aus Conquest
+                 checkForPackage (namePackage = "reshape", targetPackage = "eatModel")                                              
                  input           <- scan(file,what="character",sep="\n",quiet=TRUE)
-                 input           <- strsplit(crop(gsub("-"," -",input) ) ," +")# Untere Zeile gibt die maximale Spaltenanzahl
+                 input           <- strsplit(crop(gsub("-"," -",input) ) ," +") ### Untere Zeile gibt die maximale Spaltenanzahl
                  n.spalten       <- max ( sapply(input,FUN=function(ii){ length(ii) }) )
-                 input           <- data.frame( matrix( t( sapply(input,FUN=function(ii){ ii[1:n.spalten] }) ),length(input),byrow=F), stringsAsFactors=F)
+                 input           <- data.frame( matrix( t( sapply(input,FUN=function(ii){ ii[1:n.spalten] }) ),length(input), byrow = FALSE), stringsAsFactors = FALSE)
                  pv.pro.person   <- sum (input[-1,1]==1:(nrow(input)-1) )       ### Problem: wieviele PVs gibt es pro Person? Kann nicht suchen, ob erste Ziffer ganzzahlig, denn das kommt manchmal auch bei Zeile 7/8 vor, wenn entsprechende Werte = 0.0000
-                 n.person        <- nrow(input)/(pv.pro.person+3)               ### Anzahl an PVs pro Person wird bestimmt anhand der uebereinstimmung der ersten Spalte mit aufsteigenden 1,2,3,4...
+                 n.person        <- nrow(input)/(pv.pro.person+3)               ### Anzahl an PVs pro Person wird bestimmt anhand der Übereinstimmung der ersten Spalte mit aufsteigenden 1,2,3,4...
                  weg             <- c(1, as.numeric( sapply(1:n.person,FUN=function(ii){((pv.pro.person+3)*ii-1):((pv.pro.person+3)*ii+1)}) ) )
                  cases           <- input[(1:n.person)*(pv.pro.person+3)-(pv.pro.person+2),1:2]
                  input.sel       <- input[-weg,]
@@ -1330,14 +1345,15 @@ get.plausible <- function(file, quiet = FALSE, forConquestResults = FALSE)  {   
                  input.sel$ID    <- rep(ID, each = pv.pro.person)
                  is.na.ID        <- FALSE
                  if(is.na(input.sel$ID[1])) {                                   ### wenn keine ID im PV-File, wird hier eine erzeugt (Fall-Nr), da sonst reshapen misslingt
-                    is.na.ID        <- TRUE                                     ### Die ID wird spaeter wieder geloescht. Um das machen zu koennen, wird Indikatorvariable erzeugt, die sagt, ob ID fehlend war.
+                    is.na.ID        <- TRUE                                     ### Die ID wird später wieder geloescht. Um das machen zu koennen, wird Indikatorvariable erzeugt, die sagt, ob ID fehlend war.
                     input.sel$ID    <- rep( 1: n.person, each = pv.pro.person)
                  }
                  input.melt      <- melt(input.sel, id.vars = c("ID", "PV.Nr") , stringsAsFactors = FALSE)
+                 input.melt[,"value"] <- as.numeric(input.melt[,"value"])
                  input.wide      <- data.frame( case = gsub(" ", "0",formatC(as.character(1:n.person),width = nchar(n.person))) , dcast(input.melt, ... ~ variable + PV.Nr) , stringsAsFactors = FALSE)
                  colnames(input.wide)[-c(1:2)] <- paste("pv.", paste( rep(1:pv.pro.person,n.dim), rep(1:n.dim, each = pv.pro.person), sep = "."), sep = "")
                  weg.eap         <- (1:n.person)*(pv.pro.person+3) - (pv.pro.person+2)
-                 input.eap    <- input[setdiff(weg,weg.eap),]                   ### nimm EAPs und deren Standardfehler und haenge sie an Datensatz - all rows that have not been used before
+                 input.eap    <- input[setdiff(weg,weg.eap),]                   ### nimm EAPs und deren Standardfehler und hänge sie an Datensatz - all rows that have not been used before
                  input.eap    <- na.omit(input.eap[,-ncol(input.eap),drop=FALSE])## find EAPs and posterior standard deviations 
                  stopifnot(ncol(input.eap) ==  n.dim)
                  input.eap    <- lapply(1:n.dim, FUN=function(ii) {matrix(unlist(as.numeric(input.eap[,ii])), ncol=2,byrow=T)})
