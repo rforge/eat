@@ -9,7 +9,7 @@ methods for multiple imputed data. Nested imputations of the dependent variable(
 Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} functions of the \code{'survey'} package.}
 \usage{
 jk2.mean (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, 
-          nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
+          repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
             group.differences.by = NULL, group.delimiter = "_", dependent, na.rm = FALSE, 
             doCheck = TRUE)}
 %- maybe also 'usage' for other objects documented here.
@@ -43,6 +43,11 @@ standard errors are computed according to a random sample.
 %%     ~~Describe \code{sig.dif.bound} here~~
 Variable name or column number of variable indicating replicate ID. In a jackknife procedure, this is the jackknife replicate 
 variable. If \code{NULL}, no cluster structure is assumed and standard errors are computed according to a random sample.
+}
+  \item{repWgt}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Normally, replicate weights are created by \code{jk2.mean} directly from \code{PSU} and \code{repInd} variables. Alternatively, 
+if replicate weights are included in the data.frame, specify the variable names or column number in the \code{repWgt} argument.
 }
   \item{nest}{Optional: name or column number of the nesting variable. Only applies in nested multiple imputed data sets.  
 }

@@ -4,14 +4,14 @@
 \title{JK2 for frequency tables.}
 \description{Compute frequency tables for categorical variables (e.g. factors: dichotomous or polytomous) in complex
 cluster designs. Estimation of standard errors optionally takes the clustered structure and multiple imputed
-variables into account. To date, only the Jackknife-2 procedure (JK2) is implemented to account for clustered designs.
-Procedures of Rubin (1987) and Rubin (2003) are implemented to account for multiple imputed data and nested imputed data.
-Conceptually, the function combines replication and imputation methods. Technically, this is a wrapper
-for the svymean() function of the survey package.
+variables into account. To date, Jackknife-1 (JK1), Jackknife-2 (JK2) and Balanced repeated replicate (BRR) methods are 
+implemented to account for clustered designs. Procedures of Rubin (1987) and Rubin (2003) are implemented to account for 
+multiple imputed data and nested imputed data, if necessary. Conceptually, the function combines replication and imputation 
+methods. Technically, this is a wrapper for the svymean() function of the survey package.
 }
 \usage{
 jk2.table(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, 
-          nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), 
+          repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), 
           group.differences.by = NULL, correct = TRUE, group.delimiter = "_", dependent , 
           separate.missing.indicator = FALSE, na.rm=FALSE, expected.values = NULL, 
           doCheck = TRUE)}
@@ -47,7 +47,12 @@ standard errors are computed according to a random sample.
 Variable name or column number of variable indicating replicate ID. In a jackknife procedure, this is the jackknife replicate 
 variable. If \code{NULL}, no cluster structure is assumed and standard errors are computed according to a random sample.
 }
-  \item{nest}{Optional: name or column number of the nesting variable. Only applies in nested multiple imputed data sets.  
+  \item{repWgt}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Normally, replicate weights are created by \code{jk2.table} directly from \code{PSU} and \code{repInd} variables. Alternatively, 
+if replicate weights are included in the data.frame, specify the variable names or column number in the \code{repWgt} argument.
+}
+  \item{nest}{Optional: name or column number of the nesting variable. Only applies in nested multiple imputed data sets.
 }
   \item{imp}{Optional: name or column number of the imputation variable. Only applies in multiple imputed data sets.  
 }

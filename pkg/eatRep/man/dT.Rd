@@ -4,7 +4,8 @@
 \title{Display results of jk2.table analyses.}
 \description{This is an easy function only addressed to display results of jk2.table analyses in an abbreviated manner.}
 \usage{
-dT ( object, reshapeFormula = depVar + group ~ parameter + coefficient, seOmit = FALSE) }
+dT ( object, reshapeFormula = depVar + group ~ parameter + coefficient, seOmit = FALSE, 
+     roundDigits = 1, percent = TRUE) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{object}{
@@ -18,6 +19,14 @@ Optionally: specify the formula used for reshaping.
   \item{seOmit}{
 %%     ~~Describe \code{dif.term} here~~
 Optionally: omit displaying stand errors?
+}
+  \item{roundDigits}{
+%%     ~~Describe \code{dif.term} here~~
+To how many digits the results should be rounded?
+}
+  \item{percent}{
+%%     ~~Describe \code{dif.term} here~~
+Logical: Display percentage values?
 }
 }
 \details{

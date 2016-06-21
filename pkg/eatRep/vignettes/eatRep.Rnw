@@ -344,13 +344,16 @@ necessary to convert the variable class to factor.\\
 
 We now are interested in the relative frequencies of this groups in the different countries 
 and within each country for different groups of gender. As before, we want to take the cluster 
-structure and multiple imputations into account.\\
+structure and multiple imputations into account. Moreover, we are interested whether the distribution 
+of pass/fail is different for males vs. females within specific countries. This is done via a chi 
+square test. The test statistic is pooled according to the clustered structure and the imputations. 
+To call for the chi square test, we can use the \code{group.differences.by} argument:\\
 
 <<hiseiFreqsByCountryGenderdef>>=
 freqs <- jk2.table( datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
          PSU = "JKZone", repInd = "JKrep", imp = "imputation", groups = c("country", "sex"), 
-	       dependent = "passed")
-dT(freqs)
+	       group.differences.by = "sex", dependent = "passed")
+dT(freqs, percent = TRUE)
 @
 
 The output is a single data frame in the long format. To make the output more pleasing to the 
@@ -362,6 +365,21 @@ column names of the summary table. We see that in country \code{"LandA"} 35.8 pe
 females and 47.8 percent of the males \emph{do not pass}. As in the examples mentioned 
 before, these analyses may be conducted without considering clustered structure. See whether 
 the standard errors will change.\\ 
+
+The output of the summary function \code{dT} does not contain results of the chi square test.
+So far, we have to extract the results by ourself:\\
+
+<<hiseiFreqsExtraction>>=
+options(scipen=4)
+freqs[which(freqs[,"parameter"] == "chiSquareTest"),]
+@
+
+In each of the three countries a chi square test was conducted separately. For \code{LandA}, 
+the \emph{p} is <.001, hence the distribution of passed/failed significantly differs between 
+males and females in \code{LandA}. However, \code{LandB} and \code{LandC} reveals another 
+picture---there are no sex differences in the rate of pass/fail. As we have imputed data, 
+we additionallz have an chi square approximation. See the help page of \code{micombine.chisquare}
+of the \code{miceadds} package for further details. \\
 
 Let's devote little attention to the problem of missing values. In the example mentioned above, 
 it does not seem plausible to assume missing values on the \code{"passed"} variable. Without

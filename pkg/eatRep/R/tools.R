@@ -17,7 +17,7 @@
 
 
 facToChar <- function ( dataFrame, from = "factor", to = "character" ) {
-             if(!"data.frame" %in% class(dataFrame)) {stop()}
+             if(!"data.frame" %in% class(dataFrame)) {stop("'dataFrame' must be of class 'data.frame'.\n")}
              classes <- which( unlist(lapply(dataFrame,class)) == from)
              if(length(classes)>0) {
                 for (u in classes) { eval(parse(text=paste("dataFrame[,u] <- as.",to,"(dataFrame[,u])",sep="") )) }}
@@ -72,8 +72,10 @@ as.numeric.if.possible <- function(dataFrame, set.numeric=TRUE, transform.factor
                   }
                   return(ret)})
             options(warn = originWarnLevel)                                     ### danach: schalte Warnungen wieder in Ausgangszustand!
-            changeVariables <- colnames(dataFrame)[numericable[1,]]
-            changeFactorWithIndices   <- NULL
+            changeVariables <- colnames(dataFrame)[numericable[1,]]             ### welche Variablen sollen transformiert werden? 
+            alreadyNum      <- currentClasses[which(currentClasses %in% c("numeric", "integer"))]
+            if(length(alreadyNum)>0) { changeVariables <- setdiff(changeVariables, alreadyNum)}
+            changeFactorWithIndices   <- NULL                                   ### obere zeile: diejenigen ausschliessen, die bereits numerisch sind!
             if(transform.factors == TRUE & maintain.factor.scores == TRUE)   {
                changeFactorWithIndices   <- names(which(sapply(changeVariables,FUN=function(ii) {class(dataFrame[[ii]])=="factor"})))
                changeFactorWithIndices   <- setdiff(changeFactorWithIndices, names(which(numericable[2,] == FALSE)) )
@@ -99,7 +101,6 @@ as.numeric.if.possible <- function(dataFrame, set.numeric=TRUE, transform.factor
               return(dataFrame)
            }
          }
-
 
 make.indikator <- function(variable, name.var = "ind", force.indicators = NULL, separate.missing.indikator = c("no","ifany", "always"), sep = "_" )  {
                   separate.missing.indikator <- match.arg(separate.missing.indikator)

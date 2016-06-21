@@ -5,7 +5,7 @@
 \description{This is an easy function only addressed to display results of jk2.mean analyses in an abbreviated manner.}
 \usage{
 dM ( object, omitTerms = c("mean","sd","var", "Ncases","NcasesValid",
-     "meanGroupDiff", "se","est") )}
+     "meanGroupDiff", "se","est"), digits = 3 )}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{object}{
@@ -15,6 +15,10 @@ A results object created by jk2.mean().
   \item{omitTerms}{
 %%     ~~Describe \code{dif.term} here~~
 Optionally: character vector of terms you do not want to see on console.
+}
+  \item{digits}{
+%%     ~~Describe \code{dif.term} here~~
+Number of digits for rounding values.
 }
 }
 \details{

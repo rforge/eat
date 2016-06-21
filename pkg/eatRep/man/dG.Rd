@@ -4,7 +4,7 @@
 \title{Display results of jk2.glm analyses.}
 \description{This is an easy function only addressed to display results of jk2.glm analyses in an abbreviated manner.}
 \usage{
-dG ( object , analyses = NULL ) }
+dG ( object , analyses = NULL, digits = 3 ) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{object}{
@@ -14,6 +14,10 @@ A results object created by jk2.glm().
   \item{analyses}{
 %%     ~~Describe \code{dif.term} here~~
 Optionally: a numeric vector auf analyses which should be displayed.
+}
+  \item{digits}{
+%%     ~~Describe \code{dif.term} here~~
+Number of digits for rounding results (applies only for printing on console). 
 }
 }
 \details{
