@@ -616,7 +616,7 @@ for(rowi in 1:ndatapoints){
     invMANIFESTVARchol * (Y[rowi] - LAMBDA[subjecti] * eta[rowi-subjecti] - MANIFESTMEANS[subjecti]);
 
   if(T0check[rowi] ==1) Ytrans[((rowi-1)*nmanifest+1):(rowi*nmanifest)] <- 
-    invMANIFESTVARchol * (Y[rowi] - T0MEANS[subjecti]);
+    invMANIFESTVARchol * (Y[rowi] - LAMBDA[subjecti] * T0MEANS[subjecti]- MANIFESTMEANS[subjecti]);
 
   increment_log_prob(sum(log(diagonal(invMANIFESTVARchol))));
 }
@@ -859,8 +859,8 @@ paste0(unlist(lapply(1:nrow(ctspec),function(rowi){
 
     control<-list(adapt_delta=.95,
       # adapt_term_buffer=100,
-      adapt_init_buffer=2,
-      adapt_window=2,
+      adapt_init_buffer=10,
+      adapt_window=10,
       # adapt_kappa=.95,
       # adapt_gamma=.01,
       # metric="dense_e",
@@ -870,14 +870,17 @@ paste0(unlist(lapply(1:nrow(ctspec),function(rowi){
     if(plot==TRUE) {
       stanplot(chains=chains,seed=stanseed)
     }
-
+    if(!exists('sample_file')){
+      if(plot==TRUE) sample_file<-paste0(stanseed,'samples.csv')
+      if(plot==FALSE) sample_file<-NULL
+    }
+    
     out <- stan(model_code = c(stanmodelobj), 
       enable_random_init=TRUE,init_r=.5,
       refresh=20,
       data = standata, iter = iter, chains = ifelse(optimize==FALSE & vb==FALSE,chains,0), verbose = verbose, control=control,
-       # sample_file=ifelse(plot==TRUE,paste0(stanseed,'samples.csv'),NULL),
-       # MH 21.06. Fehler in ifelse(plot == TRUE, paste0(stanseed, "samples.csv"), NULL) : Ersetzung hat Länge 0
-	   , cores=max(c(chains,detectCores())),...) 
+       sample_file=sample_file,
+      cores=max(c(chains,detectCores())),...) 
     
  
     
