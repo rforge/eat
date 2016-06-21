@@ -875,8 +875,9 @@ paste0(unlist(lapply(1:nrow(ctspec),function(rowi){
       enable_random_init=TRUE,init_r=.5,
       refresh=20,
       data = standata, iter = iter, chains = ifelse(optimize==FALSE & vb==FALSE,chains,0), verbose = verbose, control=control,
-       sample_file=ifelse(plot==TRUE,paste0(stanseed,'samples.csv'),NULL),
-      cores=max(c(chains,detectCores())),...) 
+       # sample_file=ifelse(plot==TRUE,paste0(stanseed,'samples.csv'),NULL),
+       # MH 21.06. Fehler in ifelse(plot == TRUE, paste0(stanseed, "samples.csv"), NULL) : Ersetzung hat Länge 0
+	   , cores=max(c(chains,detectCores())),...) 
     
  
     
