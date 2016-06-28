@@ -12,11 +12,11 @@ defineModel (dat, items, id, splittedModels = NULL,
    irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
    qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL, anchor = NULL, 
    check.for.linking = TRUE, boundary = 6, remove.boundary = FALSE, remove.no.answers = TRUE,
-   remove.missing.items = TRUE, remove.constant.items = TRUE, remove.failures = FALSE, 
-   remove.vars.DIF.missing = TRUE, remove.vars.DIF.constant = TRUE, verbose=TRUE, 
-   software = c("conquest","tam"), dir = NULL, analysis.name, withDescriptives = TRUE, 
-   model.statement = "item",  compute.fit = TRUE, n.plausible=5,
-   seed = NULL, conquest.folder=NULL,constraints=c("cases","none","items"),
+   remove.no.answersHG = TRUE, remove.missing.items = TRUE, remove.constant.items = TRUE, 
+   remove.failures = FALSE, remove.vars.DIF.missing = TRUE, remove.vars.DIF.constant = TRUE, 
+   verbose=TRUE, software = c("conquest","tam"), dir = NULL, analysis.name, 
+   withDescriptives = TRUE, model.statement = "item",  compute.fit = TRUE, 
+   n.plausible=5, seed = NULL, conquest.folder=NULL,constraints=c("cases","none","items"),
    std.err=c("quick","full","none"), distribution=c("normal","discrete"),
    method=c("gauss", "quadrature", "montecarlo"), n.iterations=2000,
    nodes=NULL, p.nodes=2000, f.nodes=2000,converge=0.001,deviancechange=0.0001,
@@ -48,7 +48,8 @@ Optional: Object returned by 'splitModels'. Definition for multiple model handli
 }
   \item{irtmodel}{
 %%     ~~Describe \code{abs.dif.bound} here~~
-Specification of the IRT model, see help page of \code{tam} for further details.
+Specification of the IRT model. The argument corresponds to the \code{irtmodel} 
+argument of \code{tam}. See the help page of \code{tam} for further details.
 }
   \item{qMatrix}{
 %%     ~~Describe \code{abs.dif.bound} here~~
@@ -102,6 +103,10 @@ Logical: Remove subjects who have answered less items than defined in the \code{
   \item{remove.no.answers}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Logical: Should persons without any item responses being removed prior to analysis?
+}
+  \item{remove.no.answersHG}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Logical: Should persons without any responses on any background variable being removed prior to analysis?
 }
   \item{remove.missing.items}{
 %%     ~~Describe \code{sig.dif.bound} here~~
