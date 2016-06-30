@@ -197,12 +197,18 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                method=c("gauss", "quadrature", "montecarlo"), n.iterations=2000,nodes=NULL, p.nodes=2000, f.nodes=2000,converge=0.001,deviancechange=0.0001, 
                equivalence.table=c("wle","mle","NULL"), use.letters=FALSE, allowAllScoresEverywhere = TRUE, guessMat = NULL, est.slopegroups = NULL, 
                progress = FALSE, increment.factor=1 , fac.oldxsi=0, export = list(logfile = TRUE, systemfile = FALSE, history = TRUE, covariance = TRUE, reg_coefficients = TRUE, designmatrix = FALSE) )   {
+                  misItems <- missing(items)
                   checkForPackage (namePackage = "eatRest", targetPackage = "eatModel")
                   if(!"data.frame" %in% class(dat) ) { cat("Convert 'dat' to a data.frame.\n"); dat <- data.frame ( dat, stringsAsFactors = FALSE)}
      ### Sektion 'multiple models handling': jedes Modell einzeln von 'defineModel' aufbereiten lassen 
      ### Hier wird jetzt erstmal nur die bescheuerte Liste aus 'splitModels' aufbereitet (wenn der Nutzer sie verhunzt hat)
                   if(!is.null(splittedModels)) {
-                     if(length(splittedModels) == 3 & !is.null(splittedModels[[1]]) &  length(nrow( splittedModels[[1]]) > 0)>0 ) { 
+                     if(length(splittedModels) == 3 & !is.null(splittedModels[["models"]]) &  length(nrow( splittedModels[["models"]]) > 0)>0 ) { 
+                        if ( !missing ( analysis.name ) ) { 
+                           cat(paste("Analysis name is already specified by the 'splittedModels' object. User-defined analysis name '",analysis.name,"' will be used as prefix.\n",sep=""))
+                           splittedModels[["models"]][,"model.name"] <- paste(analysis.name, "_", splittedModels[["models"]][,"model.name"],sep="")
+                           for ( u in 1:length(splittedModels[["models.splitted"]]) ) { splittedModels[["models.splitted"]][[u]][["model.name"]] <- paste(analysis.name, "_", splittedModels[["models.splitted"]][[u]][["model.name"]],sep="") }
+                        }
                         if(nrow(splittedModels[[1]])>0) { 
                            mods   <- intersect(splittedModels[["models"]][,"model.no"], unlist(lapply(splittedModels[["models.splitted"]], FUN = function ( l ) {l[["model.no"]]})))
                         }  else  { 
@@ -223,6 +229,10 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                      doAufb <- function ( m ) { 
                                matchL <- match(m, unlist(lapply(splittedModels[["models.splitted"]], FUN = function ( l ) { l[["model.no"]] } )))
                                if(!is.null(splittedModels[["models.splitted"]][[matchL]][["qMatrix"]])) {
+     ### check: wenn superSplitter BERUHEND AUF ITEM GROUPING genutzt, wird 'items'-Argument von 'defineModel' ignoriert                  
+                                  if(misItems == FALSE) {                       ### Warnung nur beim ersten Schleifendurchlauf anzeigen!
+                                     if(m == mods[1]) { cat("Warning: 'defineModel' was called using 'splitModels' argument. Model split according to item groups is intended. Item selection is defined \n    via 'splittedModels' object. Hence, 'items' argument is expected to be missed in 'defineModel()' and will be ignored.\n") }
+                                  }
                                   itemMis<- setdiff ( splittedModels[["models.splitted"]][[matchL]][["qMatrix"]][,1], colnames(dat))
                                   if( length ( itemMis ) > 0) {
                                       cat(paste( "Warning: ",length(itemMis) ," from ",nrow(splittedModels[["models.splitted"]][[matchL]][["qMatrix"]])," items not found in data.\n",sep=""))
@@ -249,25 +259,25 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
      ### Aufruf von 'defineModel' generieren. Achtung: wenn der Nutzer eigenhaendig neue Argumente in <models>[["models"]] einfuegt, muessen die hier in <models>[["models.splitted"]] uebernommen werden!
                                overwr1<- data.frame ( arg = c("dat", "items", "qMatrix", "analysis.name", "dir", "splittedModels"), val = c("datSel", "itemSel", "qMatrix", "nameI", "dirI", "NULL"), stringsAsFactors = FALSE)
                                overwrF<- setdiff ( colnames(splittedModels[["models"]]), c("model.no", "model.name", "model.subpath", "dim", "Ndim", "group", "Ngroup"))
-                               if(length(overwrF)>0) {
+                               if(length(overwrF)>0) { 
                                   notAllow <- setdiff ( overwrF, names(formals(defineModel)))
-                                  if ( length ( notAllow ) > 0 ) {
+                                  if ( length ( notAllow ) > 0 ) { 
                                        if ( m == mods[1] ) {                    ### folgende Warnung soll nur einmal erscheinen, obwohl es fuer jedes Modell geschieht (Konsole nicht mit Meldungen zumuellen)
                                             cat(paste("Column(s) '",paste(notAllow, collapse = "' , '"),"' of 'splittedModels' definition frame do not match arguments of 'defineModel()'. Columns will be ignored.\n", sep=""))
                                        }
                                   }
                                   overwrFS<- setdiff ( overwrF, notAllow )
-                                  if ( length ( overwrFS ) > 0 ) {
+                                  if ( length ( overwrFS ) > 0 ) { 
                                        for ( hh in overwrFS ) { splittedModels[["models.splitted"]][[matchL]][[hh]] <- splittedModels[["models"]][m,hh] }
                                   }
-                               }
-                               notNull<- which ( unlist(lapply(splittedModels[["models.splitted"]][[matchL]], is.null)) == FALSE )
+                               }   
+                               notNull<- which ( unlist(lapply(splittedModels[["models.splitted"]][[matchL]], is.null)) == FALSE ) 
                                overwr2<- setdiff ( intersect ( names(formals(defineModel)), names ( notNull)), "qMatrix")
-                               if(length(overwr2)>0) {                          ### obere Zeile: qMatrix ist oben schon definiert, wird hier NICHT aus der Liste durchgeschleift
+                               if(length(overwr2)>0) {                          ### obere Zeile: qMatrix ist oben schon definiert, wird hier NICHT aus der Liste durchgeschleift 
                                   overwr3 <- data.frame ( arg = overwr2, val = paste("splittedModels[[\"models.splitted\"]][[",matchL,"]][[\"",overwr2,"\"]]",sep=""), stringsAsFactors = FALSE)
                                   overwr1 <- rbind ( overwr1, overwr3)
                                   overwr3[,"eval"] <- unlist(lapply(paste(overwr3[,"val"],sep=""), FUN = function ( l ) { eval(parse(text = l))}))
-                               }  else  { overwr3 <- NULL }
+                               }  else  { overwr3 <- NULL }  
                                default<- setdiff ( names(formals(defineModel)), overwr1[,"arg"])
                                overwr1<- rbind ( overwr1, data.frame ( arg = default, val = default, stringsAsFactors = FALSE) )
                                toCall <- paste( overwr1[,"arg"], overwr1[,"val"], sep=" = ", collapse=", ")
