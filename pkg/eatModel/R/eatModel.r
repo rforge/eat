@@ -1,3 +1,45 @@
+item.logit <- function(z,slope=1,thr)  {
+     n <- length(z)
+     k <- length(thr)
+     m.zts <- matrix(rep(z*slope,k),ncol=k)
+     m.thr <- matrix(rep(thr*slope,n),ncol=k,byrow=T)
+     cum.prob  <- 1.0 / (1.0 + exp(-(m.zts - m.thr)))
+     u <- matrix(rep(runif(n),k),ncol=k)
+     x <- apply(u < cum.prob,1,sum)
+     des <- cbind(-1*diag(k),rep(0,k))+cbind(rep(0,k),1*diag(k))
+     prob <- cum.prob %*% des
+     prob[,1] <- 1 + prob[,1]
+     colnames(prob) <- c(paste("p",1:(k+1),sep=""))
+     return(list(x=x,psc=prob))}
+
+num.to.cat <- function(x, cut.points, cat.values = NULL)    {
+              stopifnot(is.numeric(x))
+              if(is.null(cat.values)) {cat.values <- 1:(length(cut.points)+1)}
+              stopifnot(length(cut.points)+1 == length(cat.values))
+              repeating <- 1:length(cut.points)                                 ### create string
+              part.1 <- paste("ifelse(x < cut.points[",repeating,"],cat.values[",repeating,"]",collapse=", ")
+              part.2 <- paste(part.1, ", \"",cat.values[length(cat.values)], "\"", paste(rep(")",length(cut.points),sep=""),collapse=""), sep="", collapse="")
+              return(eval ( parse ( text = part.2 ) ))}
+
+
+simEquiTable <- function ( anchor, mRef, sdRef, addConst = 500, multConst = 100, cutScores , dir , n = 2000, conquest.folder ) {
+                if ( length(which ( duplicated(anchor[,1])))>0) { 
+                     cat(paste("Warning: Remove ",length(duplicated(anchor[,1]))," entries in the anchor parameter frame.\n",sep=""))
+                     anchor <- anchor[!duplicated(anchor[,1]),]
+                }     
+                it  <- matrix ( data = anchor[,2], ncol = length(anchor[,2]), nrow = n, byrow = TRUE)
+                colnames(it) <- anchor[,1]
+                pop <- melt ( data.frame ( idstud = paste("P",1:n,sep=""), theta = rnorm (n = n, mean = mRef, sd = sdRef), it), id.vars = c("idstud", "theta"), value.name = "itemPar", variable.name = "item")
+                pop[,"resp"] <- item.logit(z = pop[,"theta"]-pop[,"itemPar"], thr = c(0.0), slope = 1)$x
+                popW<- dcast(pop,idstud~item, value.var = "resp")
+                mDef<- defineModel ( dat = popW, items = -1, id = "idstud", anchor = anchor, dir = dir, conquest.folder = conquest.folder, compute.fit = FALSE, analysis.name = "equSimTest")
+                mRun<- runModel(mDef)
+                equ <- get.equ ( file.path ( dir, "equSimTest.equ"))[[1]]
+                equ[,"estBista"] <- (equ[,"Estimate"] - mRef) / sdRef * multConst + addConst
+                equ[,"ks"]       <- num.to.cat ( x = equ[,"estBista"], cut.points = cutScores[["values"]], cat.values = cutScores[["labels"]])
+                return(equ)}
+
+
 getResults <- function ( runModelObj, overwrite = FALSE, omitFit = FALSE, omitRegr = FALSE, omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6, sig.dif.bound = 0.3, p.value = 0.9, simplify = TRUE ) { 
             if("runMultiple" %in% class(runModelObj)) {                         ### Mehrmodellfall
                 if(is.null ( attr(runModelObj, "nCores") ) | attr(runModelObj, "nCores") == 1 ) {         
