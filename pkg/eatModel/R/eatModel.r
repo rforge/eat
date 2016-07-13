@@ -1237,8 +1237,9 @@ itemFromRes<- function ( resultsObj ) {
                  weg      <- wo.sind ( itemList[,"weg"], sel[,"var1"], quiet = TRUE)
                  forDif   <- wo.sind ( itemList[,"dif"], sel[,"var1"], quiet = TRUE)
                  stopifnot(length( intersect(weg, forDif)) == 0 ) 
-                 selForDif<- sel[forDif, ]             
+                 selForDif<- sel[forDif, ]     
                  sel      <- sel[-c(weg, forDif) , ] 
+                 sel      <- sel[which ( sel[,"par"] != "ptBis" ) , ]           ### Hotfix: wenn DIF ausgegeben, wird keine ptBis berechnet 
                  selDIF   <- do.call("rbind", by(selForDif, INDICES = selForDif[,"group"], FUN = function ( gr ) { 
                              res  <- dcast ( gr , var1~par+derived.par, value.var = "value")
                              mat  <- lapply( attr(resultsObj, "all.Names")[["variablen"]], FUN = function ( v ) { grep(v, res[,"var1"])})
@@ -1248,16 +1249,25 @@ itemFromRes<- function ( resultsObj ) {
                              res[,"absDif"]<- abs ( res[,"estDif"]  * 2 ) 
                              res[,paste("CI__", attr(resultsObj, "dif.settings")[["p.value"]] ,"__lb",sep="")] <- res[,"absDif"] - 2*abs(qnorm(0.5*(1-attr(resultsObj, "dif.settings")[["p.value"]]))) * res[,"seDif"]
                              res[,paste("CI__", attr(resultsObj, "dif.settings")[["p.value"]] ,"__ub",sep="")] <- res[,"absDif"] + 2*abs(qnorm(0.5*(1-attr(resultsObj, "dif.settings")[["p.value"]]))) * res[,"seDif"]
-                             res[,"difIndex"] <- apply(res[,c("absDif", "CI__0.9__lb", "CI__0.9__ub")], MARGIN = 1, FUN = function ( d ) { 
+                             res  <- data.frame ( res, do.call("rbind", apply(res[,c("absDif", "seDif", paste("CI__",attr(resultsObj, "dif.settings")[["p.value"]],"__lb",sep=""), paste("CI__",attr(resultsObj, "dif.settings")[["p.value"]],"__ub",sep=""))], MARGIN = 1, FUN = function ( d ) { 
                                                  check <- all ( !is.na(d) ) 
                                                  if(check == TRUE) { 
                                                     crit1 <- d[["absDif"]] > attr(resultsObj, "dif.settings")[["abs.dif.bound"]]
-                                                    crit2 <- !all ( sort ( c ( d[["CI__0.9__lb"]], attr(resultsObj, "dif.settings")[["sig.dif.bound"]] , d[["CI__0.9__ub"]]), index.return = TRUE)$ix == 1:3 )
+                                                    crit2 <- !all ( sort ( c ( d[[paste("CI__",attr(resultsObj, "dif.settings")[["p.value"]],"__lb",sep="")]], attr(resultsObj, "dif.settings")[["sig.dif.bound"]] , d[[paste("CI__",attr(resultsObj, "dif.settings")[["p.value"]],"__ub",sep="")]]), index.return = TRUE)$ix == 1:3 )
                                                     if ( crit1 == TRUE & crit2 == TRUE) { res <- 1 }  else { res <- 0}
+        ### Implementiere Formel nach Lord (1980) und ETS-Klassifikation von DIF; siehe Funktion equating.rasch aus 'eatRest'
+                                                    ets   <- "A"
+                                                    ets1  <- d[["absDif"]] > 0.43 & d[["absDif"]] < 0.64
+                                                    ets2  <- !all ( sort ( c ( d[[paste("CI__",attr(resultsObj, "dif.settings")[["p.value"]],"__lb",sep="")]], 0 , d[[paste("CI__",attr(resultsObj, "dif.settings")[["p.value"]],"__ub",sep="")]]), index.return = TRUE)$ix == 1:3 )
+                                                    if ( ets1 == TRUE & ets2 == TRUE) { ets <- "B" }  
+                                                    etsC1 <- d[["absDif"]] > 0.64 
+                                                    etsC2 <- !all ( sort ( c ( d[[paste("CI__",attr(resultsObj, "dif.settings")[["p.value"]],"__lb",sep="")]], 0.43 , d[[paste("CI__",attr(resultsObj, "dif.settings")[["p.value"]],"__ub",sep="")]]), index.return = TRUE)$ix == 1:3 )
+                                                    if ( etsC1 == TRUE & etsC2 == TRUE) { ets <- "C" }  
+                                                    res   <- data.frame(difIndex = res, ETS = ets )
                                                  }  else  { 
-                                                    res <- NA
+                                                    res   <- data.frame(difIndex = NA, ETS = NA )
                                                  }   
-                                                 return(res)})
+                                                 return(res)}) ) )
                              return(res)}))                    
              }                
              sel  <- do.call("rbind", by(sel, INDICES = sel[,"group"], FUN = function ( gr ) { 
@@ -1270,7 +1280,7 @@ itemFromRes<- function ( resultsObj ) {
                      return(res)}))
              if ( length(attr(resultsObj, "all.Names")[["DIF.var"]])>0) { 
                  ciCo<- colnames(selDIF)[grep("^CI__", colnames(selDIF))]
-                 sel <- merge(sel, selDIF[,c("item", "estDif", "seDif", "infitDif", "absDif", ciCo, "difIndex")], by="item", all=TRUE)
+                 sel <- merge(sel, selDIF[,c("item", "estDif", "seDif", "infitDif", "absDif", ciCo, "difIndex", "ETS")], by="item", all=TRUE)
              }    
              return(sel)
           }

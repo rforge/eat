@@ -8,9 +8,9 @@ level for each total score of the test.}
 cutScores , dir , n = 2000, conquest.folder )}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{anchor}{A data frame with anchor parameters on the logit scale. The first 
-  column contains the names of all anchored items. The second column contains anchor 
-  parameters.
+  \item{anchor}{A data frame with anchor parameters on the logit scale, transformed 
+  to the metric of the reference population. The first column contains the names of 
+  all anchored items. The second column contains anchor parameters.
 }
   \item{mRef}{
 %%     ~~Describe \code{dif.term} here~~
@@ -44,8 +44,8 @@ Scalar: sample size for the simulated data.
 }
   \item{conquest.folder}{
 %%     ~~Describe \code{dif.term} here~~
-Applies only if \code{software = "conquest"}. A character string with path and name
-of the ConQuest console, for example \code{"c:/programme/conquest/console_Feb2007.exe"}.
+Character string with path and name of the ConQuest console, for 
+example \code{"c:/programme/conquest/console_Feb2007.exe"}.
 }
 }
 \details{
@@ -58,6 +58,13 @@ of the ConQuest console, for example \code{"c:/programme/conquest/console_Feb200
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
 A data frame with 5 columns. 
+  \describe{
+    \item{Score}{Students raw score}
+    \item{Estimate}{Estimated individual WLE according to the raw score.}
+    \item{std.error}{Standard error of the individual WLE estimate.}
+    \item{estBista}{Transformed WLE}
+    \item{ks}{competence level}
+ }
 }
 \references{
 %% ~put references to the literature/web site here ~
