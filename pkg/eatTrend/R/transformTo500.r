@@ -3,7 +3,7 @@ transformTo500 <- function(pars, mRefPop=NULL, sdRefPop=NULL, mtT=500, sdtT=100,
 
 	wgts <-as.numeric(wgts)
 	res <- pars
-	
+
 	if(type == "itPar") {
 	
 	if(is.null(mRefPop) | is.null(sdRefPop)) {stop("if type is itPar, mRefPop and sdRefPop have to be specified")}

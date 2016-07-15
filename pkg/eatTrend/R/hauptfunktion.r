@@ -30,31 +30,34 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 	if(is.null(jkzoneT2)) {cat("Warning! jkzoneT2 is empty and will be defaulted to nonsense values \n"); jkzoneT2 <- paste0(countriesT2, sample(c(0,1,2,3), length(countriesT2), replace = TRUE))}
 	if(is.null(jkrepT1)) {cat("Warning! jkrepT1 is empty and will be defaulted to nonsense values \n"); jkrepT1 <- rbinom(length(countriesT1),1,.5)}
 	if(is.null(jkrepT2)) {cat("Warning! jkrepT2 is empty and will be defaulted to nonsense values \n"); jkrepT2 <- rbinom(length(countriesT2),1,.5)} 
-	
+	if(is.null(weightsT1)) weightsT1 <- rep(1, length(countriesT1))
+	if(is.null(weightsT2)) weightsT2 <- rep(1, length(countriesT2))
 	
 	if(writeCsv & is.null(path)) {stop("please specify path if 'writeCsv=TRUE'")}
 	if(plots & is.null(path)) {stop("please specify path if 'plots=TRUE'")}
 	
-	if(!identical(dir(path), character(0))) {
-	   cat(paste("Data already exists in: ", path, ", which might be overwritten. Press 'Esc' to cancel.\n", sep =""))
-	   temp <- mapply ( function ( nr ) {
-			cat ( paste ( nr , " " , sep="" ) )
-			flush.console ( )
-			Sys.sleep ( 1 )
-		} , 5:1 )
-		cat("\n")
-	}
-	
-	# Pfad checken & anlegen
-	if(inherits(ret <- try(dir.create(path, showWarnings = FALSE, recursive=TRUE)),"try-error")) {
-		stop("Error while creating folder.")
-	}
+	if(!is.null(path)) {
+		if(!identical(dir(path), character(0))) {
+		   cat(paste("Data already exists in: ", path, ", which might be overwritten. Press 'Esc' to cancel.\n", sep =""))
+		   temp <- mapply ( function ( nr ) {
+				cat ( paste ( nr , " " , sep="" ) )
+				flush.console ( )
+				Sys.sleep ( 1 )
+			} , 5:1 )
+			cat("\n")
+		}
 		
-	# Schreibrechte vorhanden?
-	if(unname ( file.access(path, mode = 2 ) )  == 0 ) {
-	   ret <- TRUE
-	   } else {
-		stop(paste("No writing access", path))
+		# Pfad checken & anlegen
+		if(inherits(ret <- try(dir.create(path, showWarnings = FALSE, recursive=TRUE)),"try-error")) {
+			stop("Error while creating folder.")
+		}
+			
+		# Schreibrechte vorhanden?
+		if(unname ( file.access(path, mode = 2 ) )  == 0 ) {
+		   ret <- TRUE
+		   } else {
+			stop(paste("No writing access", path))
+		}
 	}
 
 	itParsIntT1 <- eatPrep::set.col.type(itParsIntT1, list(character=names(itParsIntT1)[1], numeric=names(itParsIntT1)[2:dim(itParsIntT1)[2]]))
@@ -158,7 +161,7 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 				} else {
 				PV500T1 <- transformTo500(pars=PV500T1, mtT=mtT, sdtT=sdtT, wgts=weightsT1, type="persPar", cutScores=cutScores)
 				}
-				PV500T2 <- transformTo500(pars=PV500T2, mtT=mtT, sdtT=sdtT, mRefPop=mRefPop, sdRefPop=sdRefPop, type="persPar", cutScores=cutScores)
+				PV500T2 <- transformTo500(pars=PV500T2, mtT=mtT, sdtT=sdtT, mRefPop=mRefPop, sdRefPop=sdRefPop, wgts=weightsT2, type="persPar", cutScores=cutScores)
 	
 			}
 				
@@ -226,6 +229,7 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 			cutsT1 <- rbind(cutsT1,cutdT1)
 			resCutsT1 <- reshape2::dcast(cutsT1[,-c(1:3)], parameter+countriesT1 ~ coefficient,margins="value")
 		}
+
 		resMeanT1 <- reshape2::dcast(subset(meansT1[,-c(1:3)], meansT1$parameter == "mean"), parameter+countriesT1 ~ coefficient,margins="value")[,-1]
 		names(resMeanT1) <- c("country", "meanT1", "seT1")
 		resSDT1 <- reshape2::dcast(subset(meansT1[,-c(1:3)], meansT1$parameter == "sd"), parameter+countriesT1 ~ coefficient,margins="value")[,2:4]
@@ -358,20 +362,26 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 
 			seres <- data.frame(country=c(unique(countriesT2), "GES"), seTrendpisa=seres, stringsAsFactors=FALSE)
 			resMeans <- eatPrep::mergeData("country", list(resMeans, seres))
-			resMeans$seTrendpisa <- sqrt(resMeans$seT1^2+resMeans$seT2^2+((resMeans$seTrendpisa/sdRefPop)*100)^2)
+			if(!is.null(sdRefPop)) {
+				resMeans$seTrendpisa <- sqrt(resMeans$seT1^2+resMeans$seT2^2+((resMeans$seTrendpisa/sdRefPop)*100)^2)
+			} else {
+				resMeans$seTrendpisa <- sqrt(resMeans$seT1^2+resMeans$seT2^2+(resMeans$seTrendpisa*100)^2)
+			}
 		}
-		
-		resCutsT2$id <- paste(resCutsT2$parameter, resCutsT2$countriesT2)
-		names(resCutsT2)[3:4] <- c("estT2", "seT2")
-		resCutsT1$id <- paste(resCutsT1$parameter, resCutsT1$countriesT1)
-		names(resCutsT1)[3:4] <- c("estT1", "seT1")
-		resCuts <- eatPrep::mergeData("id", list(resCutsT1, resCutsT2))
-		resCuts <- resCuts[,-c(2,6)]
-		names(resCuts)[2] <- "country"
-		resCuts <- resCuts[,c(2,1,3,4,5,6)]
-		resCuts <- resCuts[order(resCuts$country),]
-		resCuts$estTrend <- resCuts$estT2 - resCuts$estT1
-		resCuts$seTrendUnderestimated <- sqrt(resCuts$seT2^2 + resCuts$seT1^2)
+
+		if(!is.null(cutScores)) {
+			resCutsT2$id <- paste(resCutsT2$parameter, resCutsT2$countriesT2)
+			names(resCutsT2)[3:4] <- c("estT2", "seT2")
+			resCutsT1$id <- paste(resCutsT1$parameter, resCutsT1$countriesT1)
+			names(resCutsT1)[3:4] <- c("estT1", "seT1")
+			resCuts <- eatPrep::mergeData("id", list(resCutsT1, resCutsT2))
+			resCuts <- resCuts[,-c(2,6)]
+			names(resCuts)[2] <- "country"
+			resCuts <- resCuts[,c(2,1,3,4,5,6)]
+			resCuts <- resCuts[order(resCuts$country),]
+			resCuts$estTrend <- resCuts$estT2 - resCuts$estT1
+			resCuts$seTrendUnderestimated <- sqrt(resCuts$seT2^2 + resCuts$seT1^2)
+		}
 		linkerror <- mean(sqrt(resMeans$seTrendpisa^2-(resMeans$seT1^2+resMeans$seT2^2)), na.rm=TRUE)
 		M2 <- SD2 <- NULL	
 		for(i in 6:max(which(unlist(lapply(PV500T2,class))=="numeric"))) {
@@ -417,20 +427,26 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 			return( resCuts1 )          
 			}
 		
-		resCuts <- seKompstuf(resCuts, cutScores, M1 , SD1 , M2 , SD2 , linkerror)
-		resCuts[,c(3:9)] <- resCuts[,c(3:9)]*100
+		if(!is.null(cutScores)) {
+			resCuts <- seKompstuf(resCuts, cutScores, M1 , SD1 , M2 , SD2 , linkerror)
+			resCuts[,c(3:9)] <- resCuts[,c(3:9)]*100
+		}
 
 		if(writeCsv) {
 			stopifnot(!is.null(path))
 			if(landNam) {
-				resCuts[,1] <- landerNam(resCuts[,1])
+				if(!is.null(cutScores)) {
+					resCuts[,1] <- landerNam(resCuts[,1])
+				}
 				resMeans[,1] <- landerNam(resMeans[,1])
 			}
 			write.csv2(PV500T1, file=paste0(path, "/PV500T1_", type, "_", Sys.Date(), ".csv"), row.names=FALSE)
 			write.csv2(PV500T2, file=paste0(path, "/PV500T2_", type, "_", Sys.Date(), ".csv"), row.names=FALSE)
-			write.csv2(resCuts, file=paste0(path, "/levelTrend_", type, "_GES_", Sys.Date(), ".csv"), row.names=FALSE)
+			if(!is.null(cutScores)) {
+				write.csv2(resCuts, file=paste0(path, "/levelTrend_", type, "_GES_", Sys.Date(), ".csv"), row.names=FALSE)
+				write.csv2(cutScores, file=paste0(path, "/cutScores_", Sys.Date(), ".csv"), row.names=FALSE)
+			}
 			write.csv2(resMeans, file=paste0(path, "/meanTrend_", type, "_GES_", Sys.Date(), ".csv"), row.names=FALSE)
-			write.csv2(cutScores, file=paste0(path, "/cutScores_", Sys.Date(), ".csv"), row.names=FALSE)
 		}
 	}
 	
@@ -472,10 +488,14 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 				stopifnot(!is.null(path))
 				for(i in 1:dim(groupsT1)[2]) {
 					if(landNam) {
-						groups[[i]][[2]][,1] <- landerNam(groups[[i]][[2]][,1])
+						if(!is.null(cutScores)) {
+							groups[[i]][[2]][,1] <- landerNam(groups[[i]][[2]][,1])
+						}
 						groups[[i]][[1]][,1] <- landerNam(groups[[i]][[1]][,1])
 					}
-					write.csv2(groups[[i]][[2]], file=paste0(path, "/levelTrend_", type, "_", groupNam[i], "_", Sys.Date(), ".csv"), row.names=FALSE)
+					if(!is.null(cutScores)) {
+						write.csv2(groups[[i]][[2]], file=paste0(path, "/levelTrend_", type, "_", groupNam[i], "_", Sys.Date(), ".csv"), row.names=FALSE)
+					}
 					write.csv2(groups[[i]][[1]], file=paste0(path, "/meanTrend_", type, "_", groupNam[i], "_", Sys.Date(), ".csv"), row.names=FALSE)
 				}
 			}
@@ -632,19 +652,24 @@ cutScores=NULL, seres) {
 	
 	seres <- data.frame(country=c(unique(countriesT2), "GES"), seTrendpisa=seres, stringsAsFactors=FALSE)
 	resMeansG <- eatPrep::mergeData("country", list(resMeansG, seres))
-	resMeansG$seTrendpisa <- sqrt(resMeansG$seT1^2+resMeansG$seT2^2+((resMeansG$seTrendpisa/sdRefPop)*100)^2)
-	
-	resCutsT2$id <- paste(resCutsT2$parameter, resCutsT2$countriesT2)
-	names(resCutsT2)[3:4] <- c("estT2", "seT2")
-	resCutsT1$id <- paste(resCutsT1$parameter, resCutsT1$countriesT1)
-	names(resCutsT1)[3:4] <- c("estT1", "seT1")
-	resCutsG <- eatPrep::mergeData("id", list(resCutsT1, resCutsT2))
-	resCutsG <- resCutsG[,-c(2,6)]
-	names(resCutsG)[2] <- "country"
-	resCutsG <- resCutsG[,c(2,1,3,4,5,6)]
-	resCutsG <- resCutsG[order(resCutsG$country),]
-	resCutsG$estTrend <- resCutsG$estT2 - resCutsG$estT1
-	resCutsG$seTrendUnderestimated <- sqrt(resCutsG$seT2^2 + resCutsG$seT1^2)
+	if(!is.null(sdRefPop)) {
+		resMeansG$seTrendpisa <- sqrt(resMeansG$seT1^2+resMeansG$seT2^2+((resMeansG$seTrendpisa/sdRefPop)*100)^2)
+	} else {
+		resMeansG$seTrendpisa <- sqrt(resMeansG$seT1^2+resMeansG$seT2^2+(resMeansG$seTrendpisa*100)^2)
+	}
+	if(!is.null(cutScores)) {
+		resCutsT2$id <- paste(resCutsT2$parameter, resCutsT2$countriesT2)
+		names(resCutsT2)[3:4] <- c("estT2", "seT2")
+		resCutsT1$id <- paste(resCutsT1$parameter, resCutsT1$countriesT1)
+		names(resCutsT1)[3:4] <- c("estT1", "seT1")
+		resCutsG <- eatPrep::mergeData("id", list(resCutsT1, resCutsT2))
+		resCutsG <- resCutsG[,-c(2,6)]
+		names(resCutsG)[2] <- "country"
+		resCutsG <- resCutsG[,c(2,1,3,4,5,6)]
+		resCutsG <- resCutsG[order(resCutsG$country),]
+		resCutsG$estTrend <- resCutsG$estT2 - resCutsG$estT1
+		resCutsG$seTrendUnderestimated <- sqrt(resCutsG$seT2^2 + resCutsG$seT1^2)
+	}
 	linkerror <- mean(sqrt(resMeansG$seTrendpisa^2-(resMeansG$seT1^2+resMeansG$seT2^2)), na.rm=TRUE)
 	M2 <- SD2 <- NULL	
 	for(i in 6:max(which(unlist(lapply(PV500T2,class))=="numeric"))) {
@@ -689,9 +714,12 @@ cutScores=NULL, seres) {
 		}	
 		return( resCuts1 )          
 		}
-	
-	resCutsG <- seKompstuf(resCutsG, cutScores, M1 , SD1 , M2 , SD2 , linkerror)
-	resCutsG[,c(3:9)] <- resCutsG[,c(3:9)]*100
-	
-	return(list(resMeansG, resCutsG))
+	if(!is.null(cutScores)) {
+		resCutsG <- seKompstuf(resCutsG, cutScores, M1 , SD1 , M2 , SD2 , linkerror)
+		resCutsG[,c(3:9)] <- resCutsG[,c(3:9)]*100
+		
+		return(list(resMeansG, resCutsG))
+	} else {
+		return(list(resMeansG))
+	}
 }
