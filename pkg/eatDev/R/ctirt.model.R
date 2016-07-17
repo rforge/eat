@@ -36,11 +36,35 @@ ctirt.model <- function ( d, id=NULL, timepoint.sep="_", lag.names=NULL, Lambda=
 				cat( paste0( paste( paste0("[",seq(along=error),"] ",error), collapse="\n" ), "\n\n" ) )
 				cat( paste0( "DO NOT RUN THE MODEL!\n" ) )
 		} else {
-				if (verbose) cat( paste0( "MODEL SUCESSFULLY CREATED | proceed with ctirt.run() \n" ) )
+				if (verbose) cat( paste0( "MODEL SUCESSFULLY CREATED | proceed with ctirt.syntax() \n" ) )
 		}
 		
 		# create jags syntax
-		invisible( create.jags.syntax( env ) )
+		# invisible( create.jags.syntax( env ) )
+		
+		### return list ###
+		
+		# overwrite user specified prior list
+		# assign( "priors", get( "prior", envir=env ), envir=env )
+		
+		# list elements
+		el <- ls( envir=env )
+		
+		# remove arguments of ctirt.model and other objects
+		el <- el[ !el %in% c("timepoint.sep","verbose","prior","env","lag.names") ]
+		
+		## order of elements
+		el <- el[ order(el) ]
+		first <- c("d","col.id","col.item","col.time","col.y","A",ifelse(exists("A.prior",envir=env),"A.prior",NULL),"Q","b","beta",ifelse( measurement.model$family %in% "gaussian", "E", NULL ),"priors","F","I","J","T","R","P","Lambda","measurement.model")
+		last <- c()
+		el <- el[ c( match( first, el ) , which( !el %in% c( first, last ) ), match( last, el ) ) ]
+		
+		# create return list
+		ret <- list()
+		do <- paste0( "ret$'", el, "' <- get( '", el, "', envir=env )" )
+		eval( parse( text = do ) )
+		
+		return( ret )
 		
 }
 

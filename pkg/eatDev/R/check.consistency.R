@@ -23,24 +23,24 @@ check.consistency <- function ( env ) {
 		   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "loading matrix Lambda is not IxFxT (", I, "x", F, ") | check Lambda matrix" ) }		
 
 		# beta
-		if ( verbose ) cat( paste0( "       manifest int./diff. vector beta is I (", I, "): "  ) )
+		if ( verbose ) cat( paste0( "             item easiness vector beta is I (", I, "): "  ) )
 		if ( length(beta)==I ) { if ( verbose ) cat( "OK\n" ) } 
-		   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "manifest intercept vector beta is not of length I (", I, ") | check data and/or beta vector" ) }
+		   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "     item easiness vector beta is not of length I (", I, ") | check data and/or beta vector" ) }
 
-	   # Epsilon
+	   # E
 		if ( measurement.model$family == "gaussian" ) {		
 				# IxI
-				if ( verbose ) cat( paste0( "  measurement error matrix Epsilon is IxI (", I, "x", I, "): "  ) )
-				if ( identical( dim(Epsilon), c(I,I) ) ) { if ( verbose ) cat( "OK\n" ) } 
-				   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "measurement error matrix Epsilon is not IxI (", I, "x", I, ") | check data and/or Epsilon matrix" ) }						
+				if ( verbose ) cat( paste0( "        measurement error matrix E is IxI (", I, "x", I, "): "  ) )
+				if ( identical( dim(E), c(I,I) ) ) { if ( verbose ) cat( "OK\n" ) } 
+				   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "        measurement error matrix E is not IxI (", I, "x", I, ") | check data and/or E matrix" ) }						
 				# symmetric matrix
-				if ( verbose ) cat( paste0( "                           Epsilon is symmetric: "  ) )
-				if ( identical( Epsilon[lower.tri( Epsilon )], Epsilon[upper.tri( Epsilon )] ) ) { if ( verbose ) cat( "OK\n" ) } 
-				   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "measurement error matrix Epsilon is not symmetric | check Epsilon" ) }
+				if ( verbose ) cat( paste0( "                                 E is symmetric: "  ) )
+				if ( identical( E[lower.tri( E )], E[upper.tri( E )] ) ) { if ( verbose ) cat( "OK\n" ) } 
+				   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "measurement error matrix E is not symmetric | check E" ) }
 				   # uncorrelated errors
 				if ( verbose ) cat( paste0( "                uncorrelated measurement errors: "  ) )
-				if ( all( c( Epsilon[lower.tri( Epsilon )], Epsilon[upper.tri( Epsilon )] ) == 0 ) ) { if ( verbose ) cat( "OK\n" ) } 
-				   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "off-diagonal elements of measurement error matrix are not 0 (correlated errors are currently not supported) | check Epsilon matrix" ) }		
+				if ( all( c( E[lower.tri( E )], E[upper.tri( E )] ) == 0 ) ) { if ( verbose ) cat( "OK\n" ) } 
+				   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "off-diagonal elements of measurement error matrix are not 0 (correlated errors are currently not supported) | check E matrix" ) }		
 		}
 		
 		### continuous time stuff ###

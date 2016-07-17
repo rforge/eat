@@ -66,11 +66,11 @@ check.input <- function ( env ) {
 				if ( is.vector ) { if ( verbose ) cat( "OK\n" ) }
 				   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "b is not a vector | check b" ) }
 		}
-		# Epsilon is two-dimensional matris
-		if ( exists( "Epsilon", inherits=FALSE ) ) {
-				if ( verbose ) cat( paste0( "              Epsilon is two-dimensional matrix: "  ) )
-				if ( is.matrix(Epsilon) & length(dim(Epsilon))==2 ) { if ( verbose ) cat( "OK\n" ) }
-				   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "Epsilon is not two-dimensional matrix | check Epsilon" ) }
+		# E is two-dimensional matris
+		if ( exists( "E", inherits=FALSE ) ) {
+				if ( verbose ) cat( paste0( "              E is two-dimensional matrix: "  ) )
+				if ( is.matrix(E) & length(dim(E))==2 ) { if ( verbose ) cat( "OK\n" ) }
+				   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "E is not two-dimensional matrix | check E" ) }
 		}
 
 		

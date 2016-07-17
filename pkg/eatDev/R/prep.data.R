@@ -119,7 +119,8 @@ prep.data <- function ( env ) {
 		do3 <- unname( mapply( function (x,y) paste( c(x,y), collapse=" & " ), do1, do2 ) )
 		do4 <- mapply( function(r,do3) paste0 ( "indsL[[",r,"]] <- which( ",do3," ) " ), 1:nrow(Lpat) , do3 )
 		eval(parse(text=do4))
-
+		rownames( Lpat ) <- seq( along=rownames( Lpat ) )
+		
 		# pattern groups of persons
 		Lpat.group <- rep(NA,nrow(Lags))
 		do <- mapply( function( nr, inds ) paste0("Lpat.group[c(",paste(inds,collapse=","),")] <- ",nr ), seq(along=indsL), indsL )
@@ -132,7 +133,15 @@ prep.data <- function ( env ) {
 		P <- nrow( Lpat )
 		# non-missing time points per pattern
 		Tp <- unname( apply( Lpat, 1 , function(x) T - length(which(is.na(x))) ) )
-	
+
+		# number of persons in each pattern
+		PNj <- sapply( unique( Lpat.group ), function( gr ) length( which( Lpat.group==gr ) ) )
+		
+		# specific persons in specific pattern
+		Pj <- matrix( NA, P, J )
+		do <- paste0(  "Pj[",1:P,",1:PNj[",1:P,"]] <- which( Lpat.group == ",1:P," )" )
+		eval( parse( text=do ) )		
+		
 		
 		### Stuff for measurement model ###
 		## initialize default measurement parameters (if not set by user)
@@ -193,7 +202,7 @@ prep.data <- function ( env ) {
 				eval( parse( text=do ) )
 				
 				# output
-				default[length(default)+1] <- paste0( "      manifest intercept/difficulty vector beta: I (", I, ") vector, first item per latent variable set to 0 " )
+				default[length(default)+1] <- paste0( "                      item easiness vector beta: I (", I, ") vector, first item per latent variable set to 0 " )
 
 		} else {
 				## beta is set by user ##
@@ -212,35 +221,35 @@ prep.data <- function ( env ) {
 		# if gaussian, error var/cov matrix
 		if ( measurement.model$family == "gaussian" ) {
 				
-				# default of Epsilon
-				if ( !exists("Epsilon",inherits=FALSE) || is.null(Epsilon) ) {
+				# default of E
+				if ( !exists("E",inherits=FALSE) || is.null(E) ) {
 						
 						if ( man2lat ) {
 								# if manifest are mapped to latent, all 0
-								Epsilon <- diag( 0, I )
+								E <- diag( 0, I )
 						} else {
 								# uncorrelated errors
-								Epsilon <- diag( NA, I )
+								E <- diag( NA, I )
 						}
-						rownames( Epsilon ) <- colnames( Epsilon ) <- item.names
+						rownames( E ) <- colnames( E ) <- item.names
 				
 				} else {
-						## Epsilon is set by user ##
+						## E is set by user ##
 
 						# if names are set by user then sort according to data set, important!!!
-						if ( !is.null( colnames( Epsilon ) ) ) {
-								Epsilon <- Epsilon[ , match( item.names, colnames( Epsilon ) ) ]
+						if ( !is.null( colnames( E ) ) ) {
+								E <- E[ , match( item.names, colnames( E ) ) ]
 						}
-						if ( !is.null( rownames( Epsilon ) ) ) {
-								Epsilon <- Epsilon[ match( item.names, rownames( Epsilon ) ) , ]
+						if ( !is.null( rownames( E ) ) ) {
+								E <- E[ match( item.names, rownames( E ) ) , ]
 						}
 
 				}
 		} else {
-				Epsilon <- NULL
+				E <- NULL
 		}
 		# NAs to labeled parameters
-		Epsilon <- label.pars(Epsilon,"Epsilon")
+		E <- label.pars(E,"E")
 		
 
 		### Stuff for continuous time model ###		
@@ -296,7 +305,7 @@ prep.data <- function ( env ) {
 		b <- label.pars(b,"b")		
 
 		### (over)write relevant variables to environment ###
-		obj <- c( "d", "col.y", "col.id", "col.item", "col.time", "R", "J", "I", "T", "Tj", "P", "Tp", "L", "Lpat", "Lpat.group", "Lambda", "beta", "Epsilon", "F", "I1", "I2", "Aw", "I1w", "Qt.prec.replace", "A", "b", "Q" )
+		obj <- c( "d", "col.y", "col.id", "col.item", "col.time", "R", "J", "I", "T", "Tj", "P", "Tp", "L", "Lpat", "Lpat.group", "Lambda", "beta", "E", "F", "I1", "I2", "Aw", "I1w", "Qt.prec.replace", "A", "b", "Q" )
 		eval( parse ( text=paste0( "assign( '",obj, "' , get('",obj,"') , envir=env )" ) ) )
 
 		
@@ -313,6 +322,8 @@ prep.data <- function ( env ) {
 				cat( paste0( "                               lag patterns (P): ", P,"\n") )
 				Tp.string <- ifelse( all(Tp==Tp[1]), as.character(Tp[1]), paste0("M=", formatC(mean(Tp),format="f",digits=2), " min=", min(Tp), " max=", max(Tp)) )
 				cat( paste0( "                   time points per pattern (Tp): ", Tp.string, "\n") )
+				PNj.string <- ifelse( length(PNj)==1, as.character(PNj[1]), paste0("M=", formatC(mean(PNj),format="f",digits=2), " min=", min(PNj), " max=", max(PNj)) )
+				cat( paste0( "                      persons per pattern (PNj): ", PNj.string, "\n") )				
 				cat("\n")
 				cat( paste0( "setting defaults\n\n" ) )
 				if( length(default)>0 ) {
@@ -347,9 +358,9 @@ label.pars <- function(m,m.name) {
 				# parameter names
 				nams <- apply( nams.dfr, 1, function (z) paste( z, collapse="_" ) )
 
-				# if all names equal then only one name
-				eq <- apply( nams.dfr, 1, function(x) all( x==x[1] ) )
-				if ( any( eq ) ) nams[eq] <- as.character( nams.dfr[eq,1] )
+				# if all names equal then only one name, e.g. A_lat1 instead of A_lat1_lat1
+				# eq <- apply( nams.dfr, 1, function(x) all( x==x[1] ) )
+				# if ( any( eq ) ) nams[eq] <- as.character( nams.dfr[eq,1] )
 				
 				# add indicator as additional column
 				m.[,ncol(m.)+1] <- 1:nrow(m.)
