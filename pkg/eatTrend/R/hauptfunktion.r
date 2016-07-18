@@ -460,7 +460,7 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 	groups <- list()
 	if(!is.null(groupsT1)) {
 		for(i in 1:dim(groupsT1)[2]) {
-			groups[[i]] <- groupe(PV500T1=PV500T1, PVsT1=PVsT1, countriesT1=countriesT1,jkzoneT1=jkzoneT1, jkrepT1=jkrepT1, weightsT1=weightsT1, groupsT1=groupsT1[,i], PV500T2=PV500T2, PVsT2=PVsT2, countriesT2=countriesT2, weightsT2=weightsT2, jkzoneT2=jkzoneT2, jkrepT2=jkrepT2, groupsT2=groupsT2[,i], GES=GES, cutScores=cutScores, seres=eres)
+			groups[[i]] <- groupe(PV500T1=PV500T1, PVsT1=PVsT1, countriesT1=countriesT1,jkzoneT1=jkzoneT1, jkrepT1=jkrepT1, weightsT1=weightsT1, groupsT1=groupsT1[,i], PV500T2=PV500T2, PVsT2=PVsT2, countriesT2=countriesT2, weightsT2=weightsT2, jkzoneT2=jkzoneT2, jkrepT2=jkrepT2, groupsT2=groupsT2[,i], GES=GES, cutScores=cutScores, seres=eres, sdRefPop=sdRefPop)
 		}
 	}
 		
@@ -513,7 +513,7 @@ transfTo500=TRUE, mtT=500, sdtT=100, mRefPop=NULL, sdRefPop=NULL, cutScores=NULL
 groupe <- function(PV500T1, PVsT1, countriesT1, 
 jkzoneT1, jkrepT1, weightsT1, groupsT1, PV500T2, PVsT2, 
 countriesT2, weightsT2, jkzoneT2, jkrepT2, groupsT2, GES=TRUE, 
-cutScores=NULL, seres) {
+cutScores=NULL, seres, sdRefPop) {
 
 	PV500T1 <- eatPrep::mergeData("idstud", list(data.frame(idstud=PVsT1[,1], countriesT1, jkzoneT1, jkrepT1, weightsT1, stringsAsFactors=FALSE),PV500T1))
 	PV500T1g <- PV500T1[groupsT1 == "1",]
