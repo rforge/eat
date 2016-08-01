@@ -11,8 +11,17 @@ catPbc <- function(datRaw, datRec, idRaw, idRec, context.vars = NULL, values, su
 		datRec  <- datRec [ order(idrec) , ]
 		datRaw   <- datRaw  [ order(idraw) , ]
 
+		# exclude ID vars from subunits and values
+  idvars <- c(idrec, idraw)
+  if (any(!is.na (match(idvars, subunits$subunit)))){
+    subunits <- subunits[-which(subunits$subunit %in% idvars), ]
+  }
+  if (any(!is.na (match(idvars, values$subunit)))){
+    values   <- values[-which(values$subunit %in% idvars), ]
+  }
+
 		# exclude context vars from subunits and values
-  if ( length(context.vars != 0) ) {
+  if ( length(context.vars) != 0 ) {
     if (any(!is.na (match(context.vars, subunits$subunit)))){
       subunits <- subunits[-which(subunits$subunit %in% context.vars), ]
     }

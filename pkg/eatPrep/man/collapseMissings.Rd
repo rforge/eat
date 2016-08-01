@@ -15,7 +15,7 @@ collapseMissings(dat, missing.rule = NULL, items)
 A data frame containing character missings (e.g., \code{mbd} - missing by design). See \sQuote{Details} for supported character missing values.
 }
   \item{missing.rule}{
-A named list with definitions how to recode the different types of missings in the dataset. The names correspond to the character missings and the list elements correspond to their recode values. If \code{NULL}, the default is used (\code{list(mvi = 0, mnr = 0, mci = 0, mbd = NA, mir = 0, mbi = 0)}). Please note that only the recode value 0 and \code{NA} are currently supported. 
+A named list with definitions how to recode the different types of missings in the dataset. The names correspond to the character missings and the list elements correspond to their recode values. If \code{NULL}, the default is used (\code{list(mvi = 0, mnr = 0, mci = NA, mbd = NA, mir = 0, mbi = 0)}). Please note that only the recode value 0 and \code{NA} are currently supported.
 }
   \item{items}{
 A character vector containing the column names of the data frame for the which character missings should be recoded.
