@@ -1,7 +1,7 @@
 \name{jk2.table}
 \alias{jk2.table}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{JK2 for frequency tables.}
+\title{JK1, JK2 and BRR for frequency tables.}
 \description{Compute frequency tables for categorical variables (e.g. factors: dichotomous or polytomous) in complex
 cluster designs. Estimation of standard errors optionally takes the clustered structure and multiple imputed
 variables into account. To date, Jackknife-1 (JK1), Jackknife-2 (JK2) and Balanced repeated replicate (BRR) methods are 

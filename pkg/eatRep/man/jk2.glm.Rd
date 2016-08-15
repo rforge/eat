@@ -1,9 +1,9 @@
 \name{jk2.glm}
 \alias{jk2.glm}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{JK2 for linear regression models.}
+\title{JK1, JK2 and BRR for linear regression models.}
 \description{Compute generalized linear models for complex cluster designs with multiple imputed variables based 
-on the Jackknife (JK2) or balanced repeated replicates (BRR) procedure. Conceptually, the function combines replication 
+on the Jackknife (JK1, JK2) or balanced repeated replicates (BRR) procedure. Conceptually, the function combines replication 
 methods and methods for multiple imputed data. Technically, this is a wrapper for the \code{svyglm()} function
 of the \code{'survey'} package.
 }

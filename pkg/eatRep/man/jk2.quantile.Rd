@@ -1,10 +1,10 @@
 \name{jk2.quantile}
 \alias{jk2.quantile}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{JK2 method for quantiles.}
+\title{JK1, JK2 and BRR method for quantiles.}
 \description{Compute quantiles with standard errors for complex cluster designs with multiple imputed variables
-(e.g. plausible values) based on Jackknife (JK2) procedure. Conceptually, the function combines
-replication methods and methods for multiple imputed data. Technically, this is a wrapper for
+(e.g. plausible values) based on Jackknife (JK1, JK2) or balanced repeated replicates (BRR) procedure. Conceptually, 
+the function combines replication methods and methods for multiple imputed data. Technically, this is a wrapper for
 the \code{svyquantile()} function of the survey package.
 }
 \usage{

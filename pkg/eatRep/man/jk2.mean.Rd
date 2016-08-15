@@ -1,10 +1,10 @@
 \name{jk2.mean}
 \alias{jk2.mean}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{JK2 for mean estimates.}
+\title{JK1, JK2 and BRR for mean estimates.}
 \description{Compute totals, means, variances and standard deviations with standard errors
-for complex cluster designs with multiple imputed variables (e.g. plausible values) based on Jackknife (JK2)
-of Balanced Repeated Replicates (BRR) procedure. Conceptually, the function combines replication methods and 
+for complex cluster designs with multiple imputed variables (e.g. plausible values) based on Jackknife (JK1, JK2)
+or Balanced Repeated Replicates (BRR) procedure. Conceptually, the function combines replication methods and 
 methods for multiple imputed data. Nested imputations of the dependent variable(s) are supported as well.
 Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} functions of the \code{'survey'} package.}
 \usage{
@@ -65,7 +65,8 @@ in the whole group or overlying groups. See examples for more details.
   \item{group.differences.by}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Optional: Specifies variable group differences should be computed for. The corresponding variable must be included in 
-the \code{groups} statement. 
+the \code{groups} statement. Exception: choose 'wholePop' if you want to estimate each's group difference from the 
+overall sample mean. See examples for further details.
 }
   \item{group.delimiter}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -130,32 +131,49 @@ Sebastian Weirich
 }
 \examples{
 data(reading)
-### First example: only means, SD and variances for each country
-### We only consider the first "nest"
+### Example 1: only means, SD and variances for each country
+### We only consider the first "nest". 
 readingNest1 <- reading[which(reading[,"nest"] == 1),]
-means        <- jk2.mean(datL = readingNest1, ID="idstud", wgt="wgtSTUD", type = "JK2", 
+means1       <- jk2.mean(datL = readingNest1, ID="idstud", wgt="wgtSTUD", type = "JK2", 
                 PSU = "JKZone", repInd = "JKrep", imp="imputation", groups = "country", 
                 dependent = "score", na.rm=FALSE, doCheck=TRUE)
-dM(means)                
+dM(means1)      
 
-### Second example: Sex differences by country. Assume equally weighted cases by omitting
+### Example 1a: Additionally to example 1, we decide to estimate whether 
+### each country's mean differ significantly from the overall mean. 
+means1a      <- jk2.mean(datL = readingNest1, ID="idstud", wgt="wgtSTUD", type = "JK2", 
+                PSU = "JKZone", repInd = "JKrep", imp="imputation", groups = "country", 
+                group.differences.by = "wholePop", dependent = "score", na.rm=FALSE, doCheck=TRUE)
+
+### See that only the mean of 'LandB' significantly differs from the overall mean.
+means1a[which(means1a[,"parameter"] == "wholePopDiff"),]
+
+### Example 2: Sex differences by country. Assume equally weighted cases by omitting
 ### 'wgt' argument.
-means        <- jk2.mean(datL = readingNest1, ID="idstud", type = "JK2", 
+means2       <- jk2.mean(datL = readingNest1, ID="idstud", type = "JK2", 
                 PSU = "JKZone", repInd = "JKrep", imp="imputation", groups = c("country", "sex"),
                 group.differences.by="sex", dependent = "score", na.rm=FALSE, doCheck=TRUE)
+
+### Example 2a: Additionally to example 2, we decide to estimate whether 
+### each country's mean differ significantly from the overall mean. Moreover, we estimate
+### whether each country's sex difference differ significantly from the sex difference in
+### the whole population. 
+means2a      <- jk2.mean(datL = readingNest1, ID="idstud", type = "JK2", 
+                PSU = "JKZone", repInd = "JKrep", imp="imputation", groups = c("country", "sex"),
+                group.differences.by=c("wholePop", "sex"), dependent = "score", na.rm=FALSE, doCheck=TRUE)
 
 ### Third example: Nested imputations of dependent variable
 ### First split the income in above and below 2000
 reading[,"incomeHL"] <- ifelse(reading[,"income"]>2000,1,0)
 ### Assuming 2 nests, i.e. variable "income" with 2 imputations, and three plausible 
 ### values for each imputation
-means  <- jk2.mean(datL = reading, ID="idstud", wgt="wgtSTUD", type = "JK2", PSU = "JKZone", 
+means3 <- jk2.mean(datL = reading, ID="idstud", wgt="wgtSTUD", type = "JK2", PSU = "JKZone", 
           repInd = "JKrep", nest="nest",imp="imputation", groups = c("country", "incomeHL"), 
           dependent = "score", na.rm=FALSE, doCheck=TRUE)
 
 ### Fourth example: Assume a completely random sample (e.g. no cluster structure and no weights),
 ### and give descriptives for subpopulations and the overlying populations
-means  <- jk2.mean(datL = readingNest1, ID=1, imp="imputation", groups = c("country", "sex"),
+means4 <- jk2.mean(datL = readingNest1, ID=1, imp="imputation", groups = c("country", "sex"),
           group.splits = c(0:2), dependent = "score", na.rm=FALSE, doCheck=TRUE)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
