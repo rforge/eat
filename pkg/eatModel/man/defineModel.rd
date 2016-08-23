@@ -342,8 +342,7 @@ qMat <- data.frame ( qMat[,1,drop=FALSE], knowledge  = as.numeric(qMat[,"domain"
 # ConQuest console must be specified by setting conquest.folder = "<path_to_your_conquest.exe>"
 # defining the model: specifying q matrix is not necessary
 mod1 <- defineModel(dat=datW, items= -c(1:3), id="id", analysis.name = "unidim",
-        conquest.folder = "c:/programme/conquest/console_Feb2007.exe",
-        dir = "c:/Dokumente und Einstellungen/Gast/Eigene Dateien")
+        conquest.folder = "N:/console_Feb2007.exe",  dir = "N:/test")
 # run the model
 run1 <- runModel(mod1)
 # get the results
@@ -353,14 +352,13 @@ res1 <- getResults(run1)
 # regression (sex). Use item parameter from the first model as anchor parameters
 # use only biology items from both domains (procedural/knowledge)
 # read in anchor parameters from showfile
-aPar <- get.shw("c:/Dokumente und Einstellungen/Gast/Eigene Dateien/unidim.shw")
-aPar <- aPar$item[,2:3]
+aPar <- itemFromRes ( res1 ) 
+aPar <- aPar[,c("item", "est")]
 # defining the model: specifying q matrix now is necessary. please acknowledge the notes
 # printed on console!
 mod2 <- defineModel(dat=datW, items= qMat[,1], id="id", analysis.name = "twodim",
         qMatrix = qMat, HG.var = "sex", anchor = aPar, n.plausible = 20,
-        conquest.folder = "c:/programme/conquest/console_Feb2007.exe",
-        dir = "c:/Dokumente und Einstellungen/Gast/Eigene Dateien")
+        conquest.folder = "N:/console_Feb2007.exe",  dir = "N:/test")
 # run the model
 run2 <- runModel(mod2)
 # get the results
@@ -372,39 +370,70 @@ mod1T<- defineModel(dat=datW, items= -c(1:3), id="id", software = "tam")
 run1T<- runModel(mod1T)
 res1T<- getResults(run1T)
 # anchor parameters from TAM
-aParT<- data.frame ( item = rownames(run1T$xsi), par = run1T$xsi[,"xsi"])
+aParT<- itemFromRes(res1T)
+aParT<- aParT[,c("item", "est")]
+# estimate model 2 with latent regression and anchored parameters in TAM
 mod2T<- defineModel(dat=datW, items= qMat[,1], id="id", qMatrix = qMat,
         HG.var = "sex", anchor = aParT, software = "tam")
 # run the model
 run2T<- runModel(mod2T)
+class(run2T)
 # the class of 'run2T' corresponds to the class defined by the TAM package; all
 # functions of the TAM package intended for further processing (e.g. drawing
 # plausible values, plotting deviance change etc.) work, for example:
 wle  <- tam.wle(run2T)
 # Now, the model result are collected in a single data frame
 res2T<- getResults(run2T)
-class(run2T)
-# Sometimes, TAM has some problems with the estimation:
-plotDevianceTAM(run2T)
-# TAM authors recommend to increase 'increment.factor' and 'fac.oldxsi'
-mod2T2<- defineModel(dat=datW, items= qMat[,1], id="id", qMatrix = qMat,
-        HG.var = "sex", anchor = aParT, n.plausible = 20, software = "tam",
-        increment.factor=1.1 , fac.oldxsi=.4)
-run2T2<- runModel(mod2T2)
-res2T2<- getResults(run2T2)
-plotDevianceTAM(run2T2)
 #
 # Example 4: define und run multiple models defined by 'splitModels'
 # define person grouping
 pers  <- data.frame ( idstud = datW[,"id"] , group1 = datW[,"sex"], group2 = datW[,"grade"], stringsAsFactors = FALSE )
 # define 18 models
-l1    <- splitModels ( item.grouping = qMat, person.groups = pers)
+l1    <- splitModels ( qMatrix = qMat, person.groups = pers)
 # run 'defineModel' for each model in 'l1'
 modMul<- defineModel(dat = datW, items = qMat[,1], id = "id", check.for.linking = TRUE, splittedModels = l1, software = "tam")
 # run all models 
 runMul<- runModel(modMul)
 # get results
 resMul<- getResults(runMul)
+#
+# Example 5: define und run multiple models according to different domains (item groups)
+# and further linking/equating
+# define item groups via the Q matrix
+l2    <- splitModels ( qMatrix = qMat)
+# define 2 models
+mods  <- defineModel(dat = datW, id = "id", check.for.linking = TRUE, splittedModels = l2, software = "tam")
+# run 2 models 
+runs  <- runModel(mods)
+# get the results 
+ress  <- getResults(runs)
+# only for illustration, we create arbitrary parameters for anchoring
+prmNrm<- itemFromRes(ress)[ sample ( 1:56, 15,F) ,c("item", "est")]
+prmNrm[,"est"] <- prmNrm[,"est"] - 0.6 + rnorm ( 15, 0, 0.6)
+# anchoring without exclusion of linking DIF items
+anch  <- equat1pl ( results = ress, prmNorm = prmNrm, excludeLinkingDif = FALSE, 
+         difBound = 0.6)
+# anchoring with exclusion of linking DIF items
+anch2 <- equat1pl ( results = ress, prmNorm = prmNrm, excludeLinkingDif = TRUE, 
+         difBound = 0.6, iterativ = FALSE)
+# anchoring with iterative exclusion of linking DIF items
+anch3 <- equat1pl ( results = ress, prmNorm = prmNrm, excludeLinkingDif = TRUE, 
+         difBound = 0.6, iterativ = TRUE)
+# transformation to the Bista metric
+# first we arbitrarily define mean and standard deviation of the reference 
+# population according to both dimensions (defined in the Q matrix): 
+# procedural and knowledge
+refPop<- data.frame ( domain = c("procedural", "knowledge"), m = c(0.122, -0.047), 
+         sd = c(0.899, 1.121))
+# second, we specify a list with cut scores. Values must be in ascending order.
+# Labels of the competence stages are optional. If no values are specified, 
+# the will be defaulted to 1, 2, 3 ... etc.
+# Note: if labels are specified, there must be one label more than cut scores. 
+# (i.e. 4 cut scores --> 5 labels, etc.)
+cuts  <- list ( procedural = list ( values = c(380, 420, 500, 560)) , 
+         knowledge = list ( values = 400+0:2*100, labels = c("A1", "A2", "B1", "B2")))
+# transformation
+dfr   <- transformToBista ( equatingList = anch3, refPop = refPop, cuts=cuts )          
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

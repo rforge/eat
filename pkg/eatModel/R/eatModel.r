@@ -44,7 +44,8 @@ getResults <- function ( runModelObj, overwrite = FALSE, omitFit = FALSE, omitRe
             if("runMultiple" %in% class(runModelObj)) {                         ### Mehrmodellfall
                 if(is.null ( attr(runModelObj, "nCores") ) | attr(runModelObj, "nCores") == 1 ) {         
                    res <- lapply( runModelObj, FUN = function ( r ) {           ### erstmal single core auswertung
-                          ret <- getResults (runModelObj = r, overwrite = overwrite, omitFit = omitFit, omitRegr = omitRegr, omitWle = omitWle, omitPV = omitPV, abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value, simplify = simplify ) 
+                          do    <- paste ( "ret <- getResults ( ", paste(names(formals(getResults)), recode(names(formals(getResults)), "'runModelObj'='r'"), sep =" = ", collapse = ", "), ")",sep="")
+                          eval(parse(text=do))
                           att <- list ( list ( model.name = ret[1,"model"], all.Names = attr(ret, "all.Names"), dif.settings = attr(ret, "dif.settings") ))
                           stopifnot ( length(unique(ret[1,"model"])) == 1 )     ### grosser scheiss: baue Hilfsobjekt fuer Attribute (intern notwendige Zusatzinformationen) separat zusammen
                           return(list ( ret = ret, att = att))})                ### schlimmer Code, darf nie jemand sehen!!
@@ -53,7 +54,8 @@ getResults <- function ( runModelObj, overwrite = FALSE, omitFit = FALSE, omitRe
                    doIt<- function (laufnummer,  ... ) { 
                           if(!exists("getResults"))  { library(eatModel) }
                           if(!exists("tam.mml") &  length(grep("tam.", class(runModelObj[[1]])))>0 ) {library(TAM, quietly = TRUE)} 
-                          ret <- getResults (runModelObj = runModelObj[[laufnummer]], overwrite = overwrite, omitFit = omitFit, omitRegr = omitRegr, omitWle = omitWle, omitPV = omitPV, abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value, simplify = simplify ) 
+                          do    <- paste ( "ret <- getResults ( ", paste(names(formals(getResults)), recode(names(formals(getResults)), "'runModelObj'='runModelObj[[laufnummer]]'"), sep =" = ", collapse = ", "), ")",sep="")
+                          eval(parse(text=do))
                           att <- list ( list ( model.name = ret[1,"model"], all.Names = attr(ret, "all.Names"), dif.settings = attr(ret, "dif.settings") ))
                           stopifnot ( length(unique(ret[1,"model"])) == 1 )
                           return(list ( ret = ret, att = att))}
@@ -67,17 +69,20 @@ getResults <- function ( runModelObj, overwrite = FALSE, omitFit = FALSE, omitRe
                res <- do.call("rbind", lapply ( res, FUN = function ( yy ) { return ( yy[["ret"]] ) } ) ) 
                attr(res, "att") <- att
                class(res) <- c("data.frame", "multipleResults")
+               rownames(res) <- NULL
                return(res)
             }  else {                                                           ### Einmodellfall 
                isTa  <- FALSE                                                   
                if( "runConquest" %in% class(runModelObj) ) {                    ### wurde mit Conquest gerechnet?
-                    res <- getConquestResults (path = runModelObj$dir, analysis.name=runModelObj$analysis.name, model.name=runModelObj$model.name, qMatrix=runModelObj$qMatrix, all.Names = runModelObj$all.Names, abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value, simplify = simplify, deskRes = runModelObj$deskRes, discrim = runModelObj$discrim, omitFit = omitFit, omitRegr = omitRegr, omitWle = omitWle, omitPV = omitPV)
-                    dir <- runModelObj[["dir"]]
-                    name<- runModelObj[["analysis.name"]]
+                    do    <- paste ( "res <- getConquestResults ( ", paste(names(formals(getConquestResults)), recode(names(formals(getConquestResults)), "'path'='runModelObj$dir'; 'analysis.name'='runModelObj$analysis.name'; 'model.name'='runModelObj$model.name'; 'qMatrix'='runModelObj$qMatrix'; 'all.Names'='runModelObj$all.Names'; 'deskRes'='runModelObj$deskRes'; 'discrim'='runModelObj$discrim'"), sep =" = ", collapse = ", "), ")",sep="")
+                    eval(parse(text=do))                                        ### obere Zeile: baue Aufruf zusammen; rufe 'getConquestResults' mit seinen eigenen Argumenten auf
+                    dir <- runModelObj[["dir"]]                                 ### wo Argumente neu vergeben werden, geschieht das in dem 'recode'-Befehl; so wird als 'path'-
+                    name<- runModelObj[["analysis.name"]]                       ### Argument 'runModelObj$dir' uebergeben
                     attr(res, "all.Names") <- runModelObj[["all.Names"]]
                }  else  {                                                       ### Alternativ: es wurde mit TAM gerechnet 
                     isTa<- TRUE                                                 ### logisches Argument: wurde mit Tam gerechnet?
-                    res <- getTamResults (runModelObj=runModelObj, omitFit = omitFit, omitRegr = omitRegr, omitWle = omitWle, omitPV = omitPV)
+                    do    <- paste ( "res <- getTamResults ( ", paste(names(formals(getTamResults)), names(formals(getTamResults)), sep =" = ", collapse = ", "), ")",sep="")
+                    eval(parse(text=do))
                     dir <- attr(runModelObj, "dir")
                     name<- attr(runModelObj, "analysis.name")
                     attr(res, "all.Names") <- attr(runModelObj, "all.Names")
@@ -121,14 +126,80 @@ getResults <- function ( runModelObj, overwrite = FALSE, omitFit = FALSE, omitRe
                            }     
                       }
                   }
-                  if ( file.exists(file.path(dir, paste(name, "_resultsAll.csv",sep=""))) & overwrite == FALSE) { 
-                       cat(paste("Results cannot be saved, file ",  file.path(dir, paste(name, "_resultsAll.csv",sep=""))," already exists.\n    Please remove/rename existing file or use 'overwrite=TRUE'.\n",sep=""))
-                  }  else  { 
-                       write.csv2(res, file.path(dir, paste(name, "_resultsAll.csv",sep="")), na="", row.names = FALSE)
-                  }    
                }   
+               rownames(res) <- NULL
                return(res)
                }}   
+               
+equat1pl<- function ( results , prmNorm , excludeLinkingDif = TRUE, difBound = 1, iterativ = TRUE) {
+           nMods <- table(results[,"model"])
+           nDim  <- by ( data = results, INDICES = results[,"model"], FUN = function ( x ) {
+                    res <- table(as.character(itemFromRes(x)[,"dimension"]))
+                    res <- data.frame ( model = x[1,"model"], name = names(res), Anzahl = as.numeric(res)) } )
+           cat(paste("Found ", length(nMods), " models.\n",sep=""))
+    ### Fuer jedes Modell findet Equating separat statt
+           items <- by ( data = results, INDICES = results[,"model"], FUN = function ( d ) {
+                    it  <- itemFromRes(d)
+                    eq  <- equating.rasch(x = it[ ,c("item", "est")], y = prmNorm)
+                    dif <- eq[["anchor"]][,"TransfItempar.Gr1"] - eq[["anchor"]][,"Itempar.Gr2"]
+                    prbl<- which ( abs ( dif ) > difBound )
+                    cat(paste("\n",paste(rep("=",100),collapse=""),"\n \nModel No. ",match(d[1,"model"], names(nDim)),"\n    Model name:              ",d[1,"model"],"\n    Number of dimension(s):  ",length(unique(it[,"dimension"])),"\n    Name(s) of dimension(s): ", paste( names(table(as.character(it[,"dimension"]))), collapse = ", "),"\n",sep=""))
+                    info<- NULL
+                    if ( length( prbl ) > 0 ) {
+                         cat(paste ( "\nDimension '", it[1,"dimension"], "': ", length( prbl), " of ", nrow( eq[["anchor"]]), " items with linking DIF > ",difBound," identified.\n",sep=""))
+                         dskr <- data.frame ( item = eq[["anchor"]][prbl,"item"], dif = dif[prbl], mean.mean = eq[["B.est"]][["Mean.Mean"]], linkerror = eq[["descriptives"]][["linkerror"]] )
+                         if ( !excludeLinkingDif) { info<- dskr }
+                         if ( excludeLinkingDif ) {
+                              if ( iterativ == FALSE ) {
+                                   cat(paste("   Exclude ",length( prbl), " items.\n",sep=""))
+                                   qp1 <- prmNorm[-match ( dskr[,"item"], prmNorm[,1]),]
+                                   eq1 <- equating.rasch(x = it[ ,c("item", "est")], y = qp1)
+                                   info<- data.frame ( method = "nonIterativ", rbind ( data.frame ( itemExcluded = "" , mean.mean = eq[["B.est"]][["Mean.Mean"]], linkerror = eq[["descriptives"]][["linkerror"]] ), data.frame ( itemExcluded = paste ( prmNorm[match ( dskr[,"item"], prmNorm[,1]),"item"] , collapse = ", "), mean.mean = eq1[["B.est"]][["Mean.Mean"]], linkerror = eq1[["descriptives"]][["linkerror"]] ) ))
+    ### hier beginnt iterativer Ausschluss von Linking-DIF
+                              }  else  {
+                                   info<- data.frame ( method = "iterativ", iter = 0 , itemExcluded = "" , mean.mean = eq[["B.est"]][["Mean.Mean"]], linkerror = eq[["descriptives"]][["linkerror"]] )
+                                   qp1 <- prmNorm
+                                   iter<- 1
+                                   while  ( length ( prbl ) > 0 ) {
+                                       maxD<- which ( abs ( eq[["anchor"]][,"TransfItempar.Gr1"] - eq[["anchor"]][,"Itempar.Gr2"] ) == max ( abs (eq[["anchor"]][,"TransfItempar.Gr1"] - eq[["anchor"]][,"Itempar.Gr2"])) )
+                                       wegI<- eq[["anchor"]][maxD,"item"]
+                                       cat ( paste ( "   Iteration ", iter,": Exclude item '",wegI,"'.\n",sep=""))
+                                       qp1 <- qp1[-match ( wegI, qp1[,1]),]
+                                       eq  <- equating.rasch(x = it[ ,c("item", "est")], y = qp1)
+                                       dif <- eq[["anchor"]][,"TransfItempar.Gr1"] - eq[["anchor"]][,"Itempar.Gr2"]
+                                       prbl<- which ( abs ( dif ) > difBound )
+                                       info<- rbind(info, data.frame ( method = "iterativ", iter = iter , itemExcluded = wegI, mean.mean = round ( eq[["B.est"]][["Mean.Mean"]],digits = 3), linkerror = round ( eq[["descriptives"]][["linkerror"]], digits = 3) ))
+                                       iter<- iter + 1
+                                   }
+                              }
+                         }
+                    }
+                    if ( !is.null ( info ) ) { cat("\n"); print ( info)}
+                    cat("\n")
+                    return ( list ( eq = eq, items = it, info = info ) ) })
+           return(items)}
+           
+transformToBista <- function ( equatingList, refPop, cuts ) {                   ### Fuer jedes Modell findet Transformation separat statt 
+       if ( ncol ( refPop ) == 3) { 
+            cat ( "The 'refPop' data.frame does not include information about reference population mean/SD on Bista metric. Values will be defaulted to 500/100.\n")
+            refPop[,4] <- 500; refPop[,5] <- 100
+       }     
+       tf <- do.call("rbind", lapply ( names(equatingList), FUN = function ( d ) { 
+             subList <- equatingList[[d]]
+             transf  <- do.call("rbind", by ( data = subList[["items"]], INDICES = subList[["items"]][,"dimension"], FUN = function ( e ) { 
+                        if ( !e[1,"dimension"] %in% refPop[,1] ) { stop(paste("Cannot found dimension '",e[1,"dimension"],"' in the first column of the 'refPop' argument.\n",sep=""))}
+                        if ( !e[1,"dimension"] %in% names(cuts) ) { stop(paste("Cannot found dimension '",e[1,"dimension"],"' in the 'cuts' list.\n",sep=""))}
+                        mat <- match( e[1,"dimension"], refPop[,1])
+                        mat1<- match( e[1,"dimension"], names(cuts))
+                        e[,"estTransf"]      <- e[,"est"] + subList[["eq"]][["B.est"]][["Mean.Mean"]]
+                        e[,"estTransf625"]   <- e[,"estTransf"] + log(0.625/(1-0.625))
+                        e[,"estTransfBista"] <- (e[,"estTransf625"] - refPop[mat,2]) / refPop[mat,3] * refPop[mat,5] + refPop[mat,4]
+                        e[,"ks"]             <- num.to.cat(x = e[,"estTransfBista"], cut.points = cuts[[mat1]][["values"]], cat.values = cuts[[mat1]][["labels"]])
+                        return(e)}))
+             transf  <- data.frame ( dimension =  d, transf)        
+             return(transf)}))
+       return(tf)}      
+                
 
 runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.console = TRUE, wait = TRUE) {
             if ("defineMultiple" %in% class( defineModelObj ) ) {               ### erstmal fuer den Multimodellfall: nur dafuer wird single core und multicore unterschieden
@@ -229,7 +300,6 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                    attr(mod, "irtmodel")     <- defineModelObj[["irtmodel"]] 
                    return(mod)  }  }   }
 
-
 defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
                qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL, anchor = NULL, check.for.linking = TRUE, boundary = 6, 
                remove.boundary = FALSE, remove.no.answers = TRUE, remove.no.answersHG = TRUE, remove.missing.items = TRUE, remove.constant.items = TRUE, remove.failures = FALSE, 
@@ -242,7 +312,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                   misItems <- missing(items)
                   checkForPackage (namePackage = "eatRest", targetPackage = "eatModel")
                   if(!"data.frame" %in% class(dat) ) { cat("Convert 'dat' to a data.frame.\n"); dat <- data.frame ( dat, stringsAsFactors = FALSE)}
-     ### Sektion 'multiple models handling': jedes Modell einzeln von 'defineModel' aufbereiten lassen 
+     ### Sektion 'multiple models handling': jedes Modell einzeln von 'defineModel' aufbereiten lassen
      ### Hier wird jetzt erstmal nur die bescheuerte Liste aus 'splitModels' aufbereitet (wenn der Nutzer sie verhunzt hat)
                   if(!is.null(splittedModels)) {
                      if(length(splittedModels) == 3 & !is.null(splittedModels[["models"]]) &  length(nrow( splittedModels[["models"]]) > 0)>0 ) { 
@@ -266,12 +336,12 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                              flush.console()
                          }   
                      }    
-     ### Jetzt wird die aufbereitete Liste aus 'splitModels' abgearbeitet 
-     ### ACHTUNG: Argumente in 'splittedModels' ueberschreiben default- und vom Nutzer gesetzte Argumente in 'defineModel'!
-                     doAufb <- function ( m ) { 
+     ### Jetzt wird die aufbereitete Liste aus 'splitModels' abgearbeitet. ACHTUNG: Argumente in 'splittedModels' ueberschreiben default- und vom Nutzer gesetzte Argumente in 'defineModel'!
+     ### Der Funktionsaufruf von 'doAufb' variiert je nach single- oder multicore handling. hier: single core
+                     doAufb <- function ( m ) {
                                matchL <- match(m, unlist(lapply(splittedModels[["models.splitted"]], FUN = function ( l ) { l[["model.no"]] } )))
                                if(!is.null(splittedModels[["models.splitted"]][[matchL]][["qMatrix"]])) {
-     ### check: wenn superSplitter BERUHEND AUF ITEM GROUPING genutzt, wird 'items'-Argument von 'defineModel' ignoriert                  
+     ### check: wenn superSplitter BERUHEND AUF ITEM GROUPING genutzt, wird 'items'-Argument von 'defineModel' ignoriert
                                   if(misItems == FALSE) {                       ### Warnung nur beim ersten Schleifendurchlauf anzeigen!
                                      if(m == mods[1]) { cat("Warning: 'defineModel' was called using 'splitModels' argument. Model split according to item groups is intended. Item selection is defined \n    via 'splittedModels' object. Hence, 'items' argument is expected to be missed in 'defineModel()' and will be ignored.\n") }
                                   }
@@ -301,25 +371,25 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
      ### Aufruf von 'defineModel' generieren. Achtung: wenn der Nutzer eigenhaendig neue Argumente in <models>[["models"]] einfuegt, muessen die hier in <models>[["models.splitted"]] uebernommen werden!
                                overwr1<- data.frame ( arg = c("dat", "items", "qMatrix", "analysis.name", "dir", "splittedModels"), val = c("datSel", "itemSel", "qMatrix", "nameI", "dirI", "NULL"), stringsAsFactors = FALSE)
                                overwrF<- setdiff ( colnames(splittedModels[["models"]]), c("model.no", "model.name", "model.subpath", "dim", "Ndim", "group", "Ngroup"))
-                               if(length(overwrF)>0) { 
+                               if(length(overwrF)>0) {
                                   notAllow <- setdiff ( overwrF, names(formals(defineModel)))
-                                  if ( length ( notAllow ) > 0 ) { 
+                                  if ( length ( notAllow ) > 0 ) {
                                        if ( m == mods[1] ) {                    ### folgende Warnung soll nur einmal erscheinen, obwohl es fuer jedes Modell geschieht (Konsole nicht mit Meldungen zumuellen)
                                             cat(paste("Column(s) '",paste(notAllow, collapse = "' , '"),"' of 'splittedModels' definition frame do not match arguments of 'defineModel()'. Columns will be ignored.\n", sep=""))
                                        }
                                   }
                                   overwrFS<- setdiff ( overwrF, notAllow )
-                                  if ( length ( overwrFS ) > 0 ) { 
+                                  if ( length ( overwrFS ) > 0 ) {
                                        for ( hh in overwrFS ) { splittedModels[["models.splitted"]][[matchL]][[hh]] <- splittedModels[["models"]][m,hh] }
                                   }
-                               }   
-                               notNull<- which ( unlist(lapply(splittedModels[["models.splitted"]][[matchL]], is.null)) == FALSE ) 
+                               }
+                               notNull<- which ( unlist(lapply(splittedModels[["models.splitted"]][[matchL]], is.null)) == FALSE )
                                overwr2<- setdiff ( intersect ( names(formals(defineModel)), names ( notNull)), "qMatrix")
-                               if(length(overwr2)>0) {                          ### obere Zeile: qMatrix ist oben schon definiert, wird hier NICHT aus der Liste durchgeschleift 
+                               if(length(overwr2)>0) {                          ### obere Zeile: qMatrix ist oben schon definiert, wird hier NICHT aus der Liste durchgeschleift
                                   overwr3 <- data.frame ( arg = overwr2, val = paste("splittedModels[[\"models.splitted\"]][[",matchL,"]][[\"",overwr2,"\"]]",sep=""), stringsAsFactors = FALSE)
                                   overwr1 <- rbind ( overwr1, overwr3)
                                   overwr3[,"eval"] <- unlist(lapply(paste(overwr3[,"val"],sep=""), FUN = function ( l ) { eval(parse(text = l))}))
-                               }  else  { overwr3 <- NULL }  
+                               }  else  { overwr3 <- NULL }
                                default<- setdiff ( names(formals(defineModel)), overwr1[,"arg"])
                                overwr1<- rbind ( overwr1, data.frame ( arg = default, val = default, stringsAsFactors = FALSE) )
                                toCall <- paste( overwr1[,"arg"], overwr1[,"val"], sep=" = ", collapse=", ")
@@ -331,23 +401,22 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                                nDots  <- max(nchar(overwr3[,"arg"])) + max(nchar(overwr3[,"eval"])) + 6
                                if(verbose == TRUE ) {
                                   cat(paste("\n\n",paste(rep("=",times = nDots), sep="", collapse=""),"\nModel No. ",m, paste(txt,sep="", collapse=""), "\n",paste(rep("=",times = nDots), sep="", collapse=""),"\n\n", sep=""))
-                               }   
-     ### Achtung! Rueckgabe haengt davon ab, ob multicore Handling stattfinden soll! zuerst single core 
-                               if(is.null ( splittedModels[["nCores"]] ) | splittedModels[["nCores"]] == 1 ) {                                   
-                                  ret    <- eval(parse(text=toCall))            ### single core handling: die verschiedenen Modelle werden 
+                               }
+     ### Achtung! Rueckgabe haengt davon ab, ob multicore Handling stattfinden soll! zuerst single core
+                               if(is.null ( splittedModels[["nCores"]] ) | splittedModels[["nCores"]] == 1 ) {
+                                  ret    <- eval(parse(text=toCall))            ### single core handling: die verschiedenen Modelle werden
                                }  else  {                                       ### bereits jetzt an "defineModel" zurueckgegeben und seriell verarbeitet
                                   retMul <- paste( overwr1[,"arg"], overwr1[,"val"], sep=" = ", collapse=", ")
                                   retMul <- paste("list ( ", retMul, ")", sep="")## multicore: die verschiedenen Modelle werden noch nicht weiter verarbeitet,
                                   ret    <- eval(parse(text=retMul))            ### es wird lediglich der Modellaufruf generiert, der dann spaeter an die einzelnen
                                }                                                ### cores weitergegeben wird
                                return(ret) }                                    ### hier endet "doAufb"
-     ### Der Funktionsaufruf variiert je nach single- oder multicore handling. hier: single core
-                     if(is.null ( splittedModels[["nCores"]] ) | splittedModels[["nCores"]] == 1 ) {                                   
+                     if(is.null ( splittedModels[["nCores"]] ) | splittedModels[["nCores"]] == 1 ) {
                         models <- lapply( mods, FUN = doAufb)                   ### single core handling: Funktion "doAufb" wird seriell fuer alle "mods" aufgerufen
      ### wenn multicore handling, dann wird das Objekt "model" an cores verteilt und dort weiter verarbeitet. Ausserdem werden Konsolenausgaben in stringobjekt "txt" weitergeleitet
                      }  else  { 
-                        txt    <- capture.output ( models <- lapply( mods, FUN = doAufb))
                         # if(!exists("detectCores"))   {library(parallel)}
+                        txt    <- capture.output ( models <- lapply( mods, FUN = doAufb))
                         doIt<- function (laufnummer,  ... ) { 
                                if(!exists("getResults"))  { library(eatModel) }
                                strI<- paste(unlist(lapply ( names ( models[[laufnummer]]) , FUN = function ( nameI ) { paste ( nameI, " = models[[laufnummer]][[\"",nameI,"\"]]", sep="")})), collapse = ", ")
@@ -528,7 +597,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                             cat(paste("Warning: Background variables '",paste(names(varClass)[notNum], collapse="', '"),"' of class \n    '",paste(varClass[notNum],collapse="', '"),"' will be converted to indicator variables.\n",sep=""))
                             ind <- do.call("cbind", lapply ( names(varClass)[notNum], FUN = function ( yy ) {
                                    newFr <- model.matrix( as.formula (paste("~",yy,sep="")), data = dat)[,-1,drop=FALSE]  
-                                   cat(paste("    Variable '",yy,"' was converted to ",ncol(newFr)," indicator(s) with name(s) '",paste(colnames(newFr), collapse= "', '"), ".\n",sep=""))  
+                                   cat(paste("    Variable '",yy,"' was converted to ",ncol(newFr)," indicator(s) with name(s) '",paste(colnames(newFr), collapse= "', '"), "'.\n",sep=""))  
                                    flush.console()
                                    return(newFr) }))
                             if(software == "conquest") {                        ### ggf. fuer Conquest Namen der HG-Variablen aendern
@@ -681,13 +750,14 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                          deskRes <- NULL 
                          discrim <- NULL
                       }   
+                      lab <- data.frame(itemNr = 1:length(all.Names[["variablen"]]), item = all.Names[["variablen"]], stringsAsFactors = FALSE)
+                      if(!is.null(anchor))  { ankFrame <- anker (lab = lab, prm = anchor) } else { ankFrame <- NULL}
                       if ( software == "conquest" )   {
                           daten$ID <- gsub ( " ", "0", formatC(daten$ID, width=max(as.numeric(names(table(nchar(daten$ID)))))) )
                           fixed.width <- c(as.numeric(names(table(nchar(daten[,"ID"])))), all.hg.char, rep(max(var.char),length(var.char)))
                           write.fwf(daten , file.path(dir,paste(analysis.name,".dat",sep="")), colnames = FALSE,rownames = FALSE, sep="",quote = FALSE,na=".", width=fixed.width)
                           test <- readLines(paste(dir,"/",analysis.name,".dat",sep=""))
                           stopifnot(length(table(nchar(test)))==1)              ### Check: hat der Resultdatensatz eine einheitliche Spaltenanzahl? Muß unbedingt sein!
-                          lab <- data.frame(1:length(all.Names[["variablen"]]), all.Names[["variablen"]], stringsAsFactors = FALSE)
                           colnames(lab) <- c("===>","item")                     ### schreibe Labels!
                           write.table(lab,file.path(dir,paste(analysis.name,".lab",sep="")),col.names = TRUE,row.names = FALSE, dec = ",", sep = " ", quote = FALSE)
                           if(!is.null(conquest.folder))     {
@@ -696,10 +766,9 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                           foo <- gen.syntax(Name=analysis.name, daten=daten, all.Names = all.Names, namen.all.hg = namen.all.hg, all.hg.char = all.hg.char, var.char= max(var.char), model=qMatrix, anchored=anchor, pfad=dir, n.plausible=n.plausible, compute.fit = compute.fit,
                                             constraints=constraints, std.err=std.err, distribution=distribution, method=method, n.iterations=n.iterations, nodes=nodes, p.nodes=p.nodes, f.nodes=f.nodes, converge=converge,deviancechange=deviancechange, equivalence.table=equivalence.table, use.letters=use.letters, model.statement=model.statement, conquest.folder = conquest.folder, allowAllScoresEverywhere = allowAllScoresEverywhere, seed = seed, export = export)
                           if(!is.null(anchor))  { 
-                             ankFrame <- anker (lab = lab, prm = anchor) 
-                             write.table(ankFrame, file.path(dir,paste(analysis.name,".ank",sep="")) ,sep=" ", col.names = FALSE, row.names = FALSE, quote = FALSE)
+                             write.table(ankFrame[["resConquest"]], file.path(dir,paste(analysis.name,".ank",sep="")) ,sep=" ", col.names = FALSE, row.names = FALSE, quote = FALSE)
                           }
-     ### wenn Conquest gewaehlt, dann ggf. Logfile umbenennen falls bereits (unter demselben namen existiert) existiert
+     ### wenn Conquest gewaehlt, dann ggf. Logfile umbenennen, falls es bereits (unter demselben namen) existiert
                           if(file.exists( file.path ( dir,  paste(analysis.name,".log",sep=""))) )  {
                              cat(paste("Found existing log file '",paste(analysis.name,".log",sep=""), "' in folder '",dir,"'\nConquest analysis will overwrite log file. Original log file will be saved as '",paste(analysis.name,"_old.log'\n",sep=""),sep=""))
                              do <- file.rename(from = file.path(dir, paste(analysis.name,".log",sep="")), to = file.path(dir, paste(analysis.name,"_old.log",sep="")))
@@ -714,7 +783,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                           cat(paste("Q matrix specifies ",ncol(qMatrix)-1," dimension(s).\n",sep=""))
                           control <- list ( nodes = nodes , snodes = snodes , QMC=QMC, convD = deviancechange ,conv = converge , convM = .0001 , Msteps = 4 , maxiter = n.iterations, max.increment = 1 , 
                                      min.variance = .001 , progress = progress , ridge=0 , seed = seed , xsi.start0=FALSE,  increment.factor=increment.factor , fac.oldxsi= fac.oldxsi) 
-                          ret     <- list ( software = software, qMatrix=qMatrix, anchor=anchor,  all.Names=all.Names, daten=daten, irtmodel=irtmodel, est.slopegroups = est.slopegroups, guessMat=guessMat, control = control, n.plausible=n.plausible, dir = dir, analysis.name=analysis.name, deskRes = deskRes, discrim = discrim)
+                          ret     <- list ( software = software, qMatrix=qMatrix, anchor=ankFrame[["resTam"]],  all.Names=all.Names, daten=daten, irtmodel=irtmodel, est.slopegroups = est.slopegroups, guessMat=guessMat, control = control, n.plausible=n.plausible, dir = dir, analysis.name=analysis.name, deskRes = deskRes, discrim = discrim)
                           class(ret) <-  c("defineTam", "list")
                           return ( ret )    }   }  }
 
@@ -1926,13 +1995,15 @@ gen.syntax     <- function(Name,daten, all.Names, namen.all.hg = NULL, all.hg.ch
 anker <- function(lab, prm )  {                                
                   stopifnot(ncol(prm)==2); stopifnot(ncol(lab)==2)
                   colnames(prm) <- c("item","parameter")
+                  dopp<- which(duplicated(prm[,"item"]))
+                  if(length(dopp)>0) { cat(paste("Found ",length(dopp)," duplicate item identifiers in anchor list. Duplicated entries will be deleted.\n")) ; prm <- prm[which(!duplicated(prm[,"item"])), ] }
                   ind <- intersect(lab[,"item"],prm[,"item"])
                   if(length(ind) == 0) {stop("No common items found in 'lab.file' and 'prm.file'.\n")}
                   if(length(ind) > 0)  {cat(paste(length(ind), " common items found in 'lab.file' and 'prm.file'.\n",sep="")) }
-                  res <- merge(lab, prm, by = "item", sort = FALSE, all = FALSE)
-                  res <- data.frame(res[sort(res[,2],decreasing=FALSE,index.return=TRUE)$ix,], stringsAsFactors = FALSE)[,-1]
+                  resT<- merge(lab, prm, by = "item", sort = FALSE, all = FALSE)
+                  res <- data.frame(resT[sort(resT[,2],decreasing=FALSE,index.return=TRUE)$ix,], stringsAsFactors = FALSE)[,-1]
                   stopifnot(nrow(res) == length(ind))
-                  return(res)}
+                  return(list ( resConquest = res, resTam = resT[,-2]))}
                  
 remove.pattern     <- function ( string, pattern ) {
                       splitt <- strsplit(string, pattern)
