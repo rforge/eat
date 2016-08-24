@@ -4,7 +4,8 @@
 \title{Prepares results getResults() for eatRep analyses.}
 \description{Prepares a data.frame suitable for eatRep analyses. }
 \usage{
-prepJack(resultsObj, arrangeDependentVar = c("singleFrame", "multipleFrames"), modelAsGroup = TRUE)}
+prepJack(resultsObj, arrangeDependentVar = c("singleFrame", "multipleFrames"), 
+         modelAsGroup = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{resultsObj}{

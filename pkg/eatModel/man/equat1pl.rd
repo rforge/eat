@@ -5,7 +5,8 @@
 \description{Function does the 1pl linking according to \code{equating.rasch} from the \code{sirt} package. 
 Moreover, optional elimination of items with linking DIF is allowed.}
 \usage{
-equat1pl(results , prmNorm , excludeLinkingDif = TRUE, difBound = 1, iterativ = TRUE)}
+equat1pl(results , prmNorm , excludeLinkingDif = TRUE, difBound = 1, 
+         iterativ = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{results}{

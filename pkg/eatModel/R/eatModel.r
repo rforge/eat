@@ -155,6 +155,7 @@ equat1pl<- function ( results , prmNorm , excludeLinkingDif = TRUE, difBound = 1
                                    qp1 <- prmNorm[-match ( dskr[,"item"], prmNorm[,1]),]
                                    eq1 <- equating.rasch(x = it[ ,c("item", "est")], y = qp1)
                                    info<- data.frame ( method = "nonIterativ", rbind ( data.frame ( itemExcluded = "" , mean.mean = eq[["B.est"]][["Mean.Mean"]], linkerror = eq[["descriptives"]][["linkerror"]] ), data.frame ( itemExcluded = paste ( prmNorm[match ( dskr[,"item"], prmNorm[,1]),"item"] , collapse = ", "), mean.mean = eq1[["B.est"]][["Mean.Mean"]], linkerror = eq1[["descriptives"]][["linkerror"]] ) ))
+                                   eq  <- eq1
     ### hier beginnt iterativer Ausschluss von Linking-DIF
                               }  else  {
                                    info<- data.frame ( method = "iterativ", iter = 0 , itemExcluded = "" , mean.mean = eq[["B.est"]][["Mean.Mean"]], linkerror = eq[["descriptives"]][["linkerror"]] )
@@ -198,6 +199,8 @@ transformToBista <- function ( equatingList, refPop, cuts ) {                   
                         return(e)}))
              transf  <- data.frame ( dimension =  d, transf)        
              return(transf)}))
+       attr(tf, "refPop") <- refPop
+       attr(tf, "cuts")   <- cuts
        return(tf)}      
                 
 
@@ -684,20 +687,27 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                          if( remove.no.answers == TRUE)  {cat("Cases with missings on all items will be deleted.\n"); dat <- dat[-match(weg,dat[,all.Names[["ID"]]] ) ,]  }
                          if( remove.no.answers == FALSE) {cat("Cases with missings on all items will be kept.\n")}}
      ### Sektion 'Summenscores fuer Personen pruefen' ###
-                      datW  <- dcast(datL, as.formula(paste("variable~",all.Names[["ID"]],sep="")), value.var = "value")
-                      means <- colMeans(datW[,-1], na.rm=TRUE)
-                      minMea<- mean(sapply(datW[,-1], min, na.rm=TRUE), na.rm=TRUE)
-                      maxMea<- mean(sapply(datW[,-1], max, na.rm=TRUE), na.rm=TRUE)
-                      allFal<- which ( sapply ( means, FUN = function ( xx ) { isTRUE(all.equal( xx, minMea ))}))
+                      minMax<- do.call("rbind", by ( data = datL, INDICES = datL[,"variable"], FUN = function ( v ) { 
+                               v[,"valueMin"] <- min(v[,"value"])               ### obere Zeile: da der hier verwendete Longdatensatz 'datL' oben mit 'na.rm = TRUE' erzeugt wurde, 
+                               v[,"valueMax"] <- max(v[,"value"])               ### sind hier diejenigen Personen mit ausschliesslich Missings bereits eliminiert
+                               return(v)}))
+                      datW  <- dcast(minMax, as.formula(paste(all.Names[["ID"]], "~variable",sep="")), value.var = "value")
+                      datMin<- dcast(minMax, as.formula(paste(all.Names[["ID"]], "~variable",sep="")), value.var = "valueMin")
+                      datMax<- dcast(minMax, as.formula(paste(all.Names[["ID"]], "~variable",sep="")), value.var = "valueMax")
+                      allFal<- datW[ which ( rowSums ( datW[,-1], na.rm = TRUE ) == rowSums ( datMin[,-1], na.rm = TRUE ) ), all.Names[["ID"]] ]
+                      allTru<- datW[ which ( rowSums ( datW[,-1], na.rm = TRUE ) == rowSums ( datMax[,-1], na.rm = TRUE ) ), all.Names[["ID"]] ]
                       if(length(allFal)>0) { 
-                         cat(paste( length(allFal), " subject(s) have a sum score of ",minMea," which seems to be the lowest possible test score. Hence, they do not solve any item:\n   ", paste(names(allFal), " (",minMea,"/",nValid[allFal],")",sep="",collapse=", "),"\n",sep=""))
+                         num <- rowSums(datMax[ which ( datMax[,1] %in% allFal), -1], na.rm = TRUE)
+                         cat(paste( length(allFal), " subject(s) do not solve any item:\n   ", paste(allFal, " (",num," false)",sep="",collapse=", "),"\n",sep=""))
                          if (remove.failures == TRUE)  { 
                              cat("   Remove subjects without any correct response.\n"); flush.console()
-                             weg <- na.omit(match(names(allFal), dat[,all.Names[["ID"]]]))
+                             weg <- na.omit(match(allFal, dat[,all.Names[["ID"]]]))
                              dat <- dat[-weg,] } 
                       }
-                      allTru<- which ( sapply ( means, FUN = function ( xx ) { isTRUE(all.equal( xx, maxMea ))}))
-                      if(length(allTru)>0) { cat(paste( length(allTru), " subject(s) solved each item: ", paste(names(allTru), " (",nValid[allTru],"/",nValid[allTru],")",sep="", collapse=", "),"\n",sep=""))}
+                      if(length(allTru)>0) { 
+                         num <- rowSums(datMax[ which ( datMax[,1] %in% allTru), -1], na.rm = TRUE)
+                         cat(paste( length(allTru), " subject(s) solved each item: ", paste(allTru, " (",num ," correct)",sep="", collapse=", "),"\n",sep=""))
+                      }
      ### Sektion 'Verlinkung pruefen' ###
                       if(check.for.linking == TRUE) {                           ### Dies geschieht auf dem nutzerspezifisch reduzierten/selektierten Datensatz
                          linkNaKeep <- checkLink(dataFrame = dat[,all.Names[["variablen"]], drop = FALSE], remove.non.responser = FALSE, verbose = FALSE )
