@@ -418,8 +418,8 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                         models <- lapply( mods, FUN = doAufb)                   ### single core handling: Funktion "doAufb" wird seriell fuer alle "mods" aufgerufen
      ### wenn multicore handling, dann wird das Objekt "model" an cores verteilt und dort weiter verarbeitet. Ausserdem werden Konsolenausgaben in stringobjekt "txt" weitergeleitet
                      }  else  { 
-                        # if(!exists("detectCores"))   {library(parallel)}
                         txt    <- capture.output ( models <- lapply( mods, FUN = doAufb))
+                        # if(!exists("detectCores"))   {library(parallel)}
                         doIt<- function (laufnummer,  ... ) { 
                                if(!exists("getResults"))  { library(eatModel) }
                                strI<- paste(unlist(lapply ( names ( models[[laufnummer]]) , FUN = function ( nameI ) { paste ( nameI, " = models[[laufnummer]][[\"",nameI,"\"]]", sep="")})), collapse = ", ")
@@ -473,6 +473,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                      }     
                      allVars     <- list(ID = id, variablen=items, DIF.var=DIF.var, HG.var=HG.var, group.var=group.var, weight.var=weight.var)
                      all.Names   <- lapply(allVars, FUN=function(ii) {.existsBackgroundVariables(dat = dat, variable=ii)})
+                     dat[,all.Names[["ID"]] ] <- as.character(dat[,all.Names[["ID"]] ])
                      doppelt     <- which(duplicated(dat[,all.Names[["ID"]]]))
                      if(length(doppelt)>0)  {stop(paste( length(doppelt) , " duplicate IDs found!",sep=""))}
                      if(!is.null(dir)) {                                        ### Sofern ein verzeichnis angegeben wurde (nicht NULL), 
@@ -663,9 +664,11 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                       }                                                         ### untere Zeile, Achtung: group- und DIF- bzw. group- und HG-Variablen d¸rfen sich ¸berschneiden!
                       namen.all.hg <- unique(c(all.Names$HG.var,all.Names$group.var,all.Names$DIF.var,all.Names$weight.var))
                       weg.all <- unique(c(weg.dif, weg.hg, weg.weight, weg.group))
+                      perExHG <- NULL
                       if(length(weg.all)>0) {
                          cat(paste("Remove",length(weg.all),"case(s) overall due to missings on at least one explicit variable.\n"))
-                         dat   <- dat[-weg.all,]
+                         perExHG<- dat[weg.all, all.Names[["ID"]] ]
+                         dat    <- dat[-weg.all,]
                       }
      ### Sektion 'Itemdatensatz zusammenbauen' (fuer Conquest ggf. mit Buchstaben statt Ziffern) ###
                       if(length(namen.items.weg)>0)  {
@@ -681,28 +684,40 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                          datL  <- melt(data = dat, id.vars = all.Names[["ID"]], measure.vars = all.Names[["variablen"]], na.rm=TRUE)
                          datL  <- merge(datL, dat[,unique(unlist(all.Names[-match("variablen", names(all.Names))]))], by = all.Names[["ID"]], all=TRUE)
                       }   
-                      weg   <- setdiff(dat[,all.Names[["ID"]]], unique(datL[,all.Names[["ID"]]]))
-                      if(length(weg)>0)   {                                     ### identifiziere Faelle mit ausschlieﬂlich missings
-                         cat(paste("Found ",length(weg)," cases with missings on all items.\n",sep=""))
-                         if( remove.no.answers == TRUE)  {cat("Cases with missings on all items will be deleted.\n"); dat <- dat[-match(weg,dat[,all.Names[["ID"]]] ) ,]  }
-                         if( remove.no.answers == FALSE) {cat("Cases with missings on all items will be kept.\n")}}
+                      wegNV <- setdiff(dat[,all.Names[["ID"]]], unique(datL[,all.Names[["ID"]]]))
+                      perNA <- NULL
+                      if(length(wegNV)>0)   {                                   ### identifiziere Faelle mit ausschlieﬂlich missings
+                         cat(paste("Found ",length(wegNV)," cases with missings on all items.\n",sep=""))
+                         if( remove.no.answers == TRUE)  {
+                             cat("Cases with missings on all items will be deleted.\n") 
+                             perNA<- dat[match(wegNV,dat[,all.Names[["ID"]]] ), all.Names[["ID"]]]
+                             dat  <- dat[-match(wegNV,dat[,all.Names[["ID"]]] ) ,]  
+                         }
+                         if( remove.no.answers == FALSE) {
+                             cat("Cases with missings on all items will be kept.\n")
+                             perNA<- NULL
+                         }
+                      }
      ### Sektion 'Summenscores fuer Personen pruefen' ###
                       minMax<- do.call("rbind", by ( data = datL, INDICES = datL[,"variable"], FUN = function ( v ) { 
-                               v[,"valueMin"] <- min(v[,"value"])               ### obere Zeile: da der hier verwendete Longdatensatz 'datL' oben mit 'na.rm = TRUE' erzeugt wurde, 
-                               v[,"valueMax"] <- max(v[,"value"])               ### sind hier diejenigen Personen mit ausschliesslich Missings bereits eliminiert
-                               return(v)}))
+                               v[,"valueMin"] <- min(v[,"value"])               ### obere Zeile: hier wird variablenweise der kleinstmoegliche Wert gesucht
+                               v[,"valueMax"] <- max(v[,"value"])               ### da der hier verwendete Longdatensatz 'datL' oben mit 'na.rm = TRUE' erzeugt wurde, 
+                               return(v)}))                                     ### sind hier diejenigen Personen mit ausschliesslich Missings bereits eliminiert
                       datW  <- dcast(minMax, as.formula(paste(all.Names[["ID"]], "~variable",sep="")), value.var = "value")
                       datMin<- dcast(minMax, as.formula(paste(all.Names[["ID"]], "~variable",sep="")), value.var = "valueMin")
                       datMax<- dcast(minMax, as.formula(paste(all.Names[["ID"]], "~variable",sep="")), value.var = "valueMax")
                       allFal<- datW[ which ( rowSums ( datW[,-1], na.rm = TRUE ) == rowSums ( datMin[,-1], na.rm = TRUE ) ), all.Names[["ID"]] ]
                       allTru<- datW[ which ( rowSums ( datW[,-1], na.rm = TRUE ) == rowSums ( datMax[,-1], na.rm = TRUE ) ), all.Names[["ID"]] ]
+                      per0  <- NULL
                       if(length(allFal)>0) { 
                          num <- rowSums(datMax[ which ( datMax[,1] %in% allFal), -1], na.rm = TRUE)
                          cat(paste( length(allFal), " subject(s) do not solve any item:\n   ", paste(allFal, " (",num," false)",sep="",collapse=", "),"\n",sep=""))
                          if (remove.failures == TRUE)  { 
                              cat("   Remove subjects without any correct response.\n"); flush.console()
                              weg <- na.omit(match(allFal, dat[,all.Names[["ID"]]]))
-                             dat <- dat[-weg,] } 
+                             per0<- dat[weg, all.Names[["ID"]] ] 
+                             dat <- dat[-weg,] 
+                         } 
                       }
                       if(length(allTru)>0) { 
                          num <- rowSums(datMax[ which ( datMax[,1] %in% allTru), -1], na.rm = TRUE)
@@ -785,7 +800,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                           }
      ### Sektion 'Rueckgabeobjekt bauen', hier fuer Conquest                    ### setze Optionen wieder in Ausgangszustand
                           options(scipen = original.options); flush.console()   ### Achtung: setze Konsolenpfade in Hochkommas, da andernfalls keine Leerzeichen in den Ordner- bzw. Dateinamen erlaubt sind!
-                          ret <- list ( software = software, input = paste("\"", file.path(dir, paste(analysis.name,"cqc",sep=".")), "\"", sep=""), conquest.folder = paste("\"", conquest.folder, "\"", sep=""), dir=dir, analysis.name=analysis.name, model.name = analysis.name, qMatrix=qMatrix, all.Names=all.Names, deskRes = deskRes, discrim = discrim)
+                          ret <- list ( software = software, input = paste("\"", file.path(dir, paste(analysis.name,"cqc",sep=".")), "\"", sep=""), conquest.folder = paste("\"", conquest.folder, "\"", sep=""), dir=dir, analysis.name=analysis.name, model.name = analysis.name, qMatrix=qMatrix, all.Names=all.Names, deskRes = deskRes, discrim = discrim, perNA=perNA, per0=per0, perExHG = perExHG, itemsExcluded = namen.items.weg)
                           class(ret) <-  c("defineConquest", "list")
                           return ( ret )  }
      ### Sektion 'Rueckgabeobjekt fuer tam'
@@ -793,10 +808,10 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                           cat(paste("Q matrix specifies ",ncol(qMatrix)-1," dimension(s).\n",sep=""))
                           control <- list ( nodes = nodes , snodes = snodes , QMC=QMC, convD = deviancechange ,conv = converge , convM = .0001 , Msteps = 4 , maxiter = n.iterations, max.increment = 1 , 
                                      min.variance = .001 , progress = progress , ridge=0 , seed = seed , xsi.start0=FALSE,  increment.factor=increment.factor , fac.oldxsi= fac.oldxsi) 
-                          ret     <- list ( software = software, qMatrix=qMatrix, anchor=ankFrame[["resTam"]],  all.Names=all.Names, daten=daten, irtmodel=irtmodel, est.slopegroups = est.slopegroups, guessMat=guessMat, control = control, n.plausible=n.plausible, dir = dir, analysis.name=analysis.name, deskRes = deskRes, discrim = discrim)
+                          ret     <- list ( software = software, qMatrix=qMatrix, anchor=ankFrame[["resTam"]],  all.Names=all.Names, daten=daten, irtmodel=irtmodel, est.slopegroups = est.slopegroups, guessMat=guessMat, control = control, n.plausible=n.plausible, dir = dir, analysis.name=analysis.name, deskRes = deskRes, discrim = discrim, perNA=perNA, per0=per0, perExHG = perExHG, itemsExcluded = namen.items.weg)
                           class(ret) <-  c("defineTam", "list")
                           return ( ret )    }   }  }
-
+                          
 ### Hilfsfunktionen fuer prep.conquest
 .checkContextVars <- function(x, varname, type, itemdaten, suppressAbort = FALSE)   {
                      if(missing(varname))  {varname <- "ohne Namen"}

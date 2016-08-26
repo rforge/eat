@@ -307,8 +307,77 @@ on hard disk.
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-An object which contains information about the desired estimation.
-Run \code{runModel} to continue the analysis.
+A list which contains information about the desired estimation. The list is intended for 
+further processing via \code{runModel}. Structure of the list varies depending on 
+whether multiple models were called using \code{splitModels} or not. If \code{splitModels} was called, 
+the number of elements in the list equals the number of models defined via \code{splitModels}. Each
+element in the list is a list with various elements: 
+  \item{software}{
+Character string of the software which is intended to use for the further estimation, i.e. "conquest" or "tam"
+}
+  \item{qMatrix}{
+The Q matrix allocating items to dimensions.
+}
+  \item{all.Names}{
+Named list of all relevant variables of the data set.
+}
+  \item{dir}{
+Character string of the directory the results are to be saved. 
+}
+  \item{analysis.name}{
+Character string of the analysis' name. 
+}
+  \item{deskRes}{
+Data frame with descriptives (e.g., p values) of the test items. 
+}
+  \item{discrim}{
+Data frame with item discrimination values. 
+}
+  \item{perNA}{
+The person identifiers of examinees which are excluded from the analysis due to solely missing values.
+}
+  \item{per0}{
+The person identifiers of examinees which are excluded from the analysis due to solely false responses.
+(applies only if \code{remove.failues} was set to be TRUE)
+}
+  \item{perExHG}{
+The person identifiers of examinees which are excluded from the analysis due to missing values on explicit variables.
+}
+  \item{itemsExcluded}{
+Character string of items which were excluded, for example due to zero variance or solely missing values. 
+}
+If software == "conquest", the output additionally includes the following elements:
+  \item{input}{
+Character string of the path with Conquest input (cqc) file. 
+}
+  \item{conquest.folder}{
+Character string of the path of the conquest executable file. 
+}
+  \item{model.name}{
+Character string of the model name. 
+}
+If software == "tam", the output additionally includes the following elements:
+  \item{anchor}{
+Optional: data frame of anchor parameters (if anchor parameters were defined).
+}
+  \item{daten}{
+The prepared data for TAM analysis. 
+}
+  \item{irtmodel}{
+Character string of the used IRT model. 
+}
+  \item{est.slopegroups}{
+Applies for 2pl modeling. Information about which items share a common slope parameter. 
+}
+  \item{guessMat}{
+Applies for 3pl modeling. Information about which items share a common guessing parameter. 
+}
+  \item{control}{
+List of control parameters for TAM estimation.
+}
+  \item{n.plausible}{
+Desired number of plausible values.
+}
 }
 \references{
 %% ~put references to the literature/web site here ~
