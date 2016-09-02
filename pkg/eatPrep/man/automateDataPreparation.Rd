@@ -12,7 +12,7 @@ This function facilitates automated data preparation and wraps most functions fr
     nMbi = 2, rotation.id = NULL, suppressErr = FALSE, recodeErr = "mci",
     aggregatemissings = NULL, rename = TRUE, recodedData = TRUE, 
     correctDigits=FALSE, truncateSpaceChar = TRUE, newID = NULL, oldIDs = NULL, 
-    missing.rule = list(mvi = 0, mnr = 0, mci = 0, mbd = NA, mir = 0, mbi = 0), 
+    missing.rule = list(mvi = 0, mnr = 0, mci = NA, mbd = NA, mir = 0, mbi = 0), 
     verbose=FALSE)}
 \arguments{
   \item{datList}{
