@@ -6,7 +6,7 @@
 Moreover, optional elimination of items with linking DIF is allowed.}
 \usage{
 equat1pl(results , prmNorm , excludeLinkingDif = TRUE, difBound = 1, 
-         iterativ = TRUE)}
+         iterativ = TRUE, method = c("Mean.Mean", "Haebara", "Stocking.Lord"))}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{results}{
@@ -30,6 +30,10 @@ be removed from the linking procedure.
   \item{iterativ}{
 %%     ~~Describe \code{file} here~~
 Logical. Should the exclusion of linking DIF items executed in an iterative loop?
+}
+  \item{method}{
+%%     ~~Describe \code{file} here~~
+Linking method
 }
 }
 \details{

@@ -1,11 +1,12 @@
 \name{transformToBista}
 \alias{transformToBista}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{Transformation of item parameters to the Bista metric.}
-\description{Function uses output of \code{equat1pl} to provide a data.frame 
-with item parameters on the bista metric. }
+\title{Transformation of item and person parameters to the Bista metric.}
+\description{Function uses output of \code{equat1pl} to provide two data.frames, 
+one for the item parameters on the bista metric and one for the person parameter
+(PVs) on the bista metric.}
 \usage{
-transformToBista ( equatingList, refPop, cuts)}
+transformToBista ( equatingList, refPop, cuts, weights = NULL)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{equatingList}{
@@ -29,6 +30,14 @@ A named list with cut scores. Names of the list must match the domain names in t
 output of \code{getResults}. Each element of the list is a list with one or two 
 elements---the cut scores (in ascending order) and (optionally) the labels of the 
 stages. See the examples of \code{defineModel} for further details. 
+}
+  \item{weights}{
+%%     ~~Describe \code{file} here~~
+Optional: a data.frame with two columns, first column is person identifier, second
+columns is individual caseweight. Necessary for the transformation of linking 
+error for (ordered) factors and/or if descriptives of the reference population 
+should be computed directly from the data. See the examples of \code{defineModel}
+for further details. 
 }
 }
 \details{

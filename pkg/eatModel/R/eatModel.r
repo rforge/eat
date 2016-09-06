@@ -18,8 +18,10 @@ num.to.cat <- function(x, cut.points, cat.values = NULL)    {
               stopifnot(length(cut.points)+1 == length(cat.values))
               repeating <- 1:length(cut.points)                                 ### create string
               part.1 <- paste("ifelse(x < cut.points[",repeating,"],cat.values[",repeating,"]",collapse=", ")
-              part.2 <- paste(part.1, ", \"",cat.values[length(cat.values)], "\"", paste(rep(")",length(cut.points),sep=""),collapse=""), sep="", collapse="")
-              return(eval ( parse ( text = part.2 ) ))}
+              part.2 <- paste("ret <- ", part.1, ", \"",cat.values[length(cat.values)], "\"", paste(rep(")",length(cut.points),sep=""),collapse=""), sep="", collapse="")
+              eval ( parse ( text = part.2 ) )
+              attr(ret, "cat.values") <- cat.values
+              return(ret)}
 
 
 simEquiTable <- function ( anchor, mRef, sdRef, addConst = 500, multConst = 100, cutScores , dir , n = 2000, conquest.folder ) {
@@ -89,119 +91,240 @@ getResults <- function ( runModelObj, overwrite = FALSE, omitFit = FALSE, omitRe
                }
                attr(res, "dif.settings")   <- list (abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value, simplify = simplify) 
                if(!is.null(dir)) { 
-                  if(isTa == TRUE)          { save(runModelObj, file = file.path(dir, paste(name, "_tamObject.rda",sep="")))} 
-                  if(isTa == FALSE ) { 
-                      if ( attr(res, "available")[["itn"]] == TRUE | attr(res, "available")[["itn"]] == TRUE ) { 
-                          item<- itemFromRes ( res )                            ### obere Zeile: wenn mit TAM gerechnet wurde, tam Objekt speichern 
-                          if ( file.exists(file.path(dir, paste(name, "_items.csv",sep=""))) & overwrite == FALSE) { 
-                               cat(paste("Item results cannot be saved, file ",  file.path(dir, paste(name, "_items.csv",sep=""))," already exists.\n    Please remove/rename existing file or use 'overwrite=TRUE'.\n",sep=""))
+                    item<-itemFromRes ( res ) 
+                    if ( file.exists(file.path(dir, paste(name, "_items.csv",sep=""))) & overwrite == FALSE) { 
+                         cat(paste("Item results cannot be saved, file '",  file.path(dir, paste(name, "_items.csv",sep="")),"' already exists.\n    Please remove/rename existing file or use 'overwrite=TRUE'.\n",sep=""))
+                    }  else  { 
+                         write.csv2(item, file.path(dir, paste(name, "_items.csv",sep="")), na="", row.names = FALSE)
+                    }                                                           ### untere Zeilen: speichere wunschgemaess alle Personenparameter in einer Tabelle im Wideformat
+                    txt <- capture.output ( wle <- wleFromRes(res) )            ### 'capture.output' wird benutzt um Warnungen in wleFromres() zu unterdruecken
+                    if (!is.null ( wle ) ) { 
+                         wleL<- melt ( wle, id.vars = c(attr(res, "all.Names")[["ID"]], "dimension"), measure.vars = c("wle_est", "wle_se"), na.rm = TRUE)
+                         form<- as.formula ( paste ( attr(res, "all.Names")[["ID"]], "~dimension+variable",sep=""))
+                         wleW<- dcast ( wleL, form, value.var = "value" )
+                    }     
+                    txt <- capture.output ( pv  <- pvFromRes(res) ) 
+                    if(!is.null(pv)) { 
+                         pvL <- melt ( pv, id.vars = c( attr(res, "all.Names")[["ID"]] , "dimension"), na.rm = TRUE)
+                         form<- as.formula ( paste ( attr(res, "all.Names")[["ID"]], "~dimension+variable",sep=""))
+                         pvW <- dcast ( pvL, ID~dimension+variable, value.var = "value" )
+                    }
+                    txt <- capture.output ( eap <- eapFromRes(res) ) 
+                    if(!is.null(eap)) { 
+                         eapL<- melt ( eap, id.vars = c("ID", "dimension"), measure.vars = c("EAP", "SE.EAP"), na.rm = TRUE)
+                         eapW<- dcast ( eapL, ID~dimension+variable, value.var = "value" )
+                    }                                                           ### Hier wird geprueft, welche Personenparameter vorliegen
+                    alls<- list ( wle, pv, eap )                                ### wenn es Personenparameter gibt, werden sie eingelesen
+                    allP<- NULL                                                 ### alle vorhandenen Personenparamater werden zum Speichern in einen gemeinsamen Dataframe gemergt
+                    notN<- which ( unlist(lapply ( alls, FUN = function ( x ) { !is.null(x)})) ) 
+                    if ( length( notN ) >= 1 ) { allP <- alls[[notN[1]]] }
+                    if ( length( notN ) > 1 )  { 
+                         for ( u in notN[-1] )   { 
+                               allP <- merge ( allP, alls[[notN[u]]], by = c ( attr(res, "all.Names")[["ID"]], "dimension"), all = TRUE)
+                         }      
+                    }     
+                    if ( !is.null(allP)) {
+                          if ( file.exists(file.path(dir, paste(name, "_persons.csv",sep=""))) & overwrite == FALSE) { 
+                               cat(paste("Person estimates cannot be saved, file '",  file.path(dir, paste(name, "_persons.csv",sep="")),"' already exists.\n    Please remove/rename existing file or use 'overwrite=TRUE'.\n",sep=""))
                           }  else  { 
-                               write.csv2(item, file.path(dir, paste(name, "_items.csv",sep="")), na="", row.names = FALSE)
-                          }    
-                      }
-                  }        
-                  if (isTa == FALSE ) { 
-                      if ( attr(res, "available")[["wle"]] == TRUE & attr(res, "available")[["pv"]] == TRUE) { 
-                           if (omitWle == FALSE ) { 
-                              wle <- wleFromRes(res)                               ### untere Zeilen: speichere wunschgemaess alle Personenparameter in einer Tabelle im Wideformat
-                              wleL<- melt ( wle, id.vars = c("ID", "dimension"), measure.vars = c("wle_est", "wle_se"), na.rm = TRUE)
-                              wleW<- dcast ( wleL, ID~dimension+variable, value.var = "value" )
-                           }
-                           if ( omitPV == FALSE ) { 
-                                pv  <- pvFromRes(res)
-                                pvL <- melt ( pv, id.vars = c("ID", "dimension"), na.rm = TRUE)
-                                pvW <- dcast ( pvL, ID~dimension+variable, value.var = "value" )
-                                eap <- eapFromRes(res)
-                                eapL<- melt ( eap, id.vars = c("ID", "dimension"), measure.vars = c("EAP", "SE.EAP"), na.rm = TRUE)
-                                eapW<- dcast ( eapL, ID~dimension+variable, value.var = "value" )
-                           }
-                           if ( omitWle == FALSE & omitPV == FALSE ) { 
-                                allP<- merge(eapW, pvW, by = "ID", all=TRUE)
-                                allP<- merge(allP, wleW, by = "ID", all=TRUE)
-                                if ( file.exists(file.path(dir, paste(name, "_persons.csv",sep=""))) & overwrite == FALSE) { 
-                                     cat(paste("Person estimates cannot be saved, file ",  file.path(dir, paste(name, "_persons.csv",sep=""))," already exists.\n    Please remove/rename existing file or use 'overwrite=TRUE'.\n",sep=""))
-                                }  else  { 
-                                     write.csv2(allP, file.path(dir, paste(name, "_persons.csv",sep="")), na="", row.names = FALSE)
-                                }    
-                           }     
-                      }
-                  }
-               }   
+                               write.csv2(allP, file.path(dir, paste(name, "_persons.csv",sep="")), na="", row.names = FALSE)
+                          }     
+                    }           
+               }
                rownames(res) <- NULL
                return(res)
                }}   
                
-equat1pl<- function ( results , prmNorm , excludeLinkingDif = TRUE, difBound = 1, iterativ = TRUE) {
+equat1pl<- function ( results , prmNorm , excludeLinkingDif = TRUE, difBound = 1, iterativ = TRUE, method = c("Mean.Mean", "Haebara", "Stocking.Lord") ) {
+           method<- match.arg(method)
            nMods <- table(results[,"model"])
            nDim  <- by ( data = results, INDICES = results[,"model"], FUN = function ( x ) {
                     res <- table(as.character(itemFromRes(x)[,"dimension"]))
                     res <- data.frame ( model = x[1,"model"], name = names(res), Anzahl = as.numeric(res)) } )
            cat(paste("Found ", length(nMods), " models.\n",sep=""))
+           if ( missing ( prmNorm) ) { 
+                cat("No norm parameter defined ('prmNorm' is missing). Treat current sample as drawn from the reference population.\n")
+                return ( list ( items = NULL, results = results ) ) 
+           }  else {      
+              stopifnot ( ncol(prmNorm ) %in% 2:3 )
     ### Fuer jedes Modell findet Equating separat statt
-           items <- by ( data = results, INDICES = results[,"model"], FUN = function ( d ) {
-                    it  <- itemFromRes(d)
-                    eq  <- equating.rasch(x = it[ ,c("item", "est")], y = prmNorm)
-                    dif <- eq[["anchor"]][,"TransfItempar.Gr1"] - eq[["anchor"]][,"Itempar.Gr2"]
-                    prbl<- which ( abs ( dif ) > difBound )
-                    cat(paste("\n",paste(rep("=",100),collapse=""),"\n \nModel No. ",match(d[1,"model"], names(nDim)),"\n    Model name:              ",d[1,"model"],"\n    Number of dimension(s):  ",length(unique(it[,"dimension"])),"\n    Name(s) of dimension(s): ", paste( names(table(as.character(it[,"dimension"]))), collapse = ", "),"\n",sep=""))
-                    info<- NULL
-                    if ( length( prbl ) > 0 ) {
-                         cat(paste ( "\nDimension '", it[1,"dimension"], "': ", length( prbl), " of ", nrow( eq[["anchor"]]), " items with linking DIF > ",difBound," identified.\n",sep=""))
-                         dskr <- data.frame ( item = eq[["anchor"]][prbl,"item"], dif = dif[prbl], mean.mean = eq[["B.est"]][["Mean.Mean"]], linkerror = eq[["descriptives"]][["linkerror"]] )
-                         if ( !excludeLinkingDif) { info<- dskr }
-                         if ( excludeLinkingDif ) {
-                              if ( iterativ == FALSE ) {
-                                   cat(paste("   Exclude ",length( prbl), " items.\n",sep=""))
-                                   qp1 <- prmNorm[-match ( dskr[,"item"], prmNorm[,1]),]
-                                   eq1 <- equating.rasch(x = it[ ,c("item", "est")], y = qp1)
-                                   info<- data.frame ( method = "nonIterativ", rbind ( data.frame ( itemExcluded = "" , mean.mean = eq[["B.est"]][["Mean.Mean"]], linkerror = eq[["descriptives"]][["linkerror"]] ), data.frame ( itemExcluded = paste ( prmNorm[match ( dskr[,"item"], prmNorm[,1]),"item"] , collapse = ", "), mean.mean = eq1[["B.est"]][["Mean.Mean"]], linkerror = eq1[["descriptives"]][["linkerror"]] ) ))
-                                   eq  <- eq1
+              items <- by ( data = results, INDICES = results[,"model"], FUN = function ( d ) {
+                       it  <- itemFromRes(d)
+                       eq  <- equAux ( x = it[ ,c("item", "est")], y = prmNorm) 
+                       dif <- eq[["anchor"]][,"TransfItempar.Gr1"] - eq[["anchor"]][,"Itempar.Gr2"]
+                       prbl<- which ( abs ( dif ) > difBound )
+                       cat(paste("\n",paste(rep("=",100),collapse=""),"\n \nModel No. ",match(d[1,"model"], names(nDim)),"\n    Model name:              ",d[1,"model"],"\n    Number of dimension(s):  ",length(unique(it[,"dimension"])),"\n    Name(s) of dimension(s): ", paste( names(table(as.character(it[,"dimension"]))), collapse = ", "),"\n",sep=""))
+                       cat(paste( "    Number of linking items: " , eq[["descriptives"]][["N.Items"]],"\n",sep=""))
+                       if ( ncol ( prmNorm) == 3 ) { cat(paste( "    Number of testlets:      ",  eq[["ntl"]],"\n",sep="")) }
+                       info<- NULL
+                       if ( length( prbl ) > 0 ) {
+                            cat(paste ( "\nDimension '", it[1,"dimension"], "': ", length( prbl), " of ", nrow( eq[["anchor"]]), " items with linking DIF > ",difBound," identified.\n",sep=""))
+                            dskr <- data.frame ( item = eq[["anchor"]][prbl,"item"], dif = dif[prbl], linking.constant = eq[["B.est"]][[method]], linkerror = eq[["descriptives"]][["linkerror"]] )
+                            if ( !excludeLinkingDif) { info<- dskr }
+                            if ( excludeLinkingDif ) {
+                                 if ( iterativ == FALSE ) {
+                                      cat(paste("   Exclude ",length( prbl), " items.\n",sep=""))
+                                      qp1 <- prmNorm[-match ( dskr[,"item"], prmNorm[,1]),]
+                                      eq1 <- equAux ( x=it[ ,c("item", "est")], y = qp1)
+                                      info<- data.frame ( method = "nonIterativ", rbind ( data.frame ( itemExcluded = "" , linking.constant = eq[["B.est"]][[method]], linkerror = eq[["descriptives"]][["linkerror"]] ), data.frame ( itemExcluded = paste ( prmNorm[match ( dskr[,"item"], prmNorm[,1]),"item"] , collapse = ", "), linking.constant = eq1[["B.est"]][[method]], linkerror = eq1[["descriptives"]][["linkerror"]] ) ))
+                                      eq  <- eq1
     ### hier beginnt iterativer Ausschluss von Linking-DIF
-                              }  else  {
-                                   info<- data.frame ( method = "iterativ", iter = 0 , itemExcluded = "" , mean.mean = eq[["B.est"]][["Mean.Mean"]], linkerror = eq[["descriptives"]][["linkerror"]] )
-                                   qp1 <- prmNorm
-                                   iter<- 1
-                                   while  ( length ( prbl ) > 0 ) {
-                                       maxD<- which ( abs ( eq[["anchor"]][,"TransfItempar.Gr1"] - eq[["anchor"]][,"Itempar.Gr2"] ) == max ( abs (eq[["anchor"]][,"TransfItempar.Gr1"] - eq[["anchor"]][,"Itempar.Gr2"])) )
-                                       wegI<- eq[["anchor"]][maxD,"item"]
-                                       cat ( paste ( "   Iteration ", iter,": Exclude item '",wegI,"'.\n",sep=""))
-                                       qp1 <- qp1[-match ( wegI, qp1[,1]),]
-                                       eq  <- equating.rasch(x = it[ ,c("item", "est")], y = qp1)
-                                       dif <- eq[["anchor"]][,"TransfItempar.Gr1"] - eq[["anchor"]][,"Itempar.Gr2"]
-                                       prbl<- which ( abs ( dif ) > difBound )
-                                       info<- rbind(info, data.frame ( method = "iterativ", iter = iter , itemExcluded = wegI, mean.mean = round ( eq[["B.est"]][["Mean.Mean"]],digits = 3), linkerror = round ( eq[["descriptives"]][["linkerror"]], digits = 3) ))
-                                       iter<- iter + 1
-                                   }
-                              }
-                         }
-                    }
-                    if ( !is.null ( info ) ) { cat("\n"); print ( info)}
-                    cat("\n")
-                    return ( list ( eq = eq, items = it, info = info ) ) })
-           return(items)}
+                                 }  else  {
+                                      info<- data.frame ( method = "iterativ", iter = 0 , itemExcluded = "" , linking.constant = eq[["B.est"]][[method]], linkerror = eq[["descriptives"]][["linkerror"]] )
+                                      qp1 <- prmNorm
+                                      iter<- 1
+                                      while  ( length ( prbl ) > 0 ) {
+                                          maxD<- which ( abs ( eq[["anchor"]][,"TransfItempar.Gr1"] - eq[["anchor"]][,"Itempar.Gr2"] ) == max ( abs (eq[["anchor"]][,"TransfItempar.Gr1"] - eq[["anchor"]][,"Itempar.Gr2"])) )
+                                          wegI<- eq[["anchor"]][maxD,"item"]
+                                          cat ( paste ( "   Iteration ", iter,": Exclude item '",wegI,"'.\n",sep=""))
+                                          qp1 <- qp1[-match ( wegI, qp1[,1]),]
+                                          eq  <- equAux ( x = it[ ,c("item", "est")], y = qp1)
+                                          dif <- eq[["anchor"]][,"TransfItempar.Gr1"] - eq[["anchor"]][,"Itempar.Gr2"]
+                                          prbl<- which ( abs ( dif ) > difBound )
+                                          info<- rbind(info, data.frame ( method = "iterativ", iter = iter , itemExcluded = wegI, linking.constant = round ( eq[["B.est"]][[method]],digits = 3), linkerror = round ( eq[["descriptives"]][["linkerror"]], digits = 3) ))
+                                          iter<- iter + 1
+                                      }
+                                 }
+                            }
+                       }
+                       if ( !is.null ( info ) ) { 
+                            cat("\n") 
+                            infPrint <- data.frame ( lapply ( test , FUN = function ( x ) {if(class(x) == "numeric") { x <- round(x, digits = 3)}; return(x) }))
+                            print(infPrint)
+                       }     
+                       cat("\n")
+                       return ( list ( eq = eq, items = it, info = info, method = method ) ) })
+              return(list ( items = items, results = results))                  ### "results"-Objekt wird durchgeschleift
+           }  }
+
+
+### Hilfsfunktion fuer equat1pl
+equAux  <- function ( x, y ) {                 
+           eq  <- equating.rasch(x = x, y = y[,1:2])                      ### kein Jackknife 
+           if ( ncol(y)==3) {                                                   ### jackknife
+                colnames(x)[1] <- colnames(y)[1] <- "item"
+                dfr <- merge( x, y, by = "item", all = FALSE)
+                stopifnot ( ncol ( dfr ) == 4 )
+                txt <- capture.output ( eqJk<- equating.rasch.jackknife(dfr[ , c(4 , 2  , 3 , 1 ) ], display = FALSE ) )
+                if(!all ( unlist(lapply(txt, nchar)) == 0  ) ) { cat(txt, sep="\n")}
+                eq[["descriptives"]][["linkerror"]] <- eqJk[["descriptives"]][["linkerror.jackknife"]]
+                eq[["ntl"]]  <- length(unique(dfr[,4]))
+           }
+           return(eq)}     
            
-transformToBista <- function ( equatingList, refPop, cuts ) {                   ### Fuer jedes Modell findet Transformation separat statt 
-       if ( ncol ( refPop ) == 3) { 
-            cat ( "The 'refPop' data.frame does not include information about reference population mean/SD on Bista metric. Values will be defaulted to 500/100.\n")
-            refPop[,4] <- 500; refPop[,5] <- 100
-       }     
-       tf <- do.call("rbind", lapply ( names(equatingList), FUN = function ( d ) { 
-             subList <- equatingList[[d]]
-             transf  <- do.call("rbind", by ( data = subList[["items"]], INDICES = subList[["items"]][,"dimension"], FUN = function ( e ) { 
-                        if ( !e[1,"dimension"] %in% refPop[,1] ) { stop(paste("Cannot found dimension '",e[1,"dimension"],"' in the first column of the 'refPop' argument.\n",sep=""))}
-                        if ( !e[1,"dimension"] %in% names(cuts) ) { stop(paste("Cannot found dimension '",e[1,"dimension"],"' in the 'cuts' list.\n",sep=""))}
-                        mat <- match( e[1,"dimension"], refPop[,1])
-                        mat1<- match( e[1,"dimension"], names(cuts))
-                        e[,"estTransf"]      <- e[,"est"] + subList[["eq"]][["B.est"]][["Mean.Mean"]]
-                        e[,"estTransf625"]   <- e[,"estTransf"] + log(0.625/(1-0.625))
-                        e[,"estTransfBista"] <- (e[,"estTransf625"] - refPop[mat,2]) / refPop[mat,3] * refPop[mat,5] + refPop[mat,4]
-                        e[,"ks"]             <- num.to.cat(x = e[,"estTransfBista"], cut.points = cuts[[mat1]][["values"]], cat.values = cuts[[mat1]][["labels"]])
-                        return(e)}))
-             transf  <- data.frame ( dimension =  d, transf)        
-             return(transf)}))
-       attr(tf, "refPop") <- refPop
-       attr(tf, "cuts")   <- cuts
-       return(tf)}      
+transformToBista <- function ( equatingList, refPop, cuts, weights = NULL ) {   ### Fuer jedes Modell findet Transformation separat statt 
+       if (missing ( refPop) & !is.null ( equatingList[["items"]] ) ) { 
+           stop("'refPop' must be defined if the current sample is not considered to be drawn from the reference population.\n")
+       }
+       if(!missing(refPop)) {     
+          if ( ncol ( refPop ) == 3) { 
+               cat ( "The 'refPop' data.frame does not include information about reference population mean/SD on Bista metric. Values will be defaulted to 500/100.\n")
+               refPop[,4] <- 500; refPop[,5] <- 100
+          }  else  {
+               if ( ncol ( refPop) != 5 ) { stop ( "Invalid 'refPop'.\n") }
+          }
+       }  else  { 
+          items  <- itemFromRes(equatingList[["results"]])
+          refPop <- data.frame ( domain = unique(items[,"dimension"]), mean.bista = NA, sd.bista = NA, mean500 = 500, sd100 = 100)
+       }   
+       if ( !is.null ( equatingList[["items"]] )) { 
+    ### Hier beginnt die Transformation, wenn equatet werden soll (also der Datensatz nicht aus der Normpopulation kommt)
+             tf <- lapply ( names(equatingList[["items"]]), FUN = function ( d ) { 
+                   subList <- equatingList[["items"]][[d]]
+                   transf  <- by ( data = subList[["items"]], INDICES = subList[["items"]][,"dimension"], FUN = function ( e ) { 
+                              if ( !e[1,"dimension"] %in% refPop[,1] ) { stop(paste("Cannot found dimension '",e[1,"dimension"],"' in the first column of the 'refPop' argument.\n",sep=""))}
+                              if ( !e[1,"dimension"] %in% names(cuts) ) { stop(paste("Cannot found dimension '",e[1,"dimension"],"' in the 'cuts' list.\n",sep=""))}
+                              mat <- match( e[1,"dimension"], refPop[,1])
+                              mat1<- match( e[1,"dimension"], names(cuts))
+    ### 1. Transformation fuer Itemparameter
+                              e[,"estTransf"]      <- e[,"est"] + subList[["eq"]][["B.est"]][[ subList[["method"]] ]]
+                              e[,"estTransf625"]   <- e[,"estTransf"] + log(0.625/(1-0.625))
+                              e[,"estTransfBista"] <- (e[,"estTransf625"] - refPop[mat,2]) / refPop[mat,3] * refPop[mat,5] + refPop[mat,4]
+                              traitLevel           <- num.to.cat(x = e[,"estTransfBista"], cut.points = cuts[[mat1]][["values"]], cat.values = cuts[[mat1]][["labels"]])
+                              e[,"traitLevel"]     <- traitLevel
+                              e[,"linkingConstant"]<- subList[["eq"]][["B.est"]][[ subList[["method"]] ]]
+                              e[,"linkingMethod"]  <- subList[["method"]]
+                              e[,"nLinkitems"]     <- subList[["eq"]][["descriptives"]][["N.Items"]]
+                              e[,"linkingError"]   <- subList[["eq"]][["descriptives"]][["linkerror"]]
+    ### Transformation des Linkingfehlers entsprechend der Rechenregeln fuer Varianzen. ist geprueft, dass dasselbe rauskommt, wie wenn man Parameter transformiert und dann Linkingfehler bestimmt
+                              e[,"linkingErrorTransfBista"] <- ( (e[,"linkingError"]^2) * (refPop[mat,5]^2) / (refPop[mat,3]^2) )^0.5
+    ### Deltamethode, wie in eatTrend (Funktion 'seKompstuf'). Dazu wird MW und SD der Fokuspopulation benoetigt! (muss aus resultsobjekt extrahiert werden)
+                              rex <- pvFromRes(equatingList[["results"]], toWideFormat = FALSE)
+                              rex <- rex[intersect ( which (rex[,"model"] == d), which ( rex[,"group"] == e[1,"dimension"]) ) , ]
+                              rex[,"valueTransfBista"] <- (rex[,"value"] + subList[["eq"]][["B.est"]][[ subList[["method"]] ]] - refPop[mat,2] ) / refPop[mat,3] * refPop[mat,5] + refPop[mat,4]
+                              txt <- capture.output ( msd <- jk2.mean ( datL = rex, ID = attr(equatingList[["results"]], "all.Names")[["ID"]], imp = "imp", dependent = "valueTransfBista", na.rm = TRUE) ) 
+                              cts <- c( -10^6, cuts[[mat1]][["values"]], 10^6)  ### Cuts mit Schwelle nach unten und nach oben offen
+                              le  <- do.call("rbind", lapply ( (length(cts)-1):1 , FUN = function ( l ) {
+                                     kmp<- c(cts[l], cts[l+1])                  ### Linkingfehler fuer einzelnen Kompetenzintervalle; absteigend wie bei karoline
+                                     a1 <- sum ( dnorm ( ( kmp - refPop[mat,4]) / refPop[mat,5] ) * c(-1,1) / refPop[mat,5] )
+                                     a2 <- sum ( dnorm ( ( kmp - msd[intersect ( which (msd[,"parameter"] == "mean"), which (msd[,"coefficient"] == "est") ),"value"]) / msd[intersect ( which (msd[,"parameter"] == "sd"), which (msd[,"coefficient"] == "est") ),"value"] ) * c(-1,1) / msd[intersect ( which (msd[,"parameter"] == "sd"), which (msd[,"coefficient"] == "est") ),"value"] )
+      			                         del<- ( (  a1^2 + a2^2 ) * (unique(e[,"linkingErrorTransfBista"])^2) / 2  )^0.5
+      			                         del<- data.frame ( traitLevel = attr(traitLevel, "cat.values")[l], linkingErrorTraitLevel = del )
+      			                         return(del)}))
+      			                  ori <- colnames(e)
+                              e   <- data.frame ( merge ( e, le, by = "traitLevel", sort = FALSE, all = TRUE) )
+                              e   <- e[,c(ori, "linkingErrorTraitLevel")]
+                              e[,"refMean"]        <- refPop[mat,2]                  
+                              e["refSD"]           <- refPop[mat,3]                  
+                              e[,"refTransfMean"]  <- refPop[mat,4]                  
+                              e[,"refTransfSD"]    <- refPop[mat,5]
+    ### 2. Transformation der Personenparameter                    
+                              rex[,"traitLevel"]   <- num.to.cat(x = rex[,"valueTransfBista"], cut.points = cuts[[mat1]][["values"]], cat.values = cuts[[mat1]][["labels"]])
+                              rex[,"dimension"]    <- rex[,"group"]
+                              rex[,"linkingError"] <- subList[["eq"]][["descriptives"]][["linkerror"]]
+                              rex[,"linkingErrorTransfBista"] <- unique(e[,"linkingErrorTransfBista"])
+                              ori <- colnames(rex)
+                              rex <- data.frame ( merge ( rex, le, by = "traitLevel", sort = FALSE, all = TRUE) )
+                              rex <- rex[,c(ori, "linkingErrorTraitLevel")]
+                              return(list ( itempars = e, personpars = rex))})
+                   itempars<- data.frame ( model = d, do.call("rbind", lapply ( transf, FUN = function ( x ) { x[["itempars"]]})))
+                   perspar <- data.frame ( model = d, do.call("rbind", lapply ( transf, FUN = function ( x ) { x[["personpars"]]})))
+                   return( list ( itempars = itempars, personpars = perspar)) } )
+             personpars <- do.call("rbind", lapply ( tf, FUN = function ( x ) { x[["personpars"]]}))
+             itempars   <- do.call("rbind", lapply ( tf, FUN = function ( x ) { x[["itempars"]]}))
+             return( list ( itempars = itempars, personpars = personpars)) 
+       }  else  {
+    ### Hier beginnt die Transformation, wenn NICHT equatet werden soll (also der Datensatz aus der Normpopulation kommt)
+             pvs  <- pvFromRes ( equatingList[["results"]], toWideFormat = FALSE)
+             if ( !all (pvs[,"model"] == pvs[,"group"])) { stop("Error: Calibration only works for one dimensional models.\n") }
+             trans<- by ( data = items, INDICES = items[,"dimension"], FUN = function ( e ) { 
+                     if ( !e[1,"dimension"] %in% refPop[,1] ) { stop(paste("Cannot found dimension '",e[1,"dimension"],"' in the first column of the 'refPop' argument.\n",sep=""))}
+                     if ( !e[1,"dimension"] %in% names(cuts) ) { stop(paste("Cannot found dimension '",e[1,"dimension"],"' in the 'cuts' list.\n",sep=""))}
+                     mat <- match( e[1,"dimension"], refPop[,1])
+                     mat1<- match( e[1,"dimension"], names(cuts))
+    ### 1. Transformation fuer Itemparameter
+                     e[,"estTransf"]      <- e[,"est"]
+                     e[,"estTransf625"]   <- e[,"estTransf"] + log(0.625/(1-0.625))
+                     pvE <- pvs[which(pvs[,"group"] == e[1,"dimension"]),]
+                     txt <- capture.output ( msd <- jk2.mean ( datL = pvE, ID = attr(equatingList[["results"]], "all.Names")[["ID"]],imp = "imp", dependent = "value", na.rm = TRUE) ) 
+                     refPop[mat,2] <- msd[intersect ( which(msd[,"parameter"] == "mean"), which(msd[,"coefficient"] == "est")),"value"]
+                     refPop[mat,3] <- msd[intersect ( which(msd[,"parameter"] == "sd"), which(msd[,"coefficient"] == "est")),"value"]
+                     e[,"estTransfBista"] <- (e[,"estTransf625"] - refPop[mat,2]) / refPop[mat,3] * refPop[mat,5] + refPop[mat,4]
+                     traitLevel           <- num.to.cat(x = e[,"estTransfBista"], cut.points = cuts[[mat1]][["values"]], cat.values = cuts[[mat1]][["labels"]])
+                     e[,"traitLevel"]     <- traitLevel
+                     e[,"linkingConstant"]<- 0
+                     e[,"linkingMethod"]  <- NA
+                     e[,"nLinkitems"]     <- NA
+                     e[,"linkingError"]   <- NA
+    ### Transformation des Linkingfehlers entsprechend der Rechenregeln fuer Varianzen. ist geprueft, dass dasselbe rauskommt, wie wenn man Parameter transformiert und dann Linkingfehler bestimmt
+                     e[,"linkingErrorTransfBista"] <- NA
+    ### Deltamethode, wie in eatTrend (Funktion 'seKompstuf'). Dazu wird MW und SD der Fokuspopulation benoetigt! (muss aus resultsobjekt extrahiert werden)
+                     e[,"linkingErrorTraitLevel"]  <- NA
+                     e[,"refMean"]        <- refPop[mat,2]                  
+                     e["refSD"]           <- refPop[mat,3]                  
+                     e[,"refTransfMean"]  <- refPop[mat,4]                  
+                     e[,"refTransfSD"]    <- refPop[mat,5]
+    ### 2. Transformation der Personenparameter                    
+                     pvE[,"valueTransfBista"] <- (pvE[,"value"] - refPop[mat,2]) / refPop[mat,3] * refPop[mat,5] + refPop[mat,4]
+                     pvE[,"traitLevel"]   <- num.to.cat(x = pvE[,"valueTransfBista"], cut.points = cuts[[mat1]][["values"]], cat.values = cuts[[mat1]][["labels"]])
+                     pvE[,"dimension"]    <- pvE[,"group"]
+                     pvE[,"linkingError"] <- NA
+                     pvE[,"linkingErrorTransfBista"] <- NA
+                     pvE[,"linkingErrorTraitLevel"] <- NA
+                     return(list ( itempars = e, personpars = pvE))})
+             personpars <- do.call("rbind", lapply ( trans, FUN = function ( x ) { x[["personpars"]]}))
+             itempars   <- do.call("rbind", lapply ( trans, FUN = function ( x ) { x[["itempars"]]}))
+             return( list ( itempars = itempars, personpars = personpars))}   }              
                 
 
 runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.console = TRUE, wait = TRUE) {
@@ -1282,27 +1405,40 @@ getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV) {
 
 ### Extraktorfunktionen
 eapFromRes <- function ( resultsObj ) { 
-          sel  <- resultsObj[intersect( which(resultsObj[,"par"] == "eap"),which(resultsObj[,"indicator.group"] == "persons")),]
-          sel  <- do.call("rbind", by(sel, INDICES = sel[,"group"], FUN = function ( gr ) { 
-                  res  <- dcast ( gr , var1~derived.par, value.var = "value")
-                  colnames(res) <- c("ID", "EAP", "SE.EAP")                     ### Spaeter eventuell die Original-ID durchschleifen?
-                  res  <- data.frame ( res[,"ID", drop=FALSE], dimension = as.character(gr[1,"group"]), res[,-1,drop=FALSE], stringsAsFactors = FALSE)
-                  return(res)}))
-          return(sel)}        
+          eapRo<- intersect( which(resultsObj[,"par"] == "eap"),which(resultsObj[,"indicator.group"] == "persons"))
+          if ( length ( eapRo ) == 0 ) { 
+               cat("Error: 'resultsObj' does not contain any eap values.\n")
+               return ( NULL ) 
+          }  else  { 
+             sel  <- resultsObj[eapRo,]
+             sel  <- do.call("rbind", by(sel, INDICES = sel[,"group"], FUN = function ( gr ) { 
+                     res  <- dcast ( gr , var1~derived.par, value.var = "value")
+                     colnames(res) <- c("ID", "EAP", "SE.EAP")                     ### Spaeter eventuell die Original-ID durchschleifen?
+                     res  <- data.frame ( res[,"ID", drop=FALSE], dimension = as.character(gr[1,"group"]), res[,-1,drop=FALSE], stringsAsFactors = FALSE)
+                     return(res)}))
+             return(sel)
+          }  }   
 
 pvFromRes  <- function ( resultsObj, toWideFormat = TRUE ) { 
-          sel  <- resultsObj[intersect( which(resultsObj[,"par"] == "pv"),which(resultsObj[,"indicator.group"] == "persons")),]
-          if (toWideFormat == TRUE ) { 
-              sel  <- do.call("rbind", by(sel, INDICES = sel[,"group"], FUN = function ( gr ) { 
-                      res  <- dcast ( gr , var1~derived.par, value.var = "value")
-                      colnames(res)[1] <- "ID"                                  ### Spaeter eventuell die Original-ID durchschleifen?
-                      res  <- data.frame ( res[,"ID", drop=FALSE], dimension = as.character(gr[1,"group"]), res[,-1,drop=FALSE], stringsAsFactors = FALSE)
-                      return(res)}))
-          }  else  { 
-              sel  <- sel[,c("model", "var1", "group", "derived.par", "value")] 
-              colnames(sel) <- recode ( colnames(sel), "'var1'='ID'; 'derived.par'='imp'")
-          }    
-          return(sel)}        
+          pvRow<- intersect( which(resultsObj[,"par"] == "pv"),which(resultsObj[,"indicator.group"] == "persons"))
+          if ( length ( pvRow ) == 0 ) { 
+               cat("Error: 'resultsObj' does not contain any pv values.\n")
+               return ( NULL ) 
+          }  else  {      
+             sel  <- resultsObj[pvRow, ]
+             if (toWideFormat == TRUE ) { 
+                 sel  <- do.call("rbind", by(sel, INDICES = sel[,"group"], FUN = function ( gr ) { 
+                         res  <- dcast ( gr , var1~derived.par, value.var = "value")
+                         colnames(res)[1] <- attr(resultsObj, "all.Names")[["ID"]]
+                         res  <- data.frame ( res[,"ID", drop=FALSE], dimension = as.character(gr[1,"group"]), res[,-1,drop=FALSE], stringsAsFactors = FALSE)
+                         return(res)}))
+             }  else  { 
+                 sel  <- sel[,c("model", "var1", "group", "derived.par", "value")] 
+                 recSt<- paste ( "'var1'='",attr(resultsObj, "all.Names")[["ID"]],"'; 'derived.par'='imp'",sep="")
+                 colnames(sel) <- recode ( colnames(sel), recSt)
+             }    
+             return(sel)
+         }  }        
           
 itemFromRes<- function ( resultsObj ) { 
           if( "multipleResults" %in% class(resultsObj)) {                       ### Mehrmodellfall
@@ -1381,13 +1517,19 @@ itemFromRes<- function ( resultsObj ) {
           return (selM )}           
           
 wleFromRes <- function ( resultsObj ) { 
-          sel  <- resultsObj[intersect( which(resultsObj[,"par"] %in% c("wle","NitemsSolved", "NitemsTotal")),which(resultsObj[,"indicator.group"] == "persons")),]
-          sel  <- do.call("rbind", by(sel, INDICES = sel[,"group"], FUN = function ( gr ) { 
-                  res  <- dcast ( gr , var1~par+derived.par, value.var = "value")
-                  colnames(res) <- recode ( colnames(res) , "'var1'='ID'; 'NitemsSolved_NA'='NitemsSolved'; 'NitemsTotal_NA'='NitemsTotal'")
-                  res  <- data.frame ( res[,"ID", drop=FALSE], dimension = as.character(gr[1,"group"]), res[,-1,drop=FALSE], stringsAsFactors = FALSE)
-                  return(res)}))
-          return(sel)} 
+          wleRo<- intersect( which(resultsObj[,"par"] %in% c("wle","NitemsSolved", "NitemsTotal")),which(resultsObj[,"indicator.group"] == "persons"))
+          if(length(wleRo) == 0 ) { 
+             cat("Error: 'resultsObj' does not contain any WLE values.\n")
+             return(NULL)
+          }  else  {    
+             sel  <- resultsObj[wleRo,]
+             sel  <- do.call("rbind", by(sel, INDICES = sel[,"group"], FUN = function ( gr ) { 
+                     res  <- dcast ( gr , var1~par+derived.par, value.var = "value")
+                     colnames(res) <- recode ( colnames(res) , "'var1'='ID'; 'NitemsSolved_NA'='NitemsSolved'; 'NitemsTotal_NA'='NitemsTotal'")
+                     res  <- data.frame ( res[,"ID", drop=FALSE], dimension = as.character(gr[1,"group"]), res[,-1,drop=FALSE], stringsAsFactors = FALSE)
+                     return(res)}))
+             return(sel)
+          }  }   
           
           
 prepJack <- function ( resultsObj , arrangeDependentVar = c("singleFrame", "multipleFrames"), modelAsGroup = TRUE ) {
