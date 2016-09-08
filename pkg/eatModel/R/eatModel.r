@@ -228,7 +228,7 @@ equat1pl<- function ( results , prmNorm , excludeLinkingDif = TRUE, difBound = 1
                        }
                        if ( !is.null ( info ) ) { 
                             cat("\n") 
-                            infPrint <- data.frame ( lapply ( test , FUN = function ( x ) {if(class(x) == "numeric") { x <- round(x, digits = 3)}; return(x) }))
+                            infPrint <- data.frame ( lapply ( info , FUN = function ( x ) {if(class(x) == "numeric") { x <- round(x, digits = 3)}; return(x) }))
                             print(infPrint)
                        }     
                        cat("\n")
@@ -253,9 +253,12 @@ equAux  <- function ( x, y ) {
            
 transformToBista <- function ( equatingList, refPop, cuts, weights = NULL ) {   ### Fuer jedes Modell findet Transformation separat statt 
        if (missing ( refPop) & !is.null ( equatingList[["items"]] ) ) { 
-           stop("'refPop' must be defined if the current sample is not considered to be drawn from the reference population.\n")
-       }
-       if(!missing(refPop)) {     
+           cat("'refPop' was not defined. Parameter will not be transformed to the 'bista' metric. \n")
+           bista <- FALSE
+       }  else  { bista <- TRUE }
+       if( missing(cuts)) { cutsMis <- TRUE }  else  { cutsMis <- FALSE }
+       if(!missing(refPop)) { 
+          refMis <- FALSE 
           if ( ncol ( refPop ) == 3) { 
                cat ( "The 'refPop' data.frame does not include information about reference population mean/SD on Bista metric. Values will be defaulted to 500/100.\n")
                refPop[,4] <- 500; refPop[,5] <- 100
@@ -263,58 +266,76 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL ) {   
                if ( ncol ( refPop) != 5 ) { stop ( "Invalid 'refPop'.\n") }
           }
        }  else  { 
+          refMis <- TRUE
           items  <- itemFromRes(equatingList[["results"]])
           refPop <- data.frame ( domain = unique(items[,"dimension"]), mean.bista = NA, sd.bista = NA, mean500 = 500, sd100 = 100)
        }   
        if ( !is.null ( equatingList[["items"]] )) { 
-    ### Hier beginnt die Transformation, wenn equatet werden soll (also der Datensatz nicht aus der Normpopulation kommt)
+    ### Hier beginnt die Transformation, wenn equatet wurde (also der Datensatz nicht aus der Normpopulation kommt). wenn 'refPop' fehlt, wird 'cuts' automatisch ignoriert
+    ### es werden dann nur equatete parameter, keine auf KSM-metrik zurueckgegeben
              tf <- lapply ( names(equatingList[["items"]]), FUN = function ( d ) { 
                    subList <- equatingList[["items"]][[d]]
                    transf  <- by ( data = subList[["items"]], INDICES = subList[["items"]][,"dimension"], FUN = function ( e ) { 
                               if ( !e[1,"dimension"] %in% refPop[,1] ) { stop(paste("Cannot found dimension '",e[1,"dimension"],"' in the first column of the 'refPop' argument.\n",sep=""))}
-                              if ( !e[1,"dimension"] %in% names(cuts) ) { stop(paste("Cannot found dimension '",e[1,"dimension"],"' in the 'cuts' list.\n",sep=""))}
+                              if ( cutsMis == FALSE ) { 
+                                   if ( !e[1,"dimension"] %in% names(cuts) ) { stop(paste("Cannot found dimension '",e[1,"dimension"],"' in the 'cuts' list.\n",sep=""))}
+                                   mat1<- match( e[1,"dimension"], names(cuts))
+                              }     
                               mat <- match( e[1,"dimension"], refPop[,1])
-                              mat1<- match( e[1,"dimension"], names(cuts))
     ### 1. Transformation fuer Itemparameter
                               e[,"estTransf"]      <- e[,"est"] + subList[["eq"]][["B.est"]][[ subList[["method"]] ]]
                               e[,"estTransf625"]   <- e[,"estTransf"] + log(0.625/(1-0.625))
-                              e[,"estTransfBista"] <- (e[,"estTransf625"] - refPop[mat,2]) / refPop[mat,3] * refPop[mat,5] + refPop[mat,4]
-                              traitLevel           <- num.to.cat(x = e[,"estTransfBista"], cut.points = cuts[[mat1]][["values"]], cat.values = cuts[[mat1]][["labels"]])
-                              e[,"traitLevel"]     <- traitLevel
+                              if ( refMis == FALSE ) { 
+                                   e[,"estTransfBista"] <- (e[,"estTransf625"] - refPop[mat,2]) / refPop[mat,3] * refPop[mat,5] + refPop[mat,4]
+                                   traitLevel           <- num.to.cat(x = e[,"estTransfBista"], cut.points = cuts[[mat1]][["values"]], cat.values = cuts[[mat1]][["labels"]])
+                                   e[,"traitLevel"]     <- traitLevel
+                              }     
                               e[,"linkingConstant"]<- subList[["eq"]][["B.est"]][[ subList[["method"]] ]]
                               e[,"linkingMethod"]  <- subList[["method"]]
                               e[,"nLinkitems"]     <- subList[["eq"]][["descriptives"]][["N.Items"]]
                               e[,"linkingError"]   <- subList[["eq"]][["descriptives"]][["linkerror"]]
     ### Transformation des Linkingfehlers entsprechend der Rechenregeln fuer Varianzen. ist geprueft, dass dasselbe rauskommt, wie wenn man Parameter transformiert und dann Linkingfehler bestimmt
-                              e[,"linkingErrorTransfBista"] <- ( (e[,"linkingError"]^2) * (refPop[mat,5]^2) / (refPop[mat,3]^2) )^0.5
+                              if ( refMis == FALSE ) { 
+                                   e[,"linkingErrorTransfBista"] <- ( (e[,"linkingError"]^2) * (refPop[mat,5]^2) / (refPop[mat,3]^2) )^0.5
+                              }     
     ### Deltamethode, wie in eatTrend (Funktion 'seKompstuf'). Dazu wird MW und SD der Fokuspopulation benoetigt! (muss aus resultsobjekt extrahiert werden)
                               rex <- pvFromRes(equatingList[["results"]], toWideFormat = FALSE)
                               rex <- rex[intersect ( which (rex[,"model"] == d), which ( rex[,"group"] == e[1,"dimension"]) ) , ]
-                              rex[,"valueTransfBista"] <- (rex[,"value"] + subList[["eq"]][["B.est"]][[ subList[["method"]] ]] - refPop[mat,2] ) / refPop[mat,3] * refPop[mat,5] + refPop[mat,4]
-                              txt <- capture.output ( msd <- jk2.mean ( datL = rex, ID = attr(equatingList[["results"]], "all.Names")[["ID"]], imp = "imp", dependent = "valueTransfBista", na.rm = TRUE) ) 
-                              cts <- c( -10^6, cuts[[mat1]][["values"]], 10^6)  ### Cuts mit Schwelle nach unten und nach oben offen
-                              le  <- do.call("rbind", lapply ( (length(cts)-1):1 , FUN = function ( l ) {
-                                     kmp<- c(cts[l], cts[l+1])                  ### Linkingfehler fuer einzelnen Kompetenzintervalle; absteigend wie bei karoline
-                                     a1 <- sum ( dnorm ( ( kmp - refPop[mat,4]) / refPop[mat,5] ) * c(-1,1) / refPop[mat,5] )
-                                     a2 <- sum ( dnorm ( ( kmp - msd[intersect ( which (msd[,"parameter"] == "mean"), which (msd[,"coefficient"] == "est") ),"value"]) / msd[intersect ( which (msd[,"parameter"] == "sd"), which (msd[,"coefficient"] == "est") ),"value"] ) * c(-1,1) / msd[intersect ( which (msd[,"parameter"] == "sd"), which (msd[,"coefficient"] == "est") ),"value"] )
-      			                         del<- ( (  a1^2 + a2^2 ) * (unique(e[,"linkingErrorTransfBista"])^2) / 2  )^0.5
-      			                         del<- data.frame ( traitLevel = attr(traitLevel, "cat.values")[l], linkingErrorTraitLevel = del )
-      			                         return(del)}))
-      			                  ori <- colnames(e)
-                              e   <- data.frame ( merge ( e, le, by = "traitLevel", sort = FALSE, all = TRUE) )
-                              e   <- e[,c(ori, "linkingErrorTraitLevel")]
-                              e[,"refMean"]        <- refPop[mat,2]                  
-                              e["refSD"]           <- refPop[mat,3]                  
-                              e[,"refTransfMean"]  <- refPop[mat,4]                  
-                              e[,"refTransfSD"]    <- refPop[mat,5]
+                              if ( refMis == FALSE ) { 
+                                   rex[,"valueTransfBista"] <- (rex[,"value"] + subList[["eq"]][["B.est"]][[ subList[["method"]] ]] - refPop[mat,2] ) / refPop[mat,3] * refPop[mat,5] + refPop[mat,4]
+                                   txt <- capture.output ( msd <- jk2.mean ( datL = rex, ID = attr(equatingList[["results"]], "all.Names")[["ID"]], imp = "imp", dependent = "valueTransfBista", na.rm = TRUE) ) 
+                              }     
+                              if ( refMis == FALSE & cutsMis == FALSE ) { 
+                                   cts <- c( -10^6, cuts[[mat1]][["values"]], 10^6)  ### Cuts mit Schwelle nach unten und nach oben offen
+                                   le  <- do.call("rbind", lapply ( (length(cts)-1):1 , FUN = function ( l ) {
+                                          kmp<- c(cts[l], cts[l+1])                  ### Linkingfehler fuer einzelnen Kompetenzintervalle; absteigend wie bei karoline
+                                          a1 <- sum ( dnorm ( ( kmp - refPop[mat,4]) / refPop[mat,5] ) * c(-1,1) / refPop[mat,5] )
+                                          a2 <- sum ( dnorm ( ( kmp - msd[intersect ( which (msd[,"parameter"] == "mean"), which (msd[,"coefficient"] == "est") ),"value"]) / msd[intersect ( which (msd[,"parameter"] == "sd"), which (msd[,"coefficient"] == "est") ),"value"] ) * c(-1,1) / msd[intersect ( which (msd[,"parameter"] == "sd"), which (msd[,"coefficient"] == "est") ),"value"] )
+           			                         del<- ( (  a1^2 + a2^2 ) * (unique(e[,"linkingErrorTransfBista"])^2) / 2  )^0.5
+           			                         del<- data.frame ( traitLevel = attr(traitLevel, "cat.values")[l], linkingErrorTraitLevel = del )
+           			                         return(del)}))
+           			                   ori <- colnames(e)
+                                   e   <- data.frame ( merge ( e, le, by = "traitLevel", sort = FALSE, all = TRUE) )
+                                   e   <- e[,c(ori, "linkingErrorTraitLevel")]
+                              }
+                              if ( refMis == FALSE ) {
+                                   e[,"refMean"]        <- refPop[mat,2]                  
+                                   e["refSD"]           <- refPop[mat,3]                  
+                                   e[,"refTransfMean"]  <- refPop[mat,4]                  
+                                   e[,"refTransfSD"]    <- refPop[mat,5]
     ### 2. Transformation der Personenparameter                    
-                              rex[,"traitLevel"]   <- num.to.cat(x = rex[,"valueTransfBista"], cut.points = cuts[[mat1]][["values"]], cat.values = cuts[[mat1]][["labels"]])
+                                   rex[,"traitLevel"]   <- num.to.cat(x = rex[,"valueTransfBista"], cut.points = cuts[[mat1]][["values"]], cat.values = cuts[[mat1]][["labels"]])
+                              }
                               rex[,"dimension"]    <- rex[,"group"]
-                              rex[,"linkingError"] <- subList[["eq"]][["descriptives"]][["linkerror"]]
-                              rex[,"linkingErrorTransfBista"] <- unique(e[,"linkingErrorTransfBista"])
-                              ori <- colnames(rex)
-                              rex <- data.frame ( merge ( rex, le, by = "traitLevel", sort = FALSE, all = TRUE) )
-                              rex <- rex[,c(ori, "linkingErrorTraitLevel")]
+                              if ( refMis == FALSE ) {
+                                   rex[,"linkingError"] <- subList[["eq"]][["descriptives"]][["linkerror"]]
+                                   rex[,"linkingErrorTransfBista"] <- unique(e[,"linkingErrorTransfBista"])
+                              }
+                              if ( refMis == FALSE & cutsMis == FALSE ) { 
+                                   ori <- colnames(rex)
+                                   rex <- data.frame ( merge ( rex, le, by = "traitLevel", sort = FALSE, all = TRUE) )
+                                   rex <- rex[,c(ori, "linkingErrorTraitLevel")]
+                              }     
                               return(list ( itempars = e, personpars = rex))})
                    itempars<- data.frame ( model = d, do.call("rbind", lapply ( transf, FUN = function ( x ) { x[["itempars"]]})))
                    perspar <- data.frame ( model = d, do.call("rbind", lapply ( transf, FUN = function ( x ) { x[["personpars"]]})))
