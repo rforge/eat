@@ -3,10 +3,12 @@
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{1pl equating with optional elimination of linking DIF items}
 \description{Function does the 1pl linking according to \code{equating.rasch} from the \code{sirt} package. 
-Moreover, optional elimination of items with linking DIF is allowed.}
+Moreover, optional elimination of items with linking DIF is allowed and linking error may be estimated
+via the jackknife method if testlets are specified.}
 \usage{
-equat1pl(results , prmNorm , excludeLinkingDif = TRUE, difBound = 1, 
-         iterativ = TRUE, method = c("Mean.Mean", "Haebara", "Stocking.Lord"))}
+equat1pl(results , prmNorm , item = NULL, domain = NULL, testlet = NULL, value = NULL, 
+         excludeLinkingDif = TRUE, difBound = 1, iterativ = TRUE, 
+         method = c("Mean.Mean", "Haebara", "Stocking.Lord"))}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{results}{
@@ -15,8 +17,32 @@ The object returned by \code{getResults}.
 }
   \item{prmNorm}{
 %%     ~~Describe \code{file} here~~
-Data frame with two columns: First column items, second column item difficulties. 
-Column names are arbitrary. 
+Data frame with normed anchor item parameters. Data frame must have at least two 
+columns: items and item difficulties. Use the further arguments 'item', 'domain',
+'testlet' and 'value' to define the column in which the corresponding parameter
+can be found. If 'item', 'domain', 'testlet' and 'value' is NULL, prmNorm must 
+have only two columns: First column items, second column item difficulties. 
+Column names than are arbitrary. 
+}
+  \item{item}{
+%%     ~~Describe \code{file} here~~
+Optional: Give the number or name of the item identifier column in prmNorm.
+}
+  \item{domain}{
+%%     ~~Describe \code{file} here~~
+Optional: Give the number or name of the domain name in prmNorm. Only necessary if
+item identifiers are not unique in prmNorm (for example, if one item occurs several 
+times, with a global item parameter and a domain-specific item parameter. Domain names 
+in prmNorm must match dimension names in the 'results' object. 
+}
+  \item{testlet}{
+%%     ~~Describe \code{file} here~~
+Optional: Give the number or name of the testlet name in prmNorm. Only necessary if
+linking errors should be estimated via the jackknife method. 
+}
+  \item{value}{
+%%     ~~Describe \code{file} here~~
+Optional: Give the number or name of the parameter column in prmNorm. 
 }
   \item{excludeLinkingDif}{
 %%     ~~Describe \code{file} here~~

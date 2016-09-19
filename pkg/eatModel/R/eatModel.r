@@ -174,50 +174,73 @@ getResults <- function ( runModelObj, overwrite = FALSE, omitFit = FALSE, omitRe
                return(res)
                }}   
                
-equat1pl<- function ( results , prmNorm , excludeLinkingDif = TRUE, difBound = 1, iterativ = TRUE, method = c("Mean.Mean", "Haebara", "Stocking.Lord") ) {
+equat1pl<- function ( results , prmNorm , item = NULL, domain = NULL, testlet = NULL, value = NULL, excludeLinkingDif = TRUE, difBound = 1, iterativ = TRUE, method = c("Mean.Mean", "Haebara", "Stocking.Lord") ) {
            method<- match.arg(method)
            nMods <- table(results[,"model"])
            nDim  <- by ( data = results, INDICES = results[,"model"], FUN = function ( x ) {
                     res <- table(as.character(itemFromRes(x)[,"dimension"]))
                     res <- data.frame ( model = x[1,"model"], name = names(res), Anzahl = as.numeric(res)) } )
+           dims  <- unlist(lapply(nDim, FUN = function ( y ) { as.character(y[,"name"])}))
            cat(paste("Found ", length(nMods), " models.\n",sep=""))
            if ( missing ( prmNorm) ) { 
                 cat("No norm parameter defined ('prmNorm' is missing). Treat current sample as drawn from the reference population.\n")
                 return ( list ( items = NULL, results = results ) ) 
-           }  else {      
-              stopifnot ( ncol(prmNorm ) %in% 2:3 )
+           }  else {                                                            ### plausibility checks
+              stopifnot ( "data.frame" %in% class(prmNorm))
+              if ( ncol ( prmNorm ) == 2 ) { 
+                   if (!length(prmNorm[,1]) == length(unique(prmNorm[,1]))) { stop("Item identifiers are not unique in 'prmNorm'.\n")}
+                   if(is.null(item)) { item <- colnames(prmNorm)[1] }
+                   if(is.null(value)){ value<- colnames(prmNorm)[2] }
+              }  else  { 
+                   ch1  <- !is.null(item) & !is.null(value)
+                   ch2  <- !is.null(domain) | !is.null(testlet)
+                   stopifnot ( ch1 == TRUE & ch2 == TRUE ) 
+              }
+              allV <- list(item=item, domain = domain, testlet = testlet, value = value)
+              allN <- lapply(allV, FUN=function(ii) {.existsBackgroundVariables(dat = prmNorm, variable=ii)})
+              if (!is.null ( allN[["domain"]] )) {                              ### check: match domain names
+                   mis <- setdiff ( dims,  names(table(prmNorm[, allN[["domain"]] ])) )
+                   if ( length( mis ) > 0 ) { stop ( paste ( "Domain '",mis,"' is missing in 'prmNorm'.\n",sep="")) }
+                   uni <- by ( data = prmNorm, INDICES = prmNorm[, allN[["domain"]] ], FUN = function ( g ) { 
+                          if (!length(g[,allN[["item"]]]) == length(unique(g[,allN[["item"]]]))) { stop(paste ( "Item identifiers are not unique in 'prmNorm' for domain '",g[1,allN[["domain"]]],"'.\n",sep=""))} 
+                   })                                                           ### check: items unique within domains? 
+              }     
     ### Fuer jedes Modell findet Equating separat statt
               items <- by ( data = results, INDICES = results[,"model"], FUN = function ( d ) {
                        it  <- itemFromRes(d)
-                       eq  <- equAux ( x = it[ ,c("item", "est")], y = prmNorm) 
+                       if(!is.null(allN[["domain"]]) ) { 
+                           prmM<- prmNorm [ which(prmNorm[,allN[["domain"]]] %in% unique(it[,"dimension"])) ,]
+                       }  else  {
+                           prmM<- prmNorm
+                       }    
+                       eq  <- equAux ( x = it[ ,c("item", "est")], y = prmM[,c(allN[["item"]], allN[["value"]], allN[["testlet"]])] ) 
                        dif <- eq[["anchor"]][,"TransfItempar.Gr1"] - eq[["anchor"]][,"Itempar.Gr2"]
                        prbl<- which ( abs ( dif ) > difBound )
                        cat(paste("\n",paste(rep("=",100),collapse=""),"\n \nModel No. ",match(d[1,"model"], names(nDim)),"\n    Model name:              ",d[1,"model"],"\n    Number of dimension(s):  ",length(unique(it[,"dimension"])),"\n    Name(s) of dimension(s): ", paste( names(table(as.character(it[,"dimension"]))), collapse = ", "),"\n",sep=""))
                        cat(paste( "    Number of linking items: " , eq[["descriptives"]][["N.Items"]],"\n",sep=""))
-                       if ( ncol ( prmNorm) == 3 ) { cat(paste( "    Number of testlets:      ",  eq[["ntl"]],"\n",sep="")) }
-                       info<- NULL
-                       if ( length( prbl ) > 0 ) {
+                       if ( !is.null(allN[["testlet"]]) ) { cat(paste( "    Number of testlets:      ",  eq[["ntl"]],"\n",sep="")) }
+                       if ( length( prbl ) > 0 ) {                              ### Gibt es Items mit linking dif?
                             cat(paste ( "\nDimension '", it[1,"dimension"], "': ", length( prbl), " of ", nrow( eq[["anchor"]]), " items with linking DIF > ",difBound," identified.\n",sep=""))
                             dskr <- data.frame ( item = eq[["anchor"]][prbl,"item"], dif = dif[prbl], linking.constant = eq[["B.est"]][[method]], linkerror = eq[["descriptives"]][["linkerror"]] )
                             if ( !excludeLinkingDif) { info<- dskr }
                             if ( excludeLinkingDif ) {
                                  if ( iterativ == FALSE ) {
                                       cat(paste("   Exclude ",length( prbl), " items.\n",sep=""))
-                                      qp1 <- prmNorm[-match ( dskr[,"item"], prmNorm[,1]),]
-                                      eq1 <- equAux ( x=it[ ,c("item", "est")], y = qp1)
-                                      info<- data.frame ( method = "nonIterativ", rbind ( data.frame ( itemExcluded = "" , linking.constant = eq[["B.est"]][[method]], linkerror = eq[["descriptives"]][["linkerror"]] ), data.frame ( itemExcluded = paste ( prmNorm[match ( dskr[,"item"], prmNorm[,1]),"item"] , collapse = ", "), linking.constant = eq1[["B.est"]][[method]], linkerror = eq1[["descriptives"]][["linkerror"]] ) ))
+                                      qp1 <- prmM[-match ( dskr[,"item"], prmM[,allN[["item"]]]),]
+                                      eq1 <- equAux ( x=it[ ,c("item", "est")], y = qp1[,c(allN[["item"]], allN[["value"]], allN[["testlet"]])] )
+                                      info<- data.frame ( method = "nonIterativ", rbind ( data.frame ( itemExcluded = "" , linking.constant = eq[["B.est"]][[method]], linkerror = eq[["descriptives"]][["linkerror"]] ), data.frame ( itemExcluded = paste ( prmM[match ( dskr[,"item"], prmM[,allN[["item"]]]),"item"] , collapse = ", "), linking.constant = eq1[["B.est"]][[method]], linkerror = eq1[["descriptives"]][["linkerror"]] ) ))
                                       eq  <- eq1
     ### hier beginnt iterativer Ausschluss von Linking-DIF
                                  }  else  {
                                       info<- data.frame ( method = "iterativ", iter = 0 , itemExcluded = "" , linking.constant = eq[["B.est"]][[method]], linkerror = eq[["descriptives"]][["linkerror"]] )
-                                      qp1 <- prmNorm
+                                      qp1 <- prmM
                                       iter<- 1
                                       while  ( length ( prbl ) > 0 ) {
                                           maxD<- which ( abs ( eq[["anchor"]][,"TransfItempar.Gr1"] - eq[["anchor"]][,"Itempar.Gr2"] ) == max ( abs (eq[["anchor"]][,"TransfItempar.Gr1"] - eq[["anchor"]][,"Itempar.Gr2"])) )
                                           wegI<- eq[["anchor"]][maxD,"item"]
                                           cat ( paste ( "   Iteration ", iter,": Exclude item '",wegI,"'.\n",sep=""))
-                                          qp1 <- qp1[-match ( wegI, qp1[,1]),]
-                                          eq  <- equAux ( x = it[ ,c("item", "est")], y = qp1)
+                                          qp1 <- qp1[-match ( wegI, qp1[,allN[["item"]]]),]
+                                          eq  <- equAux ( x = it[ ,c("item", "est")], y = qp1[,c(allN[["item"]], allN[["value"]], allN[["testlet"]])] )
                                           dif <- eq[["anchor"]][,"TransfItempar.Gr1"] - eq[["anchor"]][,"Itempar.Gr2"]
                                           prbl<- which ( abs ( dif ) > difBound )
                                           info<- rbind(info, data.frame ( method = "iterativ", iter = iter , itemExcluded = wegI, linking.constant = round ( eq[["B.est"]][[method]],digits = 3), linkerror = round ( eq[["descriptives"]][["linkerror"]], digits = 3) ))
@@ -225,12 +248,12 @@ equat1pl<- function ( results , prmNorm , excludeLinkingDif = TRUE, difBound = 1
                                       }
                                  }
                             }
-                       }
-                       if ( !is.null ( info ) ) { 
-                            cat("\n") 
-                            infPrint <- data.frame ( lapply ( info , FUN = function ( x ) {if(class(x) == "numeric") { x <- round(x, digits = 3)}; return(x) }))
-                            print(infPrint)
+                       }  else  {                                               ### hier folgt der Abschnitt, wenn es keine Linking-Dif Items gibt
+                            info <- data.frame ( linking.constant = eq[["B.est"]][[method]], linkerror = eq[["descriptives"]][["linkerror"]] )
                        }     
+                       cat("\n") 
+                       infPrint <- data.frame ( lapply ( info , FUN = function ( x ) {if(class(x) == "numeric") { x <- round(x, digits = 3)}; return(x) }))
+                       print(infPrint)
                        cat("\n")
                        return ( list ( eq = eq, items = it, info = info, method = method ) ) })
               return(list ( items = items, results = results))                  ### "results"-Objekt wird durchgeschleift
@@ -1269,8 +1292,8 @@ getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Name
              ret  <- rbind(ret, data.frame ( model = model.name, source = "conquest", var1 = NA, var2 = NA , type = "model", indicator.group = NA, group = NA, par = c("deviance", "Npar"),  derived.par = NA, value = shw$final.deviance , stringsAsFactors = FALSE))
          }                                                                      ### schliesst die Bedingung 'shw file vorhanden'
     ### Sektion 'Personenparameter auslesen' (wle)
+         wleFile  <- paste(analysis.name, "wle", sep=".")
          if ( omitWle == FALSE ) { 
-              wleFile  <- paste(analysis.name, "wle", sep=".")
               if (!wleFile %in% allFiles) {
                   cat("Cannot find Conquest WLE file.\n")
               } else {
@@ -1286,8 +1309,8 @@ getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Name
               }
          }     
     ### Sektion 'Personenparameter auslesen' (PVs)
+         pvFile   <- paste(analysis.name, "pvl", sep=".")
          if ( omitPV == FALSE ) { 
-              pvFile   <- paste(analysis.name, "pvl", sep=".")
               if (!pvFile %in% allFiles) {
                   cat("Cannot find Conquest PV file.\n")
               } else {

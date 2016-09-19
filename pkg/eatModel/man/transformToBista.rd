@@ -17,7 +17,7 @@ The object returned by \code{equat1pl}.
 %%     ~~Describe \code{file} here~~
 Data frame with at least three columns. First column indicates the domain name. 
 Note that this name must match the domain names in the output of \code{getResults}.
-Second column contains the mean of the referece population. Third column contains
+Second column contains the mean of the reference population. Third column contains
 the standard deviation of the reference population. Fourth column optionally contains 
 the transformed mean on the Bista metric of the reference population. Fifth column 
 optionally contains the transformed standard deviation on the Bista metric of the 
