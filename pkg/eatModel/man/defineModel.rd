@@ -395,114 +395,333 @@ Sebastian Weirich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
+################################################################################
+###               Preparation: necessary for all examples                    ###
+################################################################################
+
 # load example data
 # (these are simulated achievement test data)
 data(sciences)
+
 # first reshape the data set into wide format
 datW <- reshape2::dcast(sciences, id+grade+sex~variable, value.var="value")
+
 # second, create the q matrix from the long format data frame
 qMat <- sciences[ which( sciences[,"subject"] == "biology") ,c("variable","domain")]
 qMat <- qMat[!duplicated(qMat[,1]),]
 qMat <- data.frame ( qMat[,1,drop=FALSE], knowledge  = as.numeric(qMat[,"domain"] == "knowledge"),
         procedural = as.numeric(qMat[,"domain"] == "procedural"))
 \dontrun{
+
+
+################################################################################
+###                Example 1: Unidimensional Rasch Model                     ###
+################################################################################
+
 # Example 1: define and run a unidimensional Rasch model with all variables in dataset
 # using "Conquest". Note: if software="conquest", the path of the windows executable
 # ConQuest console must be specified by setting conquest.folder = "<path_to_your_conquest.exe>"
+
 # defining the model: specifying q matrix is not necessary
 mod1 <- defineModel(dat=datW, items= -c(1:3), id="id", analysis.name = "unidim",
         conquest.folder = "N:/console_Feb2007.exe",  dir = "N:/test")
+
 # run the model
 run1 <- runModel(mod1)
+
 # get the results
 res1 <- getResults(run1)
-#
+
+# extract the item parameters from the results object
+item <- itemFromRes ( res1 ) 
+
+
+################################################################################
+###               Example 2: Multidimensional Rasch Model                    ###
+################################################################################
+
 # Example 2: running a multidimensional Rasch model on a subset of items with latent
 # regression (sex). Use item parameter from the first model as anchor parameters
 # use only biology items from both domains (procedural/knowledge)
-# read in anchor parameters from showfile
+
+# read in anchor parameters from the results object of the first example
 aPar <- itemFromRes ( res1 ) 
 aPar <- aPar[,c("item", "est")]
-# defining the model: specifying q matrix now is necessary. please acknowledge the notes
-# printed on console!
+
+# defining the model: specifying q matrix now is necessary.
+# Please note that all latent regression variables have to be of class numeric. 
+# If regression variables are factors, dummy variables automatically will be used. 
+# (This behavior is equivalent as in lm() for example.)
 mod2 <- defineModel(dat=datW, items= qMat[,1], id="id", analysis.name = "twodim",
         qMatrix = qMat, HG.var = "sex", anchor = aPar, n.plausible = 20,
         conquest.folder = "N:/console_Feb2007.exe",  dir = "N:/test")
+
 # run the model
 run2 <- runModel(mod2)
+
 # get the results
 res2 <- getResults(run2)
-#
+
+
+################################################################################
+###            Example 3: Multidimensional Rasch Model in TAM                ###
+################################################################################
+
 # Example 3: the same model in TAM
-# first use unidimensional calibration (model 1) to get item parameters
-mod1T<- defineModel(dat=datW, items= -c(1:3), id="id", software = "tam")
-run1T<- runModel(mod1T)
-res1T<- getResults(run1T)
-# anchor parameters from TAM
-aParT<- itemFromRes(res1T)
-aParT<- aParT[,c("item", "est")]
+# we use the same anchor parameters from example 1
+
 # estimate model 2 with latent regression and anchored parameters in TAM
+# specification of an output folder (via 'dir' argument) no longer necessary 
 mod2T<- defineModel(dat=datW, items= qMat[,1], id="id", qMatrix = qMat,
-        HG.var = "sex", anchor = aParT, software = "tam")
+        HG.var = "sex", anchor = aPar, software = "tam")
+
 # run the model
 run2T<- runModel(mod2T)
+
+# Object 'run2T' is of class 'tam.mml'
 class(run2T)
+
 # the class of 'run2T' corresponds to the class defined by the TAM package; all
 # functions of the TAM package intended for further processing (e.g. drawing
 # plausible values, plotting deviance change etc.) work, for example:
 wle  <- tam.wle(run2T)
-# Now, the model result are collected in a single data frame
+
+# Finally, the model result are collected in a single data frame
 res2T<- getResults(run2T)
-#
+
+
+################################################################################
+###    Example 4: define und run multiple models defined by 'splitModels'    ###
+################################################################################
+
 # Example 4: define und run multiple models defined by 'splitModels'
+# Model split is possible for different groups of items (i.e. domains) and/or
+# different groups of persons (for example, federal states within Germany)
+
 # define person grouping
-pers  <- data.frame ( idstud = datW[,"id"] , group1 = datW[,"sex"], group2 = datW[,"grade"], stringsAsFactors = FALSE )
-# define 18 models
+pers  <- data.frame ( idstud = datW[,"id"] , group1 = datW[,"sex"], 
+         group2 = datW[,"grade"], stringsAsFactors = FALSE )
+
+# define 18 models, splitting according to person groups and item groups separately
+# by default, multicore processing is applied
 l1    <- splitModels ( qMatrix = qMat, person.groups = pers)
-# run 'defineModel' for each model in 'l1'
-modMul<- defineModel(dat = datW, items = qMat[,1], id = "id", check.for.linking = TRUE, splittedModels = l1, software = "tam")
+
+# apply 'defineModel' for each of the 18 models in 'l1'
+modMul<- defineModel(dat = datW, items = qMat[,1], id = "id", 
+         check.for.linking = TRUE, splittedModels = l1, software = "tam")
+
 # run all models 
 runMul<- runModel(modMul)
-# get results
+
+# get results of all models 
 resMul<- getResults(runMul)
-#
+
+
+################################################################################
+###          Example 5: Linking and equating for multiple models             ###
+################################################################################
+
 # Example 5: define und run multiple models according to different domains (item groups)
-# and further linking/equating
-# define item groups via the Q matrix
+# and further linking/equating. This example mimics the routines necessary for the 
+# 'Vergleichsarbeiten' at the Institute of Educational Progress (IQB)
+
+# specify two models according to the two domains 'knowledge' and 'procedural' 
 l2    <- splitModels ( qMatrix = qMat)
+
 # define 2 models
-mods  <- defineModel(dat = datW, id = "id", check.for.linking = TRUE, splittedModels = l2, software = "tam")
+mods  <- defineModel(dat = datW, id = "id", check.for.linking = TRUE, 
+         splittedModels = l2, software = "tam")
+
 # run 2 models 
 runs  <- runModel(mods)
+
 # get the results 
 ress  <- getResults(runs)
-# only for illustration, we create arbitrary parameters for anchoring
-prmNrm<- itemFromRes(ress)[ sample ( 1:56, 15,F) ,c("item", "est")]
-prmNrm[,"est"] <- prmNrm[,"est"] - 0.6 + rnorm ( 15, 0, 0.6)
-# anchoring without exclusion of linking DIF items
+
+# only for illustration, we create arbitrary 'normed' parameters for anchoring
+prmNrm<- itemFromRes(ress)[ sample ( 1:56, 31,F) ,c("item", "est")]
+prmNrm[,"est"] <- prmNrm[,"est"] - 0.6 + rnorm ( 31, 0, 0.75)
+
+# anchoring without exclusion of linking DIF items (DIF items will only be identified)
 anch  <- equat1pl ( results = ress, prmNorm = prmNrm, excludeLinkingDif = FALSE, 
          difBound = 0.6)
+
 # anchoring with exclusion of linking DIF items
 anch2 <- equat1pl ( results = ress, prmNorm = prmNrm, excludeLinkingDif = TRUE, 
          difBound = 0.6, iterativ = FALSE)
+
 # anchoring with iterative exclusion of linking DIF items
 anch3 <- equat1pl ( results = ress, prmNorm = prmNrm, excludeLinkingDif = TRUE, 
          difBound = 0.6, iterativ = TRUE)
+
 # transformation to the Bista metric
 # first we arbitrarily define mean and standard deviation of the reference 
 # population according to both dimensions (defined in the Q matrix): 
 # procedural and knowledge
+# Note that the the first column of the 'refPop' data frame must include the 
+# domain names. Domain names must match the names defined in the Q matrix
 refPop<- data.frame ( domain = c("procedural", "knowledge"), m = c(0.122, -0.047), 
          sd = c(0.899, 1.121))
+
 # second, we specify a list with cut scores. Values must be in ascending order.
-# Labels of the competence stages are optional. If no values are specified, 
+# Labels of the competence stages are optional. If no labels are specified, 
 # the will be defaulted to 1, 2, 3 ... etc.
 # Note: if labels are specified, there must be one label more than cut scores. 
-# (i.e. 4 cut scores --> 5 labels, etc.)
+# (i.e. 4 cut scores need 5 labels, etc.)
 cuts  <- list ( procedural = list ( values = c(380, 420, 500, 560)) , 
          knowledge = list ( values = 400+0:2*100, labels = c("A1", "A2", "B1", "B2")))
+
 # transformation
-dfr   <- transformToBista ( equatingList = anch3, refPop = refPop, cuts=cuts )          
+dfr   <- transformToBista ( equatingList = anch3, refPop = refPop, cuts=cuts ) 
+View(dfr$itempars)
+View(dfr$personpars)
+
+
+################################################################################
+###      Example 5a: Linking for multiple models, including global domain    ###
+################################################################################
+
+# Example 5a: define und run multiple models according to different domains (item groups)
+# and further linking/equating. Same as example 5, but extended for the 'global' 
+# domain. 
+
+# add the 'global' domain in the Q matrix
+qMat2 <- qMat
+qMat2[,"global"] <- 1
+
+# specify two models according to the two domains 'knowledge' and 'procedural' 
+l3    <- splitModels ( qMatrix = qMat2)
+
+# define 2 models
+mods3 <- defineModel(dat = datW, id = "id", check.for.linking = TRUE, 
+         splittedModels = l3, software = "tam")
+
+# run 2 models 
+runs3 <- runModel(mods3)
+
+# get the results 
+res3  <- getResults(runs3)
+
+# only for illustration, we create arbitrary 'normed' parameters for anchoring.
+# Each item now has to item parameter: one is domain-specific, one is the global
+# item parameter. Hence, each item occurs two times in 'prmNrm'
+prmNrm<- itemFromRes(ress)[ sample ( 1:56, 31,F) ,c("dimension", "item", "est")]
+prmNrm[,"est"] <- prmNrm[,"est"] - 0.6 + rnorm ( 31, 0, 0.75)
+prmGlo<- prmNrm
+prmGlo[,"dimension"] <- "global"
+prmNrm<- rbind ( prmNrm, prmGlo)
+
+# if the item identifier in 'prmNrm' is not unique, 'equat1pl' has to know which 
+# parameter in 'prmNrm' belongs to which dimension/domain. Hence, the dimension
+# is added to 'prmNrm'.
+ 
+# anchoring: if 'prmNrm' has more than 2 columns, the columns of 'prmNrm' must be 
+# specified in 'equat1pl'
+anch3 <- equat1pl ( results = res3, prmNorm = prmNrm, item = "item", value = "est", 
+         domain = "dimension", excludeLinkingDif = FALSE, difBound = 0.6)
+
+# transformation to the Bista metric
+# first we arbitrarily define mean and standard deviation of the reference 
+# population according to the three dimensions (defined in the Q matrix): 
+# procedural, knowledge, and global
+# Note that the the first column of the 'refPop' data frame must include the 
+# domain names. Domain names must match the names defined in the Q matrix
+refPop<- data.frame ( domain = c("procedural", "knowledge", "global"), 
+         m = c(0.122, -0.047, 0.069), sd = c(0.899, 1.121, 1.015))
+
+# second, we specify a list with cut scores. Values must be in ascending order.
+# Labels of the competence stages are optional. If no labels are specified, 
+# the will be defaulted to 1, 2, 3 ... etc.
+# Note: if labels are specified, there must be one label more than cut scores. 
+# (i.e. 4 cut scores need 5 labels, etc.)
+cuts  <- list ( procedural = list ( values = c(380, 420, 500, 560)) , 
+         knowledge = list ( values = 400+0:2*100, labels = c("A1", "A2", "B1", "B2")),
+         global = list ( values = 400+0:2*100, labels = c("A1", "A2", "B1", "B2")))
+
+# transformation
+dfr   <- transformToBista ( equatingList = anch3, refPop = refPop, cuts=cuts ) 
+View(dfr$itempars)
+View(dfr$personpars)
+
+
+################################################################################
+###        Example 6: Linking and equating for multiple models (II)          ###
+################################################################################
+
+# Example 6: define und run multiple models according to different domains (item groups)
+# and different person groups. This example mimics the routines necessary for the 
+# 'Laendervergleich/Bildungstrend' at the Institute of Educational Progress (IQB)
+
+# First step: item calibration in separate unidimensional models for each domain
+modsC <- splitModels ( qMatrix = qMat)
+
+# define 2 models
+modsD <- defineModel(dat = datW, id = "id", check.for.linking = TRUE, 
+         splittedModels = modsC, software = "tam")
+
+# run 2 models 
+runsD <- runModel(modsD)
+
+# get the results 
+resD  <- getResults(runsD)
+
+# extract item parameters from the 'results' object
+itemD <- itemFromRes(resD)
+
+# Second step: two-dimensional model is specified for each person group with fixed
+# item parameters. Moreover, a latent regression model is used (in the actual 
+# 'Laendervergleich', regressors are principal components). 
+
+# create arbitrary federal state membership
+datW[,"country"] <- sample ( x = c ( "Berlin", "Bavaria"), size = nrow(datW), 
+         replace = TRUE)
+         
+# create arbitrary principal components 
+for ( i in c("PC1", "PC2", "PC3") ) { 
+      datW[,i] <- rnorm( n = nrow(datW), mean = 0, sd = 1.2)
+}         
+
+# number of extracted principal components vary: three components for Berlin, 
+# two for Bavaria. Hence, Bavaria has no valid values on 'PC3'.
+datW[which(datW[,"country"] == "Bavaria"),"PC3"] <- NA
+
+# define person grouping
+pers  <- data.frame ( idstud = datW[,"id"] , country = datW[,"country"])
+
+# Running second step: split models according to person groups
+# ('all.persons' must be FALSE, otherwise the whole group would be treated as
+# a separate distinct group.)
+modsP <- splitModels ( person.groups = pers , all.persons = FALSE)
+
+# define the 2 country-specific models, specifying latent regression model and
+# fixed item parameters.
+modsP <- defineModel(dat = datW, items = qMat[,"variable"], id = "id", 
+         check.for.linking = TRUE, splittedModels = modsP, 
+         anchor = itemD[,c("item", "est")], HG.var = c("PC1", "PC2", "PC3"), 
+         software = "tam")
+
+# run the 2 models 
+runsP <- runModel(modsP)
+
+# get the results 
+resP  <- getResults(runsP)
+
+# equating is not necessary, as the models run with fixed item parameters
+# However, to prepare for the transformation on the 'bista' metric, run
+# 'equat1pl' with empty arguments
+anchP <- equat1pl ( results = resP)
+
+# transformation to the 'bista' metric
+# Note: if the sample was drawn from the reference population, mean and SD
+# are not yet known. So we ignore the 'refPop' argument in 'transformToBista'
+# and simply define the cut scores. 
+cuts  <- list ( procedural = list ( values = c(380, 420, 500, 560)) , 
+         knowledge = list ( values = 400+0:2*100, labels = c("A1", "A2", "B1", "B2")))
+
+# transformation [not yet implemented]
+# dfr   <- transformToBista ( equatingList = anchP, cuts=cuts ) 
+# View(dfr$itempars)
+# View(dfr$personpars)
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

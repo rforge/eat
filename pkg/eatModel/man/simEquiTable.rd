@@ -2,8 +2,8 @@
 \alias{simEquiTable}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Computes equivalence table based on simulated data}
-\description{Function provides the equivalence table, specifying the individual competence 
-level for each total score of the test.}
+\description{Function provides the equivalence table for unidimensional models, 
+specifying the individual competence level for each total score of the test.}
 \usage{simEquiTable  ( anchor, mRef, sdRef, addConst = 500, multConst = 100, 
 cutScores , dir , n = 2000, conquest.folder )}
 %- maybe also 'usage' for other objects documented here.
@@ -83,10 +83,18 @@ Sebastian Weirich
 }
 \examples{
 \dontrun{
-ret <- simEquiTable( anchor = data.frame ( item = paste("i",1:20,sep=""), 
-       par = rnorm(20, mean = -.1, sd = 1.5)), mRef = -0.05, sdRef = 0.9, 
-       cutScores = list ( values = 330+0:4*75, labels = c("1a", "1b", 2:5) ), 
+# create arbitrary anchor parameter
+anchor <- data.frame ( item = paste("i",1:20,sep=""), 
+          par = rnorm(20, mean = -.1, sd = 1.5))
+
+# create arbitrary cut scores
+# note that the number of labels (if specified) must equal the number of cuts + 1
+cuts   <- list ( values = 330+0:4*75, labels = c("1a", "1b", 2:5) )
+
+# create the equivalence table
+ret <- simEquiTable( anchor = anchor, cutScores = cuts , mRef = -0.05, sdRef = 0.9, 
        dir = "c:/users/weirichs/test", conquest.folder = "N:/console_Feb2007.exe")
+View(ret)       
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
