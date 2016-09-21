@@ -6,7 +6,7 @@ aggregate.data <- function(all.daten,spalten, unexpected.pattern.as.na = TRUE, v
                    if(length(foo)>1) {cat("Variable names with mixed numbers of characters.\n")}
                    items     <- unique(substr(colnames(daten),1,nchar(colnames(daten))-1))                       ### wieviele Items wird es geben?
                    cat(paste("Aggregate ",ncol(daten)," variable(s) to ",length(items)," item(s).\n",sep="")); flush.console()
-                   dat.sum <- NULL; dat.agg <- NULL; list.pc <- NULL            ### erstelle leere Datenobjekte für Summendatensatz, aggregierten Datensatz und Liste mit partial-credit-Items
+                   dat.sum <- NULL; dat.agg <- NULL; list.pc <- NULL            ### erstelle leere Datenobjekte fuer Summendatensatz, aggregierten Datensatz und Liste mit partial-credit-Items
                    for (i in 1:length(items))      {
                         sub.dat      <- data.frame ( lapply( data.frame(daten[, which(substr(colnames(daten),1,nchar(colnames(daten))-1) %in% items[i]), drop=FALSE ], stringsAsFactors = FALSE), as.numeric), stringsAsFactors = FALSE)
                         ncol.sub.dat <- ncol(sub.dat)
@@ -197,7 +197,7 @@ equat1pl<- function ( results , prmNorm , item = NULL, domain = NULL, testlet = 
                    stopifnot ( ch1 == TRUE & ch2 == TRUE ) 
               }
               allV <- list(item=item, domain = domain, testlet = testlet, value = value)
-              allN <- lapply(allV, FUN=function(ii) {.existsBackgroundVariables(dat = prmNorm, variable=ii)})
+              allN <- lapply(allV, FUN=function(ii) {eatRep:::.existsBackgroundVariables(dat = prmNorm, variable=ii)})
               if (!is.null ( allN[["domain"]] )) {                              ### check: match domain names
                    mis <- setdiff ( dims,  names(table(prmNorm[, allN[["domain"]] ])) )
                    if ( length( mis ) > 0 ) { stop ( paste ( "Domain '",mis,"' is missing in 'prmNorm'.\n",sep="")) }
@@ -663,8 +663,8 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                      software <- match.arg(software)
                      method   <- match.arg(method)
                      if(software == "conquest") {
-                        original.options <- options("scipen")                   ### lese Option für Anzahl der Nachkommastellen
-                        options(scipen = 20)                                    ### setze Option für Anzahl der Nachkommastellen
+                        original.options <- options("scipen")                   ### lese Option fuer Anzahl der Nachkommastellen
+                        options(scipen = 20)                                    ### setze Option fuer Anzahl der Nachkommastellen
                         if(missing(analysis.name)) {stop("Please specify 'analysis.name' or use 'software = \"tam\"'\n")} 
                      }  else  { 
                         if(missing(analysis.name)) {analysis.name <- "not_specified"} 
@@ -717,7 +717,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                            }
                         }
                         if("item" %in% unlist(all.Names[-c(1:2)])) { stop("Conquest does not allow labelling explicit variable(s) with 'Item' or 'item'.\n") }
-                     }                                                          ### untere Zeilen: Dif-Variablen und Testitems dürfen sich nicht überschneiden
+                     }                                                          ### untere Zeilen: Dif-Variablen und Testitems duerfen sich nicht ueberschneiden
                      if(length(intersect(all.Names$DIF.var, all.Names$variablen))>0)    {stop("Test items and DIF variable have to be mutually exclusive.\n")}
                      if(length(intersect(all.Names$weight.var, all.Names$variablen))>0) {stop("Test items and weighting variable have to be mutually exclusive.\n")}
                      if(length(intersect(all.Names$HG.var, all.Names$variablen))>0)     {stop("Test items and HG variable have to be mutually exclusive.\n")}
@@ -840,7 +840,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                          group.info <- lapply(all.Names$group.var, FUN = function(ii) {.checkContextVars(x = dat[,ii], varname=ii, type="group", itemdaten=dat[,all.Names[["variablen"]], drop = FALSE])})
                          for ( i in 1:length(group.info)) { dat[, group.info[[i]]$varname ] <- group.info[[i]]$x }
                          weg.group  <- unique(unlist(lapply(group.info, FUN = function ( y ) {y$weg})))
-                         if(length(weg.group)>0)                                ### untere Zeile: dies geschieht erst etwas später, wenn datensatz zusammengebaut ist
+                         if(length(weg.group)>0)                                ### untere Zeile: dies geschieht erst etwas spaeter, wenn datensatz zusammengebaut ist
                            {cat(paste("Remove ",length(weg.group)," cases with missings on group variable.\n",sep=""))}
                       }
                       if(length(all.Names$DIF.var)>0)  {
@@ -857,7 +857,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                          }
                          for ( i in 1:length(dif.info)) { dat[, dif.info[[i]]$varname ] <- dif.info[[i]]$x }
                          weg.dif  <- unique(unlist(lapply(dif.info, FUN = function ( y ) {y$weg})))
-                         if(length(weg.dif)>0)                                  ### untere Zeile: dies geschieht erst etwas später, wenn datensatz zusammengebaut ist
+                         if(length(weg.dif)>0)                                  ### untere Zeile: dies geschieht erst etwas spaeter, wenn datensatz zusammengebaut ist
                            {cat(paste("Remove ",length(weg.dif)," cases with missings on DIF variable.\n",sep=""))}
                       }
                       if(length(all.Names$weight.var)>0)  {
@@ -865,9 +865,9 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                          weight.info <- lapply(all.Names$weight.var, FUN = function(ii) {.checkContextVars(x = dat[,ii], varname=ii, type="weight", itemdaten=dat[,all.Names[["variablen"]], drop = FALSE])})
                          for ( i in 1:length(weight.info)) { dat[, weight.info[[i]]$varname ] <- weight.info[[i]]$x }
                          weg.weight  <- unique(unlist(lapply(weight.info, FUN = function ( y ) {y$weg})))
-                         if(length(weg.weight)>0)                               ### untere Zeile: dies geschieht erst etwas später, wenn datensatz zusammengebaut ist
+                         if(length(weg.weight)>0)                               ### untere Zeile: dies geschieht erst etwas spaeter, wenn datensatz zusammengebaut ist
                            {cat(paste("Remove ",length(weg.weight)," cases with missings on weight variable.\n",sep=""))}
-                      }                                                         ### untere Zeile, Achtung: group- und DIF- bzw. group- und HG-Variablen dürfen sich überschneiden!
+                      }                                                         ### untere Zeile, Achtung: group- und DIF- bzw. group- und HG-Variablen duerfen sich ueberschneiden!
                       namen.all.hg <- unique(c(all.Names$HG.var,all.Names$group.var,all.Names$DIF.var,all.Names$weight.var))
                       weg.all <- unique(c(weg.dif, weg.hg, weg.weight, weg.group))
                       perExHG <- NULL
@@ -892,7 +892,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                       }   
                       wegNV <- setdiff(dat[,all.Names[["ID"]]], unique(datL[,all.Names[["ID"]]]))
                       perNA <- NULL
-                      if(length(wegNV)>0)   {                                   ### identifiziere Faelle mit ausschließlich missings
+                      if(length(wegNV)>0)   {                                   ### identifiziere Faelle mit ausschliesslich missings
                          cat(paste("Found ",length(wegNV)," cases with missings on all items.\n",sep=""))
                          if( remove.no.answers == TRUE)  {
                              cat("Cases with missings on all items will be deleted.\n") 
@@ -968,9 +968,9 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                           if(length(no.number)>0) {var.char[no.number] <- 1}    ### -Inf steht dort, wo nur missings sind, hier soll die Characterbreite auf 1 gesetzt sein
                           if(use.letters == TRUE)   {                           ### sollen Buchstaben statt Ziffern beutzt werden? Dann erfolgt hier Recodierung.
                              rec.statement <- paste(0:25,"='",LETTERS,"'",sep="",collapse="; ")
-                             for (i in all.Names[["variablen"]])  {             ### Warum erst hier? Weil Prüfungen (auf Dichotomität etc. vorher stattfinden sollen)
+                             for (i in all.Names[["variablen"]])  {             ### Warum erst hier? Weil Pruefungen (auf Dichotomitaet etc. vorher stattfinden sollen)
                                   dat[,i] <- recode(dat[,i], rec.statement)}
-                             var.char <- rep(1,length(all.Names[["variablen"]]))}## var.char muß nun neu geschrieben werden, da nun alles wieder einstellig ist!
+                             var.char <- rep(1,length(all.Names[["variablen"]]))}## var.char muss nun neu geschrieben werden, da nun alles wieder einstellig ist!
                       }
      ### Sektion 'deskriptive Ergebnisse berechnen und durchschleifen' ###
                       daten    <- data.frame(ID=as.character(dat[,all.Names[["ID"]]]), dat[,namen.all.hg, drop = FALSE], dat[,all.Names[["variablen"]], drop = FALSE], stringsAsFactors = FALSE)
@@ -988,7 +988,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                           fixed.width <- c(as.numeric(names(table(nchar(daten[,"ID"])))), all.hg.char, rep(max(var.char),length(var.char)))
                           write.fwf(daten , file.path(dir,paste(analysis.name,".dat",sep="")), colnames = FALSE,rownames = FALSE, sep="",quote = FALSE,na=".", width=fixed.width)
                           test <- readLines(paste(dir,"/",analysis.name,".dat",sep=""))
-                          stopifnot(length(table(nchar(test)))==1)              ### Check: hat der Resultdatensatz eine einheitliche Spaltenanzahl? Muß unbedingt sein!
+                          stopifnot(length(table(nchar(test)))==1)              ### Check: hat der Resultdatensatz eine einheitliche Spaltenanzahl? Muss unbedingt sein!
                           colnames(lab) <- c("===>","item")                     ### schreibe Labels!
                           write.table(lab,file.path(dir,paste(analysis.name,".lab",sep="")),col.names = TRUE,row.names = FALSE, dec = ",", sep = " ", quote = FALSE)
                           if(!is.null(conquest.folder))     {
@@ -1025,7 +1025,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                         if (type == "weight") {stop(paste(type, " variable has to be 'numeric' necessarily. Automatic transformation is not recommended. Please transform by yourself.\n",sep=""))}
                         cat(paste(type, " variable has to be 'numeric'. Variable '",varname,"' of class '",class(x),"' will be transformed to 'numeric'.\n",sep=""))
                         x <- unlist(eatRep:::as.numeric.if.possible(dataFrame = data.frame(x, stringsAsFactors = FALSE), transform.factors = TRUE, maintain.factor.scores = FALSE, verbose=FALSE))
-                        if(class(x) != "numeric")  {                            ### erst wenn as.numeric.if.possible fehlschlägt, wird mit Gewalt numerisch gemacht, denn für Conquest MUSS es numerisch sein
+                        if(class(x) != "numeric")  {                            ### erst wenn as.numeric.if.possible fehlschlaegt, wird mit Gewalt numerisch gemacht, denn fuer Conquest MUSS es numerisch sein
                            x <- as.numeric(as.factor(x))
                         }
                         cat(paste("    '", varname, "' was converted into numeric variable of ",length(table(x))," categories. Please check whether this was intended.\n",sep=""))
@@ -1620,14 +1620,14 @@ prepJack <- function ( resultsObj , arrangeDependentVar = c("singleFrame", "mult
             return(depVar)}
           
 
-get.plausible <- function(file, quiet = FALSE, forConquestResults = FALSE)  {   ### hier beginnt Einlesen für Plausible Values aus Conquest
+get.plausible <- function(file, quiet = FALSE, forConquestResults = FALSE)  {   ### hier beginnt Einlesen fuer Plausible Values aus Conquest
                  checkForPackage (namePackage = "reshape", targetPackage = "eatModel")                                              
                  input           <- scan(file,what="character",sep="\n",quiet=TRUE)
                  input           <- strsplit(eatRep:::crop(gsub("-"," -",input) ) ," +") ### Untere Zeile gibt die maximale Spaltenanzahl
                  n.spalten       <- max ( sapply(input,FUN=function(ii){ length(ii) }) )
                  input           <- data.frame( matrix( t( sapply(input,FUN=function(ii){ ii[1:n.spalten] }) ),length(input), byrow = FALSE), stringsAsFactors = FALSE)
                  pv.pro.person   <- sum (input[-1,1]==1:(nrow(input)-1) )       ### Problem: wieviele PVs gibt es pro Person? Kann nicht suchen, ob erste Ziffer ganzzahlig, denn das kommt manchmal auch bei Zeile 7/8 vor, wenn entsprechende Werte = 0.0000
-                 n.person        <- nrow(input)/(pv.pro.person+3)               ### Anzahl an PVs pro Person wird bestimmt anhand der Übereinstimmung der ersten Spalte mit aufsteigenden 1,2,3,4...
+                 n.person        <- nrow(input)/(pv.pro.person+3)               ### Anzahl an PVs pro Person wird bestimmt anhand der uebereinstimmung der ersten Spalte mit aufsteigenden 1,2,3,4...
                  weg             <- c(1, as.numeric( sapply(1:n.person,FUN=function(ii){((pv.pro.person+3)*ii-1):((pv.pro.person+3)*ii+1)}) ) )
                  cases           <- input[(1:n.person)*(pv.pro.person+3)-(pv.pro.person+2),1:2]
                  input.sel       <- input[-weg,]
@@ -1640,7 +1640,7 @@ get.plausible <- function(file, quiet = FALSE, forConquestResults = FALSE)  {   
                  input.sel$ID    <- rep(ID, each = pv.pro.person)
                  is.na.ID        <- FALSE
                  if(is.na(input.sel$ID[1])) {                                   ### wenn keine ID im PV-File, wird hier eine erzeugt (Fall-Nr), da sonst reshapen misslingt
-                    is.na.ID        <- TRUE                                     ### Die ID wird später wieder geloescht. Um das machen zu koennen, wird Indikatorvariable erzeugt, die sagt, ob ID fehlend war.
+                    is.na.ID        <- TRUE                                     ### Die ID wird spaeter wieder geloescht. Um das machen zu koennen, wird Indikatorvariable erzeugt, die sagt, ob ID fehlend war.
                     input.sel$ID    <- rep( 1: n.person, each = pv.pro.person)
                  }
                  input.melt      <- melt(input.sel, id.vars = c("ID", "PV.Nr") , stringsAsFactors = FALSE)
@@ -1648,7 +1648,7 @@ get.plausible <- function(file, quiet = FALSE, forConquestResults = FALSE)  {   
                  input.wide      <- data.frame( case = gsub(" ", "0",formatC(as.character(1:n.person),width = nchar(n.person))) , dcast(input.melt, ... ~ variable + PV.Nr) , stringsAsFactors = FALSE)
                  colnames(input.wide)[-c(1:2)] <- paste("pv.", paste( rep(1:pv.pro.person,n.dim), rep(1:n.dim, each = pv.pro.person), sep = "."), sep = "")
                  weg.eap         <- (1:n.person)*(pv.pro.person+3) - (pv.pro.person+2)
-                 input.eap    <- input[setdiff(weg,weg.eap),]                   ### nimm EAPs und deren Standardfehler und hänge sie an Datensatz - all rows that have not been used before
+                 input.eap    <- input[setdiff(weg,weg.eap),]                   ### nimm EAPs und deren Standardfehler und haenge sie an Datensatz - all rows that have not been used before
                  input.eap    <- na.omit(input.eap[,-ncol(input.eap),drop=FALSE])## find EAPs and posterior standard deviations 
                  stopifnot(ncol(input.eap) ==  n.dim)
                  input.eap    <- lapply(1:n.dim, FUN=function(ii) {matrix(unlist(as.numeric(input.eap[,ii])), ncol=2,byrow=T)})
@@ -1700,7 +1700,7 @@ get.wle <- function(file)      {                                                
 
 get.shw <- function(file, dif.term, split.dif = TRUE, abs.dif.bound = 0.6, sig.dif.bound = 0.3, p.value = 0.9) {
             options(warn = -1)                                                  ### warnungen aus
-            all.output <- list();   all.terms <- NULL                           ### "dif.term" muß nur angegeben werden, wenn DIF-Analysen geschehen sollen.
+            all.output <- list();   all.terms <- NULL                           ### "dif.term" muss nur angegeben werden, wenn DIF-Analysen geschehen sollen.
             input.all <- scan(file,what="character",sep="\n",quiet=TRUE)        ### ginge auch mit:   input <- readLines(file)
             rowToFind <- c("Final Deviance","Total number of estimated parameters")
             rowToFind <- sapply(rowToFind, FUN = function(ii) {                 ### Find the rows indicated in "rowToFind"
@@ -1716,19 +1716,19 @@ get.shw <- function(file, dif.term, split.dif = TRUE, abs.dif.bound = 0.6, sig.d
                  doppelpunkt <- which( sapply(1:nchar(term),FUN=function(ii){u <- substr(term,ii,ii); b <- u==":"  }) )
                  term <- substr(term,doppelpunkt+2,nchar(term))
                  cat(paste("Found TERM ",i,": '",term,"' \n",sep=""))
-                 all.terms <- c(all.terms,term)                                 ### Dies dient nur dazu, hinterher die Liste mit ausgelesenen Tabellen beschriften zu können.
-                 bereich <- (ind[i]+6) : (grenzen[i] -2)                        ### Dies der Bereich, der ausgewählt werden muß
+                 all.terms <- c(all.terms,term)                                 ### Dies dient nur dazu, hinterher die Liste mit ausgelesenen Tabellen beschriften zu koennen.
+                 bereich <- (ind[i]+6) : (grenzen[i] -2)                        ### Dies der Bereich, der ausgewaehlt werden muss
                  namen   <- c("No.", strsplit(input.all[bereich[1]-2]," +")[[1]][-1])
                  namen   <- gsub("\\^","",namen)
-                 index   <- grep("CI",namen)                                    ### Wenn ein "CI" als Spaltenname erscheint, müssen daraus im R-Dataframe zwei Spalten werden!
+                 index   <- grep("CI",namen)                                    ### Wenn ein "CI" als Spaltenname erscheint, muessen daraus im R-Dataframe zwei Spalten werden!
                  if(length(index) > 0)  {
                     for (ii in 1:length(index)) {
                          namen  <- c(namen[1:index[ii]], "CI",namen[(index[ii]+1):length(namen)] )}}
-                 input.sel  <- eatRep:::crop( input.all[bereich] )              ### Textfile wird reduziert, und voranstehende und abschließende Leerzeichen werden entfernt
+                 input.sel  <- eatRep:::crop( input.all[bereich] )              ### Textfile wird reduziert, und voranstehende und abschliessende Leerzeichen werden entfernt
                  input.sel  <- gsub("\\(|)|,"," ",input.sel)                    ### entferne Klammern und Kommas (wenn's welche gibt)
-                 input.sel  <- gsub("\\*    ", "  NA", input.sel)               ### hier: gefährlich: wenn mittendrin Werte fehlen, würde stringsplit eine unterschiedliche Anzahl Elemente je Zeile finden
+                 input.sel  <- gsub("\\*    ", "  NA", input.sel)               ### hier: gefaehrlich: wenn mittendrin Werte fehlen, wuerde stringsplit eine unterschiedliche Anzahl Elemente je Zeile finden
                  foo        <- strsplit(input.sel," +")                         ### und die fehlenden Elemente stets ans Ende setzen. Fatal!
-                 maxColumns <- max(sapply(foo, FUN=function(ii){ length(ii)}))  ### Gefahr 2: '*' bezeichnet fixierte Parameter, die keinen Standardfehlöer haben. Manchmal steht aber trotzdem einer da (z.B. in DIF). Ersetzung soll nur stattfinden, wenn mehr als vier Leerzeichen hinterher
+                 maxColumns <- max(sapply(foo, FUN=function(ii){ length(ii)}))  ### Gefahr 2: '*' bezeichnet fixierte Parameter, die keinen Standardfehloeer haben. Manchmal steht aber trotzdem einer da (z.B. in DIF). Ersetzung soll nur stattfinden, wenn mehr als vier Leerzeichen hinterher
                  nDifferentColumns <- length( table(sapply(foo, FUN=function(ii){ length(ii)  })))
                  maxColumns <- which( sapply(foo, FUN=function(ii){ length(ii) == maxColumns  }) ) [1]
                  ### untere Zeile: WICHTIG! wo stehen in der Zeile mit den meisten nicht fehlenden Werten Leerzeichen?
@@ -1736,10 +1736,10 @@ get.shw <- function(file, dif.term, split.dif = TRUE, abs.dif.bound = 0.6, sig.d
                  foo.3      <- diff(foo.2)                                      ### zeige die Position des letzten Leerzeichens vor einem Nicht-Leerzeichen
                  foo.3      <- foo.2[foo.3 !=1]                                 ### suche nun in jeder Zeile von input.sel: ist das Zeichen zwei Stellen nach foo.3 ein Leerzeichen? Wenn ja: NA!
                  ESTIMATE   <- which( sapply(1:nchar(input.all[ind[i] + 4] ),FUN=function(ii){u <- substr(input.all[ind[i] + 4],ii,ii+7); b <- u=="ESTIMATE"  }) )
-                 foo.3      <- foo.3[foo.3>(ESTIMATE-3)]                        ### Achtung: das alles soll aber nur für Spalten beginnen, die hinter ESTIMATE stehen! (mißrät sonst für Produktterme, z.B. "item*sex")
+                 foo.3      <- foo.3[foo.3>(ESTIMATE-3)]                        ### Achtung: das alles soll aber nur fuer Spalten beginnen, die hinter ESTIMATE stehen! (missraet sonst fuer Produktterme, z.B. "item*sex")
                  if(nDifferentColumns>1) {
-                    if(length(foo.3)>0) {                                       ### Und nochmal: das soll NUR geschehen, wenn es in mindestens einer Zeile nicht die vollständige (=maximale) Anzahl von Elementen gibt!
-                       for (ii in 1:length(input.sel)) {                        ### also wenn nDifferentColumns größer als EINS ist (kleiner darf es nicht sein)
+                    if(length(foo.3)>0) {                                       ### Und nochmal: das soll NUR geschehen, wenn es in mindestens einer Zeile nicht die vollstaendige (=maximale) Anzahl von Elementen gibt!
+                       for (ii in 1:length(input.sel)) {                        ### also wenn nDifferentColumns groesser als EINS ist (kleiner darf es nicht sein)
                             for (iii in 1:length(foo.3)) {
                                  if(substr( input.sel[ii], foo.3[iii] + 2 , foo.3[iii] + 2 ) == " ") {input.sel[ii] <- paste(substr(input.sel[ii],1,foo.3[iii]), "NA", substring(input.sel[ii],foo.3[iii]+3) , sep="")}}}}
                     if(length(foo.3)==0) {cat(paste("There seem to be no values in any columns behind 'ESTIMATE'. Check outputfile for term '",all.terms[length(all.terms)],"' in file: '",file,"'. \n",sep=""))}}
@@ -1767,7 +1767,7 @@ get.shw <- function(file, dif.term, split.dif = TRUE, abs.dif.bound = 0.6, sig.d
                        if(all.terms[length(all.terms)] == dif.term) {           ### Der absolute DIF-Wert muss groesser als 'abs.dif.bound' (z.B. 0.6) und zugleich signifikant groesser als 'sig.dif.bound' (z.B. 0.3) sein
                           cat(paste("Treat '",all.terms[length(all.terms)],"' as DIF TERM.\n",sep=""))
                           results.sel <- data.frame(results.sel,abs.dif = 2*results.sel$ESTIMATE,stringsAsFactors=FALSE)
-                          konfNiveau  <- round(100*p.value)                     ### Das bedeutet, für Werte groesser 0.6 darf 0.3 NICHT im 90 bzw. 95%-Konfidenzintervall liegen. Nur dann haben wir DIF!
+                          konfNiveau  <- round(100*p.value)                     ### Das bedeutet, fuer Werte groesser 0.6 darf 0.3 NICHT im 90 bzw. 95%-Konfidenzintervall liegen. Nur dann haben wir DIF!
                           results.sel[,paste("KI.",konfNiveau,".u",sep="")] <- results.sel$abs.dif-2*abs(qnorm(0.5*(1-p.value)))*results.sel$ERROR  
                           results.sel[,paste("KI.",konfNiveau,".o",sep="")] <- results.sel$abs.dif+2*abs(qnorm(0.5*(1-p.value)))*results.sel$ERROR  
                           results.sel[,paste("sig.",konfNiveau,sep="")] <- ifelse(abs(results.sel[,"abs.dif"])>abs.dif.bound & abs(results.sel[,paste("KI.",konfNiveau,".u",sep="")])>sig.dif.bound & abs(results.sel[,paste("KI.",konfNiveau,".o",sep="")])>sig.dif.bound,1,0)
@@ -2024,7 +2024,7 @@ gen.syntax     <- function(Name,daten, all.Names, namen.all.hg = NULL, all.hg.ch
                           if (beginn == ende) {syntax[ind] <- paste(syntax[ind],namen.all.hg[ii], " ", beginn," ",sep="")}
                           beginn  <- ende+1 }
                    }
-                   if(length(all.Names[["DIF.var"]])>0)   {                     ### in folgender Schleife überschrieben und dann in der Schleife "if(!is.null(HG.var))" ergänzt, nicht neu geschrieben
+                   if(length(all.Names[["DIF.var"]])>0)   {                     ### in folgender Schleife ueberschrieben und dann in der Schleife "if(!is.null(HG.var))" ergaenzt, nicht neu geschrieben
                       if(model.statement != "item") {
                         cat(paste("Caution! DIF variable was specified. Expected model statement is: 'item - ",tolower(all.Names[["DIF.var"]])," + item*",tolower(all.Names[["DIF.var"]]),"'.\n",sep=""))
                         cat(paste("However, '",tolower(model.statement),"' will used as 'model statement' to accomplish your will.\n",sep=""))
@@ -2040,7 +2040,7 @@ gen.syntax     <- function(Name,daten, all.Names, namen.all.hg = NULL, all.hg.ch
                       syntax[ind.2] <- paste(eatRep:::crop(paste( c(syntax[ind.2], tolower(all.Names[["HG.var"]])), collapse=" ")),";",sep="")
                       if(method == "gauss") {cat("Warning: Gaussian quadrature is only available for models without latent regressors.\n")
                                              cat("         Use 'Bock-Aiken quadrature' for estimation.\n")
-                                             method <- "quadrature"} }          ### method muß "quadrature" oder "montecarlo" sein
+                                             method <- "quadrature"} }          ### method muss "quadrature" oder "montecarlo" sein
                    syntax    <- gsub("####hier.method.einfuegen####",method,syntax)
                    if(length(all.Names[["weight.var"]])>0)  {                   ### Method wird erst hier gesetzt, weil sie davon abhaengt, ob es ein HG-Modell gibt 
                       ind.4   <- grep("caseweight",syntax)    
@@ -2149,7 +2149,7 @@ isLetter <- function ( string ) {
       	    if(length(setdiff(names(eatRep:::table.unlist(qmatrix[,-1, drop = FALSE])), c("0","1"))) > 0 )  {
                cat("Found unequal factor loadings for at least one dimension. This will result in a 2PL model.\n")
                for (u in 2:ncol(qmatrix)) {qmatrix[,u] <- as.character(round(qmatrix[,u], digits = 3))}
-            }                                                                   ### obere Zeile: Identifiziere Items mit Trennschärfe ungleich 1.
+            }                                                                   ### obere Zeile: Identifiziere Items mit Trennschaerfe ungleich 1.
             stopifnot(all(qmatrix[,1] == itemCols))                             ### untere Zeile: Items im Datensatz, aber nicht in Q-Matrix? wird bereits in prep.conquest behandelt
             cat(paste("Q matrix specifies ",length(n.dim)," dimension(s).\n",sep=""))
             stopifnot(length(setdiff(colnames(data[,itemCols]),  qmatrix[,columnItemNames]) )==0)
@@ -2158,10 +2158,10 @@ isLetter <- function ( string ) {
             score.matrix  <- data.frame(score=1, unique.patter, matrix(NA, nrow= nrow(unique.patter), ncol=length(itemCols), dimnames=list(NULL, paste("X",1:length(itemCols),sep=""))),stringsAsFactors = FALSE)
             scoreColumns <- grep("^Var",colnames(score.matrix))
             for (i in 1:length(itemCols))  {                                    ### gebe alle Items auf den jeweiligen Dimensionen
-               qmatrix.i    <- qmatrix[qmatrix[,columnItemNames] == itemCols[i],]## auf welcher Dimension laedt Variable i? Untere Zeile: in diese Zeile von score.matrix muß ich variable i eintragen
+               qmatrix.i    <- qmatrix[qmatrix[,columnItemNames] == itemCols[i],]## auf welcher Dimension laedt Variable i? Untere Zeile: in diese Zeile von score.matrix muss ich variable i eintragen
                matchRow     <- which(sapply ( 1:nrow(score.matrix) , function(ii) {all ( as.numeric(qmatrix.i[,n.dim]) == as.numeric(score.matrix[ii,scoreColumns])) }))
                stopifnot(length(matchRow) == 1)
-               matchColumn  <- min(which(is.na(score.matrix[matchRow,])))       ### in welche spalte von Score.matrix muß ich variable i eintragen?
+               matchColumn  <- min(which(is.na(score.matrix[matchRow,])))       ### in welche spalte von Score.matrix muss ich variable i eintragen?
                stopifnot(length(matchColumn) == 1)
                score.matrix[matchRow,matchColumn] <- i
 		        }
@@ -2183,7 +2183,7 @@ isLetter <- function ( string ) {
                 string <- paste(unlist(string),collapse=", ")
                 kollapse.string[[a]] <- string
 			      }
-            ### Prüfung, ob "tranformation" des score-statements ok ist
+            ### Pruefung, ob "tranformation" des score-statements ok ist
             control <- lapply(kollapse.string,FUN=function(ii) {eval(parse(text=paste("c(",gsub("-",":",ii),")",sep="")))})
             if (!all(unlist(lapply(1:length(control), FUN=function(ii) {all(kollapse[[ii]] == control[[ii]])})))) {
                 cat("Error in creating score statement.\n")
@@ -2329,7 +2329,7 @@ table.muster <- function(vektor, mustervektor = NULL, weights, na.rm = TRUE, use
                 return(Table)}
               
 wo.sind <- function(a,b,quiet=FALSE) {
-            b <- data.frame(1:length(b),b,stringsAsFactors=FALSE)               ### zusätzliche Syntaxbefehle sind notwendig, damit die Funktion mit missing values umgehen kann.
+            b <- data.frame(1:length(b),b,stringsAsFactors=FALSE)               ### zusaetzliche Syntaxbefehle sind notwendig, damit die Funktion mit missing values umgehen kann.
             if(sum(which(is.na(a)))>0)     {cat("a contains missing values. \n")}
             if(sum(which(is.na(b[,2])))>0) {cat("b contains missing values. \n")}
             if(length(na.omit(a)) > length(unique(na.omit(a))))     {cat("a contains duplicate elements. \n")}
@@ -2357,7 +2357,7 @@ item.diskrim <- function(daten, itemspalten, na = NA, streng = TRUE)
                  namen <- colnames(daten)
                  if (is.na(na[1])==FALSE) {for (i in na)
                                                {daten[daten==i] <- NA  }}
-                 daten <- data.frame(daten, stringsAsFactors = FALSE)           ### Trennschärfe ist eigentlich Korrelation des Items mit dem Summenscore ohne dieses Item. Dieses macht die Option "streng = T"; die andere berechnet Korrelation mit Summenscore einschließlich dieses Items
+                 daten <- data.frame(daten, stringsAsFactors = FALSE)           ### Trennschaerfe ist eigentlich Korrelation des Items mit dem Summenscore ohne dieses Item. Dieses macht die Option "streng = T"; die andere berechnet Korrelation mit Summenscore einschliesslich dieses Items
                  daten <- data.frame(sapply(daten, FUN = function (uu ) {as.numeric(uu)}))
                  if(streng == TRUE)  {trennsch  <- sapply(colnames(daten), FUN = function(i) {cor(daten[,i],rowMeans(daten[,-match(i, colnames(daten)), drop = FALSE],na.rm = TRUE) ,use = "complete.obs")})}
                  if(streng == FALSE) {trennsch  <- sapply(daten, FUN = function(i) {cor(i,rowMeans(daten,na.rm = TRUE) ,use="complete.obs")})}
