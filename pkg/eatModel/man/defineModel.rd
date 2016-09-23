@@ -693,10 +693,10 @@ pers  <- data.frame ( idstud = datW[,"id"] , country = datW[,"country"])
 # a separate distinct group.)
 modsP <- splitModels ( person.groups = pers , all.persons = FALSE)
 
-# define the 2 country-specific models, specifying latent regression model and
-# fixed item parameters.
+# define the 2 country-specific 2-dimensional models, specifying latent regression 
+# model and fixed item parameters.
 modsP <- defineModel(dat = datW, items = qMat[,"variable"], id = "id", 
-         check.for.linking = TRUE, splittedModels = modsP, 
+         check.for.linking = TRUE, splittedModels = modsP, qMatrix = qMat, 
          anchor = itemD[,c("item", "est")], HG.var = c("PC1", "PC2", "PC3"), 
          software = "tam")
 

@@ -208,6 +208,11 @@ equat1pl<- function ( results , prmNorm , item = NULL, domain = NULL, testlet = 
     ### Fuer jedes Modell findet Equating separat statt
               items <- by ( data = results, INDICES = results[,"model"], FUN = function ( d ) {
                        it  <- itemFromRes(d)
+                       if ( "estOffset" %in% colnames ( it ) ) { 
+                            cat(paste("W A R N I N G:  Model '",d[1,"model"],"' was estimated with (at least partially) anchored items parameters. Equating seems questionable.\n",sep=""))
+                            d[,"par"] <- recode ( d[,"par"], "'offset'='est'")
+                            it <- itemFromRes(d)
+                       }     
                        if(!is.null(allN[["domain"]]) ) { 
                            prmM<- prmNorm [ which(prmNorm[,allN[["domain"]]] %in% unique(it[,"dimension"])) ,]
                        }  else  {
@@ -262,7 +267,7 @@ equat1pl<- function ( results , prmNorm , item = NULL, domain = NULL, testlet = 
 
 ### Hilfsfunktion fuer equat1pl
 equAux  <- function ( x, y ) {                 
-           eq  <- equating.rasch(x = x, y = y[,1:2])                      ### kein Jackknife 
+           eq  <- equating.rasch(x = x, y = y[,1:2])                            ### kein Jackknife 
            if ( ncol(y)==3) {                                                   ### jackknife
                 colnames(x)[1] <- colnames(y)[1] <- "item"
                 dfr <- merge( x, y, by = "item", all = FALSE)
@@ -326,12 +331,29 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL ) {   
                               rex <- rex[intersect ( which (rex[,"model"] == d), which ( rex[,"group"] == e[1,"dimension"]) ) , ]
                               if ( refMis == FALSE ) { 
                                    rex[,"valueTransfBista"] <- (rex[,"value"] + subList[["eq"]][["B.est"]][[ subList[["method"]] ]] - refPop[mat,2] ) / refPop[mat,3] * refPop[mat,5] + refPop[mat,4]
-                                   txt <- capture.output ( msd <- jk2.mean ( datL = rex, ID = attr(equatingList[["results"]], "all.Names")[["ID"]], imp = "imp", dependent = "valueTransfBista", na.rm = TRUE) ) 
-                              }     
-                              if ( refMis == FALSE & cutsMis == FALSE ) { 
-                                   cts <- c( -10^6, cuts[[mat1]][["values"]], 10^6)  ### Cuts mit Schwelle nach unten und nach oben offen
+                                   if ( is.null(weights) ) {                     
+                                        txt <- capture.output ( msd <- jk2.mean ( datL = rex, ID = attr(equatingList[["results"]], "all.Names")[["ID"]], imp = "imp", dependent = "valueTransfBista", na.rm = TRUE) ) 
+                                   }  else  { 
+                                        if ( !class ( weights ) %in% "data.frame") { 
+                                             cat("'weights' has to be of class 'data.frame'. 'weights' object will be converted.\n")
+                                             weights <- data.frame ( weights ) 
+                                        }     
+                                        nd  <- setdiff ( rex[,attr(equatingList[["results"]], "all.Names")[["ID"]]] , weights[,1])
+                                        if ( length(nd) > 0 ) {
+                                             stop(paste ( "Plausible values data for model '",d,"' and dimension '",e[1,"dimension"],"' contain ",length(nd)," cases for which no valid weights exist in the 'weights' frame.\n",sep=""))
+                                        }
+                                        mis <- which(is.na(weights[,2]))
+                                        if ( length(mis) > 0 ) {
+                                             stop(paste ( "Found ",length(nd)," missing values in the 'weights' frame.\n",sep=""))
+                                        }
+                                        rex <- merge ( rex, weights , by.x = attr(equatingList[["results"]], "all.Names")[["ID"]], by.y = colnames(weights)[1], all.x = TRUE, all.y = FALSE)
+                                        txt <- capture.output ( msd <- jk2.mean ( datL = rex, ID = attr(equatingList[["results"]], "all.Names")[["ID"]], imp = "imp", wgt = colnames(weights)[2], dependent = "valueTransfBista", na.rm = TRUE) ) 
+                                   }
+                              }
+                              if ( refMis == FALSE & cutsMis == FALSE ) {       ### untere Zeile: Cuts mit Schwelle nach unten und nach oben offen
+                                   cts <- c( -10^6, cuts[[mat1]][["values"]], 10^6)  
                                    le  <- do.call("rbind", lapply ( (length(cts)-1):1 , FUN = function ( l ) {
-                                          kmp<- c(cts[l], cts[l+1])                  ### Linkingfehler fuer einzelnen Kompetenzintervalle; absteigend wie bei karoline
+                                          kmp<- c(cts[l], cts[l+1])             ### Linkingfehler fuer einzelnen Kompetenzintervalle; absteigend wie bei karoline
                                           a1 <- sum ( dnorm ( ( kmp - refPop[mat,4]) / refPop[mat,5] ) * c(-1,1) / refPop[mat,5] )
                                           a2 <- sum ( dnorm ( ( kmp - msd[intersect ( which (msd[,"parameter"] == "mean"), which (msd[,"coefficient"] == "est") ),"value"]) / msd[intersect ( which (msd[,"parameter"] == "sd"), which (msd[,"coefficient"] == "est") ),"value"] ) * c(-1,1) / msd[intersect ( which (msd[,"parameter"] == "sd"), which (msd[,"coefficient"] == "est") ),"value"] )
            			                         del<- ( (  a1^2 + a2^2 ) * (unique(e[,"linkingErrorTransfBista"])^2) / 2  )^0.5
@@ -368,9 +390,12 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL ) {   
              return( list ( itempars = itempars, personpars = personpars)) 
        }  else  {
     ### Hier beginnt die Transformation, wenn NICHT equatet werden soll (also der Datensatz aus der Normpopulation kommt)
-             pvs  <- pvFromRes ( equatingList[["results"]], toWideFormat = FALSE)
-             if ( !all (pvs[,"model"] == pvs[,"group"])) { stop("Error: Calibration only works for one dimensional models.\n") }
-             trans<- by ( data = items, INDICES = items[,"dimension"], FUN = function ( e ) { 
+    ### (dann wird auch kein Linkingfehler bestimmt, der auch nicht mit Deltamethode transformiert werden muss 
+             dims <- as.character(unique(items[,"dimension"]))                  ### untere Zeile: reduziertes Results - Objekt
+             resR <- equatingList[["results"]][which( equatingList[["results"]][,"group"] %in% dims),] 
+             trans<- by ( data = resR, INDICES = resR[,c("model", "group")], FUN = function ( r ) { 
+                     r[,"par"] <- recode ( r[,"par"], "'offset'='est'")
+                     e   <- itemFromRes(r)
                      if ( !e[1,"dimension"] %in% refPop[,1] ) { stop(paste("Cannot found dimension '",e[1,"dimension"],"' in the first column of the 'refPop' argument.\n",sep=""))}
                      if ( !e[1,"dimension"] %in% names(cuts) ) { stop(paste("Cannot found dimension '",e[1,"dimension"],"' in the 'cuts' list.\n",sep=""))}
                      mat <- match( e[1,"dimension"], refPop[,1])
@@ -378,8 +403,25 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL ) {   
     ### 1. Transformation fuer Itemparameter
                      e[,"estTransf"]      <- e[,"est"]
                      e[,"estTransf625"]   <- e[,"estTransf"] + log(0.625/(1-0.625))
-                     pvE <- pvs[which(pvs[,"group"] == e[1,"dimension"]),]
-                     txt <- capture.output ( msd <- jk2.mean ( datL = pvE, ID = attr(equatingList[["results"]], "all.Names")[["ID"]],imp = "imp", dependent = "value", na.rm = TRUE) ) 
+                     pvE <- pvFromRes(r, toWideFormat = FALSE)
+                     if ( is.null(weights) ) {                     
+                          txt <- capture.output ( msd <- jk2.mean ( datL = pvE, ID = attr(equatingList[["results"]], "all.Names")[["ID"]],imp = "imp", dependent = "value", na.rm = TRUE) ) 
+                     }  else  { 
+                          if ( !class ( weights ) %in% "data.frame") { 
+                               cat("'weights' has to be of class 'data.frame'. 'weights' object will be converted.\n")
+                               weights <- data.frame ( weights ) 
+                          }     
+                          nd  <- setdiff ( pvE[,attr(equatingList[["results"]], "all.Names")[["ID"]]] , weights[,1])
+                          if ( length(nd) > 0 ) {
+                               stop(paste ( "Plausible values data for model '",as.character(r[1,"model"]),"' and dimension '",as.character(r[1,"group"]),"' contain ",length(nd)," cases for which no valid weights exist in the 'weights' frame.\n",sep=""))
+                          }
+                          mis <- which(is.na(weights[,2]))
+                          if ( length(mis) > 0 ) {
+                               stop(paste ( "Found ",length(nd)," missing values in the 'weights' frame.\n",sep=""))
+                          }
+                          pvE <- merge ( pvE, weights , by.x = attr(equatingList[["results"]], "all.Names")[["ID"]], by.y = colnames(weights)[1], all.x = TRUE, all.y = FALSE)
+                          txt <- capture.output ( msd <- jk2.mean ( datL = pvE, ID = attr(equatingList[["results"]], "all.Names")[["ID"]],imp = "imp", wgt = colnames(weights)[2], dependent = "value", na.rm = TRUE) )      
+                     }
                      refPop[mat,2] <- msd[intersect ( which(msd[,"parameter"] == "mean"), which(msd[,"coefficient"] == "est")),"value"]
                      refPop[mat,3] <- msd[intersect ( which(msd[,"parameter"] == "sd"), which(msd[,"coefficient"] == "est")),"value"]
                      e[,"estTransfBista"] <- (e[,"estTransf625"] - refPop[mat,2]) / refPop[mat,3] * refPop[mat,5] + refPop[mat,4]
@@ -404,7 +446,7 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL ) {   
                      pvE[,"linkingError"] <- NA
                      pvE[,"linkingErrorTransfBista"] <- NA
                      pvE[,"linkingErrorTraitLevel"] <- NA
-                     return(list ( itempars = e, personpars = pvE))})
+                     return(list ( itempars = data.frame ( model = r[1,"model"], dimension = r[1,"group"], e), personpars = pvE) )})
              personpars <- do.call("rbind", lapply ( trans, FUN = function ( x ) { x[["personpars"]]}))
              itempars   <- do.call("rbind", lapply ( trans, FUN = function ( x ) { x[["itempars"]]}))
              return( list ( itempars = itempars, personpars = personpars))}   }              
