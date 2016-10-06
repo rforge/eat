@@ -60,11 +60,17 @@ check.input <- function ( env ) {
 				if ( is.matrix(Q) & length(dim(Q))==2 ) { if ( verbose ) cat( "OK\n" ) }
 				   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "Q is not two-dimensional matrix | check Q" ) }
 		}
-		# b is vector
+		# b is (column) vector
 		if ( exists( "b", inherits=FALSE ) ) {
-				if ( verbose ) cat( paste0( "                                    b is vector: "  ) )
-				if ( is.vector ) { if ( verbose ) cat( "OK\n" ) }
-				   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "b is not a vector | check b" ) }
+				if ( verbose ) cat( paste0( "                           b is (column) vector: "  ) )
+				# if is vector convert to column vector
+				if ( is.vector(b) ) {
+						b <- matrix( b, ncol=1 )
+						# write to environment
+						eval( parse ( text=paste0( "assign( 'b' , get('b') , envir=env )" ) ) )
+				}
+				if ( is.matrix(b) & dim(b)[2]==1 ) { if ( verbose ) cat( "OK\n" ) }
+				   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "b is not a (column) vector | check b" ) }
 		}
 		# E is two-dimensional matris
 		if ( exists( "E", inherits=FALSE ) ) {

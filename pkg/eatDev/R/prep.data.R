@@ -159,7 +159,7 @@ prep.data <- function ( env ) {
 				colnames( Lambda ) <- paste0( "theta", formatC( 1:ncol(Lambda), format="fg", flag="0", width=max(sapply(1:ncol(Lambda),nchar)) ) )
 
 				# output
-				default[length(default)+1] <- paste0( "                          loading matrix Lambda: IxF (", I, "x", I, ") matrix, each manifest variable to one latent variable (so no measurement model is specified) " )
+				default[length(default)+1] <- paste0( "                          loading matrix Lambda: IxF (", I, "x", I, ") matrix, each manifest variable is mapped to one latent variable (so no measurement model is specified) " )
 				#                                                                                                           no error here, F is not yet set
 				
 
@@ -193,16 +193,17 @@ prep.data <- function ( env ) {
 		if ( !exists("beta",inherits=FALSE) || is.null(beta) ) {
 				
 				# default beta (constrained equal over time)
-				beta <- rep( NA, I )
-				names( beta ) <- item.names
+				beta <- matrix( rep( NA, I ), ncol=1 )
+				rownames( beta ) <- item.names
 	
 				# set first beta per latent variable to 0
-				inds <- apply( Lambda, 2, function( col ) which( !col==0 )[1] )
-				do <- paste0( "beta[",inds,"] <- 0" )
-				eval( parse( text=do ) )
+				# inds <- apply( Lambda, 2, function( col ) which( !col==0 )[1] )
+				# do <- paste0( "beta[",inds,"] <- 0" )
+				# eval( parse( text=do ) )
 				
 				# output
-				default[length(default)+1] <- paste0( "                      item easiness vector beta: I (", I, ") vector, first item per latent variable set to 0 " )
+				# default[length(default)+1] <- paste0( "             item easiness (column) vector beta: I (", I, ") column vector, first item per latent variable set to 0 " )
+				default[length(default)+1] <- paste0( "             item easiness (column) vector beta: freely estimable I (", I, ") (column) vector" )
 
 		} else {
 				## beta is set by user ##
@@ -245,11 +246,13 @@ prep.data <- function ( env ) {
 						}
 
 				}
-		} else {
-				E <- NULL
-		}
-		# NAs to labeled parameters
-		E <- label.pars(E,"E")
+				# NAs to labeled parameters
+				E <- label.pars(E,"E")	
+				
+		} #else {
+		#		E <- NULL
+		#}
+
 		
 
 		### Stuff for continuous time model ###		
@@ -296,16 +299,16 @@ prep.data <- function ( env ) {
 		
 		# ct intercepts b
 		if ( !exists("b",inherits=FALSE) || is.null(b) ) {
-				b <- rep( NA, F )
-				if ( !is.null( latent.names ) ) names( b ) <- latent.names
-				default[length(default)+1] <- paste0( "             continuous time intercept vector b: freely estimable vector of length F (", F, ") matrix" )
-
+				b <- matrix( rep( NA, F ), ncol=1 )
+				if ( !is.null( latent.names ) ) rownames( b ) <- latent.names
+				default[length(default)+1] <- paste0( "      continuous time intercept column vector b: freely estimable (column) vector of length F (", F, ") matrix" )
 		}
 		# NAs to labeled parameters
 		b <- label.pars(b,"b")		
 
 		### (over)write relevant variables to environment ###
-		obj <- c( "d", "col.y", "col.id", "col.item", "col.time", "R", "J", "I", "T", "Tj", "P", "Tp", "L", "Lpat", "Lpat.group", "Lambda", "beta", "E", "F", "I1", "I2", "Aw", "I1w", "Qt.prec.replace", "A", "b", "Q" )
+		obj <- c( "d", "col.y", "col.id", "col.item", "col.time", "R", "J", "I", "T", "Tj", "P", "Tp", "L", "Lpat", "Lpat.group", "Lambda", "beta", ifelse(measurement.model$family=="gaussian","E",NA), "F", "I1", "I2", "Aw", "I1w", "Qt.prec.replace", "A", "b", "Q" )
+		obj <- obj[!is.na(obj)]
 		eval( parse ( text=paste0( "assign( '",obj, "' , get('",obj,"') , envir=env )" ) ) )
 
 		
@@ -334,7 +337,7 @@ prep.data <- function ( env ) {
 				}
 				
 		}
-
+# browser()
 		# return
 		TRUE
 }
@@ -347,13 +350,38 @@ label.pars <- function(m,m.name) {
 				if ( is.null( names( m ) ) ) nams <- seq(along=m)[is.na(m)] else nams <- names( m )[is.na(m)]
 				m[is.na(m)] <- paste0( m.name, "_", nams )
 		} else {
+
 				## arrays
-				m. <- eval(parse(text=paste0( "Reduce(function(x, y) merge(x, y, by=NULL, all=TRUE),list(", paste( paste0( "1:", dim(m) ), collapse="," ), "),accumulate=FALSE )" )))
+				
+				# dimension of m
+				dim.m <- dim(m)
+				
+				m. <- eval(parse(text=paste0( "Reduce(function(x, y) merge(x, y, by=NULL, all=TRUE),list(", paste( paste0( "1:", dim.m ), collapse="," ), "),accumulate=FALSE )" )))
 				att <- attributes(m)$dimnames
-				if ( is.null( att ) ) att <- sapply( seq(along=dim(m)), function(x) NULL, simplify=FALSE )
-				do <- paste0( "if ( is.null( att[[",seq(along=dim(m)),"]] ) )   att[[",seq(along=dim(m)),"]] <- as.character( 1:",dim(m)," ) " )
+				
+
+				
+				
+				## remove columns without variance
+				## this is the case e.g. for column or row vectors
+				del <- sapply( m., function( sp ) length(sp) > 1 & sd( sp ) == 0 )
+
+				if( any( del ) ) {
+						m. <- m.[,!del,drop=FALSE]
+						dim.m <- dim.m[!del]
+						att <- att[!del]
+				}
+			
+			
+				
+				if ( is.null( att ) ) att <- sapply( seq(along=dim.m), function(x) NULL, simplify=FALSE )
+				do <- paste0( "if ( is.null( att[[",seq(along=dim.m),"]] ) )   att[[",seq(along=dim.m),"]] <- as.character( 1:",dim.m," ) " )
 				eval( parse( text = do ) )
-				nams.dfr <- Reduce(function(x, y) merge(x, y, by=NULL, all=TRUE), att, accumulate=FALSE )
+				if( length( att ) > 1 ) {
+						nams.dfr <- Reduce(function(x, y) merge(x, y, by=NULL, all=TRUE), att, accumulate=FALSE )
+				} else {
+						nams.dfr <- data.frame( att, stringsAsFactors=FALSE )
+				}
 				
 				# parameter names
 				nams <- apply( nams.dfr, 1, function (z) paste( z, collapse="_" ) )
@@ -364,10 +392,20 @@ label.pars <- function(m,m.name) {
 				
 				# add indicator as additional column
 				m.[,ncol(m.)+1] <- 1:nrow(m.)
+
+				
+				# if only one row in m. means that it is just one parameter
+				# then no numbering
+				if ( nrow( m. ) == 1 ) {
+						m. <- m.[,ncol(m.),drop=FALSE]
+						nams <- NULL
+				}
+				
 				
 				# set name if cell is NA
-				do <- apply( m. , 1, function ( z ) paste0( "if( is.na( m[", paste(z[-length(z)],collapse=",") ,"] ) ) m[", paste(z[-length(z)],collapse=",") ,"] <- paste0( '", m.name, "_', nams[", paste(z[length(z)],collapse=","), "] ) " )  )
+				do <- apply( m. , 1, function ( z ) paste0( "if( is.na( m[", paste(z[-length(z)],collapse=",") ,"] ) ) m[", paste(z[-length(z)],collapse=",") ,"] <- paste0( '", m.name, ifelse( is.null( nams ), "", "_" ), "', nams[", paste(z[length(z)],collapse=","), "] ) " )  )
 				eval(parse(text=do))
+				
 		}
 
 		return(m)

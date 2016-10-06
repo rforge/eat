@@ -17,9 +17,49 @@ set.priors <- function ( env ) {
 		} else {
 				if( verbose ) cat( paste0( "n/a (all ", prod(dim(A)), " values fixed)\n" ) )
 		}
+# browser()
+		# Q
+		if ( verbose ) cat( "                             diffusion matrix Q: " )
+		if ( any( is.na( suppressWarnings( as.numeric( Q ) ) ) ) ) {
+				prior[[length(prior)+1]] <- make.priors( m.name="Q", m=Q, priors=priors, env=env, diag.prior = "dgamma(1,1)", offdiag.prior = "dnorm(0,0.1)", verbose=verbose )
+		} else {
+				if( verbose ) cat( paste0( "n/a (all ", prod(dim(Q)), " values fixed)\n" ) )
+		}		
 
-		# at the end line break
+		# b
+		if ( verbose ) cat( "                   continuous time intercepts b: " )
+		if ( any( is.na( suppressWarnings( as.numeric( b ) ) ) ) ) {
+				prior[[length(prior)+1]] <- make.priors( m.name="b", m=b, priors=priors, env=env, prior = "dnorm(0,0.1)", verbose=verbose )
+		} else {
+				if( verbose ) cat( paste0( "n/a (all ", prod(dim(b)), " values fixed)\n" ) )
+		}		
+		
+		# beta
+		if ( verbose ) cat( "                             item easiness beta: " )
+		if ( any( is.na( suppressWarnings( as.numeric( beta ) ) ) ) ) {
+				prior[[length(prior)+1]] <- make.priors( m.name="beta", m=beta, priors=priors, env=env, prior = "dnorm( mu.beta, prec.beta )", verbose=verbose )
+		} else {
+				if( verbose ) cat( paste0( "n/a (all ", prod(dim(beta)), " values fixed)\n" ) )
+		}		
+		
+		### TODO irgendwie abfangen wenn vom user gesetzt
+		### TODO fuer verschiedene Dimensionen evtl. extra
+		# beta hyperparameter fixen or priors
+		# mu.beta = 0
+		eval( parse ( text=paste0( "assign( 'mu.beta' , 0 , envir=env )" ) ) )
+		if ( verbose ) cat( "                  mean of item easiness mu.beta: 0\n" )
+# browser()		
+		# prec.beta prior
+		eval( parse ( text=paste0( "assign( 'prec.beta' , 'prec.beta' , envir=env )" ) ) )
+		prec.beta <- get( "prec.beta", envir=env )
+		if ( verbose ) cat( "           precision of item easiness prec.beta: " )
+		prior[[length(prior)+1]] <- make.priors( m.name="prec.beta", m=prec.beta, priors=priors, env=env, prior = "dgamma( 1, 1 )", verbose=verbose )
+		
+		# at the end line break on console
 		if ( verbose ) cat( paste0( "\n" ) )
+		
+		### TODO priors for E
+		
 		
 		### (over)write relevant variables to environment ###
 		obj <- c( "prior" )
@@ -32,20 +72,29 @@ set.priors <- function ( env ) {
 make.priors <- function( m.name, m, priors, env, diag.prior = "dnorm(0,0.001)", offdiag.prior = "dnorm(0,0.001)", prior = "dnorm(0,0.001)", lower=TRUE, upper=TRUE, verbose ){
 
 		if( !exists( paste0( m.name, '.prior' ), envir=env ) ) {
-
+# browser()
 				# all non-numeric and non-NA (= free parameters) to NaN
 				# original NA are kept
-				m2 <- suppressWarnings( array( as.character( as.numeric( m ) ), dim=dim(m) ) )
+				if ( !is.null( dim(m) ) ) {
+						m2 <- suppressWarnings( array( as.character( as.numeric( m ) ), dim=dim(m) ) )
+						m.is.vector <- FALSE
+				} else {
+						# if no matrix, i.e., vector
+						# make column vector here
+						m2 <- matrix( suppressWarnings( as.character( as.numeric( m ) ) ), ncol=1 )
+						# later transform back to vector
+						m.is.vector <- TRUE
+				}
 				m2[is.na(m2)] <- "<setprior>"
 				m2[is.na(m)] <- NA
 				m2.fixed <- !( is.na(m2) | m2 %in% "<setprior>" )
 				
 				# number of free parameters (for which priors need to be set)
-				free <- length( m2[!m2 %in% "<setprior>"] )
+				free <- length( m2[m2 %in% "<setprior>"] )
 				# number NA-parameter
 				na <- length( m2[is.na( m2 )] )
 				# number of fixed parameters
-				fixed <- sum( dim( m2 ) ) - free - na
+				fixed <- do.call( "*", as.list( dim( m2 ) ) ) - free - na
 				
 				## user defined priors
 				if ( !is.null( priors ) ) {
@@ -79,8 +128,8 @@ make.priors <- function( m.name, m, priors, env, diag.prior = "dnorm(0,0.001)", 
 						}
 				}
 				# number user defined parameters
-				udef <- free - length( m2[!m2 %in% "<setprior>"] )
-
+				udef <- free - length( m2[m2 %in% "<setprior>"] )
+# browser()
 				## defaults		
 				# if quadratic matrix
 				if ( all( dim(m2) == dim(m2)[1] ) ) {
@@ -99,18 +148,27 @@ make.priors <- function( m.name, m, priors, env, diag.prior = "dnorm(0,0.001)", 
 						# upper triangle (of matrix)
 						if (upper) m2[upper.tri(m2) & m2 %in% "<setprior>"] <- offdiag.prior
 						
+				} else {
+# browser()			
+						## non-quadratic
+						m2[] <- prior
 				}
-				
-				# TODO non-quadratic
 				
 				# fixed parameter auf NA setzen
 				# e.g. 1 -> NA
 				m2[m2.fixed] <- NA
 				
-				# TODO rownames von Matrix fuer prior Matrix
+				# rownames von Matrix fuer prior Matrix
+				rownames( m2 ) <- rownames( m )
+				colnames( m2 ) <- colnames( m )
 				
 				# number defaulted parameters
 				def <- free - udef - length( m2[is.na( m2 )] )
+				
+				# transform back to vector
+				if ( m.is.vector ) {
+						m2 <- m2[,1]
+				}
 				
 				# write to environment
 				assign( paste0( m.name, '.prior' ), m2, envir=env )

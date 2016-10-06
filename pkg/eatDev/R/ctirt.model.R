@@ -6,7 +6,8 @@
 # Lambda          loading matrix, dimensions must be number of items x number of latent variables; defaults to diag(1,number of items) to map each manifest variable to one latent variable (so no measurement model is specified)
 # verbose         print information
 
-ctirt.model <- function ( d, id=NULL, timepoint.sep="_", lag.names=NULL, Lambda=NULL, measurement.model=gaussian(link="identity"), ..., priors=NULL, verbose=TRUE ) {
+# ctirt.model <- function ( d, id=NULL, timepoint.sep="_", lag.names=NULL, Lambda=NULL, measurement.model=gaussian(link="identity"), ..., priors=NULL, verbose=TRUE ) {
+ctirt.model <- function ( d, id=NULL, timepoint.sep="_", lag.names=NULL, Lambda=NULL, measurement.model=binomial(link="logit"), ..., priors=NULL, verbose=TRUE ) {
 
 		# new environment
 		env <- new.env()
@@ -17,8 +18,8 @@ ctirt.model <- function ( d, id=NULL, timepoint.sep="_", lag.names=NULL, Lambda=
 		if( length( list(...) ) > 0 ) {
 				eval( parse ( text=paste0( "assign( '",names(list(...)), "' , list(...)$'",names(list(...)),"' , envir=env )" ) ) )
 		}
-
-		# data preparation
+# browser()
+		# check input
 		invisible( check.input( env ) )
 		
 		# data preparation
@@ -36,7 +37,7 @@ ctirt.model <- function ( d, id=NULL, timepoint.sep="_", lag.names=NULL, Lambda=
 				cat( paste0( paste( paste0("[",seq(along=error),"] ",error), collapse="\n" ), "\n\n" ) )
 				cat( paste0( "DO NOT RUN THE MODEL!\n" ) )
 		} else {
-				if (verbose) cat( paste0( "MODEL SUCESSFULLY CREATED | proceed with ctirt.syntax() \n" ) )
+				if (verbose) cat( paste0( "MODEL SUCCESSFULLY CREATED | proceed with ctirt.syntax() \n" ) )
 		}
 		
 		# create jags syntax
@@ -55,7 +56,8 @@ ctirt.model <- function ( d, id=NULL, timepoint.sep="_", lag.names=NULL, Lambda=
 		
 		## order of elements
 		el <- el[ order(el) ]
-		first <- c("d","col.id","col.item","col.time","col.y","A",ifelse(exists("A.prior",envir=env),"A.prior",NULL),"Q","b","beta",ifelse( measurement.model$family %in% "gaussian", "E", NULL ),"priors","F","I","J","T","R","P","Lambda","measurement.model")
+		first <- c("d","col.id","col.item","col.time","col.y","A",ifelse(exists("A.prior",envir=env),"A.prior",NA),"Q",ifelse(exists("Q.prior",envir=env),"Q.prior",NA),"b",ifelse(exists("b.prior",envir=env),"b.prior",NA),"beta",ifelse(exists("beta.prior",envir=env),"beta.prior",NA),ifelse(exists("mu.beta",envir=env),"mu.beta",NA),ifelse(exists("prec.beta",envir=env),"prec.beta",NA),ifelse(exists("prec.beta.prior",envir=env),"prec.beta.prior",NA),ifelse(exists("E",envir=env),"E",NA),"priors","F","I","J","T","R","P","Lambda","measurement.model")
+		first <- first[!is.na(first)]
 		last <- c()
 		el <- el[ c( match( first, el ) , which( !el %in% c( first, last ) ), match( last, el ) ) ]
 		
