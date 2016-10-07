@@ -1,6 +1,6 @@
 
 set.priors <- function ( env ) {
-		
+
 		# get variables from env
 		eval( parse( text=paste0( "assign( '",ls(envir=env), "' , get('",ls(envir=env),"', envir=env ) )" ) ) )
 
@@ -12,48 +12,64 @@ set.priors <- function ( env ) {
 		
 		# A
 		if ( verbose ) cat( "                                 drift matrix A: " )
-		if ( any( is.na( suppressWarnings( as.numeric( A ) ) ) ) ) {
-				prior[[length(prior)+1]] <- make.priors( m.name="A", m=A, priors=priors, env=env, diag.prior = "dnorm(-0.5,0.001)", offdiag.prior = "dnorm(0,0.001)", verbose=verbose )
+		if ( any.free( A ) ) {
+				invisible( make.priors( m.name="A", m=A, priors=priors, env=env, diag.prior = "dnorm(-0.5,0.1)", offdiag.prior = "dnorm(0,0.1)", verbose=verbose ) )
 		} else {
 				if( verbose ) cat( paste0( "n/a (all ", prod(dim(A)), " values fixed)\n" ) )
 		}
 # browser()
 		# Q
 		if ( verbose ) cat( "                             diffusion matrix Q: " )
-		if ( any( is.na( suppressWarnings( as.numeric( Q ) ) ) ) ) {
-				prior[[length(prior)+1]] <- make.priors( m.name="Q", m=Q, priors=priors, env=env, diag.prior = "dgamma(1,1)", offdiag.prior = "dnorm(0,0.1)", verbose=verbose )
+		if ( any.free( Q ) ) {
+				invisible( make.priors( m.name="Q", m=Q, priors=priors, env=env, diag.prior = "dgamma(1,1)", offdiag.prior = "dnorm(0,0.1)", verbose=verbose ) )
 		} else {
 				if( verbose ) cat( paste0( "n/a (all ", prod(dim(Q)), " values fixed)\n" ) )
 		}		
 
 		# b
 		if ( verbose ) cat( "                   continuous time intercepts b: " )
-		if ( any( is.na( suppressWarnings( as.numeric( b ) ) ) ) ) {
-				prior[[length(prior)+1]] <- make.priors( m.name="b", m=b, priors=priors, env=env, prior = "dnorm(0,0.1)", verbose=verbose )
+		if ( any.free( b ) ) {
+				invisible( make.priors( m.name="b", m=b, priors=priors, env=env, prior = "dnorm(0,0.1)", verbose=verbose ) )
 		} else {
 				if( verbose ) cat( paste0( "n/a (all ", prod(dim(b)), " values fixed)\n" ) )
 		}		
 		
 		# beta
 		if ( verbose ) cat( "                             item easiness beta: " )
-		if ( any( is.na( suppressWarnings( as.numeric( beta ) ) ) ) ) {
-				prior[[length(prior)+1]] <- make.priors( m.name="beta", m=beta, priors=priors, env=env, prior = "dnorm( mu.beta, prec.beta )", verbose=verbose )
+		if ( any.free( beta ) ) {
+				invisible( make.priors( m.name="beta", m=beta, priors=priors, env=env, prior = "dnorm( mu.beta, prec.beta )", verbose=verbose ) )
 		} else {
 				if( verbose ) cat( paste0( "n/a (all ", prod(dim(beta)), " values fixed)\n" ) )
 		}		
-		
-		### TODO irgendwie abfangen wenn vom user gesetzt
-		### TODO fuer verschiedene Dimensionen evtl. extra
-		# beta hyperparameter fixen or priors
-		# mu.beta = 0
-		eval( parse ( text=paste0( "assign( 'mu.beta' , 0 , envir=env )" ) ) )
-		if ( verbose ) cat( "                  mean of item easiness mu.beta: 0\n" )
-# browser()		
+
+# browser()
+
 		# prec.beta prior
-		eval( parse ( text=paste0( "assign( 'prec.beta' , 'prec.beta' , envir=env )" ) ) )
-		prec.beta <- get( "prec.beta", envir=env )
-		if ( verbose ) cat( "           precision of item easiness prec.beta: " )
-		prior[[length(prior)+1]] <- make.priors( m.name="prec.beta", m=prec.beta, priors=priors, env=env, prior = "dgamma( 1, 1 )", verbose=verbose )
+		if ( exists("prec.beta") && any.free( prec.beta ) ) {
+				# eval( parse ( text=paste0( "assign( 'prec.beta' , 'prec.beta' , envir=env )" ) ) )
+				# prec.beta <- get( "prec.beta", envir=env )
+				if ( verbose ) cat( "           precision of item easiness prec.beta: " )
+				invisible( make.priors( m.name="prec.beta", m=prec.beta, priors=priors, env=env, prior = "dgamma( 1, 1 )", verbose=verbose ) )
+		}
+
+		# mu.t1 prior
+		if ( exists("mu.t1") && any.free( mu.t1 ) ) {
+				# eval( parse ( text=paste0( "assign( 'mu.t1' , 'mu.t1' , envir=env )" ) ) )
+				# mu.t1 <- get( "mu.t1", envir=env )
+				if ( verbose ) cat( "          mean vector of first time point mu.t1: " )
+				invisible( make.priors( m.name="mu.t1", m=mu.t1, priors=priors, env=env, prior = "dnorm(0,0.1)", verbose=verbose ) )
+		}
+# browser()	
+		# prec.t1 prior
+		if ( exists("prec.t1") && any.free( prec.t1 ) ) {
+				# eval( parse ( text=paste0( "assign( 'prec.t1' , 'prec.t1' , envir=env )" ) ) )
+				# prec.t1 <- get( "prec.t1", envir=env )
+				if ( verbose ) cat( "   precision matrix of first time point prec.t1: Wishart distribution\n" )
+				# prior[[length(prior)+1]] <- make.priors( m.name="prec.t1", m=prec.t1, priors=priors, env=env, prior = "dgamma( 1, 1 )", verbose=verbose )
+				assign( "prec.t1.prior" , "dwish( I1 , F+1 )", envir=env )
+		}
+		
+		
 		
 		# at the end line break on console
 		if ( verbose ) cat( paste0( "\n" ) )
@@ -181,4 +197,9 @@ make.priors <- function( m.name, m, priors, env, diag.prior = "dnorm(0,0.001)", 
 				if ( verbose ) cat( paste0( m.name, ".prior set by user", "\n" ) )
 		}
 		
+		return( TRUE )
+}
+
+any.free <- function( m ) {
+		any( is.na( suppressWarnings( as.numeric( m ) ) ) )
 }

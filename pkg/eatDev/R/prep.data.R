@@ -189,7 +189,7 @@ prep.data <- function ( env ) {
 		# names of latent variables
 		latent.names <- colnames( Lambda )
 		
-		# intercepts/difficulty of manifest variables
+		# item easiness
 		if ( !exists("beta",inherits=FALSE) || is.null(beta) ) {
 				
 				# default beta (constrained equal over time)
@@ -203,8 +203,8 @@ prep.data <- function ( env ) {
 				
 				# output
 				# default[length(default)+1] <- paste0( "             item easiness (column) vector beta: I (", I, ") column vector, first item per latent variable set to 0 " )
-				default[length(default)+1] <- paste0( "             item easiness (column) vector beta: freely estimable I (", I, ") (column) vector" )
-
+				default[length(default)+1] <- paste0( "                             item easiness beta: freely estimable column vector of lenth I (", I, ")" )
+				
 		} else {
 				## beta is set by user ##
 
@@ -219,6 +219,28 @@ prep.data <- function ( env ) {
 		# NAs to labeled parameters
 		beta <- label.pars(beta,"beta")
 
+		## beta mean
+		# TODO check ob alle fixed, dann nicht
+		if ( !exists("mu.beta",inherits=FALSE) || is.null(mu.beta) ) {
+				mu.beta <- 0
+				default[length(default)+1] <- paste0( "                  mean of item easiness mu.beta: scalar set to 0" )
+		}
+		# NAs to labeled parameters
+		# mu.beta <- label.pars(mu.beta,"mu.beta")
+		
+		## beta prec
+		# TODO check ob alle fixed, dann nicht
+		if ( !exists("prec.beta",inherits=FALSE) || is.null(prec.beta) ) {
+				prec.beta <- NA
+				default[length(default)+1] <- paste0( "           precision of item easiness prec.beta: freely estimable scalar" )
+		}
+		# NAs to labeled parameters
+		prec.beta <- label.pars(prec.beta,"prec.beta")
+		# prec.beta[] <- 0		
+		
+		
+		
+		
 		# if gaussian, error var/cov matrix
 		if ( measurement.model$family == "gaussian" ) {
 				
@@ -301,13 +323,37 @@ prep.data <- function ( env ) {
 		if ( !exists("b",inherits=FALSE) || is.null(b) ) {
 				b <- matrix( rep( NA, F ), ncol=1 )
 				if ( !is.null( latent.names ) ) rownames( b ) <- latent.names
-				default[length(default)+1] <- paste0( "      continuous time intercept column vector b: freely estimable (column) vector of length F (", F, ") matrix" )
+				default[length(default)+1] <- paste0( "                   continuous time intercepts b: freely estimable column vector of length F (", F, ")" )
 		}
 		# NAs to labeled parameters
-		b <- label.pars(b,"b")		
+		b <- label.pars(b,"b")
 
+		# firt time point mean
+		if ( !exists("mu.t1",inherits=FALSE) || is.null(mu.t1) ) {
+				# mu.t1 <- matrix( rep( NA, F ), ncol=1 )
+				mu.t1 <- rep( NA, F )
+				# if ( !is.null( latent.names ) ) rownames( mu.t1 ) <- latent.names
+				if ( !is.null( latent.names ) ) names( mu.t1 ) <- latent.names
+				default[length(default)+1] <- paste0( "latent variable means of first time point mu.t1: column vector of length F (", F, ") with 0s" )
+		}
+		# NAs to labeled parameters
+		mu.t1 <- label.pars(mu.t1,"mu.t1")
+		# mu.t1[] <- 0
+	
+		# first time point prec
+		if ( !exists("prec.t1",inherits=FALSE) || is.null(prec.t1) ) {
+				prec.t1 <- matrix( NA, nrow=F, ncol=F )
+				if ( !is.null( latent.names ) ) colnames( prec.t1 ) <- rownames( prec.t1 ) <- latent.names
+				default[length(default)+1] <- paste0( "lat. var. precision of first time point prec.t1: freely estimable symmetric FxF (", F, "x", F, ") matrix" )
+		}
+		# NAs to labeled parameters
+		prec.t1. <- label.pars(prec.t1,"prec.t1")		
+		# make prec.t1 (potentially) symmetric again (do not overwrite user specific labeled parameters, even if unsymmetric matrix
+		prec.t1.[upper.tri(prec.t1.)][ is.na( prec.t1[upper.tri(prec.t1)] ) ]  <- prec.t1.[lower.tri(prec.t1.)][ is.na( prec.t1[lower.tri(prec.t1)] ) ]  
+		prec.t1 <- prec.t1.	
+		
 		### (over)write relevant variables to environment ###
-		obj <- c( "d", "col.y", "col.id", "col.item", "col.time", "R", "J", "I", "T", "Tj", "P", "Tp", "L", "Lpat", "Lpat.group", "Lambda", "beta", ifelse(measurement.model$family=="gaussian","E",NA), "F", "I1", "I2", "Aw", "I1w", "Qt.prec.replace", "A", "b", "Q" )
+		obj <- c( "d", "col.y", "col.id", "col.item", "col.time", "R", "J", "I", "T", "Tj", "P", "Tp", "L", "Lpat", "Lpat.group", "Lambda", "beta", ifelse(exists("mu.beta"),"mu.beta",NA), ifelse(exists("prec.beta"),"prec.beta",NA), ifelse(measurement.model$family=="gaussian","E",NA), "F", "I1", "I2", "Aw", "I1w", "Qt.prec.replace", "A", "b", "Q", "mu.t1", "prec.t1" )
 		obj <- obj[!is.na(obj)]
 		eval( parse ( text=paste0( "assign( '",obj, "' , get('",obj,"') , envir=env )" ) ) )
 
