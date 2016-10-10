@@ -48,7 +48,10 @@ for further details.
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-A data frame with original and transformed item parameters and competence levels. 
+A list with three data frames: the first one contains original and transformed 
+item parameters and competence levels. The second one contains original and transformed 
+person parameters and competence levels. The third one contains transformation 
+information. 
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -57,6 +60,7 @@ A data frame with original and transformed item parameters and competence levels
 Sebastian Weirich
 }
 \note{
+This version is beta. Please use with care!
 %%  ~~further notes~~
 }
 
@@ -66,7 +70,7 @@ Sebastian Weirich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-# see example 5 in the help file of defineModel()
+# see example 5, 6, and 6a in the help file of defineModel()
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

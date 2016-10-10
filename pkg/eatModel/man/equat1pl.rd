@@ -87,7 +87,7 @@ Sebastian Weirich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-# see example 5 in the help file of defineModel()
+# see example 5, 6, and 6a in the help file of defineModel()
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

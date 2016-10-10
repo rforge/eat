@@ -648,68 +648,77 @@ View(dfr$personpars)
 ###        Example 6: Linking and equating for multiple models (II)          ###
 ################################################################################
 
-# Example 6: define und run multiple models according to different domains (item groups)
-# and different person groups. This example mimics the routines necessary for the 
-# 'Laendervergleich/Bildungstrend' at the Institute of Educational Progress (IQB)
+# Example 6 and 6a: define und run multiple models according to different domains 
+# (item groups) and different person groups. This example mimics the routines 
+# necessary for the 'Laendervergleich/Bildungstrend' at the Institute for 
+# Educational Progress (IQB). Example 6 demonstrates routines without trend 
+# estimation. Example 6a demonstrates routines with trend estimation 
+
+# Preparation: assume time of measurement 't1'. Only for illustration, we create 
+# an artificial item data set for the fictional time of measurement 't1'
+datT1<- reshape2::dcast(subset ( sciences, sex == "male"), 
+        formula = id+grade+sex~variable, value.var="value")
 
 # First step: item calibration in separate unidimensional models for each domain
-modsC <- splitModels ( qMatrix = qMat)
+modsT1<- splitModels ( qMatrix = qMat)
 
-# define 2 models
-modsD <- defineModel(dat = datW, id = "id", check.for.linking = TRUE, 
-         splittedModels = modsC, software = "tam")
+# define 2 models. Note: not all items of the Q matrix are present in the data.
+# Items which occur only in the Q matrix will be ignored. 
+defT1 <- defineModel(dat = datT1, id = "id", check.for.linking = TRUE, 
+         splittedModels = modsT1, software = "tam")
 
 # run 2 models 
-runsD <- runModel(modsD)
+runT1 <- runModel(defT1)
 
 # get the results 
-resD  <- getResults(runsD)
+resT1 <- getResults(runT1)
 
 # extract item parameters from the 'results' object
-itemD <- itemFromRes(resD)
+itemT1<- itemFromRes(resT1)
 
-# Second step: two-dimensional model is specified for each person group with fixed
-# item parameters. Moreover, a latent regression model is used (in the actual 
-# 'Laendervergleich', regressors are principal components). 
+# Second step: drawing plausible values. Two-dimensional model is specified for 
+# each person group with fixed item parameters. Moreover, a latent regression 
+# model is used (in the actual 'Laendervergleich', regressors are principal 
+# components). 
 
 # create arbitrary federal state membership
-datW[,"country"] <- sample ( x = c ( "Berlin", "Bavaria"), size = nrow(datW), 
+datT1[,"country"] <- sample ( x = c ( "Berlin", "Bavaria"), size = nrow(datT1), 
          replace = TRUE)
          
 # create arbitrary principal components 
 for ( i in c("PC1", "PC2", "PC3") ) { 
-      datW[,i] <- rnorm( n = nrow(datW), mean = 0, sd = 1.2)
+      datT1[,i] <- rnorm( n = nrow(datT1), mean = 0, sd = 1.2)
 }         
 
 # number of extracted principal components vary: three components for Berlin, 
 # two for Bavaria. Hence, Bavaria has no valid values on 'PC3'.
-datW[which(datW[,"country"] == "Bavaria"),"PC3"] <- NA
+datT1[which(datT1[,"country"] == "Bavaria"),"PC3"] <- NA
 
 # define person grouping
-pers  <- data.frame ( idstud = datW[,"id"] , country = datW[,"country"])
+pers  <- data.frame ( idstud = datT1[,"id"] , country = datT1[,"country"])
 
 # Running second step: split models according to person groups
 # ('all.persons' must be FALSE, otherwise the whole group would be treated as
 # a separate distinct group.)
-modsP <- splitModels ( person.groups = pers , all.persons = FALSE)
+modT1P<- splitModels ( person.groups = pers , all.persons = FALSE)
 
 # define the 2 country-specific 2-dimensional models, specifying latent regression 
 # model and fixed item parameters.
-modsP <- defineModel(dat = datW, items = qMat[,"variable"], id = "id", 
-         check.for.linking = TRUE, splittedModels = modsP, qMatrix = qMat, 
-         anchor = itemD[,c("item", "est")], HG.var = c("PC1", "PC2", "PC3"), 
+defT1P<- defineModel(dat = datT1, items = itemT1[,"item"], id = "id", 
+         check.for.linking = TRUE, splittedModels = modT1P, qMatrix = qMat, 
+         anchor = itemT1[,c("item", "est")], HG.var = c("PC1", "PC2", "PC3"), 
          software = "tam")
 
 # run the 2 models 
-runsP <- runModel(modsP)
+runT1P<- runModel(defT1P)
 
 # get the results 
-resP  <- getResults(runsP)
+resT1P<- getResults(runT1P)
 
 # equating is not necessary, as the models run with fixed item parameters
 # However, to prepare for the transformation on the 'bista' metric, run
 # 'equat1pl' with empty arguments
-anchP <- equat1pl ( results = resP)
+ankT1P<- equat1pl ( results = resT1P)
 
 # transformation to the 'bista' metric
 # Note: if the sample was drawn from the reference population, mean and SD
@@ -718,10 +727,103 @@ anchP <- equat1pl ( results = resP)
 cuts  <- list ( procedural = list ( values = c(380, 420, 500, 560)) , 
          knowledge = list ( values = 400+0:2*100, labels = c("A1", "A2", "B1", "B2")))
 
-# transformation [not yet implemented]
-# dfr   <- transformToBista ( equatingList = anchP, cuts=cuts ) 
-# View(dfr$itempars)
-# View(dfr$personpars)
+# transformation
+dfrT1P<- transformToBista ( equatingList = ankT1P, cuts=cuts ) 
+
+
+################################################################################
+###           Example 6a: Extend example 6 with trend estimation             ###
+################################################################################
+
+# Example 6a needs the objects created in example 6
+# Preparation: assume time of measurement 't2'. We create an artificial item data 
+# set for the fictional time of measurement 't2'
+datT2<- reshape2::dcast(subset ( sciences, sex == "female"), 
+        formula = id+grade~variable, value.var="value")
+
+# First step: item calibration in separate unidimensional models for each domain
+modsT2<- splitModels ( qMatrix = qMat)
+
+# define 2 models. Items which occur only in the Q matrix will be ignored. 
+defT2 <- defineModel(dat = datT2, id = "id", check.for.linking = TRUE, 
+         splittedModels = modsT2, software = "tam")
+
+# run 2 models 
+runT2 <- runModel(defT2)
+
+# get the results 
+resT2 <- getResults(runT2)
+
+# collect item parameters
+itemT2<- itemFromRes(resT2)
+
+# Second step: compute linking constant between 't1' and 't2' with the exclusion 
+# of linking DIF items and computation of linking error according to a jackknife 
+# procedure. We use the 'itemT1' object created in example 6. To demonstrate the 
+# jackknife procedure, we create an arbitrary 'testlet' variable in 'itemT1'. The 
+# testlet variable indicates items which belong to a common stimulus. The linking 
+# procedure is executed simultaneously for procedural and knowledge.
+itemT1[,"testlet"] <- substr(as.character(itemT1[,"item"]), 1, 7)
+L.t1t2<- equat1pl ( results = resT2, prmNorm = itemT1, item = "item", 
+         testlet = "testlet", value = "est", excludeLinkingDif = TRUE, 
+         difBound = 1)
+
+# Third step: transform item parameters of 't2' to the metric of 't1'
+# We now need to specify the 'refPop' argument. We use the values from 't1' which
+# serves as the reference. 
+T.t1t2<- transformToBista ( equatingList = L.t1t2, refPop=dfrT1P[["refPop"]], 
+         cuts = cuts)
+
+# The object 'T.t1t2' now contains transformed person and item parameters with 
+# original and transformed linking errors. 
+
+# Fourth step: drawing plausible values for 't2', using transformed item parameters
+# captured in 'T.t1t2'. We use the same arbitrary 'country' specification as for 
+# 't1', but slightly different principal components. 
+datT2[,"country"] <- sample ( x = c ( "Berlin", "Bavaria"), size = nrow(datT2), 
+         replace = TRUE)
+         
+# create arbitrary principal components 
+for ( i in c("PC1", "PC2", "PC3", "PC4") ) { 
+      datT2[,i] <- rnorm( n = nrow(datT2), mean = 0, sd = 1.2)
+}         
+
+# number of extracted principal components vary: four components for Berlin, 
+# three for Bavaria. Hence, Bavaria has no valid values on 'PC4'.
+datT2[which(datT2[,"country"] == "Bavaria"),"PC4"] <- NA
+
+# define person grouping
+persT2<- data.frame ( idstud = datT2[,"id"] , country = datT2[,"country"])
+
+# Running second step: split models according to person groups
+# ('all.persons' must be FALSE, otherwise the whole group would be treated as
+# a separate distinct group.)
+modT2P<- splitModels ( person.groups = persT2 , all.persons = FALSE)
+
+# define the 2 country-specific 2-dimensional models, specifying latent regression 
+# model and fixed item parameters. We used the transformed item parameters (captured
+# in 'T.t1t2[["itempars"]]' --- using the 'estTransf' column) for anchoring. 
+defT2P<- defineModel(dat = datT2, items = itemT2[,"item"], id = "id", 
+         check.for.linking = TRUE, splittedModels = modT2P, qMatrix = qMat, 
+         anchor = T.t1t2[["itempars"]][,c("item", "estTransf")], 
+         HG.var = c("PC1", "PC2", "PC3", "PC4"), software = "tam")
+
+# run the 2 models 
+runT2P<- runModel(defT2P)
+
+# get the results 
+resT2P<- getResults(runT2P)
+
+# equating is not necessary, as the models run with fixed item parameters
+# However, to prepare for the transformation on the 'bista' metric, run
+# 'equat1pl' with empty arguments
+ankT2P<- equat1pl ( results = resT2P)
+
+# transformation to the 'bista' metric, using the previously defined cut scores
+dfrT2P<- transformToBista ( equatingList = ankT2P, refPop=dfrT1P[["refPop"]], 
+         cuts=cuts ) 
+
+# prepare data for jackknifing (not yet implemented)
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
