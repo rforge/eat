@@ -1,5 +1,5 @@
 
-ctirt.syntax <- function ( m ) {
+ctirt.syntax <- function ( m, model.name="model" ) {
 		
 # browser()		
 		# new environment
@@ -7,6 +7,9 @@ ctirt.syntax <- function ( m ) {
 		
 		# put all variables (values of list m) into environment
 		eval( parse ( text=paste0( "assign( '",names(m), "' , m$'",names(m),"' , envir=env )" ) ) )
+		# put additional vars into environment
+		vars <- c("model.name")
+		eval( parse ( text=paste0( "assign( '",vars, "' , get('",vars,"') , envir=env )" ) ) )
 		# additional arguments from ...
 		# if( length( list(...) ) > 0 ) {
 				# eval( parse ( text=paste0( "assign( '",names(list(...)), "' , list(...)$'",names(list(...)),"' , envir=env )" ) ) )

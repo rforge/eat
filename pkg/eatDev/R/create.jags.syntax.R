@@ -68,11 +68,14 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "            # loop over t=2,...,Tj personal time point               ")
 		x<-rbind(x, "            for (t in 2:Tj[j]) {                                     ")
-		x<-rbind(x, "                                                                     ")		
-		x<-rbind(x, "                    theta[j,1:F,t] ~ dmnorm( At[,,t-1,Lpat.group[j]] %*% theta[j,,t-1] + bt[,t-1,Lpat.group[j]], Qt.prec.adj[1:2,1:2,t,Lpat.group[j]] ) ")
+		x<-rbind(x, "                                                                     ")
+		x<-rbind(x, "                    theta[j,1:F,t] ~ dmnorm( At[,,t-1,Lpat.group[j]] %*% theta[j,,t-1] + bt[,t-1,Lpat.group[j]], Qt.prec[1:2,1:2,t,Lpat.group[j]] ) ")
 		x<-rbind(x, "                                                                     ")		
 		x<-rbind(x, "            }                                                        ")
 		x<-rbind(x, "    }                                                                ")
+		x<-rbind(x, "                                                                     ")
+		x<-rbind(x, "    ## values/prior of parameters                                    ")
+		x<-rbind(x, "    ## Note: values are commented (already set in R)                 ")
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    # values/prior of mean of first time point                       ")
 		x<-rbind(x, make.str( "mu.t1" ) )
@@ -95,9 +98,6 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "    # values/prior of continuous time intercepts                     ")
 		x<-rbind(x, make.str( "b" ) )
 		x<-rbind(x, "                                                                     ")			
-		
-# browser()		
-
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    # rowQ: stack Q row-wise into a column vector                    ")
 		x<-rbind(x, "    for ( z in (1:Aw) ) {                                            ")
@@ -121,7 +121,7 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "                    At[1:2,1:2,t-1,p] <- mexp( A[,] * Lpat[p,t-1] )  ")
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "                    # intercepts                                     ")
-		x<-rbind(x, "                    bt[1:2,t-1,p] <- ( A.inv[,] %*% ( mexp( A[,] * Lpat[p,t-1] ) - I1 ) ) %*% b[]         ")
+		x<-rbind(x, "                    bt[1:2,t-1,p] <- ( A.inv[,] %*% ( mexp( A[,] * Lpat[p,t-1] ) - I1 ) ) %*% b[,1]         ")
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "                    # Qtv is vectorized Qt matrix                    ")
 		x<-rbind(x, "                    #Qtv[1:4,t,p] <- ifelse( t==1, ( -1 * Ah.inv[,] ) %*% rowQ[,1] , ( Ah.inv[,] %*% ( mexp( Ah[,] * Lpat[p,t-1] ) - I2 ) ) %*% rowQ[,1] )     ")
@@ -140,74 +140,14 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "                        }                                            ")
 		x<-rbind(x, "                    }                                                ")
 		x<-rbind(x, "                                                                     ")
-		x<-rbind(x, "                    ### creation of Qt precision matrix              ")
-		x<-rbind(x, "                    ## inverse of Qt (!!only 2x2!!)                  ")
-		x<-rbind(x, "                    # determinant of Qt                              ")
-		x<-rbind(x, "                    Qt.det[t,p] <- Qt[1,1,t,p]*Qt[2,2,t,p] - Qt[2,1,t,p]*Qt[1,2,t,p]     ")
-		x<-rbind(x, "                    # Qt is invertible if determinant is not 0       ")
-		x<-rbind(x, "                    Qt.invertible[t,p] <- ifelse( Qt.det[t,p]==0, 0, 1 )     ")
-		x<-rbind(x, "                    # if not invertible, modest mod of determinant   ")
-		x<-rbind(x, "                    detmod5[t,p] ~ dbern(0.5)                        ")
-		x<-rbind(x, "                    detmod6[t,p] <- ifelse( Qt.invertible[t,p]==1, 0, (detmod5[t,p]-0.5)/500 )     ")
-		x<-rbind(x, "                    Qt.det.adj[t,p] <- Qt.det[t,p] + detmod6[t,p]    ")
-		x<-rbind(x, "                    # inverse of Qt                                  ")
-		x<-rbind(x, "                    Qt.help[1,1,t,p] <- Qt[2,2,t,p]                  ")
-		x<-rbind(x, "                    Qt.help[2,2,t,p] <- Qt[1,1,t,p]                  ")
-		x<-rbind(x, "                    Qt.help[1,2,t,p] <- -1*Qt[1,2,t,p]               ")
-		x<-rbind(x, "                    Qt.help[2,1,t,p] <- -1*Qt[2,1,t,p]               ")
-		x<-rbind(x, "                    Qt.prec[1:Aw,1:Aw,t,p] <- (1/Qt.det.adj[t,p] * Qt.help[,,t,p])     ")
-		x<-rbind(x, "                                                                     ")
-		x<-rbind(x, "                    # check if Qt.prec is positive definite          ")
-		x<-rbind(x, "                    Qt.prec.det[t,p] <- Qt.prec[1,1,t,p]*Qt.prec[2,2,t,p] - Qt.prec[2,1,t,p]*Qt.prec[1,2,t,p]     ")
-		x<-rbind(x, "                    Qt.prec.posdef[t,p] <- ifelse(  Qt.prec[1,1,t,p] > 0 && Qt.prec.det[t,p] > 0, 1, 0 )     ")
-		x<-rbind(x, "                                                                     ")
-		x<-rbind(x, "                    # if Qt.prec is not pos def then replace by a pos def matrix     ")
-		x<-rbind(x, "                    Qt.prec.adj[1:2,1:2,t,p] <- ifelse( Qt.prec.posdef[t,p]==1, Qt.prec[,,t,p] , Qt.prec.replace[,]  )     ")
+		# inverse of Qt; Qt has dimensions of Q; Qt.replace must exist
+		x<-rbind(x, make.inverse.2( "Qt", dim(Q)[1] ) )
 		x<-rbind(x, "            }                                                        ")
 		x<-rbind(x, "    }                                                                ")
 		x<-rbind(x, "                                                                     ")
-		x<-rbind(x, "    ## inverse of A (!!only 2x2!!)                                   ")
-		x<-rbind(x, "    # determinant of A                                               ")
-		x<-rbind(x, "    A.det <- A[1,1]*A[2,2] - A[2,1]*A[1,2]                           ")
-		x<-rbind(x, "    # A is invertible if determinant is not 0                        ")
-		x<-rbind(x, "    A.invertible <- ifelse( A.det==0, 0, 1 )                         ")
-		x<-rbind(x, "    # if not invertible, modest mod of determinant                   ")
-		x<-rbind(x, "    detmod1 ~ dbern(0.5)                                             ")
-		x<-rbind(x, "    detmod2 <- ifelse( A.invertible==1, 0, (detmod1-0.5)/500 )       ")
-		x<-rbind(x, "    A.det.adj <- A.det + detmod2                                     ")
-		x<-rbind(x, "    # inverse of A                                                   ")
-		x<-rbind(x, "    A.help[1,1] <- A[2,2]                                            ")
-		x<-rbind(x, "    A.help[2,2] <- A[1,1]                                            ")
-		x<-rbind(x, "    A.help[1,2] <- -1*A[1,2]                                         ")
-		x<-rbind(x, "    A.help[2,1] <- -1*A[2,1]                                         ")
-		x<-rbind(x, "    A.inv[1:Aw,1:Aw] <- (1/A.det.adj * A.help[,])                    ")
-		x<-rbind(x, "                                                                     ")
-		x<-rbind(x, "    ## inverse of Ah (!!only 4x4!!)                                  ")
-		x<-rbind(x, "    # http://stackoverflow.com/questions/1148309/inverting-a-4x4-matrix                                                                                                     ")
-		x<-rbind(x, "    Ah.inv.help[1,1] <- Ah[2,2]*Ah[3,3]*Ah[4,4]-Ah[2,2]*Ah[3,4]*Ah[4,3]-Ah[3,2]*Ah[2,3]*Ah[4,4]+Ah[3,2]*Ah[2,4]*Ah[4,3]+Ah[4,2]*Ah[2,3]*Ah[3,4]-Ah[4,2]*Ah[2,4]*Ah[3,3]     ")
-		x<-rbind(x, "    Ah.inv.help[2,1] <- -Ah[2,1]*Ah[3,3]*Ah[4,4]+Ah[2,1]*Ah[3,4]*Ah[4,3]+Ah[3,1]*Ah[2,3]*Ah[4,4]-Ah[3,1]*Ah[2,4]*Ah[4,3]-Ah[4,1]*Ah[2,3]*Ah[3,4]+Ah[4,1]*Ah[2,4]*Ah[3,3]    ")
-		x<-rbind(x, "    Ah.inv.help[3,1] <- Ah[2,1]*Ah[3,2]*Ah[4,4]-Ah[2,1]*Ah[3,4]*Ah[4,2]-Ah[3,1]*Ah[2,2]*Ah[4,4]+Ah[3,1]*Ah[2,4]*Ah[4,2]+Ah[4,1]*Ah[2,2]*Ah[3,4]-Ah[4,1]*Ah[2,4]*Ah[3,2]     ")
-		x<-rbind(x, "    Ah.inv.help[4,1] <- -Ah[2,1]*Ah[3,2]*Ah[4,3]+Ah[2,1]*Ah[3,3]*Ah[4,2]+Ah[3,1]*Ah[2,2]*Ah[4,3]-Ah[3,1]*Ah[2,3]*Ah[4,2]-Ah[4,1]*Ah[2,2]*Ah[3,3]+Ah[4,1]*Ah[2,3]*Ah[3,2]    ")
-		x<-rbind(x, "    Ah.inv.help[1,2] <- -Ah[1,2]*Ah[3,3]*Ah[4,4]+Ah[1,2]*Ah[3,4]*Ah[4,3]+Ah[3,2]*Ah[1,3]*Ah[4,4]-Ah[3,2]*Ah[1,4]*Ah[4,3]-Ah[4,2]*Ah[1,3]*Ah[3,4]+Ah[4,2]*Ah[1,4]*Ah[3,3]    ")
-		x<-rbind(x, "    Ah.inv.help[2,2] <- Ah[1,1]*Ah[3,3]*Ah[4,4]-Ah[1,1]*Ah[3,4]*Ah[4,3]-Ah[3,1]*Ah[1,3]*Ah[4,4]+Ah[3,1]*Ah[1,4]*Ah[4,3]+Ah[4,1]*Ah[1,3]*Ah[3,4]-Ah[4,1]*Ah[1,4]*Ah[3,3]     ")
-		x<-rbind(x, "    Ah.inv.help[3,2] <- -Ah[1,1]*Ah[3,2]*Ah[4,4]+Ah[1,1]*Ah[3,4]*Ah[4,2]+Ah[3,1]*Ah[1,2]*Ah[4,4]-Ah[3,1]*Ah[1,4]*Ah[4,2]-Ah[4,1]*Ah[1,2]*Ah[3,4]+Ah[4,1]*Ah[1,4]*Ah[3,2]    ")
-		x<-rbind(x, "    Ah.inv.help[4,2] <- Ah[1,1]*Ah[3,2]*Ah[4,3]-Ah[1,1]*Ah[3,3]*Ah[4,2]-Ah[3,1]*Ah[1,2]*Ah[4,3]+Ah[3,1]*Ah[1,3]*Ah[4,2]+Ah[4,1]*Ah[1,2]*Ah[3,3]-Ah[4,1]*Ah[1,3]*Ah[3,2]     ")
-		x<-rbind(x, "    Ah.inv.help[1,3] <- Ah[1,2]*Ah[2,3]*Ah[4,4]-Ah[1,2]*Ah[2,4]*Ah[4,3]-Ah[2,2]*Ah[1,3]*Ah[4,4]+Ah[2,2]*Ah[1,4]*Ah[4,3]+Ah[4,2]*Ah[1,3]*Ah[2,4]-Ah[4,2]*Ah[1,4]*Ah[2,3]     ")
-		x<-rbind(x, "    Ah.inv.help[2,3] <- -Ah[1,1]*Ah[2,3]*Ah[4,4]+Ah[1,1]*Ah[2,4]*Ah[4,3]+Ah[2,1]*Ah[1,3]*Ah[4,4]-Ah[2,1]*Ah[1,4]*Ah[4,3]-Ah[4,1]*Ah[1,3]*Ah[2,4]+Ah[4,1]*Ah[1,4]*Ah[2,3]    ")
-		x<-rbind(x, "    Ah.inv.help[3,3] <- Ah[1,1]*Ah[2,2]*Ah[4,4]-Ah[1,1]*Ah[2,4]*Ah[4,2]-Ah[2,1]*Ah[1,2]*Ah[4,4]+Ah[2,1]*Ah[1,4]*Ah[4,2]+Ah[4,1]*Ah[1,2]*Ah[2,4]-Ah[4,1]*Ah[1,4]*Ah[2,2]     ")
-		x<-rbind(x, "    Ah.inv.help[4,3] <- -Ah[1,1]*Ah[2,2]*Ah[4,3]+Ah[1,1]*Ah[2,3]*Ah[4,2]+Ah[2,1]*Ah[1,2]*Ah[4,3]-Ah[2,1]*Ah[1,3]*Ah[4,2]-Ah[4,1]*Ah[1,2]*Ah[2,3]+Ah[4,1]*Ah[1,3]*Ah[2,2]    ")
-		x<-rbind(x, "    Ah.inv.help[1,4] <- -Ah[1,2]*Ah[2,3]*Ah[3,4]+Ah[1,2]*Ah[2,4]*Ah[3,3]+Ah[2,2]*Ah[1,3]*Ah[3,4]-Ah[2,2]*Ah[1,4]*Ah[3,3]-Ah[3,2]*Ah[1,3]*Ah[2,4]+Ah[3,2]*Ah[1,4]*Ah[2,3]    ")
-		x<-rbind(x, "    Ah.inv.help[2,4] <- Ah[1,1]*Ah[2,3]*Ah[3,4]-Ah[1,1]*Ah[2,4]*Ah[3,3]-Ah[2,1]*Ah[1,3]*Ah[3,4]+Ah[2,1]*Ah[1,4]*Ah[3,3]+Ah[3,1]*Ah[1,3]*Ah[2,4]-Ah[3,1]*Ah[1,4]*Ah[2,3]     ")
-		x<-rbind(x, "    Ah.inv.help[3,4] <- -Ah[1,1]*Ah[2,2]*Ah[3,4]+Ah[1,1]*Ah[2,4]*Ah[3,2]+Ah[2,1]*Ah[1,2]*Ah[3,4]-Ah[2,1]*Ah[1,4]*Ah[3,2]-Ah[3,1]*Ah[1,2]*Ah[2,4]+Ah[3,1]*Ah[1,4]*Ah[2,2]    ")
-		x<-rbind(x, "    Ah.inv.help[4,4] <- Ah[1,1]*Ah[2,2]*Ah[3,3]-Ah[1,1]*Ah[2,3]*Ah[3,2]-Ah[2,1]*Ah[1,2]*Ah[3,3]+Ah[2,1]*Ah[1,3]*Ah[3,2]+Ah[3,1]*Ah[1,2]*Ah[2,3]-Ah[3,1]*Ah[1,3]*Ah[2,2]     ")
-		x<-rbind(x, "    Ah.det <- Ah[1,1]*Ah.inv.help[1,1]+Ah[1,2]*Ah.inv.help[2,1]+Ah[1,3]*Ah.inv.help[3,1]+Ah[1,4]*Ah.inv.help[4,1]                                                           ")
-		x<-rbind(x, "    # Ah is invertible if determinant is not 0                       ")
-		x<-rbind(x, "    Ah.invertible <- ifelse( Ah.det==0, 0, 1 )                       ")
-		x<-rbind(x, "    # if not invertible, modest mod of determinant                   ")
-		x<-rbind(x, "    detmod3 ~ dbern(0.5)                                             ")
-		x<-rbind(x, "    detmod4 <- ifelse( A.invertible==1, 0, (detmod3-0.5)/500 )       ")
-		x<-rbind(x, "    Ah.det.adj <- Ah.det + detmod4                                   ")
-		x<-rbind(x, "    Ah.inv <- Ah.inv.help / Ah.det.adj                               ")
+		# inverse of A and Ah
+		x<-rbind(x, make.inverse.1( "A", dim(A)[1] ) )
+		x<-rbind(x, make.inverse.1( "Ah", dim(A)[1]^2 ) )
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    # Kronecker of A and I1                                          ")
 		x<-rbind(x, "    # https://sourceforge.net/p/mcmc-jags/discussion/610037/thread/17ddb2ce/     ")
@@ -234,7 +174,23 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "    Ah[1:(I1w*Aw),1:(I1w*Aw)] <- Ah1[,] + Ah2[,]                     ")
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "}                                                                    ")
-		
+		# call matrix (1 column)
+		y<-matrix( paste0( "### R syntax for ", model.name ), 1, 1 )
+		y<-rbind(y, "" )
+		y<-rbind(y, "# start time                                                         ")
+		y<-rbind(y, "start <- Sys.time()                                                  ")
+		y<-rbind(y, "" )
+		y<-rbind(y, "# initialization/adaptation                                          ")
+		# globalenv !!! 
+		# y<-rbind(y, "eval(parse(text=paste0(  name, ".ini <- jags.model ( file = mf , data=globalenv(), inits=sL, n.chains = ",chains,", n.adapt=",adapt,", quiet=FALSE )"  )),envir=globalenv() )" )
+		# y<-rbind(y, "eval(parse(text=paste0(  name, ".ini <- jags.model ( file = mf , data=globalenv(), n.chains = ",chains,", n.adapt=",adapt,", quiet=FALSE )"  )),envir=globalenv() )" )
+		y<-rbind(y, "eval(parse(text=paste0(  model.name, .ini <- jags.model ( file = bugs.file , data=data.env, n.chains=chains, n.adapt=adapt, quiet=FALSE ) )),envir=data.env )" )
+		y<-rbind(y, "" )
+		y<-rbind(y, "# run                                                                ")		
+		y<-rbind(y, "eval(parse(text=paste0(  model.name, .res <- jags.samples ( ',model.name,'.ini , variable.names=c('A','Q','b'), n.iter=iter, thin=thin, type='trace' , progress.bar = 'none', by=20 )' )), envir=globalenv() )" )
+		y<-rbind(y, "" )
+		y<-rbind(y, "# run time                                                           ")		
+		y<-rbind(y, "runtime <- Sys.time() - start                                        ")		
 		
 		### (over)write relevant variables to environment ###
 		# jags.syntax <- x
@@ -245,9 +201,13 @@ create.jags.syntax <- function ( env ) {
 		ret <- list()
 		# first entry: engine
 		ret$engine <- engine
-		# second entry: call
-		
-		# third entry: syntax
+		# second entry: model.name
+		ret$model.name <- model.name
+		# third entry: data environment
+		ret$data.env <- env
+		# fourth entry: call
+		ret$call <- y
+		# fifth entry: syntax
 		ret$syntax <- x
 		
 		
@@ -289,13 +249,15 @@ make.str <- function( y.name ) {
 				is.fixed <- !is.na( as.num )
 				
 				# operator: <- or ~
-				op <- ifelse( is.fixed, " <- ", " ~ ")
+				op <- ifelse( is.fixed, " <- ", " ~ " )
+				# if fixed, uncomment in jags syntax, because already set in R
+				com <- ifelse( is.fixed, "# ", "" )
 				
 				# value
 				val <- ifelse( is.fixed, as.character( as.num ), eval( parse( text=paste0( y.name, ".prior", "[", paste( z, collapse=","), "]" ) ), envir=env ) )
 				
 				# string
-				s <- paste0( "    ", nam, op, val )
+				s <- paste0( "    ", com, nam, op, val )
 				
 				# return
 				return( s )
@@ -312,3 +274,95 @@ make.str <- function( y.name ) {
 		return( s )
 
 }
+
+make.inverse.1 <- function( name, dim ){
+		
+		x<-matrix( "", 1, 1 )
+		
+		if (dim %in% 2) {
+				x<-rbind(x, paste0( "    ## inverse of ",name,"                                           " ) )
+				x<-rbind(x, paste0( "    # determinant of ",name,"                                        " ) )
+				x<-rbind(x, paste0( "    ",name,".det <- ",name,"[1,1]*",name,"[2,2] - ",name,"[2,1]*",name,"[1,2] " ) )
+				x<-rbind(x, paste0( "    # ",name," is invertible if determinant is not 0                          " ) )
+				x<-rbind(x, paste0( "    ",name,".invertible <- ifelse( ",name,".det==0, 0, 1 )           " ) )
+				x<-rbind(x, paste0( "    # if not invertible, modest mod of determinant                   " ) )
+				x<-rbind(x, paste0( "    ",name,".detmod1 ~ dbern(0.5)                                    " ) )
+				x<-rbind(x, paste0( "    ",name,".detmod2 <- ifelse( ",name,".invertible==1, 0, (",name,".detmod1-0.5)/500 )     " ) )
+				x<-rbind(x, paste0( "    ",name,".det.adj <- ",name,".det + ",name,".detmod2                                     " ) )
+				x<-rbind(x, paste0( "    # inverse of ",name,"                                                          " ) )
+				x<-rbind(x, paste0( "    ",name,".help[1,1] <- ",name,"[2,2]                                            " ) )
+				x<-rbind(x, paste0( "    ",name,".help[2,2] <- ",name,"[1,1]                                            " ) )
+				x<-rbind(x, paste0( "    ",name,".help[1,2] <- -1*",name,"[1,2]                                         " ) )
+				x<-rbind(x, paste0( "    ",name,".help[2,1] <- -1*",name,"[2,1]                                         " ) )
+				x<-rbind(x, paste0( "    ",name,".inv[1:Aw,1:Aw] <- (1/",name,".det.adj * ",name,".help[,])             " ) )
+		}
+		if (dim %in% 4) {
+				x<-rbind(x, paste0( "    ## inverse of ",name,"                                                                                                                                                                                                                                                                    ") )
+				x<-rbind(x, paste0( "    # http://stackoverflow.com/questions/1148309/inverting-a-4x4-matrix                                                                                                                                                                                                                       ") )
+				x<-rbind(x, paste0( "    ",name,".inv.help[1,1] <- ",name,"[2,2]*",name,"[3,3]*",name,"[4,4]-",name,"[2,2]*",name,"[3,4]*",name,"[4,3]-",name,"[3,2]*",name,"[2,3]*",name,"[4,4]+",name,"[3,2]*",name,"[2,4]*",name,"[4,3]+",name,"[4,2]*",name,"[2,3]*",name,"[3,4]-",name,"[4,2]*",name,"[2,4]*",name,"[3,3]     ") )
+				x<-rbind(x, paste0( "    ",name,".inv.help[2,1] <- -",name,"[2,1]*",name,"[3,3]*",name,"[4,4]+",name,"[2,1]*",name,"[3,4]*",name,"[4,3]+",name,"[3,1]*",name,"[2,3]*",name,"[4,4]-",name,"[3,1]*",name,"[2,4]*",name,"[4,3]-",name,"[4,1]*",name,"[2,3]*",name,"[3,4]+",name,"[4,1]*",name,"[2,4]*",name,"[3,3]    ") )
+				x<-rbind(x, paste0( "    ",name,".inv.help[3,1] <- ",name,"[2,1]*",name,"[3,2]*",name,"[4,4]-",name,"[2,1]*",name,"[3,4]*",name,"[4,2]-",name,"[3,1]*",name,"[2,2]*",name,"[4,4]+",name,"[3,1]*",name,"[2,4]*",name,"[4,2]+",name,"[4,1]*",name,"[2,2]*",name,"[3,4]-",name,"[4,1]*",name,"[2,4]*",name,"[3,2]     ") )
+				x<-rbind(x, paste0( "    ",name,".inv.help[4,1] <- -",name,"[2,1]*",name,"[3,2]*",name,"[4,3]+",name,"[2,1]*",name,"[3,3]*",name,"[4,2]+",name,"[3,1]*",name,"[2,2]*",name,"[4,3]-",name,"[3,1]*",name,"[2,3]*",name,"[4,2]-",name,"[4,1]*",name,"[2,2]*",name,"[3,3]+",name,"[4,1]*",name,"[2,3]*",name,"[3,2]    ") )
+				x<-rbind(x, paste0( "    ",name,".inv.help[1,2] <- -",name,"[1,2]*",name,"[3,3]*",name,"[4,4]+",name,"[1,2]*",name,"[3,4]*",name,"[4,3]+",name,"[3,2]*",name,"[1,3]*",name,"[4,4]-",name,"[3,2]*",name,"[1,4]*",name,"[4,3]-",name,"[4,2]*",name,"[1,3]*",name,"[3,4]+",name,"[4,2]*",name,"[1,4]*",name,"[3,3]    ") )
+				x<-rbind(x, paste0( "    ",name,".inv.help[2,2] <- ",name,"[1,1]*",name,"[3,3]*",name,"[4,4]-",name,"[1,1]*",name,"[3,4]*",name,"[4,3]-",name,"[3,1]*",name,"[1,3]*",name,"[4,4]+",name,"[3,1]*",name,"[1,4]*",name,"[4,3]+",name,"[4,1]*",name,"[1,3]*",name,"[3,4]-",name,"[4,1]*",name,"[1,4]*",name,"[3,3]     ") )
+				x<-rbind(x, paste0( "    ",name,".inv.help[3,2] <- -",name,"[1,1]*",name,"[3,2]*",name,"[4,4]+",name,"[1,1]*",name,"[3,4]*",name,"[4,2]+",name,"[3,1]*",name,"[1,2]*",name,"[4,4]-",name,"[3,1]*",name,"[1,4]*",name,"[4,2]-",name,"[4,1]*",name,"[1,2]*",name,"[3,4]+",name,"[4,1]*",name,"[1,4]*",name,"[3,2]    ") )
+				x<-rbind(x, paste0( "    ",name,".inv.help[4,2] <- ",name,"[1,1]*",name,"[3,2]*",name,"[4,3]-",name,"[1,1]*",name,"[3,3]*",name,"[4,2]-",name,"[3,1]*",name,"[1,2]*",name,"[4,3]+",name,"[3,1]*",name,"[1,3]*",name,"[4,2]+",name,"[4,1]*",name,"[1,2]*",name,"[3,3]-",name,"[4,1]*",name,"[1,3]*",name,"[3,2]     ") )
+				x<-rbind(x, paste0( "    ",name,".inv.help[1,3] <- ",name,"[1,2]*",name,"[2,3]*",name,"[4,4]-",name,"[1,2]*",name,"[2,4]*",name,"[4,3]-",name,"[2,2]*",name,"[1,3]*",name,"[4,4]+",name,"[2,2]*",name,"[1,4]*",name,"[4,3]+",name,"[4,2]*",name,"[1,3]*",name,"[2,4]-",name,"[4,2]*",name,"[1,4]*",name,"[2,3]     ") )
+				x<-rbind(x, paste0( "    ",name,".inv.help[2,3] <- -",name,"[1,1]*",name,"[2,3]*",name,"[4,4]+",name,"[1,1]*",name,"[2,4]*",name,"[4,3]+",name,"[2,1]*",name,"[1,3]*",name,"[4,4]-",name,"[2,1]*",name,"[1,4]*",name,"[4,3]-",name,"[4,1]*",name,"[1,3]*",name,"[2,4]+",name,"[4,1]*",name,"[1,4]*",name,"[2,3]    ") )
+				x<-rbind(x, paste0( "    ",name,".inv.help[3,3] <- ",name,"[1,1]*",name,"[2,2]*",name,"[4,4]-",name,"[1,1]*",name,"[2,4]*",name,"[4,2]-",name,"[2,1]*",name,"[1,2]*",name,"[4,4]+",name,"[2,1]*",name,"[1,4]*",name,"[4,2]+",name,"[4,1]*",name,"[1,2]*",name,"[2,4]-",name,"[4,1]*",name,"[1,4]*",name,"[2,2]     ") )
+				x<-rbind(x, paste0( "    ",name,".inv.help[4,3] <- -",name,"[1,1]*",name,"[2,2]*",name,"[4,3]+",name,"[1,1]*",name,"[2,3]*",name,"[4,2]+",name,"[2,1]*",name,"[1,2]*",name,"[4,3]-",name,"[2,1]*",name,"[1,3]*",name,"[4,2]-",name,"[4,1]*",name,"[1,2]*",name,"[2,3]+",name,"[4,1]*",name,"[1,3]*",name,"[2,2]    ") )
+				x<-rbind(x, paste0( "    ",name,".inv.help[1,4] <- -",name,"[1,2]*",name,"[2,3]*",name,"[3,4]+",name,"[1,2]*",name,"[2,4]*",name,"[3,3]+",name,"[2,2]*",name,"[1,3]*",name,"[3,4]-",name,"[2,2]*",name,"[1,4]*",name,"[3,3]-",name,"[3,2]*",name,"[1,3]*",name,"[2,4]+",name,"[3,2]*",name,"[1,4]*",name,"[2,3]    ") )
+				x<-rbind(x, paste0( "    ",name,".inv.help[2,4] <- ",name,"[1,1]*",name,"[2,3]*",name,"[3,4]-",name,"[1,1]*",name,"[2,4]*",name,"[3,3]-",name,"[2,1]*",name,"[1,3]*",name,"[3,4]+",name,"[2,1]*",name,"[1,4]*",name,"[3,3]+",name,"[3,1]*",name,"[1,3]*",name,"[2,4]-",name,"[3,1]*",name,"[1,4]*",name,"[2,3]     ") )
+				x<-rbind(x, paste0( "    ",name,".inv.help[3,4] <- -",name,"[1,1]*",name,"[2,2]*",name,"[3,4]+",name,"[1,1]*",name,"[2,4]*",name,"[3,2]+",name,"[2,1]*",name,"[1,2]*",name,"[3,4]-",name,"[2,1]*",name,"[1,4]*",name,"[3,2]-",name,"[3,1]*",name,"[1,2]*",name,"[2,4]+",name,"[3,1]*",name,"[1,4]*",name,"[2,2]    ") )
+				x<-rbind(x, paste0( "    ",name,".inv.help[4,4] <- ",name,"[1,1]*",name,"[2,2]*",name,"[3,3]-",name,"[1,1]*",name,"[2,3]*",name,"[3,2]-",name,"[2,1]*",name,"[1,2]*",name,"[3,3]+",name,"[2,1]*",name,"[1,3]*",name,"[3,2]+",name,"[3,1]*",name,"[1,2]*",name,"[2,3]-",name,"[3,1]*",name,"[1,3]*",name,"[2,2]     ") )
+				x<-rbind(x, paste0( "    ",name,".det <- ",name,"[1,1]*",name,".inv.help[1,1]+",name,"[1,2]*",name,".inv.help[2,1]+",name,"[1,3]*",name,".inv.help[3,1]+",name,"[1,4]*",name,".inv.help[4,1]                                                                                                                       ") )
+				x<-rbind(x, paste0( "    # ",name," is invertible if determinant is not 0                                   ") )
+				x<-rbind(x, paste0( "    ",name,".invertible <- ifelse( ",name,".det==0, 0, 1 )                             ") )
+				x<-rbind(x, paste0( "    # if not invertible, modest mod of determinant                                     ") )
+				x<-rbind(x, paste0( "    ",name,".detmod1 ~ dbern(0.5)                                                      ") )
+				x<-rbind(x, paste0( "    ",name,".detmod2 <- ifelse( A.invertible==1, 0, (",name,".detmod1-0.5)/500 )       ") )
+				x<-rbind(x, paste0( "    ",name,".det.adj <- ",name,".det + ",name,".detmod2                                ") )
+				x<-rbind(x, paste0( "    ",name,".inv <- ",name,".inv.help / ",name,".det.adj                               ") )
+		}
+		
+		x<-rbind(x,"")
+		return( x )
+}
+
+make.inverse.2 <- function( name, dim ){
+		
+		### *.prec.replace must exist
+		
+		x<-matrix( "", 1, 1 )
+		
+		if (dim %in% 2) {
+				if (name %in% "Qt"){
+						x<-rbind(x, "                    ## inverse of Qt                                 ")
+						x<-rbind(x, "                    # determinant of Qt                              ")
+						x<-rbind(x, "                    Qt.det[t,p] <- Qt[1,1,t,p]*Qt[2,2,t,p] - Qt[2,1,t,p]*Qt[1,2,t,p]     ")
+						x<-rbind(x, "                    # Qt is invertible if determinant is not 0       ")
+						x<-rbind(x, "                    Qt.invertible[t,p] <- ifelse( Qt.det[t,p]==0, 0, 1 )     ")
+						x<-rbind(x, "                    # if not invertible, modest mod of determinant   ")
+						x<-rbind(x, "                    Qt.detmod1[t,p] ~ dbern(0.5)                        ")
+						x<-rbind(x, "                    Qt.detmod2[t,p] <- ifelse( Qt.invertible[t,p]==1, 0, (Qt.detmod1[t,p]-0.5)/500 )     ")
+						x<-rbind(x, "                    Qt.det.adj[t,p] <- Qt.det[t,p] + Qt.detmod2[t,p]    ")
+						x<-rbind(x, "                    # inverse of Qt                                  ")
+						x<-rbind(x, "                    Qt.help[1,1,t,p] <- Qt[2,2,t,p]                  ")
+						x<-rbind(x, "                    Qt.help[2,2,t,p] <- Qt[1,1,t,p]                  ")
+						x<-rbind(x, "                    Qt.help[1,2,t,p] <- -1*Qt[1,2,t,p]               ")
+						x<-rbind(x, "                    Qt.help[2,1,t,p] <- -1*Qt[2,1,t,p]               ")
+						x<-rbind(x, "                    Qt.prec.orig[1:Aw,1:Aw,t,p] <- (1/Qt.det.adj[t,p] * Qt.help[,,t,p])     ")
+						x<-rbind(x, "                                                                     ")
+						x<-rbind(x, "                    # check if Qt.prec.orig is positive definite          ")
+						x<-rbind(x, "                    Qt.prec.orig.det[t,p] <- Qt.prec.orig[1,1,t,p]*Qt.prec.orig[2,2,t,p] - Qt.prec.orig[2,1,t,p]*Qt.prec.orig[1,2,t,p]     ")
+						x<-rbind(x, "                    Qt.prec.orig.posdef[t,p] <- ifelse(  Qt.prec.orig[1,1,t,p] > 0 && Qt.prec.orig.det[t,p] > 0, 1, 0 )     ")
+						x<-rbind(x, "                                                                     ")
+						x<-rbind(x, "                    # if Qt.prec.orig is not pos def then replace by a pos def matrix     ")
+						x<-rbind(x, "                    Qt.prec[1:2,1:2,t,p] <- ifelse( Qt.prec.orig.posdef[t,p]==1, Qt.prec.orig[,,t,p] , Qt.prec.replace[,]  )     ")
+				}
+		}
+		
+		x<-rbind(x,"")
+		return( x )
+}
+

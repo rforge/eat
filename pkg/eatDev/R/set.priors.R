@@ -33,6 +33,14 @@ set.priors <- function ( env ) {
 		} else {
 				if( verbose ) cat( paste0( "n/a (all ", prod(dim(b)), " values fixed)\n" ) )
 		}		
+
+		# Lambda
+		if ( verbose ) cat( "                          loading matrix Lambda: " )
+		if ( any.free( Lambda ) ) {
+				invisible( make.priors( m.name="Lambda", m=Lambda, priors=priors, env=env, prior = "dnorm( 1, 0.0001 )", verbose=verbose ) )
+		} else {
+				if( verbose ) cat( paste0( "n/a (all ", prod(dim(Lambda)), " values fixed)\n" ) )
+		}	
 		
 		# beta
 		if ( verbose ) cat( "                             item easiness beta: " )
@@ -104,6 +112,10 @@ make.priors <- function( m.name, m, priors, env, diag.prior = "dnorm(0,0.001)", 
 				m2[is.na(m2)] <- "<setprior>"
 				m2[is.na(m)] <- NA
 				m2.fixed <- !( is.na(m2) | m2 %in% "<setprior>" )
+browser()				
+				# for symmetric matrix, upper to NA
+				
+				
 				
 				# number of free parameters (for which priors need to be set)
 				free <- length( m2[m2 %in% "<setprior>"] )
@@ -152,6 +164,8 @@ make.priors <- function( m.name, m, priors, env, diag.prior = "dnorm(0,0.001)", 
 						
 						# TODO symmetric abfangen
 						
+# browser()					
+						
 						# set diagonal priors (matrix or array)
 						for ( i in 1:dim(m2)[1] ) {
 								do2 <- paste0( "if( m2[",paste( rep( i, length(dim(m2)) ), collapse="," ),"] %in% '<setprior>' ) m2[",paste( rep( i, length(dim(m2)) ), collapse="," ),"] <- diag.prior " )
@@ -165,9 +179,9 @@ make.priors <- function( m.name, m, priors, env, diag.prior = "dnorm(0,0.001)", 
 						if (upper) m2[upper.tri(m2) & m2 %in% "<setprior>"] <- offdiag.prior
 						
 				} else {
-# browser()			
+
 						## non-quadratic
-						m2[] <- prior
+						m2[m2 %in% "<setprior>"] <- prior
 				}
 				
 				# fixed parameter auf NA setzen
@@ -177,9 +191,10 @@ make.priors <- function( m.name, m, priors, env, diag.prior = "dnorm(0,0.001)", 
 				# rownames von Matrix fuer prior Matrix
 				rownames( m2 ) <- rownames( m )
 				colnames( m2 ) <- colnames( m )
-				
+# browser()				
 				# number defaulted parameters
-				def <- free - udef - length( m2[is.na( m2 )] )
+				# def <- free - udef - length( m2[is.na( m2 )] )
+				def <- free - udef
 				
 				# transform back to vector
 				if ( m.is.vector ) {
