@@ -328,7 +328,7 @@ prep.data <- function ( env ) {
 		# NAs to labeled parameters
 		b <- label.pars(b,"b")
 
-		# firt time point mean
+		# first time point mean
 		if ( !exists("mu.t1",inherits=FALSE) || is.null(mu.t1) ) {
 				# mu.t1 <- matrix( rep( NA, F ), ncol=1 )
 				mu.t1 <- rep( NA, F )

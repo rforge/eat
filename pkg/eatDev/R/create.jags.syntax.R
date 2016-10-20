@@ -4,6 +4,10 @@ create.jags.syntax <- function ( env ) {
 		# get variables from env
 		eval( parse( text=paste0( "assign( '",ls(envir=env), "' , get('",ls(envir=env),"', envir=env ) )" ) ) )
 		
+		# objects with free parameters must be overwritten or deleted
+		# environment to save original objects
+		par.env <- new.env()
+		
 		# syntax matrix (1 column)
 		x<-matrix(  "model", 1, 1 )
 		x<-rbind(x, "{                                                                    ")
@@ -28,32 +32,43 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "        # distributional assumption                                  ")
 		if( measurement.model$family %in% "binomial" ) {
 		x<-rbind(x, "        d[r,col.y] ~ dbern( mu.y[r] )                                ") }
+		if( measurement.model$family %in% "gaussian" ) {
+		x<-rbind(x, "        d[r,col.y] ~ dnorm( mu.y[r], E[ d[r,col.item] ] )     ") }
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "        # link                                                       ")
 		if( measurement.model$link %in% "logit" ) {
 		x<-rbind(x, "        mu.y[r] <- ilogit( eta[r] )                                  ") }
+		if( measurement.model$family %in% "gaussian" ) {
+		x<-rbind(x, "        mu.y[r] <- eta[r]                                            ") }		
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "        # linear predictor                                           ")
-		x<-rbind(x, "        eta[r] <- sum( Lambda[ d[r,col.item],  , d[r,col.time] ] * theta[ d[r,col.id], , d[r,col.time] ] )  +  beta[ d[r,col.item], 1 ]  ")
+		# x<-rbind(x, "        eta[r] <- sum( Lambda[ d[r,col.item],  , d[r,col.time] ] * theta[ d[r,col.id], , d[r,col.time] ] )  +  beta[ d[r,col.item], 1 ]  ")
+		x<-rbind(x, "        eta[r] <- sum( Lambda[ d[r,col.item], ] * theta[ d[r,col.id], , d[r,col.time] ] )  +  beta[ d[r,col.item], 1 ] ")
+		# x<-rbind(x, "        eta[r] <- sum( Lambda[ d[r,col.item], ] * theta[ d[r,col.id], , d[r,col.time] ] ) ")
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    }                                                                ")
-		# x<-rbind(x, "                                                                     ")
-		# x<-rbind(x, "    # precision of measurement errors                                ")
-		# x<-rbind(x, "    for (i in 1:I) {                                                 ")
-		# x<-rbind(x, "        E[i] ~ dgamma(1,0.005)                                       ")
-		# x<-rbind(x, "    }                                                                ")
 		x<-rbind(x, "                                                                     ")
+### TODO E Matrix richtig einpflegen, von Anfang an		
+		if( measurement.model$family %in% "gaussian" ) {		
+		x<-rbind(x, "    # precision of measurement errors                                ")
+		x<-rbind(x, "    for (i in 1:I) {                                                 ")
+		x<-rbind(x, "        E[i] ~ dgamma(1,0.005)                                       ")
+		x<-rbind(x, "    }                                                                ") 
+		x<-rbind(x, "                                                                     ") }
 		x<-rbind(x, "    # values/priors of item easiness                                 ")
-		x<-rbind(x, make.str( "beta" ) )
+		x<-rbind(x, make.str( "beta" ) ); invisible(moveTo.par.env("beta",env,par.env))
 		x<-rbind(x, "                                                                     ")
 		if ( exists( "mu.beta" ) ) {
 		x<-rbind(x, "    # values/priors of mean of item easiness                         ")
-		x<-rbind(x, make.str( "mu.beta" ) )
+		x<-rbind(x, make.str( "mu.beta" ) ); invisible(moveTo.par.env("mu.beta",env,par.env))
 		x<-rbind(x, "                                                                     ") }
 		if ( exists( "mu.beta" ) ) {
 		x<-rbind(x, "    # values/priors of precision of item easiness                    ")
-		x<-rbind(x, make.str( "prec.beta" ) )
-		x<-rbind(x, "                                                                     ") }	
+		x<-rbind(x, make.str( "prec.beta" ) ); invisible(moveTo.par.env("prec.beta",env,par.env))
+		x<-rbind(x, "                                                                     ") }
+		x<-rbind(x, "    # values/priors of Lambda                                        ")
+		x<-rbind(x, make.str( "Lambda" ) ); invisible(moveTo.par.env("Lambda",env,par.env))
+		x<-rbind(x, "                                                                     ")		
 		# x<-rbind(x, "    # standard deviation of latent scale                             ")
 		# x<-rbind(x, "    #sd.eta <- sd(eta[])                                             ")
 		# x<-rbind(x, "                                                                     ")
@@ -78,25 +93,19 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "    ## Note: values are commented (already set in R)                 ")
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    # values/prior of mean of first time point                       ")
-		x<-rbind(x, make.str( "mu.t1" ) )
+		x<-rbind(x, make.str( "mu.t1" ) ); invisible(moveTo.par.env("mu.t1",env,par.env))
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    # values/prior of precision of first time point                  ")
-		x<-rbind(x, ifelse( exists("prec.t1.prior") && is.null( dim(prec.t1.prior) ), paste0( "    prec.t1 ~ ", prec.t1.prior, "                                      " ), make.str( "prec.t1" ) ) )
+		x<-rbind(x, ifelse( exists("prec.t1.prior") && is.null( dim(prec.t1.prior) ), paste0( "    prec.t1 ~ ", prec.t1.prior, "                                      " ), make.str( "prec.t1" ) ) ); invisible(moveTo.par.env("prec.t1",env,par.env))
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    # values/prior of drift matrix                                   ")
-		x<-rbind(x, make.str( "A" ) )
+		x<-rbind(x, make.str( "A" ) ); invisible(moveTo.par.env("A",env,par.env))
 		x<-rbind(x, "                                                                     ")		
-## TODO symmetric matrix		
 		x<-rbind(x, "    # values/prior of diffusion matrix                               ")
-		x<-rbind(x, make.str( "Q" ) )
+		x<-rbind(x, make.str( "Q" ) ); invisible(moveTo.par.env("Q",env,par.env))
 		x<-rbind(x, "                                                                     ")	
-		# x<-rbind(x, "    # Q Matrix                                                       ")
-		# x<-rbind(x, "    Q[1,1] ~ dgamma(1,1)                                             ")
-		# x<-rbind(x, "    Q[1,2] ~ dnorm(0,16)                                             ")
-		# x<-rbind(x, "    Q[2,1] <- Q[1,2]                                                 ")
-		# x<-rbind(x, "    Q[2,2] ~ dgamma(1,1)                                             ")
 		x<-rbind(x, "    # values/prior of continuous time intercepts                     ")
-		x<-rbind(x, make.str( "b" ) )
+		x<-rbind(x, make.str( "b" ) ); invisible(moveTo.par.env("b",env,par.env))
 		x<-rbind(x, "                                                                     ")			
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    # rowQ: stack Q row-wise into a column vector                    ")
@@ -177,6 +186,13 @@ create.jags.syntax <- function ( env ) {
 		# call matrix (1 column)
 		y<-matrix( paste0( "### R syntax for ", model.name ), 1, 1 )
 		y<-rbind(y, "" )
+		y<-rbind(y, "# rjags package" )
+		y<-rbind(y, "require( rjags )" )
+		y<-rbind(y, "" )
+		y<-rbind(y, "# JAGS Modules" )
+		y<-rbind(y, "load.module('msm') # for matrix exponential, mexp()" )
+		y<-rbind(y, "load.module('glm') # for better glm sampler        " )
+		y<-rbind(y, "" )
 		y<-rbind(y, "# start time                                                         ")
 		y<-rbind(y, "start <- Sys.time()                                                  ")
 		y<-rbind(y, "" )
@@ -184,10 +200,13 @@ create.jags.syntax <- function ( env ) {
 		# globalenv !!! 
 		# y<-rbind(y, "eval(parse(text=paste0(  name, ".ini <- jags.model ( file = mf , data=globalenv(), inits=sL, n.chains = ",chains,", n.adapt=",adapt,", quiet=FALSE )"  )),envir=globalenv() )" )
 		# y<-rbind(y, "eval(parse(text=paste0(  name, ".ini <- jags.model ( file = mf , data=globalenv(), n.chains = ",chains,", n.adapt=",adapt,", quiet=FALSE )"  )),envir=globalenv() )" )
-		y<-rbind(y, "eval(parse(text=paste0(  model.name, .ini <- jags.model ( file = bugs.file , data=data.env, n.chains=chains, n.adapt=adapt, quiet=FALSE ) )),envir=data.env )" )
+		# y<-rbind(y, "eval(parse(text=paste0(  model.name, .ini <- jags.model ( file = bugs.file , data=data.env, n.chains=chains, n.adapt=adapt, quiet=FALSE ) )),envir=data.env )" )
+		# y<-rbind(y, "eval(parse(text=paste0(  model.name, .ini <- jags.model ( file = bugs.file , data=data.env, n.chains=chains, n.adapt=adapt, quiet=FALSE ) )),envir=globalenv())" )
+		y<-rbind(y, "ini <- jags.model ( file = bugs.file , data=data.env, n.chains=chains, n.adapt=adapt, quiet=FALSE )" )
 		y<-rbind(y, "" )
 		y<-rbind(y, "# run                                                                ")		
-		y<-rbind(y, "eval(parse(text=paste0(  model.name, .res <- jags.samples ( ',model.name,'.ini , variable.names=c('A','Q','b'), n.iter=iter, thin=thin, type='trace' , progress.bar = 'none', by=20 )' )), envir=globalenv() )" )
+		# y<-rbind(y, "eval(parse(text=paste0(  model.name, .res <- jags.samples ( ',model.name,'.ini , variable.names=c('A','Q','b'), n.iter=iter, thin=thin, type='trace' , progress.bar = 'none', by=20 )' )), envir=globalenv() )" )
+		y<-rbind(y, "res <- jags.samples ( ini, variable.names=c('A','Q','b'), n.iter=iter, thin=thin, type='trace' , progress.bar = 'text', by=20 )" )
 		y<-rbind(y, "" )
 		y<-rbind(y, "# run time                                                           ")		
 		y<-rbind(y, "runtime <- Sys.time() - start                                        ")		
@@ -205,9 +224,11 @@ create.jags.syntax <- function ( env ) {
 		ret$model.name <- model.name
 		# third entry: data environment
 		ret$data.env <- env
-		# fourth entry: call
+		# fourth entry: environment with original matrices
+		ret$par.env <- par.env
+		# fifth entry: call
 		ret$call <- y
-		# fifth entry: syntax
+		# sixth entry: syntax
 		ret$syntax <- x
 		
 		
@@ -235,34 +256,72 @@ make.str <- function( y.name ) {
 		
 				# long structure
 				y. <- eval(parse(text=paste0( "Reduce(function(x, y) merge(x, y, by=NULL, all=TRUE),list(", paste( paste0( "1:", dim.y ), collapse="," ), "),accumulate=FALSE )" )))
-
+				
 		}
+		y.$par <- apply( y., 1, function ( z ) eval( parse( text= paste0( y.name,"[", paste(z,collapse=","), "]" ) ), envir=env ) )
+# browser()
+		# tag duplicated free parameters and generate values to set duplicated
+		y.$dupl <- as.integer( duplicated(y.$par) & is.na(suppressWarnings(as.numeric(y.$par)))  )
+		dupl <- unique( y.$par[ duplicated( y.$par ) & is.na(suppressWarnings(as.numeric(y.$par))) ] )
+		if ( length( dupl ) > 0 ) {
+				d.l <- sapply( dupl, function( d ){
+						y.1 <- y.[ y.$par %in% dupl, ]
+						y.1 <- y.1[ !duplicated( y.1$par ), ]
+						y.1$val <- apply( y.1, 1, function ( z ) paste0( y.name, "", "[", paste( z[-c(length(z)-1,length(z))], collapse=","), "]" ) )
+						return( y.1 )
+				}, simplify=FALSE )
+				d <- do.call( "rbind", d.l )
+				y.cn <- colnames( y. )
+				y.$order <- seq(along=rownames(y.))
+				y. <- merge( y., d[,c("par","val")], by="par", sort=FALSE, all.x=TRUE )
+				y. <- y.[ order( y.$order), ]
+				y.$order <- NULL
+				y. <- y.[ , c( y.cn, "val" ), drop=FALSE ]
+		} else {
+				y.$val <- ""
+		}
+	
 		
 		# loop over long structure, generate strings
-		make.str <- function( z ) {
-
-				# name of parameter
-				nam <- paste0( y.name, "[", paste( z, collapse=","), "]" )
-	
-				# determine if fixed value or freely estimated
-				as.num <- suppressWarnings( as.numeric( eval( parse( text=nam ), envir=env ) ) )
-				is.fixed <- !is.na( as.num )
+		make.str2 <- function( z ) {
+# browser()
+				dupl <- z[ length(z)-1 ]
+				val <- z[ length(z) ]
+				z <- z[ -c(length(z)-2,length(z)-1,length(z)) ]
 				
-				# operator: <- or ~
-				op <- ifelse( is.fixed, " <- ", " ~ " )
-				# if fixed, uncomment in jags syntax, because already set in R
-				com <- ifelse( is.fixed, "# ", "" )
+				if ( dupl %in% "0" ){
+# browser()				
+						# name of parameter
+						nam <- paste0( y.name, "[", paste( z, collapse=","), "]" )
+			
+						# determine if fixed value or freely estimated
+						as.num <- suppressWarnings( as.numeric( eval( parse( text=nam ), envir=env ) ) )
+						is.fixed <- !is.na( as.num )
+		# browser()				
+						# operator: <- or ~
+						op <- ifelse( is.fixed, " <- ", " ~ " )
+						# if fixed, uncomment in jags syntax, because already set in R
+						# com <- ifelse( is.fixed, "# ", "" )
+						com <- ""
+						
+						# value
+						val <- ifelse( is.fixed, as.character( as.num ), eval( parse( text=paste0( y.name, ".prior", "[", paste( z, collapse=","), "]" ) ), envir=env ) )
+						
+						# string
+						s <- paste0( "    ", com, nam, op, val )
 				
-				# value
-				val <- ifelse( is.fixed, as.character( as.num ), eval( parse( text=paste0( y.name, ".prior", "[", paste( z, collapse=","), "]" ) ), envir=env ) )
-				
-				# string
-				s <- paste0( "    ", com, nam, op, val )
+				} else {
+						
+						s <- paste0( "    ",y.name, "", "[", paste( z, collapse=","), "] <- ", val )
+						
+				}
 				
 				# return
 				return( s )
 		}
-		s <- apply( y., 1, make.str )
+# browser()
+		# s <- apply( y.1[,-ncol(y.1),drop=FALSE], 1, make.str2 )
+		s <- apply( y., 1, make.str2 )
 
 		# append some white space (for optical reasons)
 		s <- sapply( s, function( x ) paste0( x, paste( rep( " ", 69 - nchar(x) ), collapse="" ) ) )
@@ -274,6 +333,15 @@ make.str <- function( y.name ) {
 		return( s )
 
 }
+
+moveTo.par.env <- function( name, env, par.env ){
+		if( exists(name,envir=env) ){
+				assign( name, get( name, envir=env ), envir=par.env )
+				rm( list=name, envir=env )
+		}
+		TRUE
+}
+
 
 make.inverse.1 <- function( name, dim ){
 		

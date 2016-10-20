@@ -112,9 +112,30 @@ make.priors <- function( m.name, m, priors, env, diag.prior = "dnorm(0,0.001)", 
 				m2[is.na(m2)] <- "<setprior>"
 				m2[is.na(m)] <- NA
 				m2.fixed <- !( is.na(m2) | m2 %in% "<setprior>" )
-browser()				
-				# for symmetric matrix, upper to NA
+# browser()				
+				## all duplicate free parameters (e.g. for symmetric matrix) to NA
+				# if structure without dimensions (e.g. vector)
+				dim.m <- dim( m )
+				if( is.null( dim.m ) ) {
+						
+						# long structure
+						m. <- data.frame( matrix( seq( along= eval( parse( text=paste0( "", m.name, "" ) ), envir=env ) ), ncol=1 ) )
+						
+				} else {
+				# if structure with dimensions (e.g. matrix)
 				
+						# long structure
+						m. <- eval(parse(text=paste0( "Reduce(function(x, y) merge(x, y, by=NULL, all=TRUE),list(", paste( paste0( "1:", dim.m ), collapse="," ), "),accumulate=FALSE )" )))
+
+				}				
+				m.$par <- apply( m., 1, function ( z ) eval( parse( text= paste0( "m[", paste(z,collapse=","), "]" ) ) ) )
+				# duplicated free parameters (not fixed values)
+				m.2 <- m.[ duplicated(m.$par) & is.na(suppressWarnings(as.numeric(m.$par))), ]
+# browser()						
+				if ( nrow( m.2 ) > 0 ) {
+						do <- apply( m.2[,-ncol(m.2),drop=FALSE], 1, function ( z ) paste0( "m[", paste(z,collapse=","), "] <- NA; m2[", paste(z,collapse=","), "] <- NA; m2.fixed[", paste(z,collapse=","), "] <- NA" ) )
+						for ( do. in do ) eval( parse( text=do. ) )
+				}
 				
 				
 				# number of free parameters (for which priors need to be set)
