@@ -80,7 +80,8 @@ simEquiTable <- function ( anchor, mRef, sdRef, addConst = 500, multConst = 100,
                 return(equ)}
 
 
-getResults <- function ( runModelObj, overwrite = FALSE, omitFit = FALSE, omitRegr = FALSE, omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6, sig.dif.bound = 0.3, p.value = 0.9, simplify = TRUE ) { 
+getResults <- function ( runModelObj, overwrite = FALSE, omitFit = FALSE, omitRegr = FALSE, omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6, sig.dif.bound = 0.3, p.value = 0.9, 
+              nplausible = NULL, ntheta = 2000, normal.approx = FALSE, samp.regr = FALSE, theta.model=FALSE, np.adj=8 ) { 
             if("runMultiple" %in% class(runModelObj)) {                         ### Mehrmodellfall
                 if(is.null ( attr(runModelObj, "nCores") ) | attr(runModelObj, "nCores") == 1 ) {         
                    res <- lapply( runModelObj, FUN = function ( r ) {           ### erstmal single core auswertung
@@ -101,7 +102,7 @@ getResults <- function ( runModelObj, overwrite = FALSE, omitFit = FALSE, omitRe
                           return(list ( ret = ret, att = att))}
                    beg <- Sys.time()
                    cl  <- makeCluster(attr(runModelObj, "nCores"), type = "SOCK")
-                   res <- clusterApply(cl = cl, x = 1:length(runModelObj), fun = doIt , overwrite = overwrite, omitFit = omitFit, omitRegr = omitRegr, omitWle = omitWle, omitPV = omitPV, abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value, simplify = simplify ) 
+                   res <- clusterApply(cl = cl, x = 1:length(runModelObj), fun = doIt , overwrite = overwrite, omitFit = omitFit, omitRegr = omitRegr, omitWle = omitWle, omitPV = omitPV, abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value) 
                    stopCluster(cl)
                    cat(paste ( "Results of ",length(runModelObj), " analyses processed: ", sep="")); print( Sys.time() - beg)
                    }
@@ -118,16 +119,17 @@ getResults <- function ( runModelObj, overwrite = FALSE, omitFit = FALSE, omitRe
                     eval(parse(text=do))                                        ### obere Zeile: baue Aufruf zusammen; rufe 'getConquestResults' mit seinen eigenen Argumenten auf
                     dir <- runModelObj[["dir"]]                                 ### wo Argumente neu vergeben werden, geschieht das in dem 'recode'-Befehl; so wird als 'path'-
                     name<- runModelObj[["analysis.name"]]                       ### Argument 'runModelObj$dir' uebergeben
-                    attr(res, "all.Names") <- runModelObj[["all.Names"]]
-               }  else  {                                                       ### Alternativ: es wurde mit TAM gerechnet 
-                    isTa<- TRUE                                                 ### logisches Argument: wurde mit Tam gerechnet?
+                    attr(res, "all.Names") <- runModelObj[["all.Names"]]        ### Alternativ: es wurde mit TAM gerechnet 
+               }  else  {                                                       ### logisches Argument: wurde mit Tam gerechnet?
+                    isTa<- TRUE                                                 ### hier wird ggf. die Anzahl der zu ziehenden PVs ueberschrieben
+                    if(!is.null(nplausible)) { attr(runModelObj, "n.plausible") <- nplausible }  else  { nplausible <- attr(runModelObj, "n.plausible") }
                     do    <- paste ( "res <- getTamResults ( ", paste(names(formals(getTamResults)), names(formals(getTamResults)), sep =" = ", collapse = ", "), ")",sep="")
                     eval(parse(text=do))
                     dir <- attr(runModelObj, "dir")
                     name<- attr(runModelObj, "analysis.name")
                     attr(res, "all.Names") <- attr(runModelObj, "all.Names")
                }
-               attr(res, "dif.settings")   <- list (abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value, simplify = simplify) 
+               attr(res, "dif.settings")   <- list (abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value) 
                if(!is.null(dir)) { 
                     item<-itemFromRes ( res ) 
                     if ( file.exists(file.path(dir, paste(name, "_items.csv",sep=""))) & overwrite == FALSE) { 
@@ -135,7 +137,7 @@ getResults <- function ( runModelObj, overwrite = FALSE, omitFit = FALSE, omitRe
                     }  else  { 
                          write.csv2(item, file.path(dir, paste(name, "_items.csv",sep="")), na="", row.names = FALSE)
                     }                                                           ### untere Zeilen: speichere wunschgemaess alle Personenparameter in einer Tabelle im Wideformat
-                    txt <- capture.output ( wle <- wleFromRes(res) )            ### 'capture.output' wird benutzt um Warnungen in wleFromres() zu unterdruecken
+                    txt <- capture.output ( wle <- wleFromRes(res) )            ### 'capture.output' wird benutzt um Warnungen in wleFromRes() zu unterdruecken
                     if (!is.null ( wle ) ) { 
                          wleL<- melt ( wle, id.vars = c(attr(res, "all.Names")[["ID"]], "dimension"), measure.vars = c("wle_est", "wle_se"), na.rm = TRUE)
                          form<- as.formula ( paste ( attr(res, "all.Names")[["ID"]], "~dimension+variable",sep=""))
@@ -423,16 +425,20 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL ) {   
                              pv  <- data.frame ( merge ( pv, le, by = "traitLevel", sort = FALSE, all = TRUE) )
                              pv  <- pv[,c(ori, "linkingErrorTraitLevel")]
                         }
+    ### ggf. Gewichte an Personenframe mit dranhaengen
+                        if (!is.null(weights)) { 
+                             pv  <- merge ( pv, weights , by.x = attr(equatingList[["results"]], "all.Names")[["ID"]], by.y = colnames(weights)[1], all.x = TRUE, all.y = FALSE)
+                        }
                         return(list ( itempars = e, personpars = pv, rp = refPop[mat,]))})
                    itempars<- data.frame ( model = d, do.call("rbind", lapply ( transf, FUN = function ( x ) { x[["itempars"]]})))
-                   perspar <- data.frame ( model = d, do.call("rbind", lapply ( transf, FUN = function ( x ) { x[["personpars"]]})))
+                   perspar <- data.frame ( do.call("rbind", lapply ( transf, FUN = function ( x ) { x[["personpars"]]})))
                    rp      <- do.call("rbind", lapply ( transf, FUN = function ( x ) { x[["rp"]]}))
                    return( list ( itempars = itempars, personpars = perspar, rp=rp)) } )
              personpars <- do.call("rbind", lapply ( tf, FUN = function ( x ) { x[["personpars"]]}))
              itempars   <- do.call("rbind", lapply ( tf, FUN = function ( x ) { x[["itempars"]]}))
              rp         <- do.call("rbind", lapply ( tf, FUN = function ( x ) { x[["rp"]]}))
              if ( mr == TRUE ) { cat("\n"); print ( rp ) } 
-             ret        <- list ( itempars = itempars, personpars = personpars, refPop = rp)
+             ret        <- list ( itempars = itempars, personpars = personpars, refPop = rp, all.Names = attr(equatingList[["results"]], "all.Names"))
              class(ret) <- c("list", "transfBista")
              return( ret ) }
                 
@@ -447,7 +453,6 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                    # if(!exists("detectCores"))   {library(parallel)}
                    doIt<- function (laufnummer,  ... ) { 
                           if(!exists("runModel"))  { library(eatModel) }
-                          if(!exists("tam.mml") & defineModelObj[[1]][["software"]] == "tam")   {library(TAM, quietly = TRUE)} 
                           ret <- runModel ( defineModelObj = defineModelObj[[laufnummer]], show.output.on.console = show.output.on.console, show.dos.console = show.dos.console, wait = TRUE)
                           return(ret) }
                    beg <- Sys.time()
@@ -472,7 +477,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                 if("defineTam" %in% class(defineModelObj)) {                    ### exportiere alle Objekte aus defineModelObj in environment 
                    for ( i in names( defineModelObj )) { assign(i, defineModelObj[[i]]) } 
                    if ( show.output.on.console == TRUE ) { control$progress <- TRUE } 
-                  # if(!exists("tam.mml"))       {library(TAM, quietly = TRUE)}  ### March, 2, 2013: fuer's erste ohne DIF, ohne polytome Items, ohne mehrgruppenanalyse, ohne 2PL
+                   # if(!exists("tam.mml"))       {library(TAM, quietly = TRUE)}  ### March, 2, 2013: fuer's erste ohne DIF, ohne polytome Items, ohne mehrgruppenanalyse, ohne 2PL
                    if(!is.null(anchor)) { 
                        stopifnot(ncol(anchor) == 2 )                            ### Untere Zeile: Wichtig! Sicherstellen, dass Reihenfolge der Items in Anker-Statement
                        notInData   <- setdiff(anchor[,1], all.Names[["variablen"]])
@@ -489,7 +494,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                    stopifnot(all(qMatrix[,1] == all.Names[["variablen"]]))
                    if(length(all.Names[["DIF.var"]]) == 0 ) {
                       if( irtmodel %in% c("1PL", "PCM", "PCM2", "RSM") ) {
-                          mod     <- tam.mml(resp = daten[,all.Names[["variablen"]]], pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, irtmodel = irtmodel, pweights = wgt, control = control)
+                          mod     <- tam.mml(resp = daten[,all.Names[["variablen"]]], constraint = constraint, pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, irtmodel = irtmodel, pweights = wgt, control = control)
                       }
                       if( irtmodel %in% c("2PL", "GPCM", "2PL.groups", "GPCM.design", "3PL") )  {
                           if(!is.null(est.slopegroups))  {
@@ -524,7 +529,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                      formel   <- as.formula(paste("~item - ",paste("DIF_",all.Names[["DIF.var"]],sep="")," + item * ",paste("DIF_",all.Names[["DIF.var"]],sep=""),sep=""))
                      facetten <- as.data.frame (daten[,all.Names[["DIF.var"]]])
                      colnames(facetten) <- paste("DIF_",all.Names[["DIF.var"]],sep="")
-                     mod      <- tam.mml.mfr(resp = daten[,all.Names[["variablen"]]], facets = facetten, formulaA = formel, pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, irtmodel = irtmodel, pweights = wgt, control = control)
+                     mod      <- tam.mml.mfr(resp = daten[,all.Names[["variablen"]]], facets = facetten, constraint = constraint, formulaA = formel, pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, irtmodel = irtmodel, pweights = wgt, control = control)
                    }
                    attr(mod, "qMatrix")      <- defineModelObj[["qMatrix"]]     ### hier werden fuer 'tam' zusaetzliche Objekte als Attribute an das Rueckgabeobjekt angehangen
                    attr(mod, "n.plausible")  <- defineModelObj[["n.plausible"]] ### Grund: Rueckgabeobjekt soll weitgehend beibehalten werden, damit alle 'tam'-Funktionen, die darauf aufsetzen, lauffaehig sind
@@ -1041,7 +1046,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                           cat(paste("Q matrix specifies ",ncol(qMatrix)-1," dimension(s).\n",sep=""))
                           control <- list ( nodes = nodes , snodes = snodes , QMC=QMC, convD = deviancechange ,conv = converge , convM = .0001 , Msteps = 4 , maxiter = n.iterations, max.increment = 1 , 
                                      min.variance = .001 , progress = progress , ridge=0 , seed = seed , xsi.start0=FALSE,  increment.factor=increment.factor , fac.oldxsi= fac.oldxsi) 
-                          ret     <- list ( software = software, qMatrix=qMatrix, anchor=ankFrame[["resTam"]],  all.Names=all.Names, daten=daten, irtmodel=irtmodel, est.slopegroups = est.slopegroups, guessMat=guessMat, control = control, n.plausible=n.plausible, dir = dir, analysis.name=analysis.name, deskRes = deskRes, discrim = discrim, perNA=perNA, per0=per0, perExHG = perExHG, itemsExcluded = namen.items.weg)
+                          ret     <- list ( software = software, constraint = match.arg(constraints) , qMatrix=qMatrix, anchor=ankFrame[["resTam"]],  all.Names=all.Names, daten=daten, irtmodel=irtmodel, est.slopegroups = est.slopegroups, guessMat=guessMat, control = control, n.plausible=n.plausible, dir = dir, analysis.name=analysis.name, deskRes = deskRes, discrim = discrim, perNA=perNA, per0=per0, perExHG = perExHG, itemsExcluded = namen.items.weg)
                           class(ret) <-  c("defineTam", "list")
                           return ( ret )    }   }  }
                           
@@ -1203,7 +1208,7 @@ converged<- function (dir, logFile) {
             }
             return(isConv)}
 
-getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Names, abs.dif.bound , sig.dif.bound, p.value, simplify, deskRes, discrim, omitFit, omitRegr, omitWle, omitPV ) {
+getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Names, abs.dif.bound , sig.dif.bound, p.value, deskRes, discrim, omitFit, omitRegr, omitWle, omitPV ) {
          allFiles <- list.files(path=path, pattern = analysis.name, recursive = FALSE)
          qL       <- melt(qMatrix, id.vars = colnames(qMatrix)[1], variable.name = "dimensionName", na.rm=TRUE)
          qL       <- qL[which(qL[,"value"] != 0 ) , ]
@@ -1364,8 +1369,8 @@ getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Name
          attr(ret, "available")   <- list ( itn = itnFile %in% allFiles, shw = shwFile %in% allFiles, wle = (wleFile %in% allFiles) & (omitWle == FALSE), pv = (pvFile %in% allFiles) & (omitPV == FALSE))
          return(ret)}
 
-getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV) {
-         if( omitRegr == FALSE ) { regr     <- tam.se(runModelObj) }
+getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV, nplausible , ntheta , normal.approx, samp.regr, theta.model, np.adj) {
+         if( omitRegr == FALSE ) { txt <- capture.output ( regr     <- tam.se(runModelObj)) }
          qMatrix  <- attr(runModelObj, "qMatrix")
          qL       <- melt(qMatrix, id.vars = colnames(qMatrix)[1], variable.name = "dimensionName", na.rm=TRUE)
          qL       <- qL[which(qL[,"value"] != 0 ) , ]
@@ -1457,7 +1462,7 @@ getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV) {
              ret  <- rbind(ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = NA, var2 = NA , type = "model", indicator.group = NA, group = NA, par = c("deviance", "Npar", "AIC", "BIC"), derived.par = NA, value = unlist(runModelObj[["ic"]][c("deviance", "Npars", "AIC", "BIC")]), stringsAsFactors = FALSE))
     ### Sektion 'Personenparameter auslesen' (wle)
          if ( omitWle == FALSE ) { 
-              wle  <- tam.wle(runModelObj, progress = FALSE)                         ### Achtung: im eindimensionalen Fall enthalten die Spaltennamen keine Benennung der Dimension
+              wle  <- tam.wle(runModelObj, progress = FALSE)                    ### Achtung: im eindimensionalen Fall enthalten die Spaltennamen keine Benennung der Dimension
               eind1<- ncol(wle) == 7
               if(eind1 == TRUE) {
                  cols1<- grep("theta$", colnames(wle))
@@ -1474,8 +1479,9 @@ getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV) {
          }      
     ### Sektion 'Personenparameter auslesen' (PVs)
          if ( omitPV == FALSE ) { 
-              pv   <- tam.pv(runModelObj, nplausible = attr(runModelObj, "n.plausible"), normal.approx = TRUE, ntheta = 2000, np.adj = 20 )$pv
-              pvL  <- melt(pv, id.vars = "pid", na.rm=TRUE)
+              do   <- paste ( "pv <- tam.pv ( ", paste(names(formals(tam.pv)), recode ( names(formals(tam.pv)), "'tamobj'='runModelObj'"), sep =" = ", collapse = ", "), ")",sep="")
+              eval(parse(text=do))
+              pvL  <- melt(pv$pv, id.vars = "pid", na.rm=TRUE)
               pvL[,"PV.Nr"] <- as.numeric(eatRep:::remove.pattern(string = unlist(lapply(strsplit(as.character(pvL[,"variable"]),"\\."), FUN = function (l) {l[1]})), pattern = "PV"))
               pvL[,"group"] <- colnames(qMatrix)[as.numeric(eatRep:::remove.pattern(string = unlist(lapply(strsplit(as.character(pvL[,"variable"]),"\\."), FUN = function (l) {l[2]})), pattern = "Dim"))+1]
               ret  <- rbind ( ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = pvL[,"pid"], var2 = NA , type = "indicator", indicator.group = "persons", group = pvL[,"group"], par = "pv",  derived.par = paste("pv", pvL[,"PV.Nr"],sep=""), value = pvL[,"value"] , stringsAsFactors = FALSE))
@@ -2366,3 +2372,32 @@ item.diskrim <- function(daten, itemspalten, na = NA, streng = TRUE)
                  trennsch  <- data.frame(item.name=colnames(daten),item.diskrim = trennsch,stringsAsFactors = FALSE)
                  return(trennsch)}
               
+prepRep <- function ( calibT2, bistaTransfT1, bistaTransfT2) {
+           if ( !"transfBista" %in% class(calibT2) ) { stop("'calibT2' object must be of class 'transfBista'.\n")}
+           if ( !"transfBista" %in% class(bistaTransfT1) ) { stop("'bistaTransfT2' object must be of class 'transfBista'.\n")}
+           if ( !"transfBista" %in% class(bistaTransfT2) ) { stop("'bistaTransfT2' object must be of class 'transfBista'.\n")}
+           if (!nrow(calibT2[["itempars"]]) < nrow(bistaTransfT1[["itempars"]])) { stop("Mismatch between 'calibT2' and 'bistaTransfT1'. \n")}
+           if (!nrow(calibT2[["itempars"]]) < nrow(bistaTransfT2[["itempars"]])) { stop("Mismatch between 'calibT2' and 'bistaTransfT2'. \n")}
+     ### finde Spalten mit Linkingfehlern
+           lc  <- colnames( calibT2[["personpars"]] ) [grep("^link", colnames(calibT2[["personpars"]]) )]
+           if(length(lc)==0) { stop("No columns with linking error information found in 'calibT2'.\n")}
+     ### suche Spalten zum Mergen
+           merg<- c("group", "imp", "traitLevel", "dimension")
+           frms<- list ( calibT2=calibT2, bistaTransfT1=bistaTransfT1, bistaTransfT2=bistaTransfT2 ) 
+           toM <- unique(unlist(lapply ( names(frms), FUN = function ( l.Name ) { 
+                  l    <- frms[[l.Name]]
+                  drin <- merg %in% colnames(l[["personpars"]])
+                  fehlt<- merg[which(drin==FALSE)]
+                  if (!all(drin == TRUE)) { cat(paste("Warning: Column(s) '",paste(fehlt, collapse = "', '"), "' are unexpectedly missing in '",l.Name,"'.\n",sep=""))}
+                  keep <- merg[which(drin==TRUE)]
+                  return(keep)})))
+           if(length(toM)==0) { stop("Merging impossible.\n")}
+     ### Reduziere Kalibrierungs-'datensatz' auf das Noetigste
+           red <- calibT2[["personpars"]][,c(toM,  lc)] 
+           red <- red[!duplicated(red),]
+           dat1<- data.frame ( trend = "T1" , merge ( bistaTransfT1[["personpars"]], red, by = toM, all = TRUE))
+     ### checks (sollten eigentlich ueberfluessig sein) 
+           stopifnot ( nrow(dat1) == nrow(bistaTransfT1[["personpars"]]))
+           dat2<- data.frame ( trend = "T2" , merge ( bistaTransfT2[["personpars"]], red, by = toM, all = TRUE))
+           stopifnot ( nrow(dat2) == nrow(bistaTransfT2[["personpars"]]))
+           return(rbind ( dat1, dat2))}              

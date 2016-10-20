@@ -7,8 +7,9 @@ call \code{runModel} with the argument returned by \code{defineModel} to start t
 The last step then is to create a results frame using \code{getResults}. }
 \usage{
 getResults(runModelObj, overwrite = FALSE, omitFit = FALSE, omitRegr = FALSE, 
-    omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6,
-    sig.dif.bound = 0.3, p.value = 0.9, simplify = TRUE)}
+    omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6, sig.dif.bound = 0.3, 
+    p.value = 0.9, nplausible = NULL, ntheta = 2000, normal.approx = FALSE, 
+    samp.regr = FALSE, theta.model=FALSE, np.adj=8)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{runModelObj}{
@@ -50,9 +51,50 @@ this specifies the critical value for confidence interval DIF.
 Applies only if DIF analyses are performed before. When DIF-Parameter are evaluated, 
 this specifies the critical p-value for confidence interval DIF.
 }
-  \item{simplify}{
-%%     ~~Describe \code{file} here~~
-Logical.
+ \item{nplausible}{
+Applies only if software = 'tam': Number of plausible values to be drawn. Note: 
+number of plausible values were already defined in \code{defineModel}, because 
+Conquest needs to know the number of PVs prior to estimation. In \code{TAM}, it 
+is possible to redefine the number of plausible values and overwrite the definition
+that was given in \code{defineModel}.
+}
+\item{ntheta}{
+Applies only if software = 'tam'. Following description is borrowed from the help 
+file of \code{tam.pv} from the \code{TAM} package: Number of ability nodes for 
+plausible value imputation. Note that in this function ability nodes are simulated 
+for the whole sample, not for every person (contrary to the software ConQuest).
+}
+\item{normal.approx}{
+Applies only if software = 'tam'. Following description is borrowed from the help 
+file of \code{tam.pv} from the \code{TAM} package: An optional logical indicating 
+whether the individual posterior distributions should be approximated by a normal 
+distribution? The default is \code{FALSE}. In the case \code{normal.approx=TRUE}
+(normal distribution approximation), the number of ability nodes \code{ntheta} can 
+be substantially smaller than 2000, say 200 or 500. The normal approximation is 
+implemented for unidimensional and multidimensional models.
+}
+\item{samp.regr}{
+Applies only if software = 'tam'. Following description is borrowed from the help 
+file of \code{tam.pv} from the \code{TAM} package: An optional logical indicating 
+whether regression coefficients should be fixed in the plausible value imputation or
+also sampled from their posterior distribution? The default is \code{FALSE}. Sampled 
+regression coefficients are obtained by nonparametric bootstrap.
+}
+\item{theta.model}{
+Applies only if software = 'tam'. Following description is borrowed from the help 
+file of \code{tam.pv} from the \code{TAM} package: Logical indicating whether the 
+theta grid from the \code{tamobj} object should be used for plausible value
+imputation. In case of \code{normal.approx=TRUE}, this should be sufficient in many 
+applications.
+}
+\item{np.adj}{
+Applies only if software = 'tam'. Following description is borrowed from the help 
+file of \code{tam.pv} from the \code{TAM} package: This parameter defines the 
+``spread'' of the random theta values for drawing plausible values when 
+\code{normal.approx=FALSE}. If \eqn{s_{EAP}} denotes the standard deviation 
+of the posterior distribution of theta (in the one-dimensional case), then theta
+is simulated from a normal distribution with standard deviation \code{np.adj} 
+times \eqn{s_{EAP}}.
 }
 }
 \details{

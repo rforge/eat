@@ -31,7 +31,7 @@
 
   The tripartite process of model estimation works for one single specified model as well as for a 
   compilation of several models in only one call. To define the compilation of multiple models, use
-  the function \code{splitModels}, which returns a list which may be assigned to the 'splittedModels'
+  the function \code{splitModels}, which returns a list which may be assigned to the `splittedModels'
   argument in \code{defineModel}. In that case, not only one but several models are defined, called and 
   evaluated. The estimation of these models may be accelerated using multicore processing. Depending 
   on the number of available logical CPUs, several models may be estimated simultaneously. See the examples
@@ -47,15 +47,15 @@
   Historically, \code{eatModel} is a \sQuote{reboot} of the package \code{eatRest} formerly known as
   \code{eat}. The functionality of both packages is quite identical, whereas \code{eatModel} uses some
   more efficient routines, though. Important note: For consistency reasons, some functions in \code{eatModel} 
-  have identical names as the corresponding function in \code{eatRest}, for example 'get.shw'. It is strongly
+  have identical names as the corresponding function in \code{eatRest}, for example `get.shw'. It is strongly
   recommended to \emph{not} have both packages attached simultaneously in one R session. 
 }
 \details{
 \tabular{ll}{
 Package: \tab eatModel\cr
 Type: \tab Package\cr
-Version: \tab 0.4.20\cr
-Date: \tab 2016-10-10\cr
+Version: \tab 0.4.21\cr
+Date: \tab 2016-10-20\cr
 License: \tab GPL(>=2)
 }
 }

@@ -2,7 +2,7 @@
 \alias{num.to.cat}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Transform continuous variables into ordered factors}
-\description{Function is useful if parameters on the 'PISA' metric should be transformed into competence levels. }
+\description{Function is useful if parameters on the `PISA' metric should be transformed into competence levels. }
 \usage{
 num.to.cat(x, cut.points, cat.values = NULL)}  
 %- maybe also 'usage' for other objects documented here.

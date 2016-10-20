@@ -654,10 +654,9 @@ View(dfr$personpars)
 # Educational Progress (IQB). Example 6 demonstrates routines without trend 
 # estimation. Example 6a demonstrates routines with trend estimation 
 
-# Preparation: assume time of measurement 't1'. Only for illustration, we create 
-# an artificial item data set for the fictional time of measurement 't1'
-datT1<- reshape2::dcast(subset ( sciences, sex == "male"), 
-        formula = id+grade+sex~variable, value.var="value")
+# Preparation: assume time of measurement 't1' corresponds to the year 2003. 
+datT1<- reshape2::dcast(subset ( sciences, year == 2003), 
+        formula = id+grade+sex+country~variable, value.var="value")
 
 # First step: item calibration in separate unidimensional models for each domain
 modsT1<- splitModels ( qMatrix = qMat)
@@ -681,10 +680,6 @@ itemT1<- itemFromRes(resT1)
 # model is used (in the actual 'Laendervergleich', regressors are principal 
 # components). 
 
-# create arbitrary federal state membership
-datT1[,"country"] <- sample ( x = c ( "Berlin", "Bavaria"), size = nrow(datT1), 
-         replace = TRUE)
-         
 # create arbitrary principal components 
 for ( i in c("PC1", "PC2", "PC3") ) { 
       datT1[,i] <- rnorm( n = nrow(datT1), mean = 0, sd = 1.2)
@@ -739,7 +734,7 @@ dfrT1P<- transformToBista ( equatingList = ankT1P, cuts=cuts )
 # Preparation: assume time of measurement 't2'. We create an artificial item data 
 # set for the fictional time of measurement 't2'
 datT2<- reshape2::dcast(subset ( sciences, sex == "female"), 
-        formula = id+grade~variable, value.var="value")
+        formula = id+grade+country~variable, value.var="value")
 
 # First step: item calibration in separate unidimensional models for each domain
 modsT2<- splitModels ( qMatrix = qMat)
@@ -778,11 +773,7 @@ T.t1t2<- transformToBista ( equatingList = L.t1t2, refPop=dfrT1P[["refPop"]],
 # original and transformed linking errors. 
 
 # Fourth step: drawing plausible values for 't2', using transformed item parameters
-# captured in 'T.t1t2'. We use the same arbitrary 'country' specification as for 
-# 't1', but slightly different principal components. 
-datT2[,"country"] <- sample ( x = c ( "Berlin", "Bavaria"), size = nrow(datT2), 
-         replace = TRUE)
-         
+# captured in 'T.t1t2'.          
 # create arbitrary principal components 
 for ( i in c("PC1", "PC2", "PC3", "PC4") ) { 
       datT2[,i] <- rnorm( n = nrow(datT2), mean = 0, sd = 1.2)
@@ -823,7 +814,26 @@ ankT2P<- equat1pl ( results = resT2P)
 dfrT2P<- transformToBista ( equatingList = ankT2P, refPop=dfrT1P[["refPop"]], 
          cuts=cuts ) 
 
-# prepare data for jackknifing (not yet implemented)
+# prepare data for jackknifing and trend estimation via 'eatRep'
+dTrend<- prepRep ( calibT2 = T.t1t2, bistaTransfT1 = dfrT1P, bistaTransfT2 = dfrT2P)
+
+
+################################################################################
+###                        Example 6b: trend analyses                        ###
+################################################################################
+
+# Example 6b needs the objects created in example 6a
+# We use the 'dTrend' object to perform some trend analyses. Note: as the example 
+# data 'sciences' do not contain any jackknife replicate weights, the following 
+# analyses will not take the clustered structure into account. 
+
+# load the 'eatRep' package
+library(eatRep)
+
+# geht erst ab eatRep 0.8.0!!
+# meanT <- jk2.mean(datL = dTrend, ID="id", imp = "imp", groups = "model", 
+# group.differences.by = "wholePop", trend = "trend", linkErr = "linkingErrorTransfBista", 
+# dependent = "valueTransfBista")
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
