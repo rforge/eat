@@ -581,6 +581,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
      ### Der Funktionsaufruf von 'doAufb' variiert je nach single- oder multicore handling. hier: single core
                      doAufb <- function ( m ) {
                                matchL <- match(m, unlist(lapply(splittedModels[["models.splitted"]], FUN = function ( l ) { l[["model.no"]] } )))
+                               mess1  <- NULL
                                if(!is.null(splittedModels[["models.splitted"]][[matchL]][["qMatrix"]])) {
      ### check: wenn superSplitter BERUHEND AUF ITEM GROUPING genutzt, wird 'items'-Argument von 'defineModel' ignoriert
                                   if(misItems == FALSE) {                       ### Warnung nur beim ersten Schleifendurchlauf anzeigen!
@@ -588,8 +589,8 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                                   }
                                   itemMis<- setdiff ( splittedModels[["models.splitted"]][[matchL]][["qMatrix"]][,1], colnames(dat))
                                   if( length ( itemMis ) > 0) {
-                                      cat(paste( "Warning: ",length(itemMis) ," from ",nrow(splittedModels[["models.splitted"]][[matchL]][["qMatrix"]])," items not found in data.\n",sep=""))
-                                  }
+                                      mess1 <- paste( "Warning! Model No. ",splittedModels[["models.splitted"]][[matchL]][["model.no"]], ", model name: '",splittedModels[["models.splitted"]][[matchL]][["model.name"]],"': ", length(itemMis) ," from ",nrow(splittedModels[["models.splitted"]][[matchL]][["qMatrix"]])," items listed the Q matrix not found in data:\n    ", paste(itemMis,collapse=", "),"\n",sep="")
+                                  } 
                                   itemSel<- intersect ( splittedModels[["models.splitted"]][[matchL]][["qMatrix"]][,1], colnames(dat))
                                   qMatrix<- splittedModels[["models.splitted"]][[matchL]][["qMatrix"]]
                                }  else  {
@@ -642,6 +643,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                                nDots  <- max(nchar(overwr3[,"arg"])) + max(nchar(overwr3[,"eval"])) + 6
                                if(verbose == TRUE ) {
                                   cat(paste("\n\n",paste(rep("=",times = nDots), sep="", collapse=""),"\nModel No. ",m, paste(txt,sep="", collapse=""), "\n",paste(rep("=",times = nDots), sep="", collapse=""),"\n\n", sep=""))
+                                  if(!is.null(mess1)) { cat(mess1)}
                                }
      ### Achtung! Rueckgabe haengt davon ab, ob multicore Handling stattfinden soll! zuerst single core
                                if(is.null ( splittedModels[["nCores"]] ) | splittedModels[["nCores"]] == 1 ) {
