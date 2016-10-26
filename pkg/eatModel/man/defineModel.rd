@@ -138,12 +138,16 @@ The desired estimation software for the analysis.
 }
   \item{dir}{
 %%     ~~Describe \code{dif.term} here~~
-Applies only if \code{software = "conquest"}. An already existsing directory in which the output will be written to.
+The directory in which the output will be written to. If \code{software = "conquest"}, 
+\code{dir} must be specified. If \code{software = "tam"}, \code{dir} is not mandatory.
 }
   \item{analysis.name}{
 %%     ~~Describe \code{dif.term} here~~
-Applies only if \code{software = "conquest"}. A character string specifying the analysis name.
-All Conquest input and output files will named \code{analysis.name} with their corresponding extensions.
+A character string specifying the analysis name. If \code{software = "conquest"}, 
+\code{analysis.name} must be specified. All Conquest input and output files will 
+named \code{analysis.name} with their corresponding extensions. If \code{software = "tam"}, 
+\code{analysis.name} is not mandatory. In the case of multiple models estimation, 
+\code{split.models} automatically defines \code{analysis.name} for each model.
 }
   \item{withDescriptives}{
 %%     ~~Describe \code{dif.term} here~~
@@ -161,8 +165,7 @@ Applies only if \code{software = "conquest"}. Compute item fit statistics?
 }
   \item{n.plausible}{
 %%     ~~Describe \code{dif.term} here~~
-Applies only if \code{software = "conquest"}. The number of plausible values which are
-to be drawn from the conditioning model.
+The number of plausible values which are to be drawn from the conditioning model.
 }
   \item{seed}{
 %%     ~~Describe \code{dif.term} here~~
@@ -175,10 +178,10 @@ of the ConQuest console, for example \code{"c:/programme/conquest/console_Feb200
 }
   \item{constraints}{
 %%     ~~Describe \code{dif.term} here~~
-Applies only if \code{software = "conquest"}. A character string specifying how
-the scale should be constrained. Possible options are "cases" (default), "items"
-and "none". When anchor parameter are specified in anchor, constraints will be set
-to "none" automatically.
+A character string specifying how the scale should be constrained. Possible options 
+are "cases" (default), "items" and "none". When anchor parameter are specified in 
+anchor, constraints will be set to "none" automatically. In \code{TAM} the option
+"none" is not allowed. (See the help file of \code{tam.mml} for further details.)
 }
   \item{std.err}{
 %%     ~~Describe \code{dif.term} here~~
@@ -256,7 +259,8 @@ with width 2 in ConQuest.
 }
   \item{allowAllScoresEverywhere}{
 %%     ~~Describe \code{dif.term} here~~
-Actually, I don't know what this means.
+Applies only if \code{software = "Conquest"}. Defines score statement generation 
+in multidimensional polytomous models. 
 }
   \item{guessMat}{
 %%     ~~Describe \code{dif.term} here~~
