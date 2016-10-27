@@ -10,8 +10,8 @@ Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} func
 \usage{
 jk2.mean (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, 
           repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
-            group.differences.by = NULL, group.delimiter = "_", dependent, na.rm = FALSE, 
-            doCheck = TRUE)}
+            group.differences.by = NULL, group.delimiter = "_", trend = NULL, linkErr = NULL, 
+            dependent, na.rm = FALSE, doCheck = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -71,6 +71,15 @@ overall sample mean. See examples for further details.
   \item{group.delimiter}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Character string which separates the group names in the output frame.
+}
+  \item{trend}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: name or column number of the trend variable. Note: Trend variable must have exact two levels. Levels for 
+grouping variables must be equal in both 'sub populations' partitioned by the trend variable. 
+}
+  \item{linkErr}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: name or column number of the trend variable. If 'NULL', a linking error of 0 will be assumed in trend estimation. 
 }
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -175,6 +184,20 @@ means3 <- jk2.mean(datL = reading, ID="idstud", wgt="wgtSTUD", type = "JK2", PSU
 ### and give descriptives for subpopulations and the overlying populations
 means4 <- jk2.mean(datL = readingNest1, ID=1, imp="imputation", groups = c("country", "sex"),
           group.splits = c(0:2), dependent = "score", na.rm=FALSE, doCheck=TRUE)
+          
+### Sixth example: Trend estimation. More specifically, we want to compute group
+### specific means, group differences, differences against the whole population, 
+### and for all of these differences also a trend estimation. First, we define 
+### an arbitrary trend variable and an arbitrary linking error
+readingTrend <- subset ( reading, nest != 3)
+readingTrend[,"trend"] <- car::recode ( readingTrend[,"nest"], "1=2005; 2=2015")
+readingTrend[,"linkE"] <- 1.554
+
+### trend estimation, using arbitrary linking error 
+means6 <- jk2.mean(datL = readingTrend, ID="idstud", type = "JK2", PSU = "JKZone", 
+          repInd = "JKrep", imp="imputation", groups = c("country", "sex"),
+          group.differences.by = c("wholePop", "sex"), trend = "trend", 
+          linkErr = "linkE", dependent = "score", na.rm=FALSE, doCheck=TRUE)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

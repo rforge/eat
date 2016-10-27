@@ -10,9 +10,9 @@ of the \code{'survey'} package.
 \usage{
 jk2.glm(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, 
         repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), 
-        group.delimiter = "_", formula, family=gaussian, 
-        forceSingularityTreatment = FALSE, 
-        glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE )}
+        group.delimiter = "_", trend = NULL, linkErr = NULL, formula, family=gaussian, 
+        forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), 
+        doCheck = TRUE, na.rm = FALSE )}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -66,6 +66,15 @@ in the whole group or overlying groups. See examples for more details.
   \item{group.delimiter}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Character string which separates the group names in the output frame.
+}
+  \item{trend}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: name or column number of the trend variable. Note: Trend variable must have exact two levels. Levels for 
+grouping variables must be equal in both 'sub populations' partitioned by the trend variable. 
+}
+  \item{linkErr}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: name or column number of the trend variable. If 'NULL', a linking error of 0 will be assumed in trend estimation. 
 }
   \item{formula}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -152,7 +161,18 @@ dG(mod1)
 mod1  <- jk2.glm(datL = reading, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
          PSU = "JKZone", repInd = "JKrep", imp = "imputation", nest="nest", 
          groups = "country",  formula = passed~sex*income, family = binomial(link="logit"))
-dG(mod1)         
+dG(mod1)       
+
+### Example 3: Like example 1, but with trend estimation
+### create arbitrary trend variable and arbitrary linking error
+readingTrend <- subset ( reading, nest != 3)
+readingTrend[,"trend"] <- car::recode ( readingTrend[,"nest"], "1=2005; 2=2015")
+readingTrend[,"linkE"] <- 1.887
+
+### estimate trend, using arbitrary linking error
+mod1  <- jk2.glm(datL = readingTrend, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
+         PSU = "JKZone", repInd = "JKrep", imp = "imputation", groups = "country",  
+         formula = score~sex, trend = "trend", linkErr = "linkE")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

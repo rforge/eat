@@ -33,13 +33,16 @@
   sample, and second the uncertainty due to multiple imputed data. This tutorial describes some basic 
   analyses to compute descriptives in complex survey designs using the R package \code{eatRep}, which 
   was designed mainly to supply replications methods in R. Such methods are appropriate to analyze both 
-  clustered and multiple imputed data as well. To date, only the Jackknife-2 (JK2) and the balanced 
-  repeated replicates (BRR) methods are supported. Some functions overlap with methods provided in 
-  the computer software WesVar \citep{Westat2000}---in this case the package only allows for executing
+  clustered and multiple imputed data as well. To date, the Jackknife-1 (JK1), Jackknife-2 (JK2) and the 
+  balanced repeated replicates (BRR) methods are supported. Some functions overlap with methods provided 
+  in the computer software WesVar \citep{Westat2000}---in this case the package only allows for executing
   these analyses in R, which may be easier to implement due to a syntax related interface. Some methods 
-  in WesVar are not implemented in \code{eatRep} yet, for example bootstrapping methods or even JK1. 
-  For bootstrapping, alternative \code{R} packages (e.g. \code{boot}) may be used. However, some methods are only 
-  implemented in \code{eatRep}, for example analyses for nested imputed data or linear logistic regression models.\\ 
+  in WesVar are not completely implemented in \code{eatRep} yet, for example bootstrapping methods. For 
+  bootstrapping, alternative \code{R} packages (e.g. \code{boot}) may be used. However, some methods are 
+  only implemented in \code{eatRep}, for example analyses for nested imputed data, linear logistic 
+  regression models, or trend analyses. Examples considering the latter one are not yet included 
+  in this vignette. The examples 6 to 6d from the help page of the \code{defineModel} function in 
+  the \code{eatModel} package contain some exhaustive demonstrations of trend analyses.\\ 
   
   \code{eatRep} heavily relies on the \code{survey} package \citep{Lumley2012} which functions has been extended by methods 
   for multiple imputed data. While the functional principle of \code{survey} is based on replication of conventional 

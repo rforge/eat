@@ -10,8 +10,9 @@ the \code{svyquantile()} function of the survey package.
 \usage{
 jk2.quantile(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, 
             repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
-            group.delimiter = "_", dependent, probs = seq(0, 1, 0.25),  na.rm = FALSE,
-            nBoot = NULL, bootMethod = c("wSampling","wQuantiles") , doCheck = TRUE)}
+            group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, 
+            probs = seq(0, 1, 0.25),  na.rm = FALSE, nBoot = NULL, 
+            bootMethod = c("wSampling","wQuantiles") , doCheck = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -65,6 +66,16 @@ in the whole group or overlying groups. See examples for more details.
   \item{group.delimiter}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Character string which separates the group names in the output frame.
+}
+  \item{trend}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: name or column number of the trend variable. Note: Trend variable must have exact two levels. Levels for 
+grouping variables must be equal in both 'sub populations' partitioned by the trend variable. 
+}
+  \item{linkErr}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: name or column number of the trend variable. If 'NULL', a linking error of 0 will be assumed in trend estimation. 
+Alternatively, the linking error may be given as a single scalar value (i.e. 'linkErr = 1.225'). 
 }
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~

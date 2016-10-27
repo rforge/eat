@@ -2,7 +2,7 @@
 \alias{eatRep-package}
 \docType{package}
 \title{
-	Statistical analyses in complex survey designs with multiple imputed data.
+	Statistical analyses in complex survey designs with multiple imputed data and trend estimation.
 }
 \description{
   Computes some basic statistic operations (means, standard deviations, frequency tables,
@@ -22,31 +22,38 @@
 
   The package \code{eatRep} is designed to combine both methods which is necessary if (nested) multiple imputed
   data are used in clustered designs. Considering the structure is relevant especially for the estimation of
-  standard errors.
+  standard errors. The estimation of national trends requires a sequential analysis for both measurements
+  and a comparison of estimates between them. 
 
   Technically, \code{eatRep} is a wrapper for the \code{survey} package (Lumley, 2004). Each function in
   \code{eatRep} corresponds to a specific function in \code{survey} which is called repeatedly during the analysis.
-  Hence, a nested loop is used. We use \dQuote{imputation replicates} in the outer loop to account for multiple imputed 
-  data, and \dQuote{cluster replicates} in the inner loop to account for the clustered sampling structure. While the 
-  functional principle of \code{survey} is based on replication of standard analyses, \code{eatRep} is based on 
-  replication of \code{survey} analyses to take multiple imputed data into account. 
+  Hence, a nested loop is used. We use \dQuote{trend replicates} in the outer loop, \dQuote{imputation replicates} 
+  in the middle loop to account for multiple imputed data, and \dQuote{cluster replicates} in the inner loop to 
+  account for the clustered sampling structure. While the functional principle of \code{survey} is based on 
+  replication of standard analyses, \code{eatRep} is based on replication of \code{survey} analyses to take 
+  multiple imputed data into account. 
   
-  For each imputed data set, i.e. in the inner loop, the \code{eatRep} function first creates replicate weights 
-  based on the primary sampling unit (PSU) variable and the replication indicator variable. In the jackknife procedure, 
-  the first one is often referred to as \dQuote{Jackknife Zone}, whereas the second one is often referred to 
-  as \dQuote{Jackknife Replicate}. The number of distinct units in the PSU variable define the number of replications
-  which are necessary due to the clustered structure. A design object is created and the appropriate \code{survey} 
-  function is called. The process is repeated for each imputed dataset and the results of the analyses are pooled.
-  The pooling procedure varies in relation to the type of variable to be pooled. For examples, means or regression 
-  coefficients are pooled according to Rubin (1987) or Rubin (2003). \eqn{R^2} is pooled according to Harel (2009),
-  using a Fisher z-transformation. Chi-square distributed values are pooled according to Thomas and Rao (1990) for
-  clustered data and according to Enders (2010) and Allison (2002) for multiple imputed data. 
+  For each imputed data set in each measurement, i.e. in the inner loop, the \code{eatRep} function first creates 
+  replicate weights based on the primary sampling unit (PSU) variable and the replication indicator variable. In 
+  the jackknife procedure, the first one is often referred to as \dQuote{Jackknife Zone}, whereas the second one 
+  is often referred to as \dQuote{Jackknife Replicate}. The number of distinct units in the PSU variable define 
+  the number of replications which are necessary due to the clustered structure. A design object is created and 
+  the appropriate \code{survey} function is called. The process is repeated for each imputed dataset and the 
+  results of the analyses are pooled. The pooling procedure varies in relation to the type of variable to be 
+  pooled. For examples, means or regression coefficients are pooled according to Rubin (1987) or Rubin (2003). 
+  \eqn{R^2} is pooled according to Harel (2009), using a Fisher z-transformation. Chi-square distributed values 
+  are pooled according to Thomas and Rao (1990) for clustered data and according to Enders (2010) and 
+  Allison (2002) for multiple imputed data. For trend analyses, the whole process is repeated two times 
+  (according to the two measurements) and the difference of the estimates are computed along with their 
+  pooled standard errors. 
   
-  Without multiple imputations, the outer loop has only one cycle. Without a clustered sampling structure (i.e, in a 
-  random sample), the inner loop has only one cycle. Without both, no replication is performed at all. To compute 
-  simple mean estimates, for example, \code{eatRep} then simply calls \code{mean} instead of \code{svymean} from 
-  the \code{survey} package. A special case occurs with nested multiple imputation. We then have three loops in a 
-  nested structure. Hence, the corresponding analyses may take considerably computational effort. 
+  Without trend estimation, the outer loop has only one cycle (instead of two). Without multiple imputations, 
+  the middle loop has only one cycle. Without a clustered sampling structure (i.e, in a random sample), the 
+  inner loop has only one cycle. Without trend, imputation and clustered structure, no replication is performed 
+  at all. To compute simple mean estimates, for example, \code{eatRep} then simply calls \code{mean} instead 
+  of \code{svymean} from the \code{survey} package. A special case occurs with nested multiple imputation. 
+  We then have four loops in a nested structure. Hence, the corresponding analyses may take considerably 
+  computational effort. 
  
   \emph{Important note:} The structure of the the \code{eatRep}-functions varied substantially between versions 
   0.5.0 and 0.6.0. Up to version 0.5.0, the data has to be provided in the wide format. Beginning with version 
@@ -60,8 +67,8 @@
 \tabular{ll}{
 Package: \tab eatRep\cr
 Type: \tab Package\cr
-Version: \tab 0.7.8\cr
-Date: \tab 2016-09-08\cr
+Version: \tab 0.8.0\cr
+Date: \tab 2016-10-26\cr
 License: \tab GPL(>=2)
 }
 }

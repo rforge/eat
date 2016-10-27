@@ -12,9 +12,9 @@ methods. Technically, this is a wrapper for the svymean() function of the survey
 \usage{
 jk2.table(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, 
           repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), 
-          group.differences.by = NULL, correct = TRUE, group.delimiter = "_", dependent , 
-          separate.missing.indicator = FALSE, na.rm=FALSE, expected.values = NULL, 
-          doCheck = TRUE)}
+          group.differences.by = NULL, chiSquare = FALSE, correct = TRUE, group.delimiter = "_", 
+          trend = NULL, linkErr = NULL, dependent, separate.missing.indicator = FALSE, na.rm=FALSE, 
+          expected.values = NULL, doCheck = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -72,6 +72,11 @@ The corresponding variable must be included in the \code{groups} statement. If s
 distribution of the dependent variable is compared between the groups. See examples for 
 further details.
 }
+  \item{chiSquare}{
+Logical. Applies only if 'group.differences.by' contains the 'wholePop' value. Defines whether 
+group differences should be represented in a chi square test or in (mean) differences of each 
+group's relative frequency. 
+}
   \item{correct}{
 Logical. Applies only if 'group.differences.by' is requested without cluster replicates. A logical indicating whether to apply 
 continuity correction when computing the test statistic for 2 by 2 tables. See help page of 'chisq.test' for further details. 
@@ -79,6 +84,16 @@ continuity correction when computing the test statistic for 2 by 2 tables. See h
   \item{group.delimiter}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Character string which separates the group names in the output frame.
+}
+  \item{trend}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: name or column number of the trend variable. Note: Trend variable must have exact two levels. Levels for 
+grouping variables must be equal in both 'sub populations' partitioned by the trend variable. 
+}
+  \item{linkErr}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: name or column number of the trend variable. If 'NULL', a linking error of 0 will be assumed in trend estimation. 
+Alternatively, the linking error may be given as a single scalar value (i.e. 'linkErr = 1.225'). 
 }
   \item{dependent}{
 %%     ~~Describe \code{sig.dif.bound} here~~

@@ -29,44 +29,60 @@ generate.replicates <- function ( dat, ID, wgt = NULL, PSU, repInd, type )   {
                        attr(ret, "n.replicates") <- length(zonen)
                        return(ret) }
 
-
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf 
 jk2.mean <- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"),
             PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
-            group.differences.by = NULL, group.delimiter = "_", dependent, na.rm = FALSE, doCheck = TRUE) {
+            group.differences.by = NULL, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE) {
             eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "mean",
-                   nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, dependent = dependent,
-                   group.delimiter=group.delimiter, na.rm=na.rm, doCheck=doCheck)}
-
+                   nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, 
+                   trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, na.rm=na.rm, doCheck=doCheck)}
 
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf 
 jk2.table<- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"),
             PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
-            group.differences.by = NULL, correct = TRUE, group.delimiter = "_", dependent , separate.missing.indicator = FALSE,
+            group.differences.by = NULL, chiSquare = FALSE, correct = TRUE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent , separate.missing.indicator = FALSE,
             na.rm=FALSE, expected.values = NULL, doCheck = TRUE ) { 
-            eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "table",
-                   nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, correct = correct, dependent = dependent,
-                   group.delimiter=group.delimiter, separate.missing.indicator=separate.missing.indicator, 
-                   expected.values=expected.values, na.rm=na.rm, doCheck=doCheck)}
-
+            if ( !is.null(group.differences.by) & chiSquare == FALSE) { 
+               chk <- eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "table",
+                      nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, correct = correct, 
+                      trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, separate.missing.indicator=separate.missing.indicator, 
+                      expected.values=expected.values, na.rm=na.rm, doCheck=doCheck, onlyCheck= TRUE)
+               frml<- as.formula ( paste("~ ",chk[["dependent"]]," - 1",sep="") )
+               matr<- data.frame ( model.matrix ( frml, data = datL) )
+               datL<- data.frame ( datL,  matr)
+               ret <- do.call("rbind", lapply ( colnames(matr), FUN = function ( dpd ) { 
+                      res <- jk2.mean ( datL = datL, ID=chk[["ID"]], wgt=chk[["wgt"]], type = type, PSU = chk[["PSU"]], repInd = chk[["repInd"]], repWgt = repWgt, 
+                                        nest = chk[["nest"]], imp = chk[["imp"]], groups = chk[["group"]], group.splits = group.splits, group.differences.by=group.differences.by, 
+                                        group.delimiter =group.delimiter, trend = chk[["trend"]], linkErr = chk[["linkErr"]], dependent = dpd, na.rm=na.rm,doCheck = doCheck) 
+                      res <- res[which(res[,"parameter"] %in% c("mean", "meanGroupDiff")),]           
+                      res[,"parameter"] <- remove.pattern(string = as.character(res[,"depVar"]), pattern = chk[["dependent"]])
+                      res[,"depVar"] <- chk[["dependent"]]
+                      return(res) } ) )
+            }  else  { 
+               ret <- eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "table",
+                      nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, correct = correct, 
+                      trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, separate.missing.indicator=separate.missing.indicator, 
+                      expected.values=expected.values, na.rm=na.rm, doCheck=doCheck)
+            }
+            return(ret)}       
             
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf 
 jk2.quantile<- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"),
             PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
-            group.delimiter = "_", dependent, probs = seq(0, 1, 0.25),  na.rm = FALSE,
+            group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, probs = seq(0, 1, 0.25),  na.rm = FALSE,
             nBoot = NULL, bootMethod = c("wSampling","wQuantiles") , doCheck = TRUE)  { 
             bootMethod <- match.arg ( bootMethod )
             eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "quantile",
-                   nest = nest, imp = imp, groups = groups, group.splits = group.splits, dependent = dependent,
+                   nest = nest, imp = imp, groups = groups, group.splits = group.splits, trend = trend, linkErr = linkErr, dependent = dependent,
                    group.delimiter=group.delimiter, probs=probs, na.rm=na.rm, nBoot=nBoot, bootMethod=bootMethod, doCheck=doCheck)}
 
 
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf 
 jk2.glm  <- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"),
             PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), group.delimiter = "_",
-            formula, family=gaussian, forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE ) { 
+            trend = NULL, linkErr = NULL, formula, family=gaussian, forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE ) { 
             eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "glm",
-                   nest = nest, imp = imp, groups = groups, group.splits = group.splits,
+                   nest = nest, imp = imp, groups = groups, group.splits = group.splits, trend = trend, linkErr = linkErr, 
                    formula=formula, family=family, forceSingularityTreatment=forceSingularityTreatment, 
                    glmTransformation = glmTransformation,
                    group.delimiter=group.delimiter, na.rm=na.rm, doCheck=doCheck)}
@@ -75,253 +91,348 @@ jk2.glm  <- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"),
 ### Funktion ist nicht user-level, sondern wird von jk2.mean, jk2.table, jk2.quantile, jk2.glm mit entsprechenden Argumenten aufgerufen
 eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, 
           toCall = c("mean", "table", "quantile", "glm"), groups = NULL, group.splits = length(groups), group.differences.by = NULL, 
-          group.delimiter = "_", dependent, na.rm = FALSE, forcePooling = TRUE, boundary = 3, doCheck = TRUE,
-          separate.missing.indicator = FALSE, expected.values = NULL, probs = NULL, nBoot = NULL, bootMethod = NULL,
-          formula=NULL, family=NULL, forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), correct)    {
-          # if(!exists("rbind.fill"))   {library(plyr)}
+          group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, forcePooling = TRUE, boundary = 3, doCheck = TRUE,
+          separate.missing.indicator = FALSE, expected.values = NULL, probs = NULL, nBoot = NULL, bootMethod = NULL, formula=NULL, family=NULL, 
+          forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), correct, onlyCheck = FALSE)    {
+          if(!exists("rbind.fill"))   {library(plyr)}
           checkForPackage (namePackage = "reshape", targetPackage = "eatRep")
           toCall<- match.arg(toCall)
           type  <- match.arg(arg = toupper(type), choices = c("JK1", "JK2", "BRR"))
           glmTransformation <- match.arg(glmTransformation)
-    ### wie in 'defineModel': Funktion ruft sich selber auf, wenn Trend bestimmt werden soll und/oder Differenzen zur Gesamtpopulation bestimmt werden sollen. 
-    ### aeussere Schleife: Trend
-    ### innere Schleife: 'wholePop'. Erstmal ein paar checks ... 
-          if ( "wholePop" %in% group.differences.by & is.null(groups) ) { 
-               cat(paste("'groups' are NULL. Hence, no group differences can be estimated.\n",sep=""))
+          if(forceSingularityTreatment == FALSE & glmTransformation != "none") { 
+             cat("'forceSingularityTreatment' was set to 'FALSE'. Please note that 'glmTransformation' is only possible if 'forceSingularityTreatment' is 'TRUE'.\n"); flush.console()
           }
-          if ( "wholePop" %in% group.differences.by & toCall != "mean" ) {               
-               cat(paste("Estimation of group differences with respect to whole population ('wholePop') only applies for the 'jk2.mean' function.\n",sep=""))
-          }
+          if(toCall == "glm") {                                                 ### fuer glm muessen abhaengge und unabhaengige Variablen aus Formel extrahiert werden
+             dependent  <- as.character(formula)[2]
+             independent<- unlist ( sapply( strsplit(as.character(formula)[3], "\\*|\\:|\\+|-|\\(|\\)|\\^")[[1]], crop ) )
+             independent<- intersect(independent, colnames(datL))
+           }  else { independent <- NULL}
+          if ( "wholePop" %in% group.differences.by ) {                         ### bloeder schlechter Hotfix
+               group.differences.by <-  setdiff ( group.differences.by, "wholePop")
+               if(length(group.differences.by) == 0) { group.differences.by <- NULL }
+               wp <- TRUE 
+          }  else { wp <- FALSE } 
+          if(is.null(groups))  {groups <- "wholeGroup"; datL[,"wholeGroup"] <- 1}## Hotfix 2 
+          allVar<- list(ID = ID, wgt = wgt, PSU = PSU, repInd = repInd, repWgt = repWgt, nest=nest, imp=imp, group = groups, trend=trend, linkErr = linkErr, group.differences.by=group.differences.by, dependent = dependent, independent=independent)
+          allNam<- lapply(allVar, FUN=function(ii) {.existsBackgroundVariables(dat = datL, variable=ii)})
+          na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne")
+          naGr  <- c("wholePop", "group", "depVar", "modus", "parameter", "coefficient", "value", "linkErr")
+          naInd <- c("(Intercept)", "Ncases", "Nvalid", "R2",  "R2nagel", "linkErr")       
+          naGr1 <- which ( allNam[["group"]] %in% naGr )                        ### hier kuenftig besser: "verbotene" Variablennamen sollen automatisch umbenannt werden!
+          if(length(naGr1)>0)  {cat("Error: Following name(s) of grouping variables in data set are deemed to be unsuitable due to danger of confusion with result structure:\n"); cat(paste(allNam[["group"]][naGr1], collapse=", ")); cat("\nPlease rename these variable(s).\n"); stop() }
+          naInd1<- which ( allNam[["independent"]] %in% naInd )
+          if(length(naInd1)>0) {cat("Error: Following name(s) of independent variables in data set are deemed to be unsuitable due to danger of confusion with result structure:\n"); cat(paste(allNam[["independent"]][naInd1], collapse=", ")); cat("\nPlease rename these variable(s).\n"); stop() }
+          na2   <- which ( unlist(allNam) %in% na )
+          if(length(na2)>0) {cat("Error: Following variable name(s) in data set are deemed to be unsuitable due to danger of confusion with result structure:\n"); cat(paste(unlist(allNam)[na2], collapse=", ")); cat("\nPlease rename these variable(s).\n"); stop() }
+    ### Achtung: wenn Funktion nur zum checken genutzt wird, endet sie hier
+          if ( onlyCheck == TRUE ) { 
+              ret <- allNam
+          }  else  { 
+    ### wie in 'defineModel': Funktion ruft sich selber auf, wenn Trend bestimmt werden soll und/oder Differenzen zur Gesamtpopulation bestimmt werden sollen.
+    ### aeussere Schleife: Trend. check: only two groups in trend variable
+              if(!is.null(allNam[["trend"]])) {                                     ### Achtung: hier wenn Trendberechnung geschehen soll 
+    ### check: nur zwei Gruppen in Trendvariablen?
+                  lev <- sort ( unique(datL[,allNam[["trend"]]]))
+                  if(length(lev) != 2) {stop(paste(length(lev), " levels ('",paste(lev, collapse="', '"),"') found for the 'trend' variable '",allNam[["trend"]],"'. 2 levels are allowed.\n",sep=""))}
+    ### check: alle Kombinationen von faktoren in beiden datensaetzen? 
+                  if (!is.null(allNam[["group"]])) {  
+                       foo <- lapply(allNam[["group"]], FUN = function ( gr ) { 
+                              ch <- by(data = datL, INDICES = datL[,allNam[["trend"]]], FUN = function ( subdat ) { table(subdat[,gr]) } )
+                              if ( !all ( names(ch[[1]]) == names(ch[[2]]))) { stop(paste("Error in grouping variable '",gr,"': Levels do not match. Levels in trend group '",names(ch)[1],"': \n    ", paste(names(ch[[1]]), collapse = ", "),"\nLevels in trend group '",names(ch)[2],"': \n    ", paste(names(ch[[2]]), collapse = ", "),sep="")) } } )
+                  }            
+    ### repliziere Analyse zweimal, d.h. fuer beide Trendgruppen ... hier single core 
+                  if ( "single" == "single" ) { 
+                        resT<- by ( data = datL, INDICES = datL[,allNam[["trend"]]], FUN = function ( subdat ) { 
+                               if(wp==TRUE) { gdb <- c( group.differences.by, "wholePop") } else { gdb <- group.differences.by }
+                               cat(paste("\nTrend group: '",subdat[1,allNam[["trend"]] ], "'\n",sep=""))  
+                               do    <- paste ( "foo <- eatRep ( ", paste(names(formals(eatRep)), recode(names(formals(eatRep)), "'trend'='NULL'; 'datL'='subdat'; 'group.differences.by'='gdb'"), sep =" = ", collapse = ", "), ")",sep="")
+                               eval(parse(text=do))
+                               foo[,allNam[["trend"]]] <- subdat[1,allNam[["trend"]] ]
+                               return(foo)}) 
+                  }  else {                                                         ### jetzt multicore
+                        if(!exists("detectCores"))   {library(parallel)}
+                        spl <- by ( data = datL, INDICES = datL[,allNam[["trend"]]], FUN = function ( subdat ) { return(subdat)})
+                        doIt<- function (laufnummer,  ... ) { 
+                               if(!exists("jk2.mean"))  { library(eatRep) }
+                               # if(!exists("jk2.mean")) {source("c:/Users/weirichs/Dropbox/R/Funktion.rsy")}
+                               cat(paste("\nTrend group '",spl[[laufnummer]][1,allNam[["trend"]] ], "'\n",sep=""))
+                               if(wp==TRUE) { gdb <- c( group.differences.by, "wholePop") } else { gdb <- group.differences.by }
+                               do    <- paste ( "txt <- capture.output ( foo <- eatRep ( ", paste(names(formals(eatRep)), recode(names(formals(eatRep)), "'trend'='NULL'; 'datL'='spl[[laufnummer]]'; 'group.differences.by'='gdb'"), sep =" = ", collapse = ", "), "))",sep="")
+                               eval(parse(text=do))
+                               foo[,allNam[["trend"]]] <- spl[[laufnummer]][1,allNam[["trend"]] ]
+                               return(list ( res=foo, txt=txt)) }
+                        cl  <- makeCluster(2, type = "SOCK")
+                        mods<- clusterApply(cl = cl, x = 1:length(spl), fun = doIt)
+                        stopCluster(cl)
+                        resT<- list( mods[[1]][["res"]], mods[[2]][["res"]])
+                        cat(c(mods[[1]][["txt"]], mods[[2]][["txt"]]), sep="\n")
+                  }      
+    ### 'resT' aufbereiten, Linkingfehler ranmatchen, Trend berechnen ... wenn es keinen linkingfehler gibt, wird er auf 0 gesetzt 
+                  ch3  <- data.frame ( do.call("rbind", lapply(resT, dim) ))
+                  ch3  <- lapply(ch3, FUN = function ( y ) { if ( length(unique(y)) != 1) {browser()} } )
+                  if (!all(colnames(resT[[1]]) == colnames(resT[[2]]))) {browser()}
+                  resT1<- dcast ( rbind(resT[[1]], resT[[2]]) , as.formula ( paste ( " ... ~ coefficient + ",allNam[["trend"]],sep="") ) )
+                  resT1[,"est_trend"]<- resT1[,paste("est_",lev[2],sep="")] - resT1[,paste("est_",lev[1],sep="")]
+    ### Linkingfehler mergen ... kompliziert! ... 
+                  if ( is.null ( allNam[["linkErr"]] ) ) { 
+                       le <- 0
+                  }  else  { 
+                       if ( length( unique(datL[, allNam[["linkErr"]]])) == 1 ) {## Achtung, krass kompliziert: wenn der Linkingfehler nicht fuer alle Zeilen gleich ist,
+                            le <- unique(datL[, allNam[["linkErr"]]])           ### muss er innerhalb jeder Gruppe von 'parameter' gleich sein
+                       }  else  {                                               ### 'leF' = linking error frame
+                            stopifnot ( length(table(datL[, allNam[["dependent"]] ]))  < 20 )
+                            leF<- do.call("rbind", by(data = datL, INDICES = datL[,allNam[["dependent"]] ], FUN = function ( z ) { 
+                                  if ( !length(unique(z[, allNam[["linkErr"]] ] )) == 1 ) {
+    ### obere Zeile darf, wenn ueberhaupt, nur dann TRUE sein, wenn 'jk2.table' ueber 'chiSquare == FALSE' mit dem 'jk2.mean'-Wrapper aufgerufen wurde ... doofes Problem: hat man eine kategoriale 
+    ### Variable und erzeugt die Haeufigkeitstabelle, indem man dichotome Indikatoren generiert und fuer diese den Mittelwert bestimmt, wird der nicht mittransformiert 
+                                       stopifnot(length(unique(datL[,allNam[["dependent"]]])) == 2)
+                                       stopifnot(all(sort(unique(datL[,allNam[["dependent"]]])) == 0:1 ))
+                                       stopifnot(length(unique(datL[,allNam[["linkErr"]]])) == 2)
+                                       lef1<- datL[ which(datL[,allNam[["dependent"]]] == 1) ,allNam[["linkErr"]] ]
+                                       stopifnot ( length(unique(lef1)) == 1)
+                                       lef1<- unique(lef1)
+                                  }  else  { 
+                                       lef1<- unique(z[,allNam[["linkErr"]]])
+                                  }     
+                                  return ( data.frame ( parameter = unique ( z[,allNam[["dependent"]]]), lef = lef1) ) } ))
+                            if ( toCall != "mean") { 
+                                  stopifnot ( all ( sort ( unique ( leF[,"parameter"]) ) == sort(unique(resT1[,"parameter"]))))
+                                  rtf<- merge ( resT1, leF, by = "parameter", all = TRUE)
+                                  stopifnot ( nrow(rtf) == nrow(resT1))
+                                  le <- rtf[,"lef"]
+                            }  else  { 
+                                  stopifnot(length(unique(leF[,"lef"])) == 1 )
+                                  le <- unique(leF[,"lef"])
+                            }      
+                       }     
+                  }                  
+                  resT1[,"se_trend"] <- sqrt(resT1[,paste("se_",lev[2],sep="")]^2 + resT1[,paste("se_",lev[1],sep="")]^2 + le^2)
+                  resT2<- melt ( resT1, measure.vars = c(paste("est_",lev[1], sep=""), paste("est_",lev[2], sep=""), paste("se_",lev[1], sep=""), paste("se_",lev[2], sep=""), "est_trend", "se_trend"), na.rm = FALSE)
+                  resT2<- data.frame ( resT2[,-match("variable", colnames(resT2))], as.numeric.if.possible (colsplit ( string = as.character(resT2[,"variable"]), pattern = "_", names = c("coefficient", allNam[["trend"]])), verbose = FALSE))
+                  return(resT2)
+              }  else {       
+    ### innere Schleife: 'wholePop'. Erstmal ein paar checks ...
+                 if ( wp==TRUE & is.null(groups) ) {
+                      cat(paste("'groups' are NULL. Hence, no group differences can be estimated.\n",sep=""))
+                 }
+                 if ( wp==TRUE & !toCall %in% c("mean", "glm") ) {
+                      cat(paste("Estimation of group differences with respect to whole population ('wholePop') only applies for the 'jk2.mean', 'jk2.glm' and 'jk2.table' with 'chiSquare == FALSE'.\n",sep=""))
+                 }
     ### hier ruft die Funktion sich selber auf, wenn 'wholePop' in 'group.differences.by' enthalten ist
-          if ( "wholePop" %in% group.differences.by & !is.null(groups) & toCall == "mean" ) {
-                group.differences.by <-  setdiff ( group.differences.by, "wholePop")
-                if ( length(group.differences.by) == 0 ) { group.differences.by <- NULL } 
-                if ( !all(group.splits == length(groups)) ) { 
-                     cat(paste("Warning: 'group.splits' has to equal 'length(groups)', if 'group.differences.by' contains 'wholePop'. Set 'group.splits' to ",length(groups),".\n",sep=""))
-                     group.splits <- length(groups)
-                }     
+                 if ( wp==TRUE & !is.null(groups) & toCall %in% c("mean", "glm") ) {
+                       if ( !all(group.splits == length(groups)) ) {
+                            cat(paste("Warning: 'group.splits' has to equal 'length(groups)', if 'group.differences.by' contains 'wholePop'. Set 'group.splits' to ",length(groups),".\n",sep=""))
+                            group.splits <- length(groups)
+                       }
     ### erster Schritt: nur Subgruppen. Modellaufruf generieren
-                do    <- paste ( "resG <- eatRep ( ", paste(names(formals(eatRep)), names(formals(eatRep)), sep =" = ", collapse = ", "), ")",sep="")
-                eval(parse(text=do))
+                       do    <- paste ( "resG <- eatRep ( ", paste(names(formals(eatRep)), names(formals(eatRep)), sep =" = ", collapse = ", "), ")",sep="")
+                       eval(parse(text=do))
     ### zweiter Schritt: nur Gesamtpopulation, groups = intersect(groups, group.differences.by)
-                newGrp<- intersect(groups, group.differences.by)
-                do    <- paste ( "resA <- eatRep ( ", paste(names(formals(eatRep)), recode(names(formals(eatRep)), "'groups'='newGrp'; 'group.differences.by'='newGrp'"), sep =" = ", collapse = ", "), ")",sep="")
-                eval(parse(text=do))
-    ### dritter Schritt: Differenzen bilden und Standardfehler poolen       
-                resKom<- do.call("rbind", by(data = resG, INDICES = resG[,attr(resG, "allNam")[["group"]] ], FUN = function ( x ) { 
-                         x1 <- dcast(x, ... ~ coefficient, value.var = "value")
-                         x2 <- dcast(resA, ... ~ coefficient, value.var = "value")
-                         com<- setdiff (intersect(colnames(x1), colnames(x2)), c("est", "se", "modus", "depVar", "group"))
-                         x3 <- merge(x1, x2, by = com, all = FALSE)
-                         stopifnot ( nrow(x3) == nrow(x1))
-                         x3[,"wholePopDiff_est"] <- x3[,"est.x"] - x3[,"est.y"]
-                         x3[,"wholePopDiff_se"]  <- sqrt(x3[,"se.x"]^2 + x3[,"se.y"]^2)
-    ### ACHTUNG: hier werden nur die Mittelwertsdifferenzen ausgegeben (nicht die Differenzen in Varianzen, Standardabweichungen, etc.)
-                         x4 <- melt ( x3[which(x3[,"parameter"] %in% c("mean", "meanGroupDiff") ), ], id.vars = "group.x", measure.vars = c("wholePopDiff_est", "wholePopDiff_se"))
-                         x4 <- data.frame ( x4, colsplit(string = as.character(x4[,"variable"]), pattern = "_", names = c("parameter", "coefficient")))
-                         x5 <- x[1:nrow(x4),]
-                         x5[,"parameter"] <- x4[,"parameter"]; x5[,"coefficient"] <- x4[,"coefficient"]; x5[,"value"] <- x4[,"value"]
-                         x  <- rbind ( x, x5)
-                         return(x)}))
-                add   <- setdiff ( colnames(resG), colnames(resA))
-                if(length(add)>0) {
-                   stopifnot ( length(add) == 1)
-                   resA[,add] <- paste("all_",add,sep="")
-                }   
-                wg    <- match("wholeGroup", colnames(resA))
-                if(is.na(wg)) {resKom<- rbind.fill(resKom, resA)} else {resKom<- rbind.fill(resKom, resA[,-wg])}
-                return(resKom)
-          }  else  {        
-    ### obere Zeile: Ende der inneren Schleife       
-                if(forceSingularityTreatment == FALSE & glmTransformation != "none") { 
-                   cat("'forceSingularityTreatment' was set to 'FALSE'. Please note that 'glmTransformation' is only possible if 'forceSingularityTreatment' is 'TRUE'.\n"); flush.console()
-                }
-                if(toCall == "glm") {                                                 ### fuer glm muessen abhaengge und unabhaengige Variablen aus Formel extrahiert werden
-                   dependent  <- as.character(formula)[2]
-                   independent<- unlist ( sapply( strsplit(as.character(formula)[3], "\\*|\\:|\\+|-|\\(|\\)|\\^")[[1]], crop ) )
-                   independent<- intersect(independent, colnames(datL))
-                   .GlobalEnv$glm.family <- family                                    ### Hotfix!
-                }  else { independent <- NULL}
-                if(is.null(groups))  {groups <- "wholeGroup"; datL[,"wholeGroup"] <- 1}## Hotfix 2 
-                allVar<- list(ID = ID, wgt = wgt, PSU = PSU, repInd = repInd, repWgt = repWgt, nest=nest, imp=imp, group = groups, group.differences.by=group.differences.by, dependent = dependent, independent=independent)
-                allNam<- lapply(allVar, FUN=function(ii) {.existsBackgroundVariables(dat = datL, variable=ii)})
-                if( length( setdiff ( allNam[["group.differences.by"]],allNam[["group"]])) != 0) {stop("Variable in 'group.differences.by' must be included in 'groups'.\n")}
-                na    <- c("isClear", "N_weightedValid", "N_weighted",  "wgtOne")
-                naGr  <- c("group", "depVar", "modus", "parameter", "coefficient", "value")
-                naInd <- c("(Intercept)", "Ncases", "Nvalid", "R2",  "R2nagel")       ### hier kuenftig besser: "verbotene" Variablennamen sollen automatisch umbenannt werden!
-                naGr1 <- which ( allNam[["group"]] %in% naGr )
-                if(length(naGr1)>0)  {cat("Error: Following name(s) of grouping variables in data set are deemed to be unsuitable due to danger of confusion with result structure:\n"); cat(paste(allNam[["group"]][naGr1], collapse=", ")); cat("\nPlease rename these variable(s).\n"); stop() }
-                naInd1<- which ( allNam[["independent"]] %in% naInd )
-                if(length(naInd1)>0) {cat("Error: Following name(s) of independent variables in data set are deemed to be unsuitable due to danger of confusion with result structure:\n"); cat(paste(allNam[["independent"]][naInd1], collapse=", ")); cat("\nPlease rename these variable(s).\n"); stop() }
-                na2   <- which ( unlist(allNam) %in% na )
-                if(length(na2)>0) {cat("Error: Following variable name(s) in data set are deemed to be unsuitable due to danger of confusion with result structure:\n"); cat(paste(unlist(allNam)[na2], collapse=", ")); cat("\nPlease rename these variable(s).\n"); stop() }
-    ### Anzahl der Analysen definieren ueber den 'super splitter' und Analysen einzeln (ueber 'lapply') starten
-                toAppl<- superSplitter(group = allNam[["group"]], group.splits = group.splits, group.differences.by = allNam[["group.differences.by"]], group.delimiter = group.delimiter , dependent=allNam[["dependent"]] )
-                cat(paste(length(toAppl)," analyse(s) overall according to: 'group.splits = ",paste(group.splits, collapse = " ") ,"'.", sep=""))
-    ### Achtung: wenn keine Gruppen und/oder Nests und/oder Imputationen spezifiziert sind, erzeuge Variablen mit Werten gleich 1, damit by() funktioniert!
-                if( is.null(allNam[["imp"]]) )  { datL[,"imp"] <- 1; allNam[["imp"]] <- "imp" } else { stopifnot(length(allNam[["imp"]]) == 1 ); datL[,allNam[["imp"]]] <- as.character(datL[,allNam[["imp"]]])}
-                if( is.null(allNam[["wgt"]]) )  { datL[,"wgtOne"] <- 1; allNam[["wgt"]] <- "wgtOne" } else { 
-                    stopifnot(length(allNam[["wgt"]]) == 1 ) 
-                    if ( !class(datL[,allNam[["wgt"]]]) %in% c("numeric", "integer") ) { stop ( paste("Error: 'wgt' variable '",allNam[["wgt"]],"' of class '",class(datL[,allNam[["wgt"]]]),"' has to be numeric.\n",sep="")) }
-                    isMis <- which(is.na(datL[,allNam[["wgt"]]]))
-                    isZero<- which ( datL[,allNam[["wgt"]]] == 0 ) 
-                    if(length(isMis)>0) { stop (paste ( "Error: Found ",length(isMis)," missing values in the weight variable '",allNam[["wgt"]],"'.\n",sep="")) }
-                    if(length(isZero)>0) { cat (paste ( "\nWarning: Found ",length(isZero)," zero weights in the weight variable '",allNam[["wgt"]],"'.\n",sep="")) }
-                }
-                if(!is.null(allNam[["nest"]]))  { 
-                    stopifnot(length(allNam[["nest"]]) == 1 ) 
-                    datL[,allNam[["nest"]]] <- as.character(datL[,allNam[["nest"]]])
-                    cat(paste("\nAssume nested structure with ", length(table(datL[,allNam[["nest"]]]))," nests and ",length(table(datL[,allNam[["imp"]]]))," imputations in each nest. This will result in ",length(table(datL[,allNam[["nest"]]]))," x ",length(table(datL[,allNam[["imp"]]]))," = ",length(table(datL[,allNam[["nest"]]]))*length(table(datL[,allNam[["imp"]]]))," imputation replicates.\n",sep=""))
-                }  else  { cat("\nAssume unnested structure with ",length(table(datL[,allNam[["imp"]]]))," imputations.\n",sep="")}
-                datL[,"isClear"] <- TRUE
-                if( is.null(allNam[["nest"]]) ) { datL[,"nest"]  <- 1; allNam[["nest"]]  <- "nest" }
-                if(!is.null(allNam[["group"]])) {                                     ### untere Zeile: das, damit leere Gruppen nicht ueber by() mit geschleift werden, wie es passiert, wenn Gruppen als Faktoren definiert sind
-                    for ( jj in allNam[["group"]] )  { datL[,jj] <- as.character(datL[,jj]) } 
-                }
-    ### check: abhaengige Var. numerisch?
-                if(toCall %in% c("mean", "quantile", "glm")) {
-                   if(!class(datL[,allNam[["dependent"]]]) %in% c("integer", "numeric")) { 
-                       cat(paste("Warning: Dependent variable has to be of class 'integer' or 'numeric'.\n         '",allNam[["dependent"]],"' of class '",class(datL[,allNam[["dependent"]]]),"' will be transformed to numeric.\n"))
-                       datL[,allNam[["dependent"]]] <- as.character(as.numeric(datL[,allNam[["dependent"]]]))
-                   }                                                                                                
-                }
-    ### wenn Replicates bereits uebergeben, muss PSU und repInd NULL sein
-                if(!is.null(repWgt) ) { 
-                   if ( !is.null(allNam[["PSU"]]) | !is.null(allNam[["repInd"]]) ) { 
-                       cat("Warning: Arguments 'PSU' and 'repInd' are expected to be NULL if replicate weights are already defined (via 'repWgt').\n    'PSU' and 'repInd' will be ignored.\n")
-                   }    
-                }
-    ### replicates erzeugen (nur einmal fuer alle Analysen, und nur wenn 'repWgt' NULL ist)
-                if(!is.null(allNam[["repWgt"]]))  {                       
-                   repA <- data.frame ( datL[,allNam[["ID"]], drop=FALSE], datL[,allNam[["repWgt"]] ])
-                   repA <- repA[!duplicated(repA[,allNam[["ID"]]]),]
-                }  else  { 
-                   if(!is.null(allNam[["PSU"]]))  { 
-                       repW <- datL[!duplicated(datL[,allNam[["ID"]]]),]
-                       repA <- generate.replicates(dat = repW, ID = allNam[["ID"]], wgt = allNam[["wgt"]], PSU = allNam[["PSU"]], repInd = allNam[["repInd"]], type=type )
-                   }  else  { repA <- NULL}
-                }   
-                if(is.null(repA)) {doJK <- FALSE }  else {doJK <- TRUE}   
-    ### splitten nach super splitter
-                allRes<- do.call("rbind.fill", lapply( names(toAppl), FUN = function ( gr ) {
-                    if(toCall %in% c("mean", "table"))  { allNam[["group.differences.by"]] <- attr(toAppl[[gr]], "group.differences.by") } 
-                    if( nchar(gr) == 0 ){ datL[,"dummyGroup"] <- "wholeGroup" ; allNam[["group"]] <- "dummyGroup" } else {allNam[["group"]] <- toAppl[[gr]] }
-    ### check: Missings duerfen nur in abhaengiger Variable auftreten!          ### obere Zeile: problematisch!! "allNam" wird hier in jedem Schleifendurchlauf ueberschrieben -- nicht so superschoen!
-                    noMis <- unlist ( c ( allNam[-match(c("group", "dependent"), names(allNam))], toAppl[gr]) )
-                    miss  <- which ( sapply(datL[,noMis], FUN = function (uu) {length(which(is.na(uu)))}) > 0 )
-                    if(length(miss)>0) { cat(paste("Warning! Unexpected missings in variable(s) ",paste(names(miss), collapse=", "),".\n",sep=""))}
-    ### check: gleichviele Imputationen je Nest und Gruppe?
-                    if(doCheck == TRUE) {
-                       impNes<- table ( by(data = datL, INDICES = datL[, c(allNam[["nest"]], toAppl[[gr]]) ], FUN = function ( x ) { length(table(as.character(x[,allNam[["imp"]]])))}) )
-                       if(length(impNes) != 1 ) {cat("Warning: Number of imputations differ across nests and/or groups!"); print(impNes)}
-    ### check: gleichviele PSUs je nest?
-                       if(!is.null(allNam[["PSU"]]))  { 
-                           psuNes<- table ( by(data = datL, INDICES = datL[,allNam[["nest"]]], FUN = function ( x ) { length(table(as.character(x[,allNam[["PSU"]]])))}) )
-                           if(length(psuNes) != 1 ) {cat("Warning: Number of PSUs differ across nests!"); print(psuNes)}
-                       }    
-    ### check: sind fuer jede Gruppe alle Faktorstufen in allen nests und allen imputationen vorhanden? z.B. nicht in einer Imputation nur Jungen
-                       impNes<- by(data = datL, INDICES = datL[, c(allNam[["nest"]], allNam[["imp"]]) ], FUN = function ( x ) {
-                                if(length(x[,allNam[["ID"]]]) != length(unique(x[,allNam[["ID"]]])))  { 
-                                   cat(paste(" W A R N I N G !  '",allNam[["ID"]],"' variable is not unique within nests and imputations. Analysis will be most likely biased!\n",sep=""))
-                                }   
-                                if( length(toAppl[[gr]])>0) { ret <- lapply( toAppl[[gr]], FUN = function ( y ) {table(x[,y])}) } else {ret <- 1}
-                                return(ret) })
-                       impNes<- data.frame ( do.call("rbind", lapply(impNes, FUN = function ( x ) { unlist(lapply(x, FUN = length)) })) )
-                       if ( !all ( sapply(impNes, FUN = function ( x ) { length(table(x)) } ) == 1) ) { cat("Warning: Number of units in at least one group differs across imputations!\n")}
-    ### Achtung!! jetzt der check, der in der alten Version ueber 'checkData' gemacht wurde!
-                       datL  <- do.call("rbind", by(data = datL, INDICES = datL[,c( allNam[["group"]], allNam[["nest"]], allNam[["imp"]])], FUN = function ( sub.dat ) {
-                                if(!is.null(allNam[["PSU"]])) {
-                                    nJkZones <- length(table(as.character(sub.dat[,allNam[["PSU"]]])))
-                                    if(nJkZones<2)  { 
-                                       cat("Warning! Found group with less than 2 PSUs. Please check your data!\n"); flush.console()
-                                       sub.dat[,"isClear"] <- FALSE 
-                                    }
-                                }                                                     ### untere Zeile: prueft; es darf GAR KEINE Missings geben 
-                                if( (toCall == "table" & separate.missing.indicator == FALSE) | (toCall %in% c("mean", "quantile", "glm") & na.rm==FALSE ) )  {    
-                                    nObserved <- length(which(is.na(sub.dat[, allNam[["dependent"]]])))
-                                    if(nObserved>0) { 
-                                       if ( toCall %in% c("mean", "quantile", "glm") ) { 
-                                            cat("Warning! Found unexpected missing data in dependent variable for at least one group. Execution haltered. Please check your data!\n"); flush.console()
-                                            sub.dat[,"isClear"] <- FALSE 
-                                       }  else  { 
-                                            cat("Warning! Found unexpected missing data in dependent variable for at least one group although 'separate.missing.indicator' was set to 'FALSE'. \n    Sure that this is intended? Try to continue execution ... \n"); flush.console()
-                                       }     
-                                    }
-                                }                                                     ### untere Zeile: prueft; es darf NICHT ALLES missing sein
-                                if ( toCall %in% c("mean", "quantile", "glm") & na.rm==TRUE) { 
-                                    nMissing <- length(which(is.na(sub.dat[, allNam[["dependent"]]])))
-                                    if(nMissing == nrow(sub.dat))  { 
-                                       cat("Warning! Some groups without any observed data. Please check your data!\n"); flush.console()
-                                       sub.dat[,"isClear"] <- FALSE 
-                                    }
+                       newGrp<- intersect(groups, group.differences.by)
+                       do    <- paste ( "resA <- eatRep ( ", paste(names(formals(eatRep)), recode(names(formals(eatRep)), "'groups'='newGrp'; 'group.differences.by'='newGrp'"), sep =" = ", collapse = ", "), ")",sep="")
+                       eval(parse(text=do))
+                       resKom<- do.call("rbind", by(data = resG, INDICES = resG[, allNam[["group"]] ], FUN = function ( x ) {
+                                x1 <- dcast(x, ... ~ coefficient, value.var = "value")
+                                x2 <- dcast(resA, ... ~ coefficient, value.var = "value")
+                                com<- setdiff (intersect(colnames(x1), colnames(x2)), c("est", "se", "modus", "depVar", "group"))
+                                x3 <- merge(x1, x2, by = com, all = FALSE)
+                                stopifnot ( nrow(x3) == nrow(x1))
+                                x3[,"wholePopDiff_est"] <- x3[,"est.x"] - x3[,"est.y"]
+                                x3[,"wholePopDiff_se"]  <- sqrt(x3[,"se.x"]^2 + x3[,"se.y"]^2)
+    ### ACHTUNG: wenn toCall == "mean", dann werden hier nur die Mittelwertsdifferenzen ausgegeben (nicht die Differenzen in Varianzen, Standardabweichungen, etc.)
+                                if ( toCall == "mean") { 
+                                     x4 <- melt ( x3[which(x3[,"parameter"] %in% c("mean", "meanGroupDiff") ), ], id.vars = "group.x", measure.vars = c("wholePopDiff_est", "wholePopDiff_se"))
+                                     x4 <- data.frame ( x4, colsplit(string = as.character(x4[,"variable"]), pattern = "_", names = c("parameter", "coefficient")))
+                                     x5 <- x[1:nrow(x4),]
+                                     x5[,"parameter"] <- x4[,"parameter"]; x5[,"coefficient"] <- x4[,"coefficient"]; x5[,"value"] <- x4[,"value"]
                                 }
-                                return(sub.dat)}))    
-                       ok    <- table(datL[,"isClear"])
-                       if(length(ok) > 1 ) { cat ( paste( ok[which(names(ok)=="FALSE")] , " of ", nrow(datL), " cases removed from analysis due to inconsistent data.\n",sep="")) }
-                    }
-    ### nur fuer jk2.table(): "expected.values" aufbereiten ... 
-                    if(toCall=="table") {
-                       misInd <- which(is.na(datL[,allNam[["dependent"]]]))
-                       if(separate.missing.indicator == TRUE) {
-                          if(length(misInd)>0) { datL[misInd,allNam[["dependent"]]] <- "<NA>"}
-                       }  else {    
-                          if(length(misInd)>0) { 
-                             cat(paste("Warning: No seperate missing categorie was chosen. ", length(misInd), " missings were found anyhow for ",allNam[["dependent"]],". Missings will be deteted from the data.\n",sep=""))
-                             if(length(misInd) == nrow(datL)) {stop()}
-                             datL <- datL[-misInd,]
-                          }
-                       }      
-                       expected.values <- sort(unique(c(expected.values, names(table(datL[,allNam[["dependent"]]]))))) 
-                    }   
-    ### nun wird der Datensatz zuerst nach Nests und je Nest nach Imputationen geteilt 
-                    anaA<- do.call("rbind", by(data = datL, INDICES = datL[,"isClear"], FUN = function ( datL1 ) {
-                           if(datL1[1,"isClear"] == TRUE) {                           ### nur fuer isClear==TRUE werden Analysen gemacht
-                              ana <- do.call("rbind", by(data = datL1, INDICES = datL1[,allNam[["nest"]]], FUN = function ( datN ) {
-                                     anaI <- do.call("rbind", by(data = datN, INDICES = datN[,allNam[["imp"]]], FUN = function ( datI ) {
-    ### nun muss die Funktion (mean, table, glm ... ) und die Methode (JK2, BRR, oder konventionell) definiert werden
-                                             if( toCall == "mean" ) {                 ### hier wird an die meanfunktion uebergeben
-                                                 if ( doJK == TRUE ) {
-                                                     ana.i <- jackknife.mean (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA)
-                                                 }  else  { 
-                                                     ana.i <- conv.mean (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter)
-                                                 }
-                                             }
-                                             if( toCall == "table" ) {                
-                                                 if ( doJK == TRUE ) {
-                                                     ana.i <- jackknife.table ( dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA, separate.missing.indicator = separate.missing.indicator, expected.values=expected.values)
-                                                 }  else  { 
-                                                     ana.i <- conv.table (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, separate.missing.indicator = separate.missing.indicator, correct=correct, expected.values=expected.values)
-                                                 }
-                                             }
-                                             if( toCall == "quantile" ) {                
-                                                 if ( doJK == TRUE ) {
-                                                     ana.i <- jackknife.quantile (dat.i = datI, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA, probs=probs)
-                                                 }  else  { 
-                                                     ana.i <- conv.quantile (dat.i = datI, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, probs=probs, nBoot=nBoot,bootMethod=bootMethod)
-                                                 }
-                                             }
-                                             if( toCall == "glm" ) {                
-    ### initiate checks specifically for regression models
-                                                 doChek<- checkRegression ( dat = datI, allNam=allNam)
-                                                 ana.i <- jackknife.glm ( dat.i = datI , allNam=allNam, formula=formula, forceSingularityTreatment=forceSingularityTreatment, glmTransformation=glmTransformation, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA)
-                                             }
-                                             ana.i <- data.frame ( ana.i, datI[1,c(allNam[["nest"]], allNam[["imp"]]),drop=FALSE], stringsAsFactors = FALSE)
-                                             return(ana.i)}))
-                                     return(anaI)}))
-    ### es wird nur gepoolt, wenn es mehr als eine Imputation gibt!
-                              if( length(table(ana[,allNam[["imp"]]])) > 1 ) { 
-                                  retList <- jk2.pool ( datLong = ana, allNam=allNam, forceSingularityTreatment = forceSingularityTreatment)
-                              }  else  { retList <- ana[,-match(c(allNam[["nest"]], allNam[["imp"]]), colnames(ana))] }
-    ### hier die dummy-Ergebnisstruktur erzeugen (noch nicht schoen, kann man vielleicht auch lassen ... )
-                           }  else  {                   
-                              retList <- NULL                           
+    ### ACHTUNG: wenn toCall == "glm", dann werden nur die Differenzen fuer Intercept und alle Regressoren ausgegeben (nicht die Differenzen Ncases, NcasesValid, R2 ...)
+                                if ( toCall == "glm") { 
+                                     x4 <- melt ( x3[-which(x3[,"parameter"] %in% c("Ncases", "Nvalid", "R2", "R2nagel") ), ], id.vars = c("group.x","parameter"), measure.vars = c("wholePopDiff_est", "wholePopDiff_se"))
+                                     foo<- colsplit(string = as.character(x4[,"variable"]), pattern = "_", names = c("parameter", "coefficient"))
+                                     foo[,"parameter"] <- paste("wholePopDiff", x4[,"parameter"], sep="__")
+                                     x5 <- data.frame ( group = x4[,"group.x"], depVar = x[1,"depVar"], modus = x[1,"modus"], parameter = foo[,"parameter"], coefficient = foo[,"coefficient"], value = x4[,"value"], model = x[1,"model"])
+                                }
+                                x  <- rbind ( x, x5)
+                                return(x)}))
+                       add   <- setdiff ( colnames(resG), colnames(resA))
+                       if(length(add)>0) {
+                          stopifnot ( length(add) == 1)
+                          resA[,add] <- paste("all_",add,sep="")
+                       }
+                       wg    <- match("wholeGroup", colnames(resA))
+                       if(is.na(wg)) {resKom<- rbind.fill(resKom, resA)} else {resKom<- rbind.fill(resKom, resA[,-wg])}
+                       return(resKom)
+                 }  else  {
+    ### obere Zeile: Ende der inneren Schleife
+                       if( length( setdiff ( allNam[["group.differences.by"]],allNam[["group"]])) != 0) {stop("Variable in 'group.differences.by' must be included in 'groups'.\n")}
+                       if(toCall == "glm") {.GlobalEnv$glm.family <- family}                 ### Hotfix!
+    ### Anzahl der Analysen definieren ueber den 'super splitter' und Analysen einzeln (ueber 'lapply') starten
+                       toAppl<- superSplitter(group = allNam[["group"]], group.splits = group.splits, group.differences.by = allNam[["group.differences.by"]], group.delimiter = group.delimiter , dependent=allNam[["dependent"]] )
+                       cat(paste(length(toAppl)," analyse(s) overall according to: 'group.splits = ",paste(group.splits, collapse = " ") ,"'.", sep=""))
+    ### Achtung: wenn keine Gruppen und/oder Nests und/oder Imputationen spezifiziert sind, erzeuge Variablen mit Werten gleich 1, damit by() funktioniert!
+                       if( is.null(allNam[["imp"]]) )  { datL[,"imp"] <- 1; allNam[["imp"]] <- "imp" } else { stopifnot(length(allNam[["imp"]]) == 1 ); datL[,allNam[["imp"]]] <- as.character(datL[,allNam[["imp"]]])}
+                       if( is.null(allNam[["wgt"]]) )  { datL[,"wgtOne"] <- 1; allNam[["wgt"]] <- "wgtOne" } else { 
+                           stopifnot(length(allNam[["wgt"]]) == 1 ) 
+                           if ( !class(datL[,allNam[["wgt"]]]) %in% c("numeric", "integer") ) { stop ( paste("Error: 'wgt' variable '",allNam[["wgt"]],"' of class '",class(datL[,allNam[["wgt"]]]),"' has to be numeric.\n",sep="")) }
+                           isMis <- which(is.na(datL[,allNam[["wgt"]]]))
+                           isZero<- which ( datL[,allNam[["wgt"]]] == 0 ) 
+                           if(length(isMis)>0) { stop (paste ( "Error: Found ",length(isMis)," missing values in the weight variable '",allNam[["wgt"]],"'.\n",sep="")) }
+                           if(length(isZero)>0) { cat (paste ( "\nWarning: Found ",length(isZero)," zero weights in the weight variable '",allNam[["wgt"]],"'.\n",sep="")) }
+                       }
+                       if(!is.null(allNam[["nest"]]))  { 
+                           stopifnot(length(allNam[["nest"]]) == 1 ) 
+                           datL[,allNam[["nest"]]] <- as.character(datL[,allNam[["nest"]]])
+                           cat(paste("\nAssume nested structure with ", length(table(datL[,allNam[["nest"]]]))," nests and ",length(table(datL[,allNam[["imp"]]]))," imputations in each nest. This will result in ",length(table(datL[,allNam[["nest"]]]))," x ",length(table(datL[,allNam[["imp"]]]))," = ",length(table(datL[,allNam[["nest"]]]))*length(table(datL[,allNam[["imp"]]]))," imputation replicates.\n",sep=""))
+                       }  else  { cat("\nAssume unnested structure with ",length(table(datL[,allNam[["imp"]]]))," imputations.\n",sep="")}
+                       datL[,"isClear"] <- TRUE
+                       if( is.null(allNam[["nest"]]) ) { datL[,"nest"]  <- 1; allNam[["nest"]]  <- "nest" }
+                       if(!is.null(allNam[["group"]])) {                                     ### untere Zeile: das, damit leere Gruppen nicht ueber by() mit geschleift werden, wie es passiert, wenn Gruppen als Faktoren definiert sind
+                           for ( jj in allNam[["group"]] )  { datL[,jj] <- as.character(datL[,jj]) } 
+                       }
+    ### check: abhaengige Var. numerisch?
+                       if(toCall %in% c("mean", "quantile", "glm")) {
+                          if(!class(datL[,allNam[["dependent"]]]) %in% c("integer", "numeric")) { 
+                              cat(paste("Warning: Dependent variable has to be of class 'integer' or 'numeric'.\n         '",allNam[["dependent"]],"' of class '",class(datL[,allNam[["dependent"]]]),"' will be transformed to numeric.\n"))
+                              datL[,allNam[["dependent"]]] <- as.character(as.numeric(datL[,allNam[["dependent"]]]))
+                          }                                                                                                
+                       }
+    ### wenn Replicates bereits uebergeben, muss PSU und repInd NULL sein
+                       if(!is.null(repWgt) ) { 
+                          if ( !is.null(allNam[["PSU"]]) | !is.null(allNam[["repInd"]]) ) { 
+                              cat("Warning: Arguments 'PSU' and 'repInd' are expected to be NULL if replicate weights are already defined (via 'repWgt').\n    'PSU' and 'repInd' will be ignored.\n")
+                          }    
+                       }
+    ### replicates erzeugen (nur einmal fuer alle Analysen, und nur wenn 'repWgt' NULL ist)
+                       if(!is.null(allNam[["repWgt"]]))  {                       
+                          repA <- data.frame ( datL[,allNam[["ID"]], drop=FALSE], datL[,allNam[["repWgt"]] ])
+                          repA <- repA[!duplicated(repA[,allNam[["ID"]]]),]
+                       }  else  { 
+                          if(!is.null(allNam[["PSU"]]))  { 
+                              repW <- datL[!duplicated(datL[,allNam[["ID"]]]),]
+                              repA <- generate.replicates(dat = repW, ID = allNam[["ID"]], wgt = allNam[["wgt"]], PSU = allNam[["PSU"]], repInd = allNam[["repInd"]], type=type )
+                          }  else  { repA <- NULL}
+                       }   
+                       if(is.null(repA)) {doJK <- FALSE }  else {doJK <- TRUE}   
+    ### splitten nach super splitter
+                       allRes<- do.call("rbind.fill", lapply( names(toAppl), FUN = function ( gr ) {
+                           if(toCall %in% c("mean", "table"))  { allNam[["group.differences.by"]] <- attr(toAppl[[gr]], "group.differences.by") } 
+                           if( nchar(gr) == 0 ){ datL[,"dummyGroup"] <- "wholeGroup" ; allNam[["group"]] <- "dummyGroup" } else {allNam[["group"]] <- toAppl[[gr]] }
+    ### check: Missings duerfen nur in abhaengiger Variable auftreten!          ### obere Zeile: problematisch!! "allNam" wird hier in jedem Schleifendurchlauf ueberschrieben -- nicht so superschoen!
+                           noMis <- unlist ( c ( allNam[-match(c("group", "dependent"), names(allNam))], toAppl[gr]) )
+                           miss  <- which ( sapply(datL[,noMis], FUN = function (uu) {length(which(is.na(uu)))}) > 0 )
+                           if(length(miss)>0) { cat(paste("Warning! Unexpected missings in variable(s) ",paste(names(miss), collapse=", "),".\n",sep=""))}
+    ### check: gleichviele Imputationen je Nest und Gruppe?
+                           if(doCheck == TRUE) {
+                              impNes<- table ( by(data = datL, INDICES = datL[, c(allNam[["nest"]], toAppl[[gr]]) ], FUN = function ( x ) { length(table(as.character(x[,allNam[["imp"]]])))}) )
+                              if(length(impNes) != 1 ) {cat("Warning: Number of imputations differ across nests and/or groups!"); print(impNes)}
+    ### check: gleichviele PSUs je nest?
+                              if(!is.null(allNam[["PSU"]]))  { 
+                                  psuNes<- table ( by(data = datL, INDICES = datL[,allNam[["nest"]]], FUN = function ( x ) { length(table(as.character(x[,allNam[["PSU"]]])))}) )
+                                  if(length(psuNes) != 1 ) {cat("Warning: Number of PSUs differ across nests!"); print(psuNes)}
+                              }    
+    ### check: sind fuer jede Gruppe alle Faktorstufen in allen nests und allen imputationen vorhanden? z.B. nicht in einer Imputation nur Jungen
+                              impNes<- by(data = datL, INDICES = datL[, c(allNam[["nest"]], allNam[["imp"]]) ], FUN = function ( x ) {
+                                       if(length(x[,allNam[["ID"]]]) != length(unique(x[,allNam[["ID"]]])))  { 
+                                          cat(paste(" W A R N I N G !  '",allNam[["ID"]],"' variable is not unique within nests and imputations. Analysis will be most likely biased!\n",sep=""))
+                                       }   
+                                       if( length(toAppl[[gr]])>0) { ret <- lapply( toAppl[[gr]], FUN = function ( y ) {table(x[,y])}) } else {ret <- 1}
+                                       return(ret) })
+                              impNes<- data.frame ( do.call("rbind", lapply(impNes, FUN = function ( x ) { unlist(lapply(x, FUN = length)) })) )
+                              if ( !all ( sapply(impNes, FUN = function ( x ) { length(table(x)) } ) == 1) ) { cat("Warning: Number of units in at least one group differs across imputations!\n")}
+    ### Achtung!! jetzt der check, der in der alten Version ueber 'checkData' gemacht wurde!
+                              datL  <- do.call("rbind", by(data = datL, INDICES = datL[,c( allNam[["group"]], allNam[["nest"]], allNam[["imp"]])], FUN = function ( sub.dat ) {
+                                       if(!is.null(allNam[["PSU"]])) {
+                                           nJkZones <- length(table(as.character(sub.dat[,allNam[["PSU"]]])))
+                                           if(nJkZones<2)  { 
+                                              cat("Warning! Found group with less than 2 PSUs. Please check your data!\n"); flush.console()
+                                              sub.dat[,"isClear"] <- FALSE 
+                                           }
+                                       }                                                     ### untere Zeile: prueft; es darf GAR KEINE Missings geben 
+                                       if( (toCall == "table" & separate.missing.indicator == FALSE) | (toCall %in% c("mean", "quantile", "glm") & na.rm==FALSE ) )  {    
+                                          nObserved <- length(which(is.na(sub.dat[, allNam[["dependent"]]])))
+                                           if(nObserved>0) { 
+                                              if ( toCall %in% c("mean", "quantile", "glm") ) { 
+                                                   cat("Warning! Found unexpected missing data in dependent variable for at least one group. Execution haltered. Please check your data!\n"); flush.console()
+                                                   sub.dat[,"isClear"] <- FALSE 
+                                              }  else  { 
+                                                   cat("Warning! Found unexpected missing data in dependent variable for at least one group although 'separate.missing.indicator' was set to 'FALSE'. \n    Sure that this is intended? Try to continue execution ... \n"); flush.console()
+                                              }     
+                                           }
+                                       }                                                     ### untere Zeile: prueft; es darf NICHT ALLES missing sein
+                                       if ( toCall %in% c("mean", "quantile", "glm") & na.rm==TRUE) { 
+                                           nMissing <- length(which(is.na(sub.dat[, allNam[["dependent"]]])))
+                                           if(nMissing == nrow(sub.dat))  { 
+                                              cat("Warning! Some groups without any observed data. Please check your data!\n"); flush.console()
+                                              sub.dat[,"isClear"] <- FALSE 
+                                           }
+                                       }
+                                       return(sub.dat)}))    
+                              ok    <- table(datL[,"isClear"])
+                              if(length(ok) > 1 ) { cat ( paste( ok[which(names(ok)=="FALSE")] , " of ", nrow(datL), " cases removed from analysis due to inconsistent data.\n",sep="")) }
                            }
-                           return(retList)}))
-                    if( "dummyGroup" %in% colnames(anaA) )  { anaA <- anaA[,-match("dummyGroup", colnames(anaA))] }
-                    return(anaA)}))
-                rownames(allRes) <- NULL;  cat("\n")
-                attr(allRes, "allNam") <- allNam                                ### ist wichtig, wenn Funktion sich selber aufruft 
-                return(allRes) }}
+    ### nur fuer jk2.table(): "expected.values" aufbereiten ... 
+                           if(toCall=="table") {
+                              misInd <- which(is.na(datL[,allNam[["dependent"]]]))
+                              if(separate.missing.indicator == TRUE) {
+                                 if(length(misInd)>0) { datL[misInd,allNam[["dependent"]]] <- "<NA>"}
+                              }  else {    
+                                 if(length(misInd)>0) { 
+                                    cat(paste("Warning: No seperate missing categorie was chosen. ", length(misInd), " missings were found anyhow for ",allNam[["dependent"]],". Missings will be deteted from the data.\n",sep=""))
+                                    if(length(misInd) == nrow(datL)) {stop()}
+                                    datL <- datL[-misInd,]
+                                 }
+                              }      
+                              expected.values <- sort(unique(c(expected.values, names(table(datL[,allNam[["dependent"]]]))))) 
+                           }   
+    ### nun wird der Datensatz zuerst nach Nests und je Nest nach Imputationen geteilt 
+                           anaA<- do.call("rbind", by(data = datL, INDICES = datL[,"isClear"], FUN = function ( datL1 ) {
+                                  if(datL1[1,"isClear"] == TRUE) {                           ### nur fuer isClear==TRUE werden Analysen gemacht
+                                     ana <- do.call("rbind", by(data = datL1, INDICES = datL1[,allNam[["nest"]]], FUN = function ( datN ) {
+                                            anaI <- do.call("rbind", by(data = datN, INDICES = datN[,allNam[["imp"]]], FUN = function ( datI ) {
+    ### nun muss die Funktion (mean, table, glm ... ) und die Methode (JK2, BRR, oder konventionell) definiert werden
+                                                    if( toCall == "mean" ) {                 ### hier wird an die meanfunktion uebergeben
+                                                        if ( doJK == TRUE ) {
+                                                            ana.i <- jackknife.mean (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA)
+                                                        }  else  { 
+                                                            ana.i <- conv.mean (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter)
+                                                        }
+                                                    }
+                                                    if( toCall == "table" ) {                
+                                                        if ( doJK == TRUE ) {
+                                                            ana.i <- jackknife.table ( dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA, separate.missing.indicator = separate.missing.indicator, expected.values=expected.values)
+                                                        }  else  { 
+                                                            ana.i <- conv.table (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, separate.missing.indicator = separate.missing.indicator, correct=correct, expected.values=expected.values)
+                                                        }
+                                                    }
+                                                    if( toCall == "quantile" ) {                
+                                                        if ( doJK == TRUE ) {
+                                                            ana.i <- jackknife.quantile (dat.i = datI, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA, probs=probs)
+                                                        }  else  { 
+                                                            ana.i <- conv.quantile (dat.i = datI, allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, probs=probs, nBoot=nBoot,bootMethod=bootMethod)
+                                                        }
+                                                    }
+                                                    if( toCall == "glm" ) {                
+    ### initiate checks specifically for regression models
+                                                        doChek<- checkRegression ( dat = datI, allNam=allNam)
+                                                        ana.i <- jackknife.glm ( dat.i = datI , allNam=allNam, formula=formula, forceSingularityTreatment=forceSingularityTreatment, glmTransformation=glmTransformation, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA)
+                                                    }
+                                                    ana.i <- data.frame ( ana.i, datI[1,c(allNam[["nest"]], allNam[["imp"]]),drop=FALSE], stringsAsFactors = FALSE)
+                                                    return(ana.i)}))
+                                            return(anaI)}))
+    ### es wird nur gepoolt, wenn es mehr als eine Imputation gibt!
+                                     if( length(table(ana[,allNam[["imp"]]])) > 1 ) { 
+                                         retList <- jk2.pool ( datLong = ana, allNam=allNam, forceSingularityTreatment = forceSingularityTreatment)
+                                     }  else  { retList <- ana[,-match(c(allNam[["nest"]], allNam[["imp"]]), colnames(ana))] }
+    ### hier die dummy-Ergebnisstruktur erzeugen (noch nicht schoen, kann man vielleicht auch lassen ... )
+                                  }  else  {                   
+                                     retList <- NULL                           
+                                  }
+                                  return(retList)}))
+                           if( "dummyGroup" %in% colnames(anaA) )  { anaA <- anaA[,-match("dummyGroup", colnames(anaA))] }
+                           return(anaA)}))
+                       rownames(allRes) <- NULL;  cat("\n")
+                       return(allRes) }}} }
           
 checkRegression <- function ( dat, allNam ) {
                    ch <- lapply( allNam[["independent"]], FUN = function ( i ) {
@@ -772,7 +883,7 @@ desk <- function(variable,na=NA, p.weights = NULL, na.rm = FALSE) {
                      if(Mis.weight == FALSE ) {
                         Summe <- sum( y * p.weights )
                         Mittelwert <- wtd.mean(x = y, weights = p.weights, na.rm = na.rm)
-                        Varianz    <- wtd.var(y, na.rm = na.rm)
+                        Varianz    <- wtd.var(x = y, weights = p.weights, na.rm = na.rm)
                         N          <- sum(p.weights)
                         N.valid    <- sum(p.weights[which(!is.na(y))]) }
                      dataFrame <- data.frame ( N = N, N.valid = N.valid, Missing = length(y) - length(na.omit(y)), Minimum = min(y, na.rm = na.rm), Maximum = max(y, na.rm = na.rm), Summe = Summe, Mittelwert = Mittelwert, std.err = sd(y, na.rm = na.rm) / sqrt(length(na.omit(y))), sig = ifelse(length(table(y))==1, NA, t.test(x = y)$p.value), Median = median(y, na.rm = na.rm), Streuung = sqrt(Varianz), Varianz = Varianz , stringsAsFactors = FALSE )
