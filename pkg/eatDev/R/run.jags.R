@@ -38,6 +38,42 @@ run.jags <- function ( env ) {
 				eval( parse( text= call[z,] ) )
 		}
 
+# browser()		
+		# return list
+		ret <- list()
+
+		# first entry: engine
+		ret$engine <- engine
+
+		# second entry: results
+		ret$results <- res
+		names( ret$results )
+
+		## third entry: parameters
+		# for better usability parameter from par.env will be put into list
+		pl <- list()
+		# do <- paste0( "pl$'", ls( envir=get("par.env",env) ) , "' <- get( '", ls( envir=get("par.env",env) ) ,"', envir=get('par.env',env) )" )
+		do <- paste0( "pl$'", ls( envir=par.env ) , "' <- get( '", ls( envir=par.env ) ,"', envir=par.env )" )
+		eval( parse( text=do ) )
+		ret$parameters <- pl
+		names( ret$parameters )
+
+		
+		## sortieren von results/parameters
+		first <- c("A","Q","b","beta","mu.beta","prec.beta")
+			
+		# sortieren von results (second entry) wie in Parameter-List
+		ord <- match( first, names(ret$results) )
+		ord <- ord[!is.na(ord)]
+		if( !identical( ord, integer(0) ) ) ret$results <- c( ret$results[ord], ret$results[ !ret$results %in% ret$results[ord] ] )
+		rm("ord")
+# browser()
+		# sortieren von results (second entry) wie in Parameter-List
+		ord <- match( first, names(ret$parameters) )
+		ord <- ord[!is.na(ord)]
+		if( !identical( ord, integer(0) ) ) ret$parameters <- c( ret$parameters[ord], ret$parameters[ !ret$parameters %in% ret$parameters[ord] ] )
+
+		
 		# return
-		return( res )
+		return( ret )
 }

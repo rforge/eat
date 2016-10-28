@@ -219,27 +219,31 @@ prep.data <- function ( env ) {
 		# NAs to labeled parameters
 		beta <- label.pars(beta,"beta")
 
-		## beta mean
-		# TODO check ob alle fixed, dann nicht
-		if ( !exists("mu.beta",inherits=FALSE) || is.null(mu.beta) ) {
-				mu.beta <- 0
-				default[length(default)+1] <- paste0( "                  mean of item easiness mu.beta: scalar set to 0" )
+		# check if all beta free
+		# beta.vec <- do.call( "c", sapply( beta, function(x) x, simplify=FALSE ) )
+		# beta.all.free <- all( is.na( suppressWarnings( as.numeric( beta.vec ) ) ) )
+		
+		# if all beta free, mean and precision of item distribution
+		if ( all.free( beta ) ){
+		
+				## beta mean
+				if ( !exists("mu.beta",inherits=FALSE) || is.null(mu.beta) ) {
+						mu.beta <- 0
+						default[length(default)+1] <- paste0( "                  mean of item easiness mu.beta: scalar set to 0" )
+				}
+				# NAs to labeled parameters
+				# mu.beta <- label.pars(mu.beta,"mu.beta")
+				
+				## beta prec
+				if ( !exists("prec.beta",inherits=FALSE) || is.null(prec.beta) ) {
+						prec.beta <- NA
+						default[length(default)+1] <- paste0( "           precision of item easiness prec.beta: freely estimable scalar" )
+				}
+				# NAs to labeled parameters
+				prec.beta <- label.pars(prec.beta,"prec.beta")
+				# prec.beta[] <- 0		
+		
 		}
-		# NAs to labeled parameters
-		# mu.beta <- label.pars(mu.beta,"mu.beta")
-		
-		## beta prec
-		# TODO check ob alle fixed, dann nicht
-		if ( !exists("prec.beta",inherits=FALSE) || is.null(prec.beta) ) {
-				prec.beta <- NA
-				default[length(default)+1] <- paste0( "           precision of item easiness prec.beta: freely estimable scalar" )
-		}
-		# NAs to labeled parameters
-		prec.beta <- label.pars(prec.beta,"prec.beta")
-		# prec.beta[] <- 0		
-		
-		
-		
 		
 		# if gaussian, error var/cov matrix
 		if ( measurement.model$family == "gaussian" ) {
@@ -253,6 +257,7 @@ prep.data <- function ( env ) {
 						} else {
 								# uncorrelated errors
 								E <- diag( NA, I )
+								default[length(default)+1] <- paste0( "                     measurement error matrix E: freely estimable uncorrelated error variances (", I, ")" )
 						}
 						rownames( E ) <- colnames( E ) <- item.names
 				

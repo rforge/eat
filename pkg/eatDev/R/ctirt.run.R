@@ -14,12 +14,12 @@ ctirt.run <- function ( s, work.dir=getwd(), verbose=TRUE, ... ) {
 		if( length( list(...) ) > 0 ) {
 				eval( parse ( text=paste0( "assign( '",names(list(...)), "' , list(...)$'",names(list(...)),"' , envir=env )" ) ) )
 		}
-		
+# browser()			
 		### call software specific run
 		if( get( "engine", envir=env ) %in% "jags" ) {
 				r <- run.jags( env )
 		}
-		
+
 		# return
 		return( r )
 }

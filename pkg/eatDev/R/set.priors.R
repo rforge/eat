@@ -9,7 +9,7 @@ set.priors <- function ( env ) {
 
 		# list of priors
 		prior <- list()
-		
+
 		# A
 		if ( verbose ) cat( "                                 drift matrix A: " )
 		if ( any.free( A ) ) {
@@ -41,23 +41,34 @@ set.priors <- function ( env ) {
 		} else {
 				if( verbose ) cat( paste0( "n/a (all ", prod(dim(Lambda)), " values fixed)\n" ) )
 		}	
-		
+# browser()		
 		# beta
 		if ( verbose ) cat( "                             item easiness beta: " )
 		if ( any.free( beta ) ) {
-				invisible( make.priors( m.name="beta", m=beta, priors=priors, env=env, prior = "dnorm( mu.beta, prec.beta )", verbose=verbose ) )
+				
+				if ( all.free( beta ) ) {
+						beta.pr <- "dnorm( mu.beta, prec.beta )"
+				} else {
+						beta.pr <- "dnorm( 1, 0.0001 )"
+				}
+				invisible( make.priors( m.name="beta", m=beta, priors=priors, env=env, prior = beta.pr, verbose=verbose ) )
 		} else {
 				if( verbose ) cat( paste0( "n/a (all ", prod(dim(beta)), " values fixed)\n" ) )
 		}		
 
 # browser()
+		# E
+		if ( exists("E") && any.free( E ) ) {
+				if ( verbose ) cat( "                     measurement error matrix E: " )
+				invisible( make.priors( m.name="E", m=E, priors=priors, env=env, diag.prior = "dgamma(1,1)", offdiag.prior = "dnorm(0,0.1)", verbose=verbose ) )
+		}
 
 		# prec.beta prior
 		if ( exists("prec.beta") && any.free( prec.beta ) ) {
 				# eval( parse ( text=paste0( "assign( 'prec.beta' , 'prec.beta' , envir=env )" ) ) )
 				# prec.beta <- get( "prec.beta", envir=env )
 				if ( verbose ) cat( "           precision of item easiness prec.beta: " )
-				invisible( make.priors( m.name="prec.beta", m=prec.beta, priors=priors, env=env, prior = "dgamma( 1, 1 )", verbose=verbose ) )
+				invisible( make.priors( m.name="prec.beta", m=prec.beta, priors=priors, env=env, diag.prior = "dgamma(1,1)", verbose=verbose ) )
 		}
 
 		# mu.t1 prior
@@ -239,3 +250,13 @@ make.priors <- function( m.name, m, priors, env, diag.prior = "dnorm(0,0.001)", 
 any.free <- function( m ) {
 		any( is.na( suppressWarnings( as.numeric( m ) ) ) )
 }
+all.free <- function( m ) {
+		m.vec <- do.call( "c", sapply( m, function(x) x, simplify=FALSE ) )
+		all( is.na( suppressWarnings( as.numeric( m.vec ) ) ) )
+}
+all.fixed <- function( m ) {
+		m.vec <- do.call( "c", sapply( m, function(x) x, simplify=FALSE ) )
+		all( !is.na( suppressWarnings( as.numeric( m.vec ) ) ) )
+}
+
+
