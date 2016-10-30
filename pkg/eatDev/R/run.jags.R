@@ -11,6 +11,16 @@ run.jags <- function ( env ) {
 		if (!exists("adapt",mode="numeric")) adapt <- 0
 		if (!exists("thin",mode="numeric")) thin <- 1
 
+		# output
+		if ( verbose ){
+				cat( paste0( "Running with...", "\n" ) )
+				cat( paste0( "   adaption iterations: ", adapt, "\n" ) )
+				cat( paste0( "            iterations: ", iter, "\n" ) )
+				cat( paste0( "                chains: ", chains, "\n" ) )
+				cat( paste0( "     thinning interval: ", thin, "\n" ) )
+				flush.console()
+		}
+		
 		# probably better to push those to data.env
 		# assign( "iter", iter, envir=globalenv() )
 		# assign( "chains", chains, envir=globalenv() )
@@ -34,7 +44,7 @@ run.jags <- function ( env ) {
 		
 		# run call step by step
 		for (z in 1:nrow(call)){
-				if( verbose ) cat( paste0( call[z,], "\n" ) )
+				if( verbose ) { cat( paste0( call[z,], "\n" ) ); flush.console() }
 				eval( parse( text= call[z,] ) )
 		}
 
@@ -45,11 +55,14 @@ run.jags <- function ( env ) {
 		# first entry: engine
 		ret$engine <- engine
 
-		# second entry: results
+		# secondfourth entry: runtime
+		ret$runtime <- runtime		
+		
+		# third entry: results
 		ret$results <- res
 		names( ret$results )
 
-		## third entry: parameters
+		## fourth entry: parameters
 		# for better usability parameter from par.env will be put into list
 		pl <- list()
 		# do <- paste0( "pl$'", ls( envir=get("par.env",env) ) , "' <- get( '", ls( envir=get("par.env",env) ) ,"', envir=get('par.env',env) )" )
@@ -58,6 +71,8 @@ run.jags <- function ( env ) {
 		ret$parameters <- pl
 		names( ret$parameters )
 
+		## fifth entry: seeds
+		ret$seeds <- seeds	
 		
 		## sortieren von results/parameters
 		first <- c("A","Q","b","beta","mu.beta","prec.beta")

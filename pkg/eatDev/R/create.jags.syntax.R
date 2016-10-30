@@ -48,7 +48,6 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    }                                                                ")
 		x<-rbind(x, "                                                                     ")
-### TODO E Matrix richtig einpflegen, von Anfang an		
 		if ( exists( "E" ) ) {
 		x<-rbind(x, "    # precision of measurement errors                                ")
 		x<-rbind(x, make.str( "E" ) ); if( any.free( E ) ) invisible(moveTo.par.env("E",env,par.env)) else rm("E", envir=env)
@@ -99,8 +98,18 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "    # values/prior of mean of first time point                       ")
 		x<-rbind(x, make.str( "mu.t1" ) ); if( any.free( mu.t1 ) ) invisible(moveTo.par.env("mu.t1",env,par.env)) else rm("mu.t1", envir=env)
 		x<-rbind(x, "                                                                     ")
+# browser()		
 		x<-rbind(x, "    # values/prior of precision of first time point                  ")
-		x<-rbind(x, ifelse( exists("prec.t1.prior") && is.null( dim(prec.t1.prior) ), paste0( "    prec.t1 ~ ", prec.t1.prior, "                                      " ), make.str( "prec.t1" ) ) ); if( any.free( prec.t1 ) ) invisible(moveTo.par.env("prec.t1",env,par.env)) else rm("prec.t1", envir=env)
+		x<-rbind(x, ifelse( exists("prec.t1.prior") && is.null( dim(prec.t1.prior) ), paste0( "    prec.t1[1:F,1:F] ~ ", prec.t1.prior, "                                      " ), make.str( "prec.t1" ) ) ); if( any.free( prec.t1 ) ) invisible(moveTo.par.env("prec.t1",env,par.env)) else rm("prec.t1", envir=env)
+		# prec.t1 is symmetric, needs definition of upper to lower elements
+		# nasty workaround here
+		# prec.t1.prior <- prec.t1
+		# pstr <- make.str( "prec.t1" )
+		# pstr <- pstr[ grepl( "<-", pstr[,1] ), ,drop=FALSE]
+		# if( nrow( pstr ) > 0 ) {
+				# x<-rbind(x,pstr)
+		# }
+		
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    # values/prior of drift matrix                                   ")
 		x<-rbind(x, make.str( "A" ) ); if( any.free( A ) ) invisible(moveTo.par.env("A",env,par.env)) else rm("A", envir=env)
@@ -187,7 +196,8 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "    Ah[1:(I1w*Aw),1:(I1w*Aw)] <- Ah1[,] + Ah2[,]                     ")
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "}                                                                    ")
-		# call matrix (1 column)
+		
+		### call matrix (1 column)
 		y<-matrix( paste0( "### R syntax for ", model.name ), 1, 1 )
 		y<-rbind(y, "" )
 		y<-rbind(y, "# rjags package" )
@@ -197,16 +207,57 @@ create.jags.syntax <- function ( env ) {
 		y<-rbind(y, "load.module('msm') # for matrix exponential, mexp()" )
 		y<-rbind(y, "load.module('glm') # for better glm sampler        " )
 		y<-rbind(y, "" )
+
+		# create starting values
+		# function make.priors with mode="startingvalue" is used
+		if ( exists("A") && any.free( A ) ) invisible( make.priors( "A", A, diag.prior = -0.5, offdiag.prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
+		if ( exists("Q") && any.free( Q ) ) invisible( make.priors( "Q", Q, diag.prior = 0.5, offdiag.prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
+		if ( exists("b") && any.free( b ) ) invisible( make.priors( "b", b, prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
+		if ( exists("beta") && any.free( beta ) ) invisible( make.priors( "beta", beta, prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
+		if ( exists("mu.beta") && any.free( mu.beta ) ) invisible( make.priors( "mu.beta", mu.beta, prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
+		if ( exists("prec.beta") && any.free( prec.beta ) ) invisible( make.priors( "prec.beta", prec.beta, diag.prior = 1, offdiag.prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
+		if ( exists("mu.t1") && any.free( mu.t1 ) ) invisible( make.priors( "mu.t1", mu.t1, prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
+		if ( exists("prec.t1") && any.free( prec.t1 ) ) {
+				invisible( make.priors( "prec.t1", prec.t1, diag.prior = 1, offdiag.prior = 0,env=environment(), mode="startingvalue", verbose=FALSE ) )
+				# !!!! because of dwish, complete starting value is needed, so assign upper with values of lower triangle
+				prec.t1.startingvalue[upper.tri(prec.t1.startingvalue)] <- prec.t1.startingvalue[lower.tri(prec.t1.startingvalue)]
+		}
+
+		# list with starting values
+		startingvalues <- list()
+		do <- do.call( "c", sapply( c("A","Q","b","beta","mu.beta","prec.beta","mu.t1","prec.t1"), function(x) if (exists(paste0(x,".startingvalue"))) paste0( "startingvalues$", x ," <- ", x,".startingvalue" ) else NULL, simplify=FALSE ) )
+		if ( length( do > 0 ) ) eval( parse( text=do ) )
+		# push starting values to data environment
+		# and create code to create as many starting value lists as chains
+		# (chains are set in next step, run model)
+		if ( length(startingvalues) > 0 ){
+				assign( "startingvalues", startingvalues, envir=env )
+				y<-rbind(y, "# starting values: create as many starting value lists as chains")
+				y<-rbind(y, "startingvalues <- get( 'startingvalues', envir=data.env )")
+				y<-rbind(y, "inits <- sapply( 1:chains, function (n,l) l, startingvalues, simplify=FALSE )")
+				y<-rbind(y, "" )
+		}
+		
+		# seeds
+		y<-rbind(y, "# seeds for each chain")
+		y<-rbind(y, "seeds <- parallel.seeds('base::BaseRNG', chains)")
+		if ( length(startingvalues) > 0 ){
+				y<-rbind(y, "inits <- mapply ( function ( l, k ) c(l,k), inits, seeds, SIMPLIFY=FALSE )")
+		} else {
+				y<-rbind(y, "inits <- seeds")
+		}
+		y<-rbind(y, "" )		
+		
 		y<-rbind(y, "# start time                                                         ")
 		y<-rbind(y, "start <- Sys.time()                                                  ")
-		y<-rbind(y, "" )
+		y<-rbind(y, "" )	
 		y<-rbind(y, "# initialization/adaptation                                          ")
 		# globalenv !!! 
 		# y<-rbind(y, "eval(parse(text=paste0(  name, ".ini <- jags.model ( file = mf , data=globalenv(), inits=sL, n.chains = ",chains,", n.adapt=",adapt,", quiet=FALSE )"  )),envir=globalenv() )" )
 		# y<-rbind(y, "eval(parse(text=paste0(  name, ".ini <- jags.model ( file = mf , data=globalenv(), n.chains = ",chains,", n.adapt=",adapt,", quiet=FALSE )"  )),envir=globalenv() )" )
 		# y<-rbind(y, "eval(parse(text=paste0(  model.name, .ini <- jags.model ( file = bugs.file , data=data.env, n.chains=chains, n.adapt=adapt, quiet=FALSE ) )),envir=data.env )" )
 		# y<-rbind(y, "eval(parse(text=paste0(  model.name, .ini <- jags.model ( file = bugs.file , data=data.env, n.chains=chains, n.adapt=adapt, quiet=FALSE ) )),envir=globalenv())" )
-		y<-rbind(y, "ini <- jags.model ( file = bugs.file , data=data.env, n.chains=chains, n.adapt=adapt, quiet=FALSE )" )
+		y<-rbind(y, paste0( "ini <- jags.model ( file = bugs.file , data=data.env, n.chains=chains, n.adapt=adapt, inits=inits, quiet=FALSE )" ) )
 		y<-rbind(y, "" )
 		y<-rbind(y, "# run                                                                ")		
 		# y<-rbind(y, "eval(parse(text=paste0(  model.name, .res <- jags.samples ( ',model.name,'.ini , variable.names=c('A','Q','b'), n.iter=iter, thin=thin, type='trace' , progress.bar = 'none', by=20 )' )), envir=globalenv() )" )

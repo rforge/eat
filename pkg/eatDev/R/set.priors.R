@@ -104,9 +104,11 @@ set.priors <- function ( env ) {
 		TRUE
 }
 
-make.priors <- function( m.name, m, priors, env, diag.prior = "dnorm(0,0.001)", offdiag.prior = "dnorm(0,0.001)", prior = "dnorm(0,0.001)", lower=TRUE, upper=TRUE, verbose ){
-
-		if( !exists( paste0( m.name, '.prior' ), envir=env ) ) {
+make.priors <- function( m.name, m, env, priors=NULL, mode=c("prior","startingvalue"), diag.prior = "dnorm(0,0.001)", offdiag.prior = "dnorm(0,0.001)", prior = "dnorm(0,0.001)", lower=TRUE, upper=TRUE, verbose=TRUE ){
+# browser()
+		if ( length( mode ) > 1 ) mode <- mode[1]
+		
+		if( !exists( paste0( m.name, '.', mode ), envir=env ) ) {
 # browser()
 				# all non-numeric and non-NA (= free parameters) to NaN
 				# original NA are kept
@@ -233,8 +235,15 @@ make.priors <- function( m.name, m, priors, env, diag.prior = "dnorm(0,0.001)", 
 						m2 <- m2[,1]
 				}
 				
+				# if mode is starting value, transform to numeric
+				if ( mode %in% "startingvalue" ){
+						m2b <- suppressWarnings( as.numeric( m2 ) )
+						dim(m2b) <- dim(m2)
+						m2 <- m2b
+				}
+				
 				# write to environment
-				assign( paste0( m.name, '.prior' ), m2, envir=env )
+				assign( paste0( m.name, '.', mode ), m2, envir=env )
 				
 				# console output
 				if ( verbose ) cat( paste0( def, " default, ", udef, " user (",fixed, " fixed value, ",na," NA)\n" ) )
@@ -243,7 +252,7 @@ make.priors <- function( m.name, m, priors, env, diag.prior = "dnorm(0,0.001)", 
 				# console output
 				if ( verbose ) cat( paste0( m.name, ".prior set by user", "\n" ) )
 		}
-		
+	
 		return( TRUE )
 }
 
