@@ -1,6 +1,5 @@
 
 run.jags <- function ( env ) {
-		
 
 		# get variables from env
 		eval( parse( text=paste0( "assign( '",ls(envir=env), "' , get('",ls(envir=env),"', envir=env ) )" ) ) )
@@ -18,6 +17,7 @@ run.jags <- function ( env ) {
 				cat( paste0( "            iterations: ", iter, "\n" ) )
 				cat( paste0( "                chains: ", chains, "\n" ) )
 				cat( paste0( "     thinning interval: ", thin, "\n" ) )
+				cat( paste0( "\n" ) )
 				flush.console()
 		}
 		
@@ -73,6 +73,9 @@ run.jags <- function ( env ) {
 
 		## fifth entry: seeds
 		ret$seeds <- seeds	
+		
+		## sixth entry: run parameter
+		ret$runpar <- list( "adapt"=adapt, "iter"=iter, "chains"=chains, "thin"=thin )
 		
 		## sortieren von results/parameters
 		first <- c("A","Q","b","beta","mu.beta","prec.beta")

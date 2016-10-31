@@ -1,5 +1,5 @@
 
-ctirt.syntax <- function ( m, model.name="model" ) {
+ctirt.syntax <- function ( m, model.name="model", verbose=TRUE ) {
 		
 # browser()		
 		# new environment
@@ -19,6 +19,8 @@ ctirt.syntax <- function ( m, model.name="model" ) {
 		if( get( "engine", envir=env ) %in% "jags" ) {
 				s <- create.jags.syntax( env )
 		}
+		
+		if (verbose) cat( paste0( "SYNTAX SUCCESSFULLY CREATED | proceed with ctirt.run() \n" ) )
 		
 		# return
 		return( s )
