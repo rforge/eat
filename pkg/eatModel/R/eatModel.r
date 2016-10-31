@@ -180,7 +180,7 @@ getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c(
                           stopifnot ( length(unique(ret[1,"model"])) == 1 )     ### grosser scheiss: baue Hilfsobjekt fuer Attribute (intern notwendige Zusatzinformationen) separat zusammen
                           return(list ( ret = ret, att = att))})                ### schlimmer Code, darf nie jemand sehen!!
                    }  else  {                                                   ### jetzt multicore: muss dasselbe Objekt zurueckgeben!
-                   if(!exists("detectCores"))   {library(parallel)}
+                   # if(!exists("detectCores"))   {library(parallel)}
                    doIt<- function (laufnummer,  ... ) { 
                           if(!exists("getResults"))  { library(eatModel) }
                           if(!exists("tam.mml") &  length(grep("tam.", class(runModelObj[[1]])))>0 ) {library(TAM, quietly = TRUE)} 
@@ -206,7 +206,7 @@ getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c(
                if( "runConquest" %in% class(runModelObj) ) {                    ### wurde mit Conquest gerechnet?
                     if ( Q3 == TRUE ) {
                         if ( ncol ( runModelObj[["qMatrix"]]) !=2 ) { 
-                            cat("Q3 is only available for unidimensional. Estimation will be skipped.\n")
+                            cat("Q3 is only available for unidimensional models. Estimation will be skipped.\n")
                             Q3 <- FALSE
                         }
                     }        
