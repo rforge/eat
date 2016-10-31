@@ -10,9 +10,9 @@ of the \code{'survey'} package.
 \usage{
 jk2.glm(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, 
         repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), 
-        group.delimiter = "_", trend = NULL, linkErr = NULL, formula, family=gaussian, 
-        forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), 
-        doCheck = TRUE, na.rm = FALSE )}
+        group.delimiter = "_", group.differences.by.wholePop = FALSE, trend = NULL, 
+        linkErr = NULL, formula, family=gaussian, forceSingularityTreatment = FALSE, 
+        glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE )}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -66,6 +66,11 @@ in the whole group or overlying groups. See examples for more details.
   \item{group.delimiter}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Character string which separates the group names in the output frame.
+}
+  \item{group.differences.by.wholePop}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Logical: Compute differences for group-specific estimates with the estimates in
+the whole population?
 }
   \item{trend}{
 %%     ~~Describe \code{sig.dif.bound} here~~

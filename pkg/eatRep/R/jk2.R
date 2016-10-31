@@ -80,13 +80,12 @@ jk2.quantile<- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"),
 ### Wrapper: ruft "eatRep()" mit selektiven Argumenten auf 
 jk2.glm  <- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"),
             PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), group.delimiter = "_",
-            trend = NULL, linkErr = NULL, formula, family=gaussian, forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE ) { 
+            group.differences.by.wholePop = FALSE, trend = NULL, linkErr = NULL, formula, family=gaussian, forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), doCheck = TRUE, na.rm = FALSE ) { 
+            if ( group.differences.by.wholePop == TRUE ) { group.differences.by <- "wholePop" } else {group.differences.by <- NULL}
             eatRep(datL =datL, ID=ID , wgt = wgt, type=type, PSU = PSU, repInd = repInd, repWgt = repWgt, toCall = "glm",
-                   nest = nest, imp = imp, groups = groups, group.splits = group.splits, trend = trend, linkErr = linkErr, 
-                   formula=formula, family=family, forceSingularityTreatment=forceSingularityTreatment, 
-                   glmTransformation = glmTransformation,
+                   nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by , trend = trend, linkErr = linkErr, 
+                   formula=formula, family=family, forceSingularityTreatment=forceSingularityTreatment, glmTransformation = glmTransformation,
                    group.delimiter=group.delimiter, na.rm=na.rm, doCheck=doCheck)}
-
 
 ### Funktion ist nicht user-level, sondern wird von jk2.mean, jk2.table, jk2.quantile, jk2.glm mit entsprechenden Argumenten aufgerufen
 eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, repWgt = NULL, nest=NULL, imp=NULL, 
