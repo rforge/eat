@@ -1,5 +1,5 @@
 
-ctirt.run <- function ( s, work.dir=getwd(), verbose=TRUE, ... ) {
+ctglm.run <- function ( s, work.dir=getwd(), verbose=TRUE, ... ) {
 		
 # browser()
 		# new environment
@@ -20,7 +20,7 @@ ctirt.run <- function ( s, work.dir=getwd(), verbose=TRUE, ... ) {
 				r <- run.jags( env )
 		}
 
-		if (verbose) cat( paste0( "\nMODEL SUCCESSFULLY RAN | proceed with ctirt.results() \n" ) )
+		if (verbose) cat( paste0( "\nMODEL SUCCESSFULLY RAN | proceed with ctglm.results() \n" ) )
 		
 		# return
 		return( r )

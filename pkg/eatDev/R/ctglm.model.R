@@ -6,8 +6,8 @@
 # Lambda          loading matrix, dimensions must be number of items x number of latent variables; defaults to diag(1,number of items) to map each manifest variable to one latent variable (so no measurement model is specified)
 # verbose         print information
 
-# ctirt.model <- function ( d, id=NULL, timepoint.sep="_", lag.names=NULL, Lambda=NULL, measurement.model=gaussian(link="identity"), ..., priors=NULL, verbose=TRUE ) {
-ctirt.model <- function ( d, id=NULL, timepoint.sep="_", lag.names=NULL, Lambda=NULL, measurement.model=binomial(link="logit"), engine="jags", ..., priors=NULL, verbose=TRUE ) {
+# ctglm.model <- function ( d, id=NULL, timepoint.sep="_", lag.names=NULL, Lambda=NULL, measurement.model=gaussian(link="identity"), ..., priors=NULL, verbose=TRUE ) {
+ctglm.model <- function ( d, id=NULL, timepoint.sep="_", lag.names=NULL, Lambda=NULL, measurement.model=binomial(link="logit"), engine="jags", ..., priors=NULL, verbose=TRUE ) {
 
 		# new environment
 		env <- new.env()
@@ -37,7 +37,7 @@ ctirt.model <- function ( d, id=NULL, timepoint.sep="_", lag.names=NULL, Lambda=
 				cat( paste0( paste( paste0("[",seq(along=error),"] ",error), collapse="\n" ), "\n\n" ) )
 				cat( paste0( "DO NOT RUN THE MODEL!\n" ) )
 		} else {
-				if (verbose) cat( paste0( "MODEL SUCCESSFULLY CREATED | proceed with ctirt.syntax() \n" ) )
+				if (verbose) cat( paste0( "MODEL SUCCESSFULLY CREATED | proceed with ctglm.syntax() \n" ) )
 		}
 		
 		# create jags syntax

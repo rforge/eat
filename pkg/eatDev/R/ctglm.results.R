@@ -1,5 +1,5 @@
 
-ctirt.results <- function ( r, plot.dir=NULL, verbose=TRUE, ... ) {
+ctglm.results <- function ( r, plot.dir=NULL, verbose=TRUE, ... ) {
 		
 # browser()
 		# new environment

@@ -1,5 +1,5 @@
 
-ctirt.syntax <- function ( m, model.name="model", verbose=TRUE ) {
+ctglm.syntax <- function ( m, model.name="model", verbose=TRUE ) {
 		
 # browser()		
 		# new environment
@@ -20,7 +20,7 @@ ctirt.syntax <- function ( m, model.name="model", verbose=TRUE ) {
 				s <- create.jags.syntax( env )
 		}
 		
-		if (verbose) cat( paste0( "SYNTAX SUCCESSFULLY CREATED | proceed with ctirt.run() \n" ) )
+		if (verbose) cat( paste0( "SYNTAX SUCCESSFULLY CREATED | proceed with ctglm.run() \n" ) )
 		
 		# return
 		return( s )
