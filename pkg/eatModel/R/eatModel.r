@@ -20,7 +20,7 @@ multiseq <- function ( v ) {
 ### randomize.order: soll die Reihenfolge der Pseudocodes nach Zufall bestimmt werden?
 make.pseudo <- function(datLong, idCol, varCol, codCol, valueCol, n.pseudo, randomize.order = TRUE)   {
                allVars     <- list(idCol = idCol, varCol = varCol, codCol = codCol, valueCol=valueCol)
-               all.Names   <- lapply(allVars, FUN=function(ii) {.existsBackgroundVariables(dat = datLong, variable=ii)})
+               all.Names   <- lapply(allVars, FUN=function(ii) {eatRep:::.existsBackgroundVariables(dat = datLong, variable=ii)})
                if(length(all.Names) != length(unique(all.Names)) ) {stop("'idCol', 'varCol', 'codCol' and 'valueCol' overlap.\n")}
                dat.i       <- datLong[,unlist(all.Names), drop = FALSE]         ### untere zeilen "only for the sake of speed": wir sortieren alle Faelle VORHER aus, wo nichts gesampelt werden kann!
                dat.i[,"index"] <- paste( dat.i[,unlist(all.Names[c("idCol")])], dat.i[,unlist(all.Names[c("varCol")])], sep="_")
@@ -168,8 +168,9 @@ simEquiTable <- function ( anchor, mRef, sdRef, addConst = 500, multConst = 100,
                 return(equ)}
 
 
-getResults <- function ( runModelObj, overwrite = FALSE, omitFit = FALSE, omitRegr = FALSE, omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6, sig.dif.bound = 0.3, p.value = 0.9, 
+getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c("pv", "wle", "eap"), omitFit = FALSE, omitRegr = FALSE, omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6, sig.dif.bound = 0.3, p.value = 0.9, 
               nplausible = NULL, ntheta = 2000, normal.approx = FALSE, samp.regr = FALSE, theta.model=FALSE, np.adj=8 ) { 
+            q3theta <- match.arg(q3theta )
             if("runMultiple" %in% class(runModelObj)) {                         ### Mehrmodellfall
                 if(is.null ( attr(runModelObj, "nCores") ) | attr(runModelObj, "nCores") == 1 ) {         
                    res <- lapply( runModelObj, FUN = function ( r ) {           ### erstmal single core auswertung
@@ -179,7 +180,7 @@ getResults <- function ( runModelObj, overwrite = FALSE, omitFit = FALSE, omitRe
                           stopifnot ( length(unique(ret[1,"model"])) == 1 )     ### grosser scheiss: baue Hilfsobjekt fuer Attribute (intern notwendige Zusatzinformationen) separat zusammen
                           return(list ( ret = ret, att = att))})                ### schlimmer Code, darf nie jemand sehen!!
                    }  else  {                                                   ### jetzt multicore: muss dasselbe Objekt zurueckgeben!
-                   # if(!exists("detectCores"))   {library(parallel)}
+                   if(!exists("detectCores"))   {library(parallel)}
                    doIt<- function (laufnummer,  ... ) { 
                           if(!exists("getResults"))  { library(eatModel) }
                           if(!exists("tam.mml") &  length(grep("tam.", class(runModelObj[[1]])))>0 ) {library(TAM, quietly = TRUE)} 
@@ -203,13 +204,25 @@ getResults <- function ( runModelObj, overwrite = FALSE, omitFit = FALSE, omitRe
             }  else {                                                           ### Einmodellfall 
                isTa  <- FALSE                                                   
                if( "runConquest" %in% class(runModelObj) ) {                    ### wurde mit Conquest gerechnet?
-                    do    <- paste ( "res <- getConquestResults ( ", paste(names(formals(getConquestResults)), recode(names(formals(getConquestResults)), "'path'='runModelObj$dir'; 'analysis.name'='runModelObj$analysis.name'; 'model.name'='runModelObj$model.name'; 'qMatrix'='runModelObj$qMatrix'; 'all.Names'='runModelObj$all.Names'; 'deskRes'='runModelObj$deskRes'; 'discrim'='runModelObj$discrim'"), sep =" = ", collapse = ", "), ")",sep="")
+                    if ( Q3 == TRUE ) {
+                        if ( ncol ( runModelObj[["qMatrix"]]) !=2 ) { 
+                            cat("Q3 is only available for unidimensional. Estimation will be skipped.\n")
+                            Q3 <- FALSE
+                        }
+                    }        
+                    do    <- paste ( "res <- getConquestResults ( ", paste(names(formals(getConquestResults)), recode(names(formals(getConquestResults)), "'path'='runModelObj$dir'; 'analysis.name'='runModelObj$analysis.name'; 'model.name'='runModelObj$model.name'; 'qMatrix'='runModelObj$qMatrix'; 'all.Names'='runModelObj$all.Names'; 'deskRes'='runModelObj$deskRes'; 'discrim'='runModelObj$discrim'; 'daten'='runModelObj$daten'"), sep =" = ", collapse = ", "), ")",sep="")
                     eval(parse(text=do))                                        ### obere Zeile: baue Aufruf zusammen; rufe 'getConquestResults' mit seinen eigenen Argumenten auf
                     dir <- runModelObj[["dir"]]                                 ### wo Argumente neu vergeben werden, geschieht das in dem 'recode'-Befehl; so wird als 'path'-
                     name<- runModelObj[["analysis.name"]]                       ### Argument 'runModelObj$dir' uebergeben
                     attr(res, "all.Names") <- runModelObj[["all.Names"]]        ### Alternativ: es wurde mit TAM gerechnet 
                }  else  {                                                       ### logisches Argument: wurde mit Tam gerechnet?
                     isTa<- TRUE                                                 ### hier wird ggf. die Anzahl der zu ziehenden PVs ueberschrieben
+                    if ( Q3 == TRUE ) {
+                        if ( ncol ( attr(runModelObj, "qMatrix")) !=2 ) { 
+                            cat("Q3 is only available for unidimensional. Estimation will be skipped.\n")
+                            Q3 <- FALSE
+                        }
+                    }        
                     if(!is.null(nplausible)) { attr(runModelObj, "n.plausible") <- nplausible }  else  { nplausible <- attr(runModelObj, "n.plausible") }
                     do    <- paste ( "res <- getTamResults ( ", paste(names(formals(getTamResults)), names(formals(getTamResults)), sep =" = ", collapse = ", "), ")",sep="")
                     eval(parse(text=do))
@@ -258,7 +271,15 @@ getResults <- function ( runModelObj, overwrite = FALSE, omitFit = FALSE, omitRe
                           }  else  { 
                                write.csv2(allP, file.path(dir, paste(name, "_persons.csv",sep="")), na="", row.names = FALSE)
                           }     
-                    }           
+                    }
+                    if ( Q3 == TRUE ) {
+                          q3m <- q3FromRes ( res )  
+                          if ( file.exists(file.path(dir, paste(name, "_q3.csv",sep=""))) & overwrite == FALSE) { 
+                               cat(paste("Item results cannot be saved, file '",  file.path(dir, paste(name, "_q3.csv",sep="")),"' already exists.\n    Please remove/rename existing file or use 'overwrite=TRUE'.\n",sep=""))
+                          }  else  { 
+                               write.csv2(q3m, file.path(dir, paste(name, "_q3.csv",sep="")), na="", row.names = FALSE)
+                          }                                                         
+                    }         
                }
                rownames(res) <- NULL
                return(res)
@@ -1128,7 +1149,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                           }
      ### Sektion 'Rueckgabeobjekt bauen', hier fuer Conquest                    ### setze Optionen wieder in Ausgangszustand
                           options(scipen = original.options); flush.console()   ### Achtung: setze Konsolenpfade in Hochkommas, da andernfalls keine Leerzeichen in den Ordner- bzw. Dateinamen erlaubt sind!
-                          ret <- list ( software = software, input = paste("\"", file.path(dir, paste(analysis.name,"cqc",sep=".")), "\"", sep=""), conquest.folder = paste("\"", conquest.folder, "\"", sep=""), dir=dir, analysis.name=analysis.name, model.name = analysis.name, qMatrix=qMatrix, all.Names=all.Names, deskRes = deskRes, discrim = discrim, perNA=perNA, per0=per0, perExHG = perExHG, itemsExcluded = namen.items.weg)
+                          ret <- list ( software = software, input = paste("\"", file.path(dir, paste(analysis.name,"cqc",sep=".")), "\"", sep=""), conquest.folder = paste("\"", conquest.folder, "\"", sep=""), dir=dir, analysis.name=analysis.name, model.name = analysis.name, qMatrix=qMatrix, all.Names=all.Names, deskRes = deskRes, discrim = discrim, perNA=perNA, per0=per0, perExHG = perExHG, itemsExcluded = namen.items.weg, daten=daten)
                           class(ret) <-  c("defineConquest", "list")
                           return ( ret )  }
      ### Sektion 'Rueckgabeobjekt fuer tam'
@@ -1298,7 +1319,7 @@ converged<- function (dir, logFile) {
             }
             return(isConv)}
 
-getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Names, abs.dif.bound , sig.dif.bound, p.value, deskRes, discrim, omitFit, omitRegr, omitWle, omitPV ) {
+getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Names, abs.dif.bound , sig.dif.bound, p.value, deskRes, discrim, omitFit, omitRegr, omitWle, omitPV, daten, Q3=Q3, q3theta=q3theta ) {
          allFiles <- list.files(path=path, pattern = analysis.name, recursive = FALSE)
          qL       <- melt(qMatrix, id.vars = colnames(qMatrix)[1], variable.name = "dimensionName", na.rm=TRUE)
          qL       <- qL[which(qL[,"value"] != 0 ) , ]
@@ -1338,7 +1359,8 @@ getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Name
              toOff<- shw2[ which(is.na(shw2[,"value"])), "var1"]
              if(length(toOff)>0) {
                 shw1[match(toOff, shw1[,"var1"]), "par"] <- "offset"
-                shw2  <- shw2[-which(is.na(shw2[,"value"])),] }                 ### entferne Zeilen aus shw2, die in der "value"-Spalte NA haben
+                shw2  <- shw2[-which(is.na(shw2[,"value"])),]                   ### entferne Zeilen aus shw2, die in der "value"-Spalte NA haben
+             }
              if(!is.null ( deskRes ) ) {
                 deskR<- merge(deskRes, qL[,-match("value", colnames(qL))], by.x = "item.name", by.y = colnames(qMatrix)[1], all=TRUE)
                 shw3 <- data.frame ( model = model.name, source = "conquest", var1 = deskR[,"item.name"], var2 = NA , type = "fixed", indicator.group = "items", group = deskR[,"dimensionName"], par = "itemP",  derived.par = NA, value = deskR[,"item.p"], stringsAsFactors = FALSE)
@@ -1358,7 +1380,7 @@ getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Name
                                 data.frame ( model = model.name, source = "conquest", var1 = shw$item[,"item"], var2 = NA , type = "fixed", indicator.group = "items", group = shw$item[,"dimensionName"], par = "est",  derived.par = "outfit", value = as.numeric(shw$item[,"MNSQ"]), stringsAsFactors = FALSE) )
              if(length(shw) > 4 )  {                                            ### ggf. Parameter zusaetzlicher Conquest-Terme einlesen
                 read  <- 2 : (length(shw) - 3)                                  ### Diese Terme muessen eingelesen werden
-                for ( i in names(shw)[read] ) {
+                for ( i in names(shw)[read] ) {  
                      cols <- unlist(isLetter(i))                                ### versuche Spalte(n) zu identifizieren
                      if( !all(cols %in% colnames(shw[[i]])) ) {
                          cat(paste("Cannot identify variable identifier for term '",i,"' in file '",shwFile,"'. Skip procedure.\n",sep=""))
@@ -1368,7 +1390,7 @@ getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Name
                          if(ncol(qMatrix) != 2 ){
                             cat(paste("Warning: Cannot identify the group the term '",i,"' in file '",shwFile,"' belongs to. Insert 'NA' to the 'group' column.\n",sep=""))
                             gr <- NA
-                         }  else { gr <- colnames(qMatrix)[2]}
+                         }  else { gr <- colnames(qMatrix)[2]}                  
                          for ( u in c("ESTIMATE", "MNSQ", "MNSQ.1", "ERROR")) { ### Hotfix
                                if ( !class ( shw[[i]][,u] ) %in% c("numeric", "integer")) { 
                                     cat(paste("Warning: Expect column '",u,"' in file '",shwFile,"' (statement '",i,"') to be numeric. Current column format is: '",class ( shw[[i]][,u] ),"'. Column will be transformed.\n",sep=""))
@@ -1457,9 +1479,44 @@ getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Name
          }     
          attr(ret, "isConverged") <- isConv
          attr(ret, "available")   <- list ( itn = itnFile %in% allFiles, shw = shwFile %in% allFiles, wle = (wleFile %in% allFiles) & (omitWle == FALSE), pv = (pvFile %in% allFiles) & (omitPV == FALSE))
+    ### Sektion 'Q3 erzeugen' 
+         theta <- NULL
+         if ( Q3 == TRUE ) {
+              if ( q3theta == "pv") { 
+                  if ( omitPV == TRUE ) {
+                      cat("Cannot compute Q3 if 'omitPV == TRUE' and 'q3theta == \"pv\"'. Skip computation.\n")
+                  }  else  { 
+                      theta <- pv[["pvWide"]][,2:3]
+                  }
+              }
+              if ( q3theta == "wle") { 
+                  if ( omitWle == TRUE ) {
+                      cat("Cannot compute Q3 if 'omitWle == TRUE' and 'q3theta == \"wle\"'. Skip computation.\n")
+                  }  else  { 
+                      colW  <- grep("^wle", colnames(wle))[1]
+                      theta <- wle[,c(2,colW)]
+                  }
+              }
+              if ( q3theta == "eap") { 
+                  if ( omitPV == TRUE ) {
+                      cat("Cannot compute Q3 if 'omitPV == TRUE' and 'q3theta == \"eap\"'. Skip computation.\n")
+                  }  else  { 
+                      colEAP<- grep("^eap", colnames(pv[["pvWide"]]))[1]
+                      theta <- pv[["pvWide"]][,c(2,colEAP)]
+                  }
+              }
+              if(!is.null(theta)) {
+                  drinI <- match( shw[["item"]][,"item"], colnames(daten))      ### ggf.: welche Items im Datensatz stehen nicht im Showfile (*.shw)?
+                  drinP <- match(theta[,1], daten[,"ID"])                       ### ggf.: welche Personen im Datensatz stehen nicht im PV-File
+                  stopifnot(length(which(is.na(drinP))) == 0 ); stopifnot(length(which(is.na(drinI))) == 0 )
+                  txt   <- capture.output ( q3.res<- Q3(dat = daten[drinP,drinI], theta = theta[,2], b = shw[["item"]][,"ESTIMATE"], progress = FALSE) )
+                  matL  <- reshapeQ3 (q3.res$q3.matrix)
+                  ret   <- rbind ( ret, data.frame ( model = model.name, source = "conquest", var1 = matL[,"Var1"],  var2 = matL[,"Var2"] , type = "fixed",indicator.group = "items",group = paste(names(table(shw1[,"group"])), collapse="_"), par = "q3", derived.par = NA, value = matL[,"value"] , stringsAsFactors = FALSE))
+              }
+         }                                          
          return(ret)}
 
-getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV, nplausible , ntheta , normal.approx, samp.regr, theta.model, np.adj) {
+getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV, nplausible , ntheta , normal.approx, samp.regr, theta.model, np.adj, Q3=Q3) {
          if( omitRegr == FALSE ) { txt <- capture.output ( regr     <- tam.se(runModelObj)) }
          qMatrix  <- attr(runModelObj, "qMatrix")
          qL       <- melt(qMatrix, id.vars = colnames(qMatrix)[1], variable.name = "dimensionName", na.rm=TRUE)
@@ -1589,9 +1646,20 @@ getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV, n
               eaps[,"par"]   <- "est"
               eaps[grep("^SD.",as.character(eaps[,"variable"])),"par"]   <- "se"
               ret  <- rbind ( ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = eaps[,"pid"], var2 = NA , type = "indicator", indicator.group = "persons", group = eaps[,"group"], par = "eap", derived.par = eaps[,"par"], value = eaps[,"value"] , stringsAsFactors = FALSE))
-         }      
+         }
+    ### Sektion 'Q3 erzeugen' 
+         if ( Q3 == TRUE ) {
+              mat  <- tam.modelfit ( tamobj = runModelObj, progress = FALSE ) 
+              matL <- reshapeQ3 (mat$Q3.matr)
+              ret  <- rbind ( ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = matL[,"Var1"], var2 = matL[,"Var2"] , type = "fixed",indicator.group = "items", group = paste(names(table(shw1[,"group"])), collapse="_"), par = "q3", derived.par = NA, value = matL[,"value"] , stringsAsFactors = FALSE))
+         }                                          
          return(ret)}
-
+         
+### Hilfsfunktion zur Vereinheitlichung der Q3-Matrix         
+reshapeQ3 <- function ( mat ) { 
+             for (ii in 1:(nrow(mat)-1)) { mat[ii,ii:ncol(mat)] <- NA}          ### entferne alles oberhalb der Hauptdiagonale 
+             matL <- melt ( mat , na.rm = TRUE)                       ### das entfernt alle doppelten Eintraege
+             return(matL)}
 
 ### Extraktorfunktionen
 eapFromRes <- function ( resultsObj ) { 
@@ -1706,6 +1774,23 @@ itemFromRes<- function ( resultsObj ) {
           }
           return (selM )}           
           
+q3FromRes<- function ( resultsObj ) {
+          if( "multipleResults" %in% class(resultsObj)) {                       ### Mehrmodellfall
+              selM  <- by(data = resultsObj, INDICES = resultsObj[,"model"], FUN = function ( mr ) {
+                       toMatch <- which ( unlist ( lapply ( attr(resultsObj, "att"), FUN = function ( aa ) { aa[[1]][["model.name"]] == mr[1,"model"] } ) )  == TRUE )
+                       stopifnot(length(toMatch) == 1 )
+                       class(mr) <- "data.frame"
+                       res     <- q3FromRes ( mr )
+                       return(res) })
+              return(selM)
+          }  else  {
+             sel  <- resultsObj[which(resultsObj[,"par"] == "q3"),]
+             if ( nrow(sel)>0) {
+                  sel  <- dcast( sel, var1~var2, value.var = "value")
+             }
+             return(sel)
+          }}
+
 wleFromRes <- function ( resultsObj ) { 
           wleRo<- intersect( which(resultsObj[,"par"] %in% c("wle","NitemsSolved", "NitemsTotal")),which(resultsObj[,"indicator.group"] == "persons"))
           if(length(wleRo) == 0 ) { 

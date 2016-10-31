@@ -6,9 +6,9 @@
 call \code{runModel} with the argument returned by \code{defineModel} to start the estimation.
 The last step then is to create a results frame using \code{getResults}. }
 \usage{
-getResults(runModelObj, overwrite = FALSE, omitFit = FALSE, omitRegr = FALSE, 
-    omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6, sig.dif.bound = 0.3, 
-    p.value = 0.9, nplausible = NULL, ntheta = 2000, normal.approx = FALSE, 
+getResults(runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c("pv", "wle", "eap"), 
+    omitFit = FALSE, omitRegr = FALSE, omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6, 
+    sig.dif.bound = 0.3, p.value = 0.9, nplausible = NULL, ntheta = 2000, normal.approx = FALSE, 
     samp.regr = FALSE, theta.model=FALSE, np.adj=8)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -19,6 +19,19 @@ The object returned by \code{runModel}.
   \item{overwrite}{
 %%     ~~Describe \code{file} here~~
 Logical. Should result files be overwritten if exist?
+}
+  \item{Q3}{
+%%     ~~Describe \code{file} here~~
+Logical. Estimate the Q3 statistic according to Yen (1984)? Note: this is only 
+possible for uni-dimensional models. If \code{software == "tam"}, Q3 statistic
+is estimated using the \code{tam.modelfit} function. If \code{software == "Conquest"}, 
+Q3 statistic is estimated using the \code{Q3} function from the \code{sirt}
+package.
+}
+  \item{q3theta}{
+%%     ~~Describe \code{file} here~~
+Specify whether the Q3 statistic should be estimated using PVs, WLEs or EAPs 
+as the theta variable.
 }
   \item{omitFit}{
 %%     ~~Describe \code{file} here~~
