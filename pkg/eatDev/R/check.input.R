@@ -15,27 +15,34 @@ check.input <- function ( env ) {
 		
 		# console output
 		if ( verbose ) cat("checking input\n\n")
-
+# browser()
 		# d, data.frame
-		if ( verbose ) cat( paste0( "                                d is data.frame: "  ) )
-		if ( is.data.frame( d ) ) { if ( verbose ) cat( "OK\n" ) } 
-		   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "d is not a data.frame | check d" ) }
+		if ( verbose ) cat( paste0( "                    d is data.frame (or matrix): "  ) )
+		if ( is.data.frame( d ) || is.matrix( d ) ) { if ( verbose ) cat( "OK" ) } 
+		   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "d is not a data.frame (or matrix) | check d" ) }
+		if ( is.matrix( d ) ) { d <- as.data.frame( d ); if ( verbose ) cat( " (matrix converted to data.frame)\n" ) } else { if ( verbose ) cat( "\n" ) }
+# browser()
 		# d, non-empty
 		if ( verbose ) cat( paste0( "                                 d is not empty: "  ) )
 		if ( nrow(d)>0 & ncol(d)>0 ) { if ( verbose ) cat( "OK\n" ) } 
 		   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "d is empty | check d" ) }
-		# id, NULL or vector of length nrow(d)
-		if ( verbose ) cat( paste0( "         id is NULL or vector of length nrow(d): ") )
-		if ( is.null(id) || length(id)==nrow(d) ) { if ( verbose ) cat( "OK\n" ) }
-		   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "id is not NULL or not of length nrow(d) | check id" ) }
-		# timepoint_sep, character vector
-		if ( verbose ) cat( paste0( "              timepoint.sep is character vector: "  ) )
-		if ( is.character(timepoint.sep) ) { if ( verbose ) cat( "OK\n" ) }
-		   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "timepoint.sep is not character | check timepoint.sep" ) }
+# browser()		
+		# id, character
+		if ( verbose ) cat( paste0( "                id is character and of length 1: ") )
+		if ( is.character( id ) && length( id ) == 1 ) { if ( verbose ) cat( "OK\n" ) }
+		   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "id is not character or not of length 1 | check id" ) }
+		# time, character
+		if ( verbose ) cat( paste0( "              time is character and of length 1: ") )
+		if ( is.character( time ) && length( time ) == 1 ) { if ( verbose ) cat( "OK\n" ) }
+		   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "time is not character or not of length 1 | check time" ) }
+	    # timepoint_sep, character vector
+		# if ( verbose ) cat( paste0( "              timepoint.sep is character vector: "  ) )
+		# if ( is.character(timepoint.sep) ) { if ( verbose ) cat( "OK\n" ) }
+		   # else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "timepoint.sep is not character | check timepoint.sep" ) }
 		# lag.names, NULL or character vector
-		if ( verbose ) cat( paste0( "          lag.names is NULL or character vector: "  ) )
-		if ( is.null(lag.names) || is.character(lag.names) ) { if ( verbose ) cat( "OK\n" ) }
-		   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "lag.names is not NULL or character vector | check lag.names" ) }
+		# if ( verbose ) cat( paste0( "          lag.names is NULL or character vector: "  ) )
+		# if ( is.null(lag.names) || is.character(lag.names) ) { if ( verbose ) cat( "OK\n" ) }
+		   # else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "lag.names is not NULL or character vector | check lag.names" ) }
 		# Lambda, NULL or two-dimensional matrix
 		if ( verbose ) cat( paste0( "       Lambda is NULL or two-dimensional matrix: "  ) )
 		if ( is.null(Lambda) || (is.matrix(Lambda) & length(dim(Lambda))==2) ) { if ( verbose ) cat( "OK\n" ) }

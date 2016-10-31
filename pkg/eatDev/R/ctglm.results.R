@@ -22,7 +22,7 @@ ctglm.results <- function ( r, plot.dir=NULL, verbose=TRUE, ... ) {
 				e <- NULL
 		}
 		
-		if ( verbose ) cat( paste0( "\nDONE\n" ) )
+		if ( verbose ) cat( paste0( "\nDONE | congrats!\n" ) )
 		
 		# return
 		return( e )

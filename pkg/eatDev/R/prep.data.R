@@ -1,6 +1,9 @@
 
 prep.data <- function ( env ) {
 		
+		# packages
+		require( reshape2 )
+		
 		# get variables from env
 		eval( parse ( text=paste0( "assign( '",ls(envir=env), "' , get('",ls(envir=env),"', envir=env ) )" ) ) )
 		# put all variable names into vector
@@ -12,21 +15,31 @@ prep.data <- function ( env ) {
 		default <- character(0)
 		
 		# lag.names
-		if ( is.null( lag.names ) ) {
+		# if ( is.null( lag.names ) ) {
 				# search for standard named lag variables
-				l <- grepl( "^dT\\d+$", colnames(d) )
-				if ( any(l) ) {
-						lag.names <- colnames(d)[l]
-				} 
-		}
+				# l <- grepl( "^dT\\d+$", colnames(d) )
+				# if ( any(l) ) {
+						# lag.names <- colnames(d)[l]
+				# } 
+		# }
+		
+		### !!! d is now long !!!
+		# long d to wide dw (with lag variables)
+		dw <- ctLongToWide ( d=d, id=id, time=time, manifestNames=colnames(d)[!colnames(d) %in% c(id,time)], TDpredNames = NULL, TIpredNames = NULL)
+		dw <- ctIntervalise( datawide=dw, Tpoints=length(unique(d[,"time"])), n.manifest=length(colnames(d)[!colnames(d) %in% c(id,time)]), n.TDpred = 0, n.TIpred = 0,
+							 imputedefs = F, manifestNames = "auto", TDpredNames = "auto",
+							 TIpredNames = "auto", digits = 5, mininterval = 0.001,
+							 individualRelativeTime = TRUE, startoffset = 0)
+		lag.names <- colnames( dw )[ grepl( "^dT", colnames( dw ) ) ]
+		timepoint.sep <- "_"
 		
 		# number of lags
 		L <- length( lag.names )
 		
-		# move lags to a matrix and delete from d
+		# move lags to a matrix and delete from dw
 		if ( !is.null( lag.names ) ) {
-				Lags <- as.matrix( d[,lag.names,drop=FALSE] )
-				d <- d[,!colnames(d) %in% lag.names,drop=FALSE]
+				Lags <- as.matrix( dw[,lag.names,drop=FALSE] )
+				dw <- dw[,!colnames(dw) %in% lag.names,drop=FALSE]
 		} else {
 				Lags <- NULL
 		}
@@ -35,21 +48,21 @@ prep.data <- function ( env ) {
 		### Data ###
 
 		# if id exists, save original person id 
-		if ( is.null( id ) | ifelse( !is.null(id), !id %in% colnames(d), TRUE ) ) {
+		if ( is.null( id ) | ifelse( !is.null(id), !id %in% colnames(dw), TRUE ) ) {
 				person.id <- NULL
 		} else {
-				person.id <- d[,id]
-				d[,id] <- NULL
+				person.id <- dw[,id]
+				dw[,id] <- NULL
 		}
 
 		# create person id by counting 1,2,...,J
-		# d <- cbind( d, 1:J )
-		d <- cbind( d, 1:nrow(d) )
-		colnames(d)[ncol(d)] <- "id"
+		# dw <- cbind( dw, 1:J )
+		dw <- cbind( dw, 1:nrow(dw) )
+		colnames(dw)[ncol(dw)] <- "id"
 		id <- "id"
 	
 		# reshape data to long, first time
-		l.time <- try( reshape( data.frame(d), idvar="id", varying=colnames(d)[!colnames(d) %in% id], direction="long", sep=timepoint.sep ) )
+		l.time <- try( reshape( data.frame(dw), idvar="id", varying=colnames(dw)[!colnames(dw) %in% id], direction="long", sep=timepoint.sep ) )
 		if ( inherits( l.time, "try-error") ) {
 				stop( "Time suffix Tx cannot be identified in variable names. Check argument timepoint.sep ." , call. = TRUE )
 		}
@@ -77,25 +90,25 @@ prep.data <- function ( env ) {
 		l$time.orig <- NULL
 
 		# sort
-		d <- as.matrix( l[order(l$id,l$item,l$time),c("id","item","time","y")] )
-		rownames(d) <- seq( along = rownames(d) )
+		dw <- as.matrix( l[order(l$id,l$item,l$time),c("id","item","time","y")] )
+		rownames(dw) <- seq( along = rownames(dw) )
 
 		# column numbers
-		col.id <- which( colnames(d) %in% "id" )
-		col.item <- which( colnames(d) %in% "item" )
-		col.time <- which( colnames(d) %in% "time" )
-		col.y <- which( colnames(d) %in% "y" )
+		col.id <- which( colnames(dw) %in% "id" )
+		col.item <- which( colnames(dw) %in% "item" )
+		col.time <- which( colnames(dw) %in% "time" )
+		col.y <- which( colnames(dw) %in% "y" )
 
 		
 		## inferred number of units from long data set
 		# persons
-		J <- length( unique( d[,col.id] ) )
+		J <- length( unique( dw[,col.id] ) )
 		# items
-		I <- length( unique( d[,col.item] ) )
+		I <- length( unique( dw[,col.item] ) )
 		# time points
-		T <- length( unique( d[,col.time] ) )
+		T <- length( unique( dw[,col.time] ) )
 		# number of rows in long data set
-		R <- nrow(d)
+		R <- nrow(dw)
 
 		
 		### Lags ###
@@ -358,7 +371,7 @@ prep.data <- function ( env ) {
 		prec.t1 <- prec.t1.	
 		
 		### (over)write relevant variables to environment ###
-		obj <- c( "d", "col.y", "col.id", "col.item", "col.time", "R", "J", "I", "T", "Tj", "P", "Tp", "L", "Lpat", "Lpat.group", "Lambda", "beta", ifelse(exists("mu.beta"),"mu.beta",NA), ifelse(exists("prec.beta"),"prec.beta",NA), ifelse(measurement.model$family=="gaussian","E",NA), "F", "I1", "I2", "Aw", "I1w", "Qt.prec.replace", "A", "b", "Q", "mu.t1", "prec.t1" )
+		obj <- c( "d", "dw", "col.y", "col.id", "col.item", "col.time", "R", "J", "I", "T", "Tj", "P", "Tp", "L", "Lpat", "Lpat.group", "Lambda", "beta", ifelse(exists("mu.beta"),"mu.beta",NA), ifelse(exists("prec.beta"),"prec.beta",NA), ifelse(measurement.model$family=="gaussian","E",NA), "F", "I1", "I2", "Aw", "I1w", "Qt.prec.replace", "A", "b", "Q", "mu.t1", "prec.t1" )
 		obj <- obj[!is.na(obj)]
 		eval( parse ( text=paste0( "assign( '",obj, "' , get('",obj,"') , envir=env )" ) ) )
 
@@ -458,6 +471,6 @@ label.pars <- function(m,m.name) {
 				eval(parse(text=do))
 				
 		}
-
+	
 		return(m)
 }

@@ -1,13 +1,15 @@
 
 # d               data in standard ctsem format
-# id              name of person id variable in the data set
-# timepoint.sep   separator of manifest variable names and time point suffix Tx, default: "_"
-# lag.names       vector of variable names for the time lags as they appear in the data set; if standard naming (dT1, dT2, ...) is used, setting lag.names is not necessary
+# id              name of person id variable in data set
+# time            name of time variable in data set 
+### timepoint.sep separator of manifest variable names and time point suffix Tx, default: "_"
+### lag.names     vector of variable names for the time lags as they appear in the data set; if standard naming (dT1, dT2, ...) is used, setting lag.names is not necessary
 # Lambda          loading matrix, dimensions must be number of items x number of latent variables; defaults to diag(1,number of items) to map each manifest variable to one latent variable (so no measurement model is specified)
 # verbose         print information
 
 # ctglm.model <- function ( d, id=NULL, timepoint.sep="_", lag.names=NULL, Lambda=NULL, measurement.model=gaussian(link="identity"), ..., priors=NULL, verbose=TRUE ) {
-ctglm.model <- function ( d, id=NULL, timepoint.sep="_", lag.names=NULL, Lambda=NULL, measurement.model=binomial(link="logit"), engine="jags", ..., priors=NULL, verbose=TRUE ) {
+# ctglm.model <- function ( d, id=NULL, timepoint.sep="_", lag.names=NULL, Lambda=NULL, measurement.model=binomial(link="logit"), engine="jags", ..., priors=NULL, verbose=TRUE ) {
+ctglm.model <- function ( d, id="id", time="time", Lambda=NULL, measurement.model=binomial(link="logit"), engine="jags", ..., priors=NULL, verbose=TRUE ) {
 
 		# new environment
 		env <- new.env()
