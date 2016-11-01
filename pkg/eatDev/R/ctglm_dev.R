@@ -49,11 +49,9 @@ colnames(LAMBDA) <- c("lat1","lat2")
 # m <- ctglm.model( d=d, Lambda=LAMBDA, b=matrix(c("y","x"),ncol=1) )
 # m <- ctglm.model( d=d, Lambda=LAMBDA, beta=matrix(0,nrow=6,ncol=1), measurement.model=gaussian(link="identity") )
 # m <- ctglm.model( d=d, Lambda=LAMBDA, beta=matrix(c(0,0,0,0,0,0),nrow=6,ncol=1), measurement.model=gaussian(link="identity") )
-m <- ctglm.model( d=d, Lambda=LAMBDA, measurement.model=gaussian(link="identity") )
+m <- ctglm.model( engine="ctstan", d=d, Lambda=LAMBDA, measurement.model=gaussian(link="identity") )
 
 s <- ctglm.syntax( m=m )
-# s$syntax[43,1] <- "mu.beta <- 0"  
-# s$syntax[46,1] <- "prec.beta ~ dnorm(0,0.001)"  
 
 r <- ctglm.run( s=s, work.dir="C:/users/hechtmaz/Desktop/temp", iter=3 )
 

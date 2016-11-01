@@ -14,10 +14,12 @@ ctglm.syntax <- function ( m, model.name="model", verbose=TRUE ) {
 		# if( length( list(...) ) > 0 ) {
 				# eval( parse ( text=paste0( "assign( '",names(list(...)), "' , list(...)$'",names(list(...)),"' , envir=env )" ) ) )
 		# }
-		
+# browser()		
 		### call software specific syntax/call generator
 		if( get( "engine", envir=env ) %in% "jags" ) {
 				s <- create.jags.syntax( env )
+		} else if( get( "engine", envir=env ) %in% "ctstan" ) {
+				s <- create.ctstan.syntax( env )
 		}
 		
 		if (verbose) cat( paste0( "SYNTAX SUCCESSFULLY CREATED | proceed with ctglm.run() \n" ) )

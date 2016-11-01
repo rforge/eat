@@ -14,11 +14,11 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    ### DATA ###                                                     ")
 		x<-rbind(x, "                                                                     ")
-		x<-rbind(x, "    # data dw in long format                                         ")
-		x<-rbind(x, "    # dw[,col.id]: person                                            ")
-		x<-rbind(x, "    # dw[,col.item]: item                                            ")
-		x<-rbind(x, "    # dw[,col.time]: time point                                      ")
-		x<-rbind(x, "    # dw[,col.y]: responses                                          ")
+		x<-rbind(x, "    # data dl in long format                                         ")
+		x<-rbind(x, "    # dl[,col.id]: person                                            ")
+		x<-rbind(x, "    # dl[,col.item]: item                                            ")
+		x<-rbind(x, "    # dl[,col.time]: time point                                      ")
+		x<-rbind(x, "    # dl[,col.y]: responses                                          ")
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "                                                                     ")		
 		x<-rbind(x, "    ### MEASUREMENT MODEL ###                                        ")
@@ -26,14 +26,14 @@ create.jags.syntax <- function ( env ) {
 		# x<-rbind(x, "    # estimated parameters                                           ")
 		# x<-rbind(x, "    # theta:        J (person)    x F (faktor)    x T (time point)   ")
 		# x<-rbind(x, "                                                                     ")
-		x<-rbind(x, "    # loop over rows in long data set dw                             ")
+		x<-rbind(x, "    # loop over rows in long data set dl                             ")
 		x<-rbind(x, "    for (r in 1:R) {                                                 ")
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "        # distributional assumption                                  ")
 		if( measurement.model$family %in% "binomial" ) {
-		x<-rbind(x, "        dw[r,col.y] ~ dbern( mu.y[r] )                               ") }
+		x<-rbind(x, "        dl[r,col.y] ~ dbern( mu.y[r] )                               ") }
 		if( measurement.model$family %in% "gaussian" ) {
-		x<-rbind(x, "        dw[r,col.y] ~ dnorm( mu.y[r], E[ dw[r,col.item], dw[r,col.item] ] ) ") }
+		x<-rbind(x, "        dl[r,col.y] ~ dnorm( mu.y[r], E[ dl[r,col.item], dl[r,col.item] ] ) ") }
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "        # link                                                       ")
 		if( measurement.model$link %in% "logit" ) {
@@ -42,9 +42,9 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "        mu.y[r] <- eta[r]                                            ") }		
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "        # linear predictor                                           ")
-		# x<-rbind(x, "        eta[r] <- sum( Lambda[ dw[r,col.item],  , dw[r,col.time] ] * theta[ dw[r,col.id], , dw[r,col.time] ] )  +  beta[ dw[r,col.item], 1 ]  ")
-		x<-rbind(x, "        eta[r] <- sum( Lambda[ dw[r,col.item], ] * theta[ dw[r,col.id], , dw[r,col.time] ] )  +  beta[ dw[r,col.item], 1 ] ")
-		# x<-rbind(x, "        eta[r] <- sum( Lambda[ dw[r,col.item], ] * theta[ dw[r,col.id], , dw[r,col.time] ] ) ")
+		# x<-rbind(x, "        eta[r] <- sum( Lambda[ dl[r,col.item],  , dl[r,col.time] ] * theta[ dl[r,col.id], , dl[r,col.time] ] )  +  beta[ dl[r,col.item], 1 ]  ")
+		x<-rbind(x, "        eta[r] <- sum( Lambda[ dl[r,col.item], ] * theta[ dl[r,col.id], , dl[r,col.time] ] )  +  beta[ dl[r,col.item], 1 ] ")
+		# x<-rbind(x, "        eta[r] <- sum( Lambda[ dl[r,col.item], ] * theta[ dl[r,col.id], , dl[r,col.time] ] ) ")
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    }                                                                ")
 		x<-rbind(x, "                                                                     ")
@@ -199,6 +199,7 @@ create.jags.syntax <- function ( env ) {
 		
 		### call matrix (1 column)
 		y<-matrix( paste0( "### R syntax for ", model.name ), 1, 1 )
+		y<-rbind(y,paste0( "### engine: ", engine )		
 		y<-rbind(y, "" )
 		y<-rbind(y, "# rjags package" )
 		y<-rbind(y, "require( rjags )" )
@@ -329,16 +330,16 @@ make.str <- function( y.name ) {
 		y.$dupl <- as.integer( duplicated(y.$par) & is.na(suppressWarnings(as.numeric(y.$par)))  )
 		dupl <- unique( y.$par[ duplicated( y.$par ) & is.na(suppressWarnings(as.numeric(y.$par))) ] )
 		if ( length( dupl ) > 0 ) {
-				dw.l <- sapply( dupl, function( dw ){
+				dl.l <- sapply( dupl, function( dl ){
 						y.1 <- y.[ y.$par %in% dupl, ]
 						y.1 <- y.1[ !duplicated( y.1$par ), ]
 						y.1$val <- apply( y.1, 1, function ( z ) paste0( y.name, "", "[", paste( z[-c(length(z)-1,length(z))], collapse=","), "]" ) )
 						return( y.1 )
 				}, simplify=FALSE )
-				dw <- do.call( "rbind", dw.l )
+				dl <- do.call( "rbind", dl.l )
 				y.cn <- colnames( y. )
 				y.$order <- seq(along=rownames(y.))
-				y. <- merge( y., dw[,c("par","val")], by="par", sort=FALSE, all.x=TRUE )
+				y. <- merge( y., dl[,c("par","val")], by="par", sort=FALSE, all.x=TRUE )
 				y. <- y.[ order( y.$order), ]
 				y.$order <- NULL
 				y. <- y.[ , c( y.cn, "val" ), drop=FALSE ]

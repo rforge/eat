@@ -90,25 +90,25 @@ prep.data <- function ( env ) {
 		l$time.orig <- NULL
 
 		# sort
-		dw <- as.matrix( l[order(l$id,l$item,l$time),c("id","item","time","y")] )
-		rownames(dw) <- seq( along = rownames(dw) )
+		dl <- as.matrix( l[order(l$id,l$item,l$time),c("id","item","time","y")] )
+		rownames(dl) <- seq( along = rownames(dl) )
 
 		# column numbers
-		col.id <- which( colnames(dw) %in% "id" )
-		col.item <- which( colnames(dw) %in% "item" )
-		col.time <- which( colnames(dw) %in% "time" )
-		col.y <- which( colnames(dw) %in% "y" )
+		col.id <- which( colnames(dl) %in% "id" )
+		col.item <- which( colnames(dl) %in% "item" )
+		col.time <- which( colnames(dl) %in% "time" )
+		col.y <- which( colnames(dl) %in% "y" )
 
 		
 		## inferred number of units from long data set
 		# persons
-		J <- length( unique( dw[,col.id] ) )
+		J <- length( unique( dl[,col.id] ) )
 		# items
-		I <- length( unique( dw[,col.item] ) )
+		I <- length( unique( dl[,col.item] ) )
 		# time points
-		T <- length( unique( dw[,col.time] ) )
+		T <- length( unique( dl[,col.time] ) )
 		# number of rows in long data set
-		R <- nrow(dw)
+		R <- nrow(dl)
 
 		
 		### Lags ###
@@ -371,7 +371,7 @@ prep.data <- function ( env ) {
 		prec.t1 <- prec.t1.	
 		
 		### (over)write relevant variables to environment ###
-		obj <- c( "d", "dw", "col.y", "col.id", "col.item", "col.time", "R", "J", "I", "T", "Tj", "P", "Tp", "L", "Lpat", "Lpat.group", "Lambda", "beta", ifelse(exists("mu.beta"),"mu.beta",NA), ifelse(exists("prec.beta"),"prec.beta",NA), ifelse(measurement.model$family=="gaussian","E",NA), "F", "I1", "I2", "Aw", "I1w", "Qt.prec.replace", "A", "b", "Q", "mu.t1", "prec.t1" )
+		obj <- c( "d", "dw", "dl", "col.y", "col.id", "col.item", "col.time", "R", "J", "I", "T", "Tj", "P", "Tp", "L", "Lpat", "Lpat.group", "Lambda", "beta", ifelse(exists("mu.beta"),"mu.beta",NA), ifelse(exists("prec.beta"),"prec.beta",NA), ifelse(measurement.model$family=="gaussian","E",NA), "F", "I1", "I2", "Aw", "I1w", "Qt.prec.replace", "A", "b", "Q", "mu.t1", "prec.t1" )
 		obj <- obj[!is.na(obj)]
 		eval( parse ( text=paste0( "assign( '",obj, "' , get('",obj,"') , envir=env )" ) ) )
 
