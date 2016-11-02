@@ -1,0 +1,98 @@
+
+create.ctstan.syntax <- function ( env ) {
+
+		# get variables from env
+		eval( parse( text=paste0( "assign( '",ls(envir=env), "' , get('",ls(envir=env),"', envir=env ) )" ) ) )
+		
+		### call matrix (1 column)
+		y<-matrix( paste0( "### R syntax for ", model.name ), 1, 1 )
+		y<-rbind(y,paste0( "### engine: ", engine ) )
+		y<-rbind(y, "" )
+		y<-rbind(y, "# rstan package" )
+		y<-rbind(y, "require( rstan )" )
+		y<-rbind(y, "rstan_options(auto_write = TRUE)" )
+		y<-rbind(y, "options(mc.cores = parallel::detectCores())" )
+		y<-rbind(y, "" )	
+		y<-rbind(y, "## modifications" )
+		y<-rbind(y, "# no . in parameter names" )	
+		y<-rbind(y, 'do <- paste0( "mu.t1[",1:length(mu.t1),"] <- gsub( \'.\', \'\', mu.t1[",1:length(mu.t1),"], fixed=TRUE  )" ) ')
+		y<-rbind(y, 'eval( parse( text=do ) ) ')
+		y<-rbind(y, "" )			
+		y<-rbind(y, paste0( "# ctstan model                                        " ) )
+        y<-rbind(y, paste0( "m <- ctModel(  Tpoints=T,                              " ) )
+        y<-rbind(y, paste0( "              n.latent=F,                             " ) )
+        y<-rbind(y, paste0( "              n.manifest=I,                           " ) )
+        if( measurement.model$family %in% "gaussian" ) {
+        y<-rbind(y, paste0( "              MANIFESTVAR=E,                          " ) ) }
+        if( measurement.model$family %in% "binomial" ) {
+        y<-rbind(y, paste0( "              MANIFESTVAR=t(chol(diag(10^-20,I))),    " ) ) }
+        y<-rbind(y, paste0( "              MANIFESTMEANS=beta,                     " ) )
+        y<-rbind(y, paste0( "              LAMBDA=Lambda,                          " ) )
+        y<-rbind(y, paste0( "              CINT=b,                                 " ) )
+        y<-rbind(y, paste0( "              T0MEANS=matrix(mu.t1,ncol=1),            " ) ) 
+        # y<-rbind(y, paste0( "              T0VAR=prec.t1,                          " ) ) # keep in mind that it's not prec but var here
+        # setting prec.t1 as T0VAR isn't working, set it 'auto'
+		y<-rbind(y, paste0( "              T0VAR='auto',                           " ) ) # keep in mind that it's not prec but var here
+        y<-rbind(y, paste0( "              type='stanct'                           " ) ) 
+        y<-rbind(y, paste0( "            )                                         " ) )
+		y<-rbind(y, "" )
+		
+		# m2$parameters$indvarying <- FALSE
+		# m2$parameters$indvarying[ m2$parameters$matrix %in% c("T0MEANS") ] <- TRUE
+		# m2$parameters$indvarying[ m2$parameters$matrix %in% c("T0MEANS","CINT") ] <- TRUE
+		# m2$parameters$indvarying[ m2$parameters$matrix %in% c("CINT") ] <- TRUE
+
+		y<-rbind(y, "# start time                                                         ")
+		y<-rbind(y, "start <- Sys.time()                                                  ")
+		y<-rbind(y, "" )	
+
+        y<-rbind(y, paste0( "# run model                                                           ") )		
+        y<-rbind(y, paste0( "r <- ctStanFit(  datalong=d,                                           ") )
+        y<-rbind(y, paste0( "                ctstanmodelobj=m,                                     ") ) 
+        y<-rbind(y, paste0( "                iter=iter,                                            ") )  
+        y<-rbind(y, paste0( "                plot=FALSE,                                           ") )   
+        y<-rbind(y, paste0( "                chains=chains,                                        ") ) 
+        y<-rbind(y, paste0( "                fit=TRUE,                                             ") )    
+        y<-rbind(y, paste0( "                kalman=FALSE,                                         ") )    
+        y<-rbind(y, paste0( "                noncentered=TRUE,                                     ") )  
+        if( measurement.model$family %in% "gaussian" ) {          
+        y<-rbind(y, paste0( "                binomial=FALSE                                        ") ) }
+        if( measurement.model$family %in% "binomial" ) {          
+        y<-rbind(y, paste0( "                binomial=TRUE                                         ") ) }
+        y<-rbind(y, paste0( "              )                                                       ") ) 
+		y<-rbind(y, "" )	
+		
+		y<-rbind(y, "# run time                                                           ")		
+		y<-rbind(y, "runtime <- Sys.time() - start                                        ")			
+		
+		# for consistency with jags implementation, put all matrices with free parameters to par.env
+		par.env <- new.env()		
+		if( exists( "E" ) && any.free( E ) ) invisible(moveTo.par.env("E",env,par.env))
+		if( exists( "beta" ) && any.free( beta ) ) invisible(moveTo.par.env("beta",env,par.env))
+		# mu.beta/prec.beta not implemented in ctsem
+		#if( exists( "mu.beta" ) && any.free( mu.beta ) ) invisible(moveTo.par.env("mu.beta",env,par.env))
+		#if( exists( "prec.beta" ) && any.free( prec.beta ) ) invisible(moveTo.par.env("prec.beta",env,par.env))
+		if( exists( "Lambda" ) && any.free( Lambda ) ) invisible(moveTo.par.env("Lambda",env,par.env))
+		if( exists( "mu.t1" ) && any.free( mu.t1 ) ) invisible(moveTo.par.env("mu.t1",env,par.env))
+		if( exists( "prec.t1" ) && any.free( prec.t1 ) ) invisible(moveTo.par.env("prec.t1",env,par.env))
+		if( exists( "A" ) && any.free( A ) ) invisible(moveTo.par.env("A",env,par.env))
+		if( exists( "Q" ) && any.free( Q ) ) invisible(moveTo.par.env("Q",env,par.env))
+		if( exists( "b" ) && any.free( b ) ) invisible(moveTo.par.env("b",env,par.env))
+		
+		## create return object
+		ret <- list()
+		# first entry: engine
+		ret$engine <- engine
+		# second entry: model.name
+		ret$model.name <- model.name
+		# third entry: data environment
+		ret$data.env <- env
+		# fourth entry: environment with original matrices
+		ret$par.env <- par.env
+		# fifth entry: call
+		ret$call <- y
+		
+		# return
+		return( ret )
+}
+

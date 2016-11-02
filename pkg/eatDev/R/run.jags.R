@@ -80,13 +80,13 @@ run.jags <- function ( env ) {
 		## sortieren von results/parameters
 		first <- c("A","Q","b","beta","mu.beta","prec.beta")
 			
-		# sortieren von results (second entry) wie in Parameter-List
+		# sortieren von results (second entry)
 		ord <- match( first, names(ret$results) )
 		ord <- ord[!is.na(ord)]
 		if( !identical( ord, integer(0) ) ) ret$results <- c( ret$results[ord], ret$results[ !ret$results %in% ret$results[ord] ] )
 		rm("ord")
 # browser()
-		# sortieren von results (second entry) wie in Parameter-List
+		# sortieren von parameters (third entry)
 		ord <- match( first, names(ret$parameters) )
 		ord <- ord[!is.na(ord)]
 		if( !identical( ord, integer(0) ) ) ret$parameters <- c( ret$parameters[ord], ret$parameters[ !ret$parameters %in% ret$parameters[ord] ] )

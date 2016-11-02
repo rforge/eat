@@ -199,7 +199,7 @@ create.jags.syntax <- function ( env ) {
 		
 		### call matrix (1 column)
 		y<-matrix( paste0( "### R syntax for ", model.name ), 1, 1 )
-		y<-rbind(y,paste0( "### engine: ", engine )		
+		y<-rbind(y,paste0( "### engine: ", engine )	)
 		y<-rbind(y, "" )
 		y<-rbind(y, "# rjags package" )
 		y<-rbind(y, "require( rjags )" )
