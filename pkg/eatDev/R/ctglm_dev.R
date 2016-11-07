@@ -52,9 +52,11 @@ colnames(LAMBDA) <- c("lat1","lat2")
 m <- ctglm.model( engine="ctstan", d=d, Lambda=LAMBDA, measurement.model=gaussian(link="identity") )
 
 s <- ctglm.syntax( m=m )
+# ctglm.save.syntax( s, "C:/users/hechtmaz/Desktop/temp" )
 
 r <- ctglm.run( s=s, work.dir="C:/users/hechtmaz/Desktop/temp", iter=3 )
 
+source.it.all ( "c:/users/hechtmaz/Desktop/eat/pkg/eatDev/R", FALSE, exclude=c("ctglm_dev.R","bias.rmse.R","MH_ccv.sampling.R","MH_find.devidable.number.R","MH_get.tam.effects.R","MH_lmer.fixef.to.dfr.R","MH_Merge.R","MH_nested.pooling.R","MH_pool.pv.R","MH_tabulate.vars.R","pool.corr.R","SW_get.lmer.effects.R","SW_MH_resJAGS.R") )
 e <- ctglm.results( r=r, burnin=50, plot.dir="C:/temp/plots" )
 
 

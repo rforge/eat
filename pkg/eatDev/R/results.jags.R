@@ -1,6 +1,6 @@
 
-results.jags <- function ( env ) {
-		
+results.jags <- function ( env, mode ) {
+# browser()		
 		# require packages
 		require( "ggplot2" )
 		require( "shinystan" )
@@ -9,7 +9,7 @@ results.jags <- function ( env ) {
 		# get variables from env
 		eval( parse( text=paste0( "assign( '",ls(envir=env), "' , get('",ls(envir=env),"', envir=env ) )" ) ) )
 		
-		# defaults fuer jags
+		# defaults of burnin
 		if (!exists("burnin",mode="numeric")) burnin <- 0
 		
 		# burnin must be lower than iterations
@@ -19,7 +19,8 @@ results.jags <- function ( env ) {
 		
 		# output
 		if ( verbose ){
-				cat( paste0( "Extracting results from JAGS object...", "\n" ) )
+				if ( mode %in% "jags" )	engine.str <- "JAGS" else if ( mode %in% "ctstan" )	engine.str <- "Stan" else engine.str <- ""
+				cat( paste0( "Extracting results from ",engine.str," object...", "\n" ) )
 				cat( paste0( "   burnin: ", burnin, "\n" ) )
 				# cat( paste0( "            iterations: ", iter, "\n" ) )
 				# cat( paste0( "                chains: ", chains, "\n" ) )
@@ -66,12 +67,31 @@ results.jags <- function ( env ) {
 				m.$parameter <- apply( m., 1, function ( z ) eval( parse( text= paste0( "m[", paste(z,collapse=","), "]" ) ) ) )
 				# NOT duplicated free parameters
 				m. <- m.[ !duplicated(m.$parameter) & is.na(suppressWarnings(as.numeric(m.$parameter))), ]
+# browser()
+				### for ctstan there musn't be . in the parameter names
+				if ( mode %in% "ctstan" ) {
+						m.$parameter.mod <- gsub( ".", "", m.$parameter, fixed=TRUE )
+				} else if ( mode %in% "jags" ) {
+						m.$parameter.mod <- m.$parameter
+				} else {
+						m.$parameter.mod <- m.$parameter
+				}				
 				
 				# name
 				m.$name <- m.name
 
 				# call (how to access parameter)
-				m.$call <- apply( m.[,colnames(m.)[!colnames(m.) %in% c("parameter","name")],drop=FALSE], 1, function ( z ) paste0( "'",m.name,"'[", paste(z,collapse=","), ",,]" ) )
+				if ( mode %in% "jags" ) {
+						m.$call <- apply( m.[,colnames(m.)[!colnames(m.) %in% c("parameter","parameter.mod","name")],drop=FALSE], 1, function ( z ) paste0( "r$results$'",m.name,"'[", paste(z,collapse=","), ",,]" ) )
+				} else if ( mode %in% "ctstan" ) {
+						# if ( !indvarying & !par %in% c("lp__") & !grepl("^eta",par) ){
+								# iterations/chains fuer parameter
+								m.$call <- paste0( "extract( r$results, pars=paste0('output_hmean_', '",m.$parameter.mod,"'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
+						# } else {
+								# x <- extract( fit, pars=par, permuted=FALSE, inc_warmup=TRUE )[,,1]
+						# }
+				}
+				
 				
 				# sort
 				m. <- m.[,c("name","parameter","call")]
@@ -83,6 +103,15 @@ results.jags <- function ( env ) {
 		pars.l <- mapply( get.par.list, r$parameters, names( r$parameters ), SIMPLIFY=FALSE )
 		pars <- do.call( "rbind", pars.l )
 		rownames( pars ) <- seq( along=rownames( pars ) )
+		
+		### for ctstan there musn't be . in the parameter names
+		# if ( mode %in% "ctstan" ) {
+				# pars$parameter.mod <- gsub( ".", "", pars$parameter, fixed=TRUE )
+		# } else if ( mode %in% "jags" ) {
+				# pars$parameter.mod <- pars$parameter
+		# } else {
+				# pars$parameter.mod <- pars$parameter
+		# }
 		
 		# indvarying <- rep( FALSE, length(pars) )
 		# est.l <- try( mapply( extr, pars, SIMPLIFY=FALSE ) )
@@ -96,10 +125,11 @@ results.jags <- function ( env ) {
 				# } else {
 					# x <- extract( fit, pars=par, permuted=FALSE, inc_warmup=TRUE )[,,1]
 				# }
-				
+# browser()
 				# get chains of parameter
-				x <- eval( parse( text=paste0( "r$results$",z["call"],"" ) ) )
-				
+				# x <- eval( parse( text=paste0( "r$results$",z["call"],"" ) ) )
+				x <- eval( parse( text=paste0( z["call"] ) ) )
+			
 				# wide ( iteration x chain ) to long
 				# data set primarily for iteration plot, that's why complete, inclusive burnin
 				# multiple chains -> melt

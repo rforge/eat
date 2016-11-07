@@ -17,7 +17,9 @@ ctglm.results <- function ( r, plot.dir=NULL, verbose=TRUE, ... ) {
 # browser()			
 		### call software specific results preparation
 		if( get( "engine", envir=env ) %in% "jags" ) {
-				e <- results.jags( env )
+				e <- results.jags( env, mode="jags" )
+		} else if( get( "engine", envir=env ) %in% "ctstan" ) {
+				e <- results.jags( env, mode="ctstan" )
 		} else {
 				e <- NULL
 		}

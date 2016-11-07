@@ -12,14 +12,22 @@ create.ctstan.syntax <- function ( env ) {
 		y<-rbind(y, "require( rstan )" )
 		y<-rbind(y, "rstan_options(auto_write = TRUE)" )
 		y<-rbind(y, "options(mc.cores = parallel::detectCores())" )
-		y<-rbind(y, "" )	
+		y<-rbind(y, "" )
+		y<-rbind(y, "# ctsem package" )
+		y<-rbind(y, "require( ctsem )" )
+		y<-rbind(y, "print( installed.packages()[ installed.packages()[,1] %in% c('ctsem'), c(1,3) ] )" )
+		y<-rbind(y, "" )
 		y<-rbind(y, "## modifications" )
 		y<-rbind(y, "# no . in parameter names" )	
-		y<-rbind(y, 'do <- paste0( "mu.t1[",1:length(mu.t1),"] <- gsub( \'.\', \'\', mu.t1[",1:length(mu.t1),"], fixed=TRUE  )" ) ')
-		y<-rbind(y, 'eval( parse( text=do ) ) ')
+		y<-rbind(y, 'eval( parse( text=paste0( "mu.t1[",1:length(mu.t1),"] <- gsub( \'.\', \'\', mu.t1[",1:length(mu.t1),"], fixed=TRUE  )" ) ) ) ')
+		y<-rbind(y, 'eval( parse( text=paste0( "prec.t1[",1:length(prec.t1),"] <- gsub( \'.\', \'\', prec.t1[",1:length(prec.t1),"], fixed=TRUE  )" ) ) ) ')
+		y<-rbind(y, "# T0VAR lower triangular (Note: T0VAR needs to be cholesky decomposed matrix)" )
+		y<-rbind(y, "prec.t1[upper.tri(prec.t1)] <- 0" )
+		y<-rbind(y, "# DIFFUSION lower triangular (Note: Q needs to be cholesky decomposed matrix)" )
+		y<-rbind(y, "Q[upper.tri(Q)] <- 0" )
 		y<-rbind(y, "" )			
 		y<-rbind(y, paste0( "# ctstan model                                        " ) )
-        y<-rbind(y, paste0( "m <- ctModel(  Tpoints=T,                              " ) )
+        y<-rbind(y, paste0( "m <- ctModel( Tpoints=T,                              " ) )
         y<-rbind(y, paste0( "              n.latent=F,                             " ) )
         y<-rbind(y, paste0( "              n.manifest=I,                           " ) )
         if( measurement.model$family %in% "gaussian" ) {
@@ -28,14 +36,17 @@ create.ctstan.syntax <- function ( env ) {
         y<-rbind(y, paste0( "              MANIFESTVAR=t(chol(diag(10^-20,I))),    " ) ) }
         y<-rbind(y, paste0( "              MANIFESTMEANS=beta,                     " ) )
         y<-rbind(y, paste0( "              LAMBDA=Lambda,                          " ) )
+        y<-rbind(y, paste0( "              DRIFT=A,                                " ) )
+        y<-rbind(y, paste0( "              DIFFUSION=Q,                            " ) )
         y<-rbind(y, paste0( "              CINT=b,                                 " ) )
-        y<-rbind(y, paste0( "              T0MEANS=matrix(mu.t1,ncol=1),            " ) ) 
-        # y<-rbind(y, paste0( "              T0VAR=prec.t1,                          " ) ) # keep in mind that it's not prec but var here
-        # setting prec.t1 as T0VAR isn't working, set it 'auto'
-		y<-rbind(y, paste0( "              T0VAR='auto',                           " ) ) # keep in mind that it's not prec but var here
+        y<-rbind(y, paste0( "              T0MEANS=matrix(mu.t1,ncol=1),           " ) ) 
+        y<-rbind(y, paste0( "              T0VAR=prec.t1,                          " ) ) # keep in mind that it's not prec but var here
         y<-rbind(y, paste0( "              type='stanct'                           " ) ) 
         y<-rbind(y, paste0( "            )                                         " ) )
 		y<-rbind(y, "" )
+		y<-rbind(y, "# individually varying parameters" )
+		y<-rbind(y, "m$parameters$indvarying <- FALSE" )
+		y<-rbind(y, "" )		
 		
 		# m2$parameters$indvarying <- FALSE
 		# m2$parameters$indvarying[ m2$parameters$matrix %in% c("T0MEANS") ] <- TRUE
@@ -47,14 +58,15 @@ create.ctstan.syntax <- function ( env ) {
 		y<-rbind(y, "" )	
 
         y<-rbind(y, paste0( "# run model                                                           ") )		
-        y<-rbind(y, paste0( "r <- ctStanFit(  datalong=d,                                           ") )
+        y<-rbind(y, paste0( "r <- ctStanFit( datalong=d,                                           ") )
         y<-rbind(y, paste0( "                ctstanmodelobj=m,                                     ") ) 
         y<-rbind(y, paste0( "                iter=iter,                                            ") )  
         y<-rbind(y, paste0( "                plot=FALSE,                                           ") )   
         y<-rbind(y, paste0( "                chains=chains,                                        ") ) 
+# browser()        
         y<-rbind(y, paste0( "                fit=TRUE,                                             ") )    
         y<-rbind(y, paste0( "                kalman=FALSE,                                         ") )    
-        y<-rbind(y, paste0( "                noncentered=TRUE,                                     ") )  
+        # y<-rbind(y, paste0( "                noncentered=TRUE,                                     ") )  
         if( measurement.model$family %in% "gaussian" ) {          
         y<-rbind(y, paste0( "                binomial=FALSE                                        ") ) }
         if( measurement.model$family %in% "binomial" ) {          

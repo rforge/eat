@@ -13,7 +13,7 @@ run.ctstan <- function ( env ) {
 		# get variables from par.env
 		eval( parse( text=paste0( "assign( '",ls(envir=par.env), "' , get('",ls(envir=par.env),"', envir=par.env ) )" ) ) )
 			
-		# defaults fuer jags
+		# defaults fuer ctstan
 		if (!exists("iter",mode="numeric")) iter <- 10
 		if (!exists("chains",mode="numeric")) chains <- 2
 		# if (!exists("adapt",mode="numeric")) adapt <- 0
@@ -40,13 +40,16 @@ run.ctstan <- function ( env ) {
 		# identify run block
 		r1 <- which( grepl( "^r <- ", call ) )
 		r2 <- which( grepl( "^\\s*\\)\\s*$", call ) )[2]
-		
+	
 		# run call
 		for (z in 1:(m1-1)){
 				if( verbose ) { cat( paste0( call[z,], "\n" ) ); flush.console() }
 				eval( parse( text= call[z,] ) )
 		}
-# browser()		
+# browser()
+		# prec.t1[ 1,2 ] <- NA
+		# prec.t1 <- t( prec.t1 )
+		
 		if( verbose ) { cat( paste0( call[m1:m2,], "\n" ) ); flush.console() }
 		eval( parse( text= call[m1:m2,] ) )
 		for (z in (m2+1):(r1-1)){
