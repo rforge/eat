@@ -1,5 +1,5 @@
 
-results.jags <- function ( env, mode ) {
+results.jags.ctstan <- function ( env, mode ) {
 # browser()		
 		# require packages
 		require( "ggplot2" )
@@ -216,7 +216,107 @@ results.jags <- function ( env, mode ) {
 		}
 		est.l <- apply( pars, 1, extr )
 		est <- do.call( "rbind", est.l )
+	
+		### software specific mods
+		
+		## ctstan
+		if ( engine %in% "ctstan" ) {
+# browser()		
+				# Q in ctstan, is cholesky matrix, transform to variance matrix
+				# save cholesky Q in cholQ
+				# cholQ
+				parP <- cholQ <- parameters$Q
+				for ( i in 1:length(cholQ) ) {
+						cholQ[i] <- est[ est$variable %in% cholQ[i], "value" ]
+				}
+				dim.cholQ <- dim( cholQ )
+				cholQ <- as.numeric( cholQ )
+				dim( cholQ ) <- dim.cholQ
+				# cholQ to Q
+				Q <- solve( chol2inv( t( cholQ ) ) )
+				estQ <- est[ est$name %in% "Q", ]
+				for ( i in 1:length(parP) ) {
+						estQ[ estQ$variable %in% parP[i], "value" ] <- Q[i]
+				}
+				# all other statistics to NA
+				toNA <- colnames( estQ )[ !colnames( estQ ) %in% c("name","variable","value","engine") ]
+				eval( parse( text=paste0( "estQ$'", toNA, "' <- NA" ) ) )
+				# rename Q to cholQ in original est
+				est$name <- sub( "^Q", "cholQ", est$name )
+				est$variable <- sub( "^Q", "cholQ", est$variable )
+				# sort Q behind cholQ into est
+				ind <- which( est$name %in% "cholQ" )
+				ind <- ind[length(ind)]
+				if ( ind >= nrow( est ) ) {
+						mL <- list( est[1:ind,,drop=FALSE] , estQ )
+				} else mL <- list( est[1:ind,,drop=FALSE] , estQ , est[(ind+1):nrow(est),,drop=FALSE] )
+				est <- do.call( "rbind", mL )
+			
+				# prec.t1 in ctstan, is cholesky matrix, transform to variance matrix
+				# cholP
+				parP <- cholP <- parameters$prec.t1
+				for ( i in 1:length(cholP) ) {
+						cholP[i] <- est[ est$variable %in% cholP[i], "value" ]
+				}
+				dim.cholP <- dim( cholP )
+				cholP <- as.numeric( cholP )
+				dim( cholP ) <- dim.cholP
+				# cholP to P
+				P <- solve( chol2inv( t( cholP ) ) )
+				estP <- est[ est$name %in% "prec.t1", ]
+				for ( i in 1:length(parP) ) {
+						estP[ estP$variable %in% parP[i], "value" ] <- P[i]
+				}
+				# all other statistics to NA
+				toNA <- colnames( estP )[ !colnames( estP ) %in% c("name","variable","value","engine") ]
+				eval( parse( text=paste0( "estP$'", toNA, "' <- NA" ) ) )
+				# rename prec to var
+				estP$name <- sub( "^prec", "var", estP$name )
+				estP$variable <- sub( "^prec", "var", estP$variable )
+				# sort var.t1 behind prec.t1 into est
+				ind <- which( est$name %in% "prec.t1" )
+				ind <- ind[length(ind)]
+				if ( ind >= nrow( est ) ) {
+						mL <- list( est[1:ind,,drop=FALSE] , estP )
+				} else  mL <- list( est[1:ind,,drop=FALSE] , estP , est[(ind+1):nrow(est),,drop=FALSE] )
+				est <- do.call( "rbind", mL )
+		}
+		
+		## jags
+		if ( engine %in% "jags" ) {
+
+				# prec.t1 in jags, is precision matrix, transform to variance matrix
+				# precP
+				parP <- precP <- parameters$prec.t1
+				for ( i in 1:length(precP) ) {
+						precP[i] <- est[ est$variable %in% precP[i], "value" ]
+				}
+				dim.precP <- dim( precP )
+				precP <- as.numeric( precP )
+				dim( precP ) <- dim.precP
+				# precP to P
+				P <- solve( precP )
+				estP <- est[ est$name %in% "prec.t1", ]
+				for ( i in 1:length(parP) ) {
+						estP[ estP$variable %in% parP[i], "value" ] <- P[i]
+				}
+				# all other statistics to NA
+				toNA <- colnames( estP )[ !colnames( estP ) %in% c("name","variable","value","engine") ]
+				eval( parse( text=paste0( "estP$'", toNA, "' <- NA" ) ) )
+				# rename prec to var
+				estP$name <- sub( "^prec", "var", estP$name )
+				estP$variable <- sub( "^prec", "var", estP$variable )
+				# sort var.t1 behind prec.t1 into est
+				ind <- which( est$name %in% "prec.t1" )
+				ind <- ind[length(ind)]
+				if ( ind >= nrow( est ) ) {
+						mL <- list( est[1:ind,,drop=FALSE] , estP )
+				} else  mL <- list( est[1:ind,,drop=FALSE] , estP , est[(ind+1):nrow(est),,drop=FALSE] )
+				est <- do.call( "rbind", mL )
+				
+		}
 		
 		# return
+		rownames( est ) <- seq( along=rownames( est ) )
 		return( est )
 }
