@@ -19,8 +19,11 @@ ctglm.run <- function ( s, work.dir=getwd(), verbose=TRUE, ... ) {
 		if( get( "engine", envir=env ) %in% "jags" ) {
 				r <- run.jags( env )
 		}
+		if( get( "engine", envir=env ) %in% "ctsem" ) {
+				r <- run.ctstan.ctsem( env, mode="ctsem" )
+		}
 		if( get( "engine", envir=env ) %in% "ctstan" ) {
-				r <- run.ctstan( env )
+				r <- run.ctstan.ctsem( env, mode="ctstan" )
 		}
 		
 		if (verbose) cat( paste0( "\nMODEL SUCCESSFULLY RAN | proceed with ctglm.results() \n" ) )

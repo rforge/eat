@@ -18,6 +18,7 @@ source.it.all ( "c:/users/hechtmaz/Desktop/eat/pkg/eatDev/R", FALSE, exclude=c("
 # d <- dl
 # save( d, file="c:/users/hechtmaz/Desktop/eat/pkg/eatDev/data/d_6items_2processes_5timepoints.Rdata" )
 load ( "c:/users/hechtmaz/Desktop/eat/pkg/eatDev/data/d_6items_2processes_5timepoints.Rdata" )
+load ( "c:/users/hechtmaz/Desktop/eat/pkg/eatDev/data/ctExample2.Rdata" )
 
 
 # LAMBDA
@@ -50,7 +51,8 @@ colnames(LAMBDA) <- c("lat1","lat2")
 # m <- ctglm.model( d=d, Lambda=LAMBDA, beta=matrix(0,nrow=6,ncol=1), measurement.model=gaussian(link="identity") )
 # m <- ctglm.model( d=d, Lambda=LAMBDA, beta=matrix(c(0,0,0,0,0,0),nrow=6,ncol=1), measurement.model=gaussian(link="identity") )
 # m <- ctglm.model( engine="ctstan", d=d, Lambda=LAMBDA, measurement.model=gaussian(link="identity") )
-m <- ctglm.model( engine="jags", d=d, Lambda=LAMBDA, measurement.model=gaussian(link="identity") )
+# m <- ctglm.model( engine="jags", d=d, Lambda=LAMBDA, measurement.model=gaussian(link="identity") )
+m <- ctglm.model( engine="ctstan", d=ctExample2, Lambda=LAMBDA, measurement.model=gaussian(link="identity") )
 
 s <- ctglm.syntax( m=m )
 # ctglm.save.syntax( s, "C:/users/hechtmaz/Desktop/temp" )
@@ -59,6 +61,10 @@ r <- ctglm.run( s=s, work.dir="C:/users/hechtmaz/Desktop/temp", iter=3 )
 
 source.it.all ( "c:/users/hechtmaz/Desktop/eat/pkg/eatDev/R", FALSE, exclude=c("ctglm_dev.R","bias.rmse.R","MH_ccv.sampling.R","MH_find.devidable.number.R","MH_get.tam.effects.R","MH_lmer.fixef.to.dfr.R","MH_Merge.R","MH_nested.pooling.R","MH_pool.pv.R","MH_tabulate.vars.R","pool.corr.R","SW_get.lmer.effects.R","SW_MH_resJAGS.R") )
 e <- ctglm.results( r=r, burnin=50, plot.dir="C:/temp/plots" )
+
+
+
+
 
 
 

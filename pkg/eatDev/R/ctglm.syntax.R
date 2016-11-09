@@ -19,7 +19,9 @@ ctglm.syntax <- function ( m, model.name="model", verbose=TRUE ) {
 		if( get( "engine", envir=env ) %in% "jags" ) {
 				s <- create.jags.syntax( env )
 		} else if( get( "engine", envir=env ) %in% "ctstan" ) {
-				s <- create.ctstan.syntax( env )
+				s <- create.ctstan.ctsem.syntax( env, mode="ctstan" )
+		} else if( get( "engine", envir=env ) %in% "ctsem" ) {
+				s <- create.ctstan.ctsem.syntax( env, mode="ctsem" )
 		}
 		
 		if (verbose) cat( paste0( "SYNTAX SUCCESSFULLY CREATED | proceed with ctglm.run() \n" ) )

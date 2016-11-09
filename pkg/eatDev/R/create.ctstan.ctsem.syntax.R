@@ -1,22 +1,24 @@
 
-create.ctstan.syntax <- function ( env ) {
+create.ctstan.ctsem.syntax <- function ( env, mode ) {
 
 		# get variables from env
 		eval( parse( text=paste0( "assign( '",ls(envir=env), "' , get('",ls(envir=env),"', envir=env ) )" ) ) )
-		
+# browser()
 		### call matrix (1 column)
 		y<-matrix( paste0( "### R syntax for ", model.name ), 1, 1 )
 		y<-rbind(y,paste0( "### engine: ", engine ) )
-		y<-rbind(y, "" )
-		y<-rbind(y, "# rstan package" )
-		y<-rbind(y, "require( rstan )" )
-		y<-rbind(y, "rstan_options(auto_write = TRUE)" )
-		y<-rbind(y, "options(mc.cores = parallel::detectCores())" )
 		y<-rbind(y, "" )
 		y<-rbind(y, "# ctsem package" )
 		y<-rbind(y, "require( ctsem )" )
 		y<-rbind(y, "print( installed.packages()[ installed.packages()[,1] %in% c('ctsem'), c(1,3) ] )" )
 		y<-rbind(y, "" )
+		
+		if( mode %in% "ctstan" ) {
+		y<-rbind(y, "# rstan package" )
+		y<-rbind(y, "require( rstan )" )
+		y<-rbind(y, "rstan_options(auto_write = TRUE)" )
+		y<-rbind(y, "options(mc.cores = parallel::detectCores())" ) }
+		y<-rbind(y, "" ) 
 		y<-rbind(y, "## modifications" )
 		y<-rbind(y, "# no . in parameter names" )	
 		y<-rbind(y, 'eval( parse( text=paste0( "mu.t1[",1:length(mu.t1),"] <- gsub( \'.\', \'\', mu.t1[",1:length(mu.t1),"], fixed=TRUE  )" ) ) ) ')
@@ -26,7 +28,8 @@ create.ctstan.syntax <- function ( env ) {
 		y<-rbind(y, "# DIFFUSION lower triangular (Note: Q needs to be cholesky decomposed matrix)" )
 		y<-rbind(y, "Q[upper.tri(Q)] <- 0" )
 		y<-rbind(y, "" )			
-		y<-rbind(y, paste0( "# ctstan model                                        " ) )
+		
+		y<-rbind(y, paste0( "# ",mode," model                                      " ) )
         y<-rbind(y, paste0( "m <- ctModel( Tpoints=T,                              " ) )
         y<-rbind(y, paste0( "              n.latent=F,                             " ) )
         y<-rbind(y, paste0( "              n.manifest=I,                           " ) )
@@ -41,12 +44,17 @@ create.ctstan.syntax <- function ( env ) {
         y<-rbind(y, paste0( "              CINT=b,                                 " ) )
         y<-rbind(y, paste0( "              T0MEANS=matrix(mu.t1,ncol=1),           " ) ) 
         y<-rbind(y, paste0( "              T0VAR=prec.t1,                          " ) ) # keep in mind that it's not prec but var here
-        y<-rbind(y, paste0( "              type='stanct'                           " ) ) 
-        y<-rbind(y, paste0( "            )                                         " ) )
+		if( mode %in% "ctsem" ) {
+		y<-rbind(y, paste0( "              type='omx'                              " ) ) }
+		if( mode %in% "ctstan" ) {
+		y<-rbind(y, paste0( "              type='stanct'                           " ) ) }
+		y<-rbind(y, paste0( "            )                                         " ) )
 		y<-rbind(y, "" )
+		
+		if( mode %in% "ctstan" ) {
 		y<-rbind(y, "# individually varying parameters" )
 		y<-rbind(y, "m$parameters$indvarying <- FALSE" )
-		y<-rbind(y, "" )		
+		y<-rbind(y, "" ) }
 		
 		# m2$parameters$indvarying <- FALSE
 		# m2$parameters$indvarying[ m2$parameters$matrix %in% c("T0MEANS") ] <- TRUE
@@ -58,12 +66,17 @@ create.ctstan.syntax <- function ( env ) {
 		y<-rbind(y, "" )	
 
         y<-rbind(y, paste0( "# run model                                                           ") )		
-        y<-rbind(y, paste0( "r <- ctStanFit( datalong=d,                                           ") )
+        if( mode %in% "ctsem" ) {
+		y<-rbind(y, paste0( "r <- ctFit( datawide=dw,                                              ") ) 
+        y<-rbind(y, paste0( "            ctmodelobj=m                                              ") )		
+        y<-rbind(y, paste0( "          )                                                           ") ) }		
+        
+		if( mode %in% "ctstan" ) {
+		y<-rbind(y, paste0( "r <- ctStanFit( datalong=d,                                           ") ) 
         y<-rbind(y, paste0( "                ctstanmodelobj=m,                                     ") ) 
         y<-rbind(y, paste0( "                iter=iter,                                            ") )  
         y<-rbind(y, paste0( "                plot=FALSE,                                           ") )   
         y<-rbind(y, paste0( "                chains=chains,                                        ") ) 
-# browser()        
         y<-rbind(y, paste0( "                fit=TRUE,                                             ") )    
         y<-rbind(y, paste0( "                kalman=FALSE,                                         ") )    
         # y<-rbind(y, paste0( "                noncentered=TRUE,                                     ") )  
@@ -71,7 +84,7 @@ create.ctstan.syntax <- function ( env ) {
         y<-rbind(y, paste0( "                binomial=FALSE                                        ") ) }
         if( measurement.model$family %in% "binomial" ) {          
         y<-rbind(y, paste0( "                binomial=TRUE                                         ") ) }
-        y<-rbind(y, paste0( "              )                                                       ") ) 
+        y<-rbind(y, paste0( "              )                                                       ") ) }
 		y<-rbind(y, "" )	
 		
 		y<-rbind(y, "# run time                                                           ")		

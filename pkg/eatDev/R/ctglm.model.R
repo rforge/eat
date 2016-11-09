@@ -9,10 +9,10 @@
 
 # ctglm.model <- function ( d, id=NULL, timepoint.sep="_", lag.names=NULL, Lambda=NULL, measurement.model=gaussian(link="identity"), ..., priors=NULL, verbose=TRUE ) {
 # ctglm.model <- function ( d, id=NULL, timepoint.sep="_", lag.names=NULL, Lambda=NULL, measurement.model=binomial(link="logit"), engine="jags", ..., priors=NULL, verbose=TRUE ) {
-ctglm.model <- function ( d, id="id", time="time", Lambda=NULL, measurement.model=binomial(link="logit"), engine=c("jags","ctstan"), ..., priors=NULL, verbose=TRUE ) {
+ctglm.model <- function ( d, id="id", time="time", Lambda=NULL, measurement.model=binomial(link="logit"), engine=c("jags","ctstan","ctsem"), ..., priors=NULL, verbose=TRUE ) {
 # browser()		
 		# engine
-		if ( is.character( engine ) && length( engine ) > 1 ) engine <- engine[1] else if( !is.character(engine) || !any("jags" %in% c("jags","ctstan")) ) engine <- "jags"
+		if ( is.character( engine ) && length( engine ) > 1 ) engine <- engine[1] else if( !is.character(engine) || !any("jags" %in% c("jags","ctstan","ctsem")) ) engine <- "jags"
 		
 		# new environment
 		env <- new.env()

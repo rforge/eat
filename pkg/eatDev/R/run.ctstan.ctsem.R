@@ -1,8 +1,8 @@
 
-run.ctstan <- function ( env ) {
+run.ctstan.ctsem <- function ( env, mode ) {
 		
 		# package
-		require( ctsem )
+		# require( ctsem )
 		
 		# get variables from env
 		eval( parse( text=paste0( "assign( '",ls(envir=env), "' , get('",ls(envir=env),"', envir=env ) )" ) ) )
@@ -12,27 +12,29 @@ run.ctstan <- function ( env ) {
 		
 		# get variables from par.env
 		eval( parse( text=paste0( "assign( '",ls(envir=par.env), "' , get('",ls(envir=par.env),"', envir=par.env ) )" ) ) )
-			
-		# defaults fuer ctstan
-		if (!exists("iter",mode="numeric")) iter <- 10
-		if (!exists("chains",mode="numeric")) chains <- 2
-		# if (!exists("adapt",mode="numeric")) adapt <- 0
-		# if (!exists("thin",mode="numeric")) thin <- 1
 
-		# output
-		if ( verbose ){
-				cat( paste0( "Running with...", "\n" ) )
-				# cat( paste0( "   adaption iterations: ", adapt, "\n" ) )
-				cat( paste0( "            iterations: ", iter, "\n" ) )
-				cat( paste0( "                chains: ", chains, "\n" ) )
-				# cat( paste0( "     thinning interval: ", thin, "\n" ) )
-				cat( paste0( "\n" ) )
-				flush.console()
+		if( mode %in% "ctstan" ) {
+		
+				# defaults fuer ctstan
+				if (!exists("iter",mode="numeric")) iter <- 10
+				if (!exists("chains",mode="numeric")) chains <- 2
+				# if (!exists("adapt",mode="numeric")) adapt <- 0
+				# if (!exists("thin",mode="numeric")) thin <- 1
+
+				# output
+				if ( verbose ){
+						cat( paste0( "Running with...", "\n" ) )
+						# cat( paste0( "   adaption iterations: ", adapt, "\n" ) )
+						cat( paste0( "            iterations: ", iter, "\n" ) )
+						cat( paste0( "                chains: ", chains, "\n" ) )
+						# cat( paste0( "     thinning interval: ", thin, "\n" ) )
+						cat( paste0( "\n" ) )
+						flush.console()
+				}
 		}
 
-
 		### run syntax
-		
+
 		# identify ctstan model block
 		m1 <- which( grepl( "^m <- ", call ) )
 		m2 <- which( grepl( "^\\s*\\)\\s*$", call ) )[1]
@@ -91,7 +93,7 @@ run.ctstan <- function ( env ) {
 		
 		## entry: run parameter
 		# ret$runpar <- list( "adapt"=adapt, "iter"=iter, "chains"=chains, "thin"=thin )
-		ret$runpar <- list( "iter"=iter, "chains"=chains )
+		if( mode %in% "ctstan" ) ret$runpar <- list( "iter"=iter, "chains"=chains )
 		
 		## sortieren von parameters
 		first <- c("A","Q","b","beta","mu.beta","prec.beta")

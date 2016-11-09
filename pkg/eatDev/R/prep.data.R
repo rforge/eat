@@ -22,24 +22,30 @@ prep.data <- function ( env ) {
 						# lag.names <- colnames(d)[l]
 				# } 
 		# }
-		
+# browser()	
 		### !!! d is now long !!!
 		# long d to wide dw (with lag variables)
 		dw <- ctLongToWide ( d=d, id=id, time=time, manifestNames=colnames(d)[!colnames(d) %in% c(id,time)], TDpredNames = NULL, TIpredNames = NULL)
+		
 		dw <- ctIntervalise( datawide=dw, Tpoints=length(unique(d[,"time"])), n.manifest=length(colnames(d)[!colnames(d) %in% c(id,time)]), n.TDpred = 0, n.TIpred = 0,
 							 imputedefs = F, manifestNames = "auto", TDpredNames = "auto",
 							 TIpredNames = "auto", digits = 5, mininterval = 0.001,
 							 individualRelativeTime = TRUE, startoffset = 0)
+		
 		lag.names <- colnames( dw )[ grepl( "^dT", colnames( dw ) ) ]
 		timepoint.sep <- "_"
 		
 		# number of lags
 		L <- length( lag.names )
+
+		# keep dw for ctsem models
+		# continue with dw2
+		dw2 <- dw
 		
-		# move lags to a matrix and delete from dw
+		# move lags to a matrix and delete from dw2
 		if ( !is.null( lag.names ) ) {
-				Lags <- as.matrix( dw[,lag.names,drop=FALSE] )
-				dw <- dw[,!colnames(dw) %in% lag.names,drop=FALSE]
+				Lags <- as.matrix( dw2[,lag.names,drop=FALSE] )
+				dw2 <- dw2[,!colnames(dw2) %in% lag.names,drop=FALSE]
 		} else {
 				Lags <- NULL
 		}
@@ -48,21 +54,21 @@ prep.data <- function ( env ) {
 		### Data ###
 
 		# if id exists, save original person id 
-		if ( is.null( id ) | ifelse( !is.null(id), !id %in% colnames(dw), TRUE ) ) {
+		if ( is.null( id ) | ifelse( !is.null(id), !id %in% colnames(dw2), TRUE ) ) {
 				person.id <- NULL
 		} else {
-				person.id <- dw[,id]
-				dw[,id] <- NULL
+				person.id <- dw2[,id]
+				dw2[,id] <- NULL
 		}
 
 		# create person id by counting 1,2,...,J
-		# dw <- cbind( dw, 1:J )
-		dw <- cbind( dw, 1:nrow(dw) )
-		colnames(dw)[ncol(dw)] <- "id"
+		# dw2 <- cbind( dw2, 1:J )
+		dw2 <- cbind( dw2, 1:nrow(dw2) )
+		colnames(dw2)[ncol(dw2)] <- "id"
 		id <- "id"
 	
 		# reshape data to long, first time
-		l.time <- try( reshape( data.frame(dw), idvar="id", varying=colnames(dw)[!colnames(dw) %in% id], direction="long", sep=timepoint.sep ) )
+		l.time <- try( reshape( data.frame(dw2), idvar="id", varying=colnames(dw2)[!colnames(dw2) %in% id], direction="long", sep=timepoint.sep ) )
 		if ( inherits( l.time, "try-error") ) {
 				stop( "Time suffix Tx cannot be identified in variable names. Check argument timepoint.sep ." , call. = TRUE )
 		}

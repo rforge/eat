@@ -18,6 +18,8 @@ ctglm.results <- function ( r, plot.dir=NULL, verbose=TRUE, ... ) {
 		### call software specific results preparation
 		if( get( "engine", envir=env ) %in% c("jags","ctstan") ) {
 				e <- results.jags.ctstan( env, mode=get( "engine", envir=env ) )
+		} else if( get( "engine", envir=env ) %in% c("ctsem") ) {
+				e <- results.ctsem( env )
 		} else {
 				e <- NULL
 		}

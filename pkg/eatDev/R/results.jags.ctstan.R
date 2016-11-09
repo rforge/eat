@@ -47,60 +47,10 @@ results.jags.ctstan <- function ( env, mode ) {
 		#indvarying[1:(length(c(T0MEANS.strings,CINT.strings)))] <- TRUE
 		# indvarying[1:length(c(T0MEANS.strings))] <- TRUE
 		
+
+# browser()
 		# make list of all parameters
-		get.par.list <- function( m, m.name ){
-# browser()
-				# data structures to long
-				dim.m <- dim( m )
-				if( is.null( dim.m ) ) {
-						
-						# long structure
-						m. <- data.frame( matrix( seq( along= m ), ncol=1 ) )
-						
-				} else {
-				# if structure with dimensions (e.g. matrix)
-				
-						# long structure
-						m. <- eval(parse(text=paste0( "Reduce(function(x, y) merge(x, y, by=NULL, all=TRUE),list(", paste( paste0( "1:", dim.m ), collapse="," ), "),accumulate=FALSE )" )))
-
-				}
-				m.$parameter <- apply( m., 1, function ( z ) eval( parse( text= paste0( "m[", paste(z,collapse=","), "]" ) ) ) )
-				# NOT duplicated free parameters
-				m. <- m.[ !duplicated(m.$parameter) & is.na(suppressWarnings(as.numeric(m.$parameter))), ]
-# browser()
-				### for ctstan there musn't be . in the parameter names
-				if ( mode %in% "ctstan" ) {
-						m.$parameter.mod <- gsub( ".", "", m.$parameter, fixed=TRUE )
-				} else if ( mode %in% "jags" ) {
-						m.$parameter.mod <- m.$parameter
-				} else {
-						m.$parameter.mod <- m.$parameter
-				}				
-				
-				# name
-				m.$name <- m.name
-
-				# call (how to access parameter)
-				if ( mode %in% "jags" ) {
-						m.$call <- apply( m.[,colnames(m.)[!colnames(m.) %in% c("parameter","parameter.mod","name")],drop=FALSE], 1, function ( z ) paste0( "r$results$'",m.name,"'[", paste(z,collapse=","), ",,]" ) )
-				} else if ( mode %in% "ctstan" ) {
-						# if ( !indvarying & !par %in% c("lp__") & !grepl("^eta",par) ){
-								# iterations/chains fuer parameter
-								m.$call <- paste0( "extract( r$results, pars=paste0('output_hmean_', '",m.$parameter.mod,"'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
-						# } else {
-								# x <- extract( fit, pars=par, permuted=FALSE, inc_warmup=TRUE )[,,1]
-						# }
-				}
-				
-				
-				# sort
-				m. <- m.[,c("name","parameter","call")]
-				
-				# return
-				return( m. )
-		}
-# browser()
-		pars.l <- mapply( get.par.list, r$parameters, names( r$parameters ), SIMPLIFY=FALSE )
+		pars.l <- mapply( get.par.list, r$parameters, names( r$parameters ), MoreArgs=list(mode=mode), SIMPLIFY=FALSE )
 		pars <- do.call( "rbind", pars.l )
 		rownames( pars ) <- seq( along=rownames( pars ) )
 		
@@ -320,3 +270,59 @@ results.jags.ctstan <- function ( env, mode ) {
 		rownames( est ) <- seq( along=rownames( est ) )
 		return( est )
 }
+
+get.par.list <- function( m, m.name, mode ){
+# browser()
+		
+		# data structures to long
+		dim.m <- dim( m )
+		if( is.null( dim.m ) ) {
+				
+				# long structure
+				m. <- data.frame( matrix( seq( along= m ), ncol=1 ) )
+				
+		} else {
+		# if structure with dimensions (e.g. matrix)
+		
+				# long structure
+				m. <- eval(parse(text=paste0( "Reduce(function(x, y) merge(x, y, by=NULL, all=TRUE),list(", paste( paste0( "1:", dim.m ), collapse="," ), "),accumulate=FALSE )" )))
+
+		}
+		m.$parameter <- apply( m., 1, function ( z ) eval( parse( text= paste0( "m[", paste(z,collapse=","), "]" ) ) ) )
+		# NOT duplicated free parameters
+		m. <- m.[ !duplicated(m.$parameter) & is.na(suppressWarnings(as.numeric(m.$parameter))), ]
+# browser()
+		### for ctstan/ctsem there musn't be . in the parameter names
+		if ( mode %in% c("ctstan","ctsem") ) {
+				m.$parameter.mod <- gsub( ".", "", m.$parameter, fixed=TRUE )
+		} else if ( mode %in% "jags" ) {
+				m.$parameter.mod <- m.$parameter
+		} else {
+				m.$parameter.mod <- m.$parameter
+		}				
+		
+		# name
+		m.$name <- m.name
+
+		# call (how to access parameter)
+		if ( mode %in% "jags" ) {
+				m.$call <- apply( m.[,colnames(m.)[!colnames(m.) %in% c("parameter","parameter.mod","name")],drop=FALSE], 1, function ( z ) paste0( "r$results$'",m.name,"'[", paste(z,collapse=","), ",,]" ) )
+		} else if ( mode %in% "ctstan" ) {
+				# if ( !indvarying & !par %in% c("lp__") & !grepl("^eta",par) ){
+						# iterations/chains fuer parameter
+						m.$call <- paste0( "extract( r$results, pars=paste0('output_hmean_', '",m.$parameter.mod,"'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
+				# } else {
+						# x <- extract( fit, pars=par, permuted=FALSE, inc_warmup=TRUE )[,,1]
+				# }
+		} else if ( mode %in% "ctsem" ) {
+				m.$call <- paste0( "summary( r$results )$ctparameters$Value[  summary( r$results )$ctparameters$'Continuous time free param' %in% c('",m.$parameter.mod,"') ]" )
+		}
+		
+		# sort
+		m. <- m.[,c("name","parameter","call")]
+		
+		# return
+		return( m. )
+}
+		
+
