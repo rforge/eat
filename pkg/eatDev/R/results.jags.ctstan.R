@@ -181,7 +181,13 @@ results.jags.ctstan <- function ( env, mode ) {
 				# prec.t1 in ctstan is precision matrix, transform to variance matrix
 				if (verbose) { cat( paste0( "      prec.t1 -> var.t1\n" ) ); flush.console() }
 				est <- transform.var.matrix( parameters$prec.t1, "prec.t1", "var.t1", "solve( M )", est )
-		
+# browser()				
+				# if prec.beta exists, transform to variance
+				if( "prec.beta" %in% est$name ) {
+						if (verbose) { cat( paste0( "      prec.beta -> var.beta\n" ) ); flush.console() }
+						est <- transform.var.matrix( parameters$prec.beta, "prec.beta", "var.beta", "solve( M )", est )				
+				}
+				
 		}
 		
 		## ctstan
@@ -191,9 +197,9 @@ results.jags.ctstan <- function ( env, mode ) {
 				if (verbose) { cat( paste0( "      cholQ -> Q\n" ) ); flush.console() }
 				est <- transform.var.matrix( parameters$cholQ, "cholQ", "Q", "solve( chol2inv( t( M ) ) )", est )
 				
-				# prec.t1 in ctstan is cholesky matrix, transform to variance matrix
-				if (verbose) { cat( paste0( "      prec.t1 -> var.t1\n" ) ); flush.console() }
-				est <- transform.var.matrix( parameters$prec.t1, "prec.t1", "var.t1", "solve( chol2inv( t( M ) ) )", est )
+				# chol.var.t1 in ctstan is cholesky matrix, transform to variance matrix
+				if (verbose) { cat( paste0( "      chol.var.t1 -> var.t1\n" ) ); flush.console() }
+				est <- transform.var.matrix( parameters$chol.var.t1, "chol.var.t1", "var.t1", "solve( chol2inv( t( M ) ) )", est )
 
 		}
 		
@@ -277,10 +283,10 @@ transform.var.matrix <- function( matr, matr.name, matr.name.replace, transform.
 		# all other statistics to NA
 		toNA <- colnames( estP )[ !colnames( estP ) %in% c("name","variable","value","engine") ]
 		eval( parse( text=paste0( "estP$'", toNA, "' <- NA" ) ) )
-		# rename prec to var
+		# rename
 		estP$name <- sub( matr.name, matr.name.replace, estP$name )
 		estP$variable <- sub( matr.name, matr.name.replace, estP$variable )
-		# sort var.t1 behind prec.t1 into est
+		# sort transformed parameter behind original
 		ind <- which( est$name %in% matr.name )
 		ind <- ind[length(ind)]
 		if ( ind >= nrow( est ) ) {

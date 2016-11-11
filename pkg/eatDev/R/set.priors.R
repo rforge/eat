@@ -93,7 +93,10 @@ set.priors <- function ( env ) {
 				invisible( make.priors( m.name="mu.t1", m=mu.t1, priors=priors, env=env, prior = "dnorm(0,0.1)", verbose=verbose ) )
 		}
 # browser()	
-		# prec.t1 prior
+		
+		## first time point prec/var
+		# in jags prec.t1
+		# in ctstan chol.var.t1
 		if ( exists("prec.t1") && any.free( prec.t1 ) ) {
 				# eval( parse ( text=paste0( "assign( 'prec.t1' , 'prec.t1' , envir=env )" ) ) )
 				# prec.t1 <- get( "prec.t1", envir=env )
@@ -101,8 +104,13 @@ set.priors <- function ( env ) {
 				# prior[[length(prior)+1]] <- make.priors( m.name="prec.t1", m=prec.t1, priors=priors, env=env, prior = "dgamma( 1, 1 )", verbose=verbose )
 				assign( "prec.t1.prior" , "dwish( I1 , F+1 )", envir=env )
 		}
-		
-		
+		if ( exists("chol.var.t1") && any.free( chol.var.t1 ) ) {
+				# eval( parse ( text=paste0( "assign( 'chol.var.t1' , 'chol.var.t1' , envir=env )" ) ) )
+				# chol.var.t1 <- get( "chol.var.t1", envir=env )
+				if ( verbose ) cat( "  chol. var. matr. of first time p. chol.var.t1: Wishart distribution\n" )
+				# prior[[length(prior)+1]] <- make.priors( m.name="chol.var.t1", m=chol.var.t1, priors=priors, env=env, prior = "dgamma( 1, 1 )", verbose=verbose )
+				assign( "chol.var.t1.prior" , "dwish( I1 , F+1 )", envir=env )		
+		}
 		
 		# at the end line break on console
 		if ( verbose ) cat( paste0( "\n" ) )

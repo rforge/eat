@@ -22,9 +22,12 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
 		y<-rbind(y, "## modifications" )
 		y<-rbind(y, "# no . in parameter names" )	
 		y<-rbind(y, 'eval( parse( text=paste0( "mu.t1[",1:length(mu.t1),"] <- gsub( \'.\', \'\', mu.t1[",1:length(mu.t1),"], fixed=TRUE  )" ) ) ) ')
-		y<-rbind(y, 'eval( parse( text=paste0( "prec.t1[",1:length(prec.t1),"] <- gsub( \'.\', \'\', prec.t1[",1:length(prec.t1),"], fixed=TRUE  )" ) ) ) ')
-		y<-rbind(y, "# T0VAR lower triangular (Note: T0VAR needs to be cholesky decomposed matrix)" )
-		y<-rbind(y, "prec.t1[upper.tri(prec.t1)] <- 0" )
+		if( mode %in% "ctstan" ) {
+		y<-rbind(y, 'eval( parse( text=paste0( "chol.var.t1[",1:length(chol.var.t1),"] <- gsub( \'.\', \'\', chol.var.t1[",1:length(chol.var.t1),"], fixed=TRUE  )" ) ) ) ') }
+		if( mode %in% "ctsem" ) {
+		y<-rbind(y, 'eval( parse( text=paste0( "var.t1[",1:length(var.t1),"] <- gsub( \'.\', \'\', var.t1[",1:length(var.t1),"], fixed=TRUE  )" ) ) ) ') }
+		# y<-rbind(y, "# T0VAR lower triangular (Note: T0VAR needs to be cholesky decomposed matrix)" )
+		# y<-rbind(y, "prec.t1[upper.tri(prec.t1)] <- 0" )
 		# y<-rbind(y, "# DIFFUSION lower triangular (Note: Q needs to be cholesky decomposed matrix)" )
 		# y<-rbind(y, "Q[upper.tri(Q)] <- 0" )
 		y<-rbind(y, "" )			
@@ -40,13 +43,16 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
         y<-rbind(y, paste0( "              MANIFESTMEANS=beta,                     " ) )
         y<-rbind(y, paste0( "              LAMBDA=Lambda,                          " ) )
         y<-rbind(y, paste0( "              DRIFT=A,                                " ) )
-        if( mode %in% "ctsem" ) {
-		y<-rbind(y, paste0( "              DIFFUSION=Q,                            " ) ) }
         if( mode %in% "ctstan" ) {
-		y<-rbind(y, paste0( "              DIFFUSION=cholQ,                        " ) ) }
+		y<-rbind(y, paste0( "              DIFFUSION=cholQ,                        " ) ) } 
+		if( mode %in% "ctsem" ) {
+		y<-rbind(y, paste0( "              DIFFUSION=Q,                            " ) ) }
         y<-rbind(y, paste0( "              CINT=b,                                 " ) )
         y<-rbind(y, paste0( "              T0MEANS=matrix(mu.t1,ncol=1),           " ) ) 
-        y<-rbind(y, paste0( "              T0VAR=prec.t1,                          " ) ) # keep in mind that it's not prec but var here
+        if( mode %in% "ctstan" ) {
+		y<-rbind(y, paste0( "              T0VAR=chol.var.t1,                      " ) ) }
+        if( mode %in% "ctsem" ) {
+		y<-rbind(y, paste0( "              T0VAR=var.t1,                           " ) ) }
 		if( mode %in% "ctsem" ) {
 		y<-rbind(y, paste0( "              type='omx'                              " ) ) }
 		if( mode %in% "ctstan" ) {
@@ -103,6 +109,8 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
 		if( exists( "Lambda" ) && any.free( Lambda ) ) invisible(moveTo.par.env("Lambda",env,par.env))
 		if( exists( "mu.t1" ) && any.free( mu.t1 ) ) invisible(moveTo.par.env("mu.t1",env,par.env))
 		if( exists( "prec.t1" ) && any.free( prec.t1 ) ) invisible(moveTo.par.env("prec.t1",env,par.env))
+		if( exists( "chol.var.t1" ) && any.free( chol.var.t1 ) ) invisible(moveTo.par.env("chol.var.t1",env,par.env))
+		if( exists( "var.t1" ) && any.free( var.t1 ) ) invisible(moveTo.par.env("var.t1",env,par.env))
 		if( exists( "A" ) && any.free( A ) ) invisible(moveTo.par.env("A",env,par.env))
 		if( exists( "Q" ) && any.free( Q ) ) invisible(moveTo.par.env("Q",env,par.env))
 		if( exists( "cholQ" ) && any.free( cholQ ) ) invisible(moveTo.par.env("cholQ",env,par.env))
