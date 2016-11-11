@@ -19,6 +19,8 @@ source.it.all ( "c:/users/hechtmaz/Desktop/eat/pkg/eatDev/R", FALSE, exclude=c("
 # save( d, file="c:/users/hechtmaz/Desktop/eat/pkg/eatDev/data/d_6items_2processes_5timepoints.Rdata" )
 load ( "c:/users/hechtmaz/Desktop/eat/pkg/eatDev/data/d_6items_2processes_5timepoints.Rdata" )
 load ( "c:/users/hechtmaz/Desktop/eat/pkg/eatDev/data/ctExample2.Rdata" )
+ctEx2 <- ctExample2[,-4]
+
 
 
 # LAMBDA
@@ -52,7 +54,7 @@ colnames(LAMBDA) <- c("lat1","lat2")
 # m <- ctglm.model( d=d, Lambda=LAMBDA, beta=matrix(c(0,0,0,0,0,0),nrow=6,ncol=1), measurement.model=gaussian(link="identity") )
 # m <- ctglm.model( engine="ctstan", d=d, Lambda=LAMBDA, measurement.model=gaussian(link="identity") )
 # m <- ctglm.model( engine="jags", d=d, Lambda=LAMBDA, measurement.model=gaussian(link="identity") )
-m <- ctglm.model( engine="jags", d=ctExample2, measurement.model=gaussian(link="identity") )
+m <- ctglm.model( engine="ctstan", d=ctEx2, measurement.model=gaussian(link="identity") )
 
 s <- ctglm.syntax( m=m )
 # ctglm.save.syntax( s, "C:/users/hechtmaz/Desktop/temp" )

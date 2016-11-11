@@ -27,7 +27,7 @@ results.ctsem <- function ( env ) {
 		rownames( pars ) <- seq( along=rownames( pars ) )
 # browser()
 		extr <- function( z ) {
-
+# browser()
 				if ( verbose ) cat( paste0( "      ", z["parameter"], "\n" ) ); flush.console()
 				ret <- data.frame( "name"=z["name"], "variable"=z["parameter"], "value"=eval( parse( text=z["call"] ) ), stringsAsFactors=FALSE )
 				
@@ -35,11 +35,20 @@ results.ctsem <- function ( env ) {
 		}
 		est.l <- apply( pars, 1, extr )
 		est <- do.call( "rbind", est.l )
-
-		### mods
-		# prec is already var
-		est$name <- sub( "^prec", "var", est$name )
-		est$variable <- sub( "^prec", "var", est$variable )
+# browser()
+		# rename parameters
+		if( verbose ){
+				cat( paste0( "\n" ) )
+				cat( paste0( "   renaming results:\n\n" ) )
+				if ( any( est$variable %in% "chol.var.t1" ) ) cat( paste0( "      chol.var.t1 -> var.t1   (Note: ctModel requires chol.var.t1 as input, but ctFit/ctsem outputs var.t1\n" ) )
+				if ( any( est$variable %in% "cholQ" ) ) cat( paste0( "      cholQ -> Q   (Note: ctModel requires cholQ as input, but ctFit/ctsem outputs Q\n" ) )
+		}
+		
+		# if ( any( est$name %in% "chol.var.t1" ) ) est$name[ est$name %in% "chol.var.t1" ] <- ""
+		est$name <- sub( "^chol", "", est$name )
+		est$name <- sub( "^\\.", "", est$name )
+		est$variable <- sub( "^chol", "", est$variable )
+		est$variable <- sub( "^\\.", "", est$variable )
 		
 		# return
 		rownames( est ) <- seq( along=rownames( est ) )

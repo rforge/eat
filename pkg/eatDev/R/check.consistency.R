@@ -55,7 +55,7 @@ check.consistency <- function ( env ) {
 		## process error matrix Q
 		# in jags/ctsem Q
 		# in ctstan cholQ
-		if ( engine %in% c("jags","ctsem") ) {
+		if ( engine %in% c("jags") ) {
 				# Q, FxF
 				if ( verbose ) cat( paste0( "            process error matrix Q is FxF (", F, "x", F, "): "  ) )
 				if ( identical( dim(Q), c(F,F) ) ) { if ( verbose ) cat( "OK\n" ) } 
@@ -65,7 +65,7 @@ check.consistency <- function ( env ) {
 				if ( identical( Q[lower.tri( Q )], Q[upper.tri( Q )] ) ) { if ( verbose ) cat( "OK\n" ) } 
 				   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "process error matrix Q is not symmetric | check Q matrix" ) }		
 		}
-		if ( engine %in% c("ctstan") ) {
+		if ( engine %in% c("ctstan","ctsem") ) {
 				# cholQ, FxF
 				if ( verbose ) cat( paste0( "        process error matrix cholQ is FxF (", F, "x", F, "): "  ) )
 				if ( identical( dim(cholQ), c(F,F) ) ) { if ( verbose ) cat( "OK\n" ) } 

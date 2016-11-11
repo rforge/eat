@@ -21,7 +21,7 @@ set.priors <- function ( env ) {
 		## process error matrix Q
 		# in jags/ctsem Q
 		# in ctstan cholQ
-		if ( engine %in% c("jags","ctsem") ) {		
+		if ( engine %in% c("jags") ) {		
 				# Q
 				if ( verbose ) cat( "                             diffusion matrix Q: " )
 				if ( any.free( Q ) ) {
@@ -30,7 +30,7 @@ set.priors <- function ( env ) {
 						if( verbose ) cat( paste0( "n/a (all ", prod(dim(Q)), " values fixed)\n" ) )
 				}		
 		}
-		if ( engine %in% c("ctstan") ) {		
+		if ( engine %in% c("ctstan","ctsem") ) {		
 				# cholQ
 				if ( verbose ) cat( "                         diffusion matrix cholQ: " )
 				if ( any.free( cholQ ) ) {

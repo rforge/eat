@@ -19,13 +19,19 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
 		y<-rbind(y, "rstan_options(auto_write = TRUE)" )
 		y<-rbind(y, "options(mc.cores = parallel::detectCores())" ) }
 		y<-rbind(y, "" ) 
+		### modifications, must also be incorporated in results.ctsem and/or results.jags.ctstan
 		y<-rbind(y, "## modifications" )
 		y<-rbind(y, "# no . in parameter names" )	
 		y<-rbind(y, 'eval( parse( text=paste0( "mu.t1[",1:length(mu.t1),"] <- gsub( \'.\', \'\', mu.t1[",1:length(mu.t1),"], fixed=TRUE  )" ) ) ) ')
-		if( mode %in% "ctstan" ) {
+		if( mode %in% c("ctstan","ctsem") ) {
 		y<-rbind(y, 'eval( parse( text=paste0( "chol.var.t1[",1:length(chol.var.t1),"] <- gsub( \'.\', \'\', chol.var.t1[",1:length(chol.var.t1),"], fixed=TRUE  )" ) ) ) ') }
-		if( mode %in% "ctsem" ) {
-		y<-rbind(y, 'eval( parse( text=paste0( "var.t1[",1:length(var.t1),"] <- gsub( \'.\', \'\', var.t1[",1:length(var.t1),"], fixed=TRUE  )" ) ) ) ') }
+		# if( mode %in% "ctsem" ) {
+		# y<-rbind(y, 'eval( parse( text=paste0( "var.t1[",1:length(var.t1),"] <- gsub( \'.\', \'\', var.t1[",1:length(var.t1),"], fixed=TRUE  )" ) ) ) ') }
+		if( mode %in% "ctsem" && F==1 ) {
+		y<-rbind(y, "# object name must not be equal to parameter name" ) 
+		y<-rbind(y, 'pars <- c("A","cholQ","b","Lambda","beta",ifelse(exists("E"),"E",NA),ifelse(exists("chol.var.t1"),"chol.var.t1",NA),ifelse(exists("mu.t1"),"mu.t1",NA))' )
+		y<-rbind(y, "pars <- pars[!is.na(pars)]" )
+		y<-rbind(y, 'eval( parse( text=paste0( pars, "2 <- ",pars,"; ",pars,"2[ is.na(suppressWarnings(as.numeric(",pars,"2))) ] <- paste0( ",pars,"[ is.na(suppressWarnings(as.numeric(",pars,"))) ] , \'_\' ); ",pars," <- ",pars,"2") ) ) ') }
 		# y<-rbind(y, "# T0VAR lower triangular (Note: T0VAR needs to be cholesky decomposed matrix)" )
 		# y<-rbind(y, "prec.t1[upper.tri(prec.t1)] <- 0" )
 		# y<-rbind(y, "# DIFFUSION lower triangular (Note: Q needs to be cholesky decomposed matrix)" )
@@ -43,16 +49,16 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
         y<-rbind(y, paste0( "              MANIFESTMEANS=beta,                     " ) )
         y<-rbind(y, paste0( "              LAMBDA=Lambda,                          " ) )
         y<-rbind(y, paste0( "              DRIFT=A,                                " ) )
-        if( mode %in% "ctstan" ) {
+        if( mode %in% c("ctstan","ctsem") ) {
 		y<-rbind(y, paste0( "              DIFFUSION=cholQ,                        " ) ) } 
-		if( mode %in% "ctsem" ) {
-		y<-rbind(y, paste0( "              DIFFUSION=Q,                            " ) ) }
+		# if( mode %in% "ctsem" ) {
+		# y<-rbind(y, paste0( "              DIFFUSION=Q,                            " ) ) }
         y<-rbind(y, paste0( "              CINT=b,                                 " ) )
         y<-rbind(y, paste0( "              T0MEANS=matrix(mu.t1,ncol=1),           " ) ) 
-        if( mode %in% "ctstan" ) {
+        if( mode %in% c("ctstan","ctsem") ) {
 		y<-rbind(y, paste0( "              T0VAR=chol.var.t1,                      " ) ) }
-        if( mode %in% "ctsem" ) {
-		y<-rbind(y, paste0( "              T0VAR=var.t1,                           " ) ) }
+        # if( mode %in% "ctsem" ) {
+		# y<-rbind(y, paste0( "              T0VAR=var.t1,                           " ) ) }
 		if( mode %in% "ctsem" ) {
 		y<-rbind(y, paste0( "              type='omx'                              " ) ) }
 		if( mode %in% "ctstan" ) {

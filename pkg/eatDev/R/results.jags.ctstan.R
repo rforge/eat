@@ -232,6 +232,12 @@ get.par.list <- function( m, m.name, mode ){
 		### for ctstan/ctsem there musn't be . in the parameter names
 		if ( mode %in% c("ctstan","ctsem") ) {
 				m.$parameter.mod <- gsub( ".", "", m.$parameter, fixed=TRUE )
+# browser()
+				if ( mode %in% c("ctsem") && nrow(r$parameters$A)==1 ) {
+						# for ctsem object name must not be equal to parameter name
+						# usually problem if F==1
+						m.$parameter.mod <- paste0( m.$parameter.mod, "_" )
+				}
 		} else if ( mode %in% "jags" ) {
 				m.$parameter.mod <- m.$parameter
 		} else {

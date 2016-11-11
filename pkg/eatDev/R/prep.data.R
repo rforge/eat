@@ -335,7 +335,7 @@ prep.data <- function ( env ) {
 		## process error matrix Q
 		# in jags/ctsem Q
 		# in ctstan cholQ
-		if ( engine %in% c("jags","ctsem") ) {
+		if ( engine %in% c("jags") ) {
 				if ( !exists("Q",inherits=FALSE) || is.null(Q) ) {
 						Q <- matrix( NA, nrow=F, ncol=F )
 						if ( !is.null( latent.names ) ) colnames( Q ) <- rownames( Q ) <- latent.names
@@ -347,7 +347,7 @@ prep.data <- function ( env ) {
 				Q.[upper.tri(Q.)][ is.na( Q[upper.tri(Q)] ) ]  <- Q.[lower.tri(Q.)][ is.na( Q[lower.tri(Q)] ) ]  
 				Q <- Q.
 		}
-		if ( engine %in% c("ctstan") ) {
+		if ( engine %in% c("ctstan","ctsem") ) {
 				if ( !exists("cholQ",inherits=FALSE) || is.null(cholQ) ) {
 						cholQ <- matrix( NA, nrow=F, ncol=F )
 						if ( !is.null( latent.names ) ) colnames( cholQ ) <- rownames( cholQ ) <- latent.names
@@ -401,7 +401,7 @@ prep.data <- function ( env ) {
 				prec.t1.[upper.tri(prec.t1.)][ is.na( prec.t1[upper.tri(prec.t1)] ) ]  <- prec.t1.[lower.tri(prec.t1.)][ is.na( prec.t1[lower.tri(prec.t1)] ) ]  
 				prec.t1 <- prec.t1.	
 		}
-		if ( engine %in% c("ctstan") ) {		
+		if ( engine %in% c("ctstan","ctsem") ) {		
 				if ( !exists("chol.var.t1",inherits=FALSE) || is.null(chol.var.t1) ) {
 						chol.var.t1 <- matrix( NA, nrow=F, ncol=F )
 						if ( !is.null( latent.names ) ) colnames( chol.var.t1 ) <- rownames( chol.var.t1 ) <- latent.names
@@ -415,20 +415,20 @@ prep.data <- function ( env ) {
 				chol.var.t1.[upper.tri(chol.var.t1.)] <- 0
 				chol.var.t1 <- chol.var.t1.	
 		}		
-		if ( engine %in% c("ctsem") ) {		
-				if ( !exists("		var.t1",inherits=FALSE) || is.null(		var.t1) ) {
-						var.t1 <- matrix( NA, nrow=F, ncol=F )
-						if ( !is.null( latent.names ) ) colnames( 		var.t1 ) <- rownames( 		var.t1 ) <- latent.names
-						default[length(default)+1] <- paste0( "     latent variance of first time point var.t1: freely estimable symmetric FxF (", F, "x", F, ") matrix" )
-				}
-				# NAs to labeled parameters
-				var.t1. <- label.pars( var.t1, "var.t1" )		
-				#make 		var.t1 (potentially) symmetric again (do not overwrite user specific labeled parameters, even if unsymmetric matrix
-				#var.t1.[upper.tri(		var.t1.)][ is.na( 		var.t1[upper.tri(		var.t1)] ) ]  <- 		var.t1.[lower.tri(		var.t1.)][ is.na( 		var.t1[lower.tri(		var.t1)] ) ]  
-				# upper triangle is 0
-				var.t1.[upper.tri(var.t1.)] <- 0			
-				var.t1 <- var.t1.	
-		}				
+		#if ( engine %in% c("ctsem") ) {		
+		#		if ( !exists("		var.t1",inherits=FALSE) || is.null(		var.t1) ) {
+		#				var.t1 <- matrix( NA, nrow=F, ncol=F )
+		#				if ( !is.null( latent.names ) ) colnames( 		var.t1 ) <- rownames( 		var.t1 ) <- latent.names
+		#				default[length(default)+1] <- paste0( "     latent variance of first time point var.t1: freely estimable symmetric FxF (", F, "x", F, ") matrix" )
+		#		}
+		#		# NAs to labeled parameters
+		#		var.t1. <- label.pars( var.t1, "var.t1" )		
+		#		#make 		var.t1 (potentially) symmetric again (do not overwrite user specific labeled parameters, even if unsymmetric matrix
+		#		#var.t1.[upper.tri(		var.t1.)][ is.na( 		var.t1[upper.tri(		var.t1)] ) ]  <- 		var.t1.[lower.tri(		var.t1.)][ is.na( 		var.t1[lower.tri(		var.t1)] ) ]  
+		#		# upper triangle is 0
+		#		var.t1.[upper.tri(var.t1.)] <- 0			
+		#		var.t1 <- var.t1.	
+		#}				
 		
 		# browser()		
 		### (over)write relevant variables to environment ###
