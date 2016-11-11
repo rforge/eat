@@ -2,6 +2,9 @@
 ctglm.results <- function ( r, plot.dir=NULL, verbose=TRUE, ... ) {
 		
 # browser()
+		# create plot.dir if not exists
+		if( !is.null( plot.dir ) && !dir.exists( plot.dir ) ) dir.create( plot.dir )
+		
 		# new environment
 		env <- new.env()
 		

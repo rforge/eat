@@ -17,6 +17,7 @@ results.ctsem <- function ( env ) {
 				# cat( paste0( "                chains: ", chains, "\n" ) )
 				# cat( paste0( "     thinning interval: ", thin, "\n" ) )
 				cat( paste0( "\n" ) )
+				cat( paste0( "   fetching results:\n\n" ) )
 				flush.console()
 		}		
 		
@@ -24,10 +25,10 @@ results.ctsem <- function ( env ) {
 		pars.l <- mapply( get.par.list, r$parameters, names( r$parameters ), MoreArgs=list(mode="ctsem"), SIMPLIFY=FALSE )
 		pars <- do.call( "rbind", pars.l )
 		rownames( pars ) <- seq( along=rownames( pars ) )
-
+# browser()
 		extr <- function( z ) {
 
-				if ( verbose ) cat( paste0( "   ", z["parameter"], "\n" ) ); flush.console()
+				if ( verbose ) cat( paste0( "      ", z["parameter"], "\n" ) ); flush.console()
 				ret <- data.frame( "name"=z["name"], "variable"=z["parameter"], "value"=eval( parse( text=z["call"] ) ), stringsAsFactors=FALSE )
 				
 				return( ret )

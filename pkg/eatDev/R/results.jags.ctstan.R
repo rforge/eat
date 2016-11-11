@@ -21,11 +21,12 @@ results.jags.ctstan <- function ( env, mode ) {
 		if ( verbose ){
 				if ( mode %in% "jags" )	engine.str <- "JAGS" else if ( mode %in% "ctstan" )	engine.str <- "Stan" else engine.str <- ""
 				cat( paste0( "Extracting results from ",engine.str," object...", "\n" ) )
-				cat( paste0( "   burnin: ", burnin, "\n" ) )
+				if ( mode %in% c("jags","ctstan") ) cat( paste0( "\n   burnin: ", burnin, "\n" ) )
 				# cat( paste0( "            iterations: ", iter, "\n" ) )
 				# cat( paste0( "                chains: ", chains, "\n" ) )
 				# cat( paste0( "     thinning interval: ", thin, "\n" ) )
 				cat( paste0( "\n" ) )
+				cat( paste0( "   fetching results:\n\n" ) )
 				flush.console()
 		}
 		
@@ -67,7 +68,7 @@ results.jags.ctstan <- function ( env, mode ) {
 		# est.l <- try( mapply( extr, pars, SIMPLIFY=FALSE ) )
 		extr <- function( z ) {
 
-				if ( verbose ) cat( paste0( "   ", z["parameter"], "\n" ) ); flush.console()
+				if ( verbose ) cat( paste0( "      ", z["parameter"], "\n" ) ); flush.console()
 				
 				# if ( !indvarying & !par %in% c("lp__") & !grepl("^eta",par) ){
 					# iterations/chains fuer parameter
@@ -167,103 +168,33 @@ results.jags.ctstan <- function ( env, mode ) {
 		est.l <- apply( pars, 1, extr )
 		est <- do.call( "rbind", est.l )
 	
+	
 		### software specific mods
+		
+		if ( verbose && engine %in% c("jags","ctstan") ) {
+				cat( paste0( "\n   converting results:\n\n" ) )
+		}
+
+		## jags
+		if ( engine %in% "jags" ) {
+				
+				# prec.t1 in ctstan is precision matrix, transform to variance matrix
+				if (verbose) { cat( paste0( "      prec.t1 -> var.t1\n" ) ); flush.console() }
+				est <- transform.var.matrix( parameters$prec.t1, "prec.t1", "var.t1", "solve( M )", est )
+		
+		}
 		
 		## ctstan
 		if ( engine %in% "ctstan" ) {
 # browser()		
-				# Q in ctstan, is cholesky matrix, transform to variance matrix
-				# save cholesky Q in cholQ
-				# cholQ
-				parP <- cholQ <- parameters$Q
-				for ( i in 1:length(cholQ) ) {
-						cholQ[i] <- est[ est$variable %in% cholQ[i], "value" ]
-				}
-				dim.cholQ <- dim( cholQ )
-				cholQ <- as.numeric( cholQ )
-				dim( cholQ ) <- dim.cholQ
-				# cholQ to Q
-				Q <- solve( chol2inv( t( cholQ ) ) )
-				estQ <- est[ est$name %in% "Q", ]
-				for ( i in 1:length(parP) ) {
-						estQ[ estQ$variable %in% parP[i], "value" ] <- Q[i]
-				}
-				# all other statistics to NA
-				toNA <- colnames( estQ )[ !colnames( estQ ) %in% c("name","variable","value","engine") ]
-				eval( parse( text=paste0( "estQ$'", toNA, "' <- NA" ) ) )
-				# rename Q to cholQ in original est
-				est$name <- sub( "^Q", "cholQ", est$name )
-				est$variable <- sub( "^Q", "cholQ", est$variable )
-				# sort Q behind cholQ into est
-				ind <- which( est$name %in% "cholQ" )
-				ind <- ind[length(ind)]
-				if ( ind >= nrow( est ) ) {
-						mL <- list( est[1:ind,,drop=FALSE] , estQ )
-				} else mL <- list( est[1:ind,,drop=FALSE] , estQ , est[(ind+1):nrow(est),,drop=FALSE] )
-				est <- do.call( "rbind", mL )
-			
-				# prec.t1 in ctstan, is cholesky matrix, transform to variance matrix
-				# cholP
-				parP <- cholP <- parameters$prec.t1
-				for ( i in 1:length(cholP) ) {
-						cholP[i] <- est[ est$variable %in% cholP[i], "value" ]
-				}
-				dim.cholP <- dim( cholP )
-				cholP <- as.numeric( cholP )
-				dim( cholP ) <- dim.cholP
-				# cholP to P
-				P <- solve( chol2inv( t( cholP ) ) )
-				estP <- est[ est$name %in% "prec.t1", ]
-				for ( i in 1:length(parP) ) {
-						estP[ estP$variable %in% parP[i], "value" ] <- P[i]
-				}
-				# all other statistics to NA
-				toNA <- colnames( estP )[ !colnames( estP ) %in% c("name","variable","value","engine") ]
-				eval( parse( text=paste0( "estP$'", toNA, "' <- NA" ) ) )
-				# rename prec to var
-				estP$name <- sub( "^prec", "var", estP$name )
-				estP$variable <- sub( "^prec", "var", estP$variable )
-				# sort var.t1 behind prec.t1 into est
-				ind <- which( est$name %in% "prec.t1" )
-				ind <- ind[length(ind)]
-				if ( ind >= nrow( est ) ) {
-						mL <- list( est[1:ind,,drop=FALSE] , estP )
-				} else  mL <- list( est[1:ind,,drop=FALSE] , estP , est[(ind+1):nrow(est),,drop=FALSE] )
-				est <- do.call( "rbind", mL )
-		}
-		
-		## jags
-		if ( engine %in% "jags" ) {
-
-				# prec.t1 in jags, is precision matrix, transform to variance matrix
-				# precP
-				parP <- precP <- parameters$prec.t1
-				for ( i in 1:length(precP) ) {
-						precP[i] <- est[ est$variable %in% precP[i], "value" ]
-				}
-				dim.precP <- dim( precP )
-				precP <- as.numeric( precP )
-				dim( precP ) <- dim.precP
-				# precP to P
-				P <- solve( precP )
-				estP <- est[ est$name %in% "prec.t1", ]
-				for ( i in 1:length(parP) ) {
-						estP[ estP$variable %in% parP[i], "value" ] <- P[i]
-				}
-				# all other statistics to NA
-				toNA <- colnames( estP )[ !colnames( estP ) %in% c("name","variable","value","engine") ]
-				eval( parse( text=paste0( "estP$'", toNA, "' <- NA" ) ) )
-				# rename prec to var
-				estP$name <- sub( "^prec", "var", estP$name )
-				estP$variable <- sub( "^prec", "var", estP$variable )
-				# sort var.t1 behind prec.t1 into est
-				ind <- which( est$name %in% "prec.t1" )
-				ind <- ind[length(ind)]
-				if ( ind >= nrow( est ) ) {
-						mL <- list( est[1:ind,,drop=FALSE] , estP )
-				} else  mL <- list( est[1:ind,,drop=FALSE] , estP , est[(ind+1):nrow(est),,drop=FALSE] )
-				est <- do.call( "rbind", mL )
+				# cholQ in ctstan is cholesky matrix, transform to variance matrix
+				if (verbose) { cat( paste0( "      cholQ -> Q\n" ) ); flush.console() }
+				est <- transform.var.matrix( parameters$cholQ, "cholQ", "Q", "solve( chol2inv( t( M ) ) )", est )
 				
+				# prec.t1 in ctstan is cholesky matrix, transform to variance matrix
+				if (verbose) { cat( paste0( "      prec.t1 -> var.t1\n" ) ); flush.console() }
+				est <- transform.var.matrix( parameters$prec.t1, "prec.t1", "var.t1", "solve( chol2inv( t( M ) ) )", est )
+
 		}
 		
 		# return
@@ -325,4 +256,37 @@ get.par.list <- function( m, m.name, mode ){
 		return( m. )
 }
 		
-
+transform.var.matrix <- function( matr, matr.name, matr.name.replace, transform.string, est ){
+# browser()		
+		parM <- M <- matr
+		for ( i in 1:length(M) ) {
+				val <- est[ est$variable %in% M[i], "value" ]
+				if ( length(val) > 0 ) M[i] <- est[ est$variable %in% M[i], "value" ]
+		}
+		dim.M <- dim( M )
+		M <- as.numeric( M )
+		dim( M ) <- dim.M
+		
+		# transform
+		eval( parse( text=paste0( "P <- ", transform.string ) ) )
+		
+		estP <- est[ est$name %in% matr.name, ]
+		for ( i in 1:length(parM) ) {
+				estP[ estP$variable %in% parM[i], "value" ] <- P[i]
+		}
+		# all other statistics to NA
+		toNA <- colnames( estP )[ !colnames( estP ) %in% c("name","variable","value","engine") ]
+		eval( parse( text=paste0( "estP$'", toNA, "' <- NA" ) ) )
+		# rename prec to var
+		estP$name <- sub( matr.name, matr.name.replace, estP$name )
+		estP$variable <- sub( matr.name, matr.name.replace, estP$variable )
+		# sort var.t1 behind prec.t1 into est
+		ind <- which( est$name %in% matr.name )
+		ind <- ind[length(ind)]
+		if ( ind >= nrow( est ) ) {
+				mL <- list( est[1:ind,,drop=FALSE] , estP )
+		} else  mL <- list( est[1:ind,,drop=FALSE] , estP , est[(ind+1):nrow(est),,drop=FALSE] )
+		est <- do.call( "rbind", mL )
+		
+		return( est )
+}

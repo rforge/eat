@@ -331,17 +331,39 @@ prep.data <- function ( env ) {
 		# NAs to labeled parameters
 		A <- label.pars(A,"A")
 	
-		# process error matrix Q
-		if ( !exists("Q",inherits=FALSE) || is.null(Q) ) {
-				Q <- matrix( NA, nrow=F, ncol=F )
-				if ( !is.null( latent.names ) ) colnames( Q ) <- rownames( Q ) <- latent.names
-				default[length(default)+1] <- paste0( "                         process error matrix Q: freely estimable symmetric FxF (", F, "x", F, ") matrix" )
+# browser()	
+		## process error matrix Q
+		# in jags/ctsem Q
+		# in ctstan cholQ
+		if ( engine %in% c("jags","ctsem") ) {
+				if ( !exists("Q",inherits=FALSE) || is.null(Q) ) {
+						Q <- matrix( NA, nrow=F, ncol=F )
+						if ( !is.null( latent.names ) ) colnames( Q ) <- rownames( Q ) <- latent.names
+						default[length(default)+1] <- paste0( "                         process error matrix Q: freely estimable symmetric FxF (", F, "x", F, ") matrix" )
+				}
+				# NAs to labeled parameters
+				Q. <- label.pars(Q,"Q")		
+				# make Q (potentially) symmetric again (do not overwrite user specific labeled parameters, even if unsymmetric matrix
+				Q.[upper.tri(Q.)][ is.na( Q[upper.tri(Q)] ) ]  <- Q.[lower.tri(Q.)][ is.na( Q[lower.tri(Q)] ) ]  
+				Q <- Q.
 		}
-		# NAs to labeled parameters
-		Q. <- label.pars(Q,"Q")		
-		# make Q (potentially) symmetric again (do not overwrite user specific labeled parameters, even if unsymmetric matrix
-		Q.[upper.tri(Q.)][ is.na( Q[upper.tri(Q)] ) ]  <- Q.[lower.tri(Q.)][ is.na( Q[lower.tri(Q)] ) ]  
-		Q <- Q.
+		if ( engine %in% c("ctstan") ) {
+				if ( !exists("cholQ",inherits=FALSE) || is.null(cholQ) ) {
+						cholQ <- matrix( NA, nrow=F, ncol=F )
+						if ( !is.null( latent.names ) ) colnames( cholQ ) <- rownames( cholQ ) <- latent.names
+						default[length(default)+1] <- paste0( "                     process error matrix cholQ: freely estimable cholesky decomposed FxF (", F, "x", F, ") matrix, upper triangle set to 0" )
+				}
+				# NAs to labeled parameters
+				cholQ. <- label.pars(cholQ,"cholQ")		
+				#make cholQ (potentially) symmetric again (do not overwrite user specific labeled parameters, even if unsymmetric matrix
+				#cholQ.[upper.tri(cholQ.)][ is.na( cholQ[upper.tri(cholQ)] ) ]  <- cholQ.[lower.tri(cholQ.)][ is.na( cholQ[lower.tri(cholQ)] ) ]  
+				# upper triangle is 0
+				cholQ.[upper.tri(cholQ.)] <- 0
+				cholQ <- cholQ.
+		}		
+		
+		
+		
 		
 		# ct intercepts b
 		if ( !exists("b",inherits=FALSE) || is.null(b) ) {
@@ -375,9 +397,9 @@ prep.data <- function ( env ) {
 		# make prec.t1 (potentially) symmetric again (do not overwrite user specific labeled parameters, even if unsymmetric matrix
 		prec.t1.[upper.tri(prec.t1.)][ is.na( prec.t1[upper.tri(prec.t1)] ) ]  <- prec.t1.[lower.tri(prec.t1.)][ is.na( prec.t1[lower.tri(prec.t1)] ) ]  
 		prec.t1 <- prec.t1.	
-		
+# browser()		
 		### (over)write relevant variables to environment ###
-		obj <- c( "d", "dw", "dl", "col.y", "col.id", "col.item", "col.time", "R", "J", "I", "T", "Tj", "P", "Tp", "L", "Lpat", "Lpat.group", "Lambda", "beta", ifelse(exists("mu.beta"),"mu.beta",NA), ifelse(exists("prec.beta"),"prec.beta",NA), ifelse(measurement.model$family=="gaussian","E",NA), "F", "I1", "I2", "Aw", "I1w", "Qt.prec.replace", "A", "b", "Q", "mu.t1", "prec.t1" )
+		obj <- c( "d", "dw", "dl", "col.y", "col.id", "col.item", "col.time", "R", "J", "I", "T", "Tj", "P", "Tp", "L", "Lpat", "Lpat.group", "Lambda", "beta", ifelse(exists("mu.beta"),"mu.beta",NA), ifelse(exists("prec.beta"),"prec.beta",NA), ifelse(measurement.model$family=="gaussian","E",NA), "F", "I1", "I2", "Aw", "I1w", "Qt.prec.replace", "A", "b", ifelse(exists("Q"),"Q",NA), ifelse(exists("cholQ"),"cholQ",NA), "mu.t1", "prec.t1" )
 		obj <- obj[!is.na(obj)]
 		eval( parse ( text=paste0( "assign( '",obj, "' , get('",obj,"') , envir=env )" ) ) )
 

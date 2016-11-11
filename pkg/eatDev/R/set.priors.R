@@ -18,14 +18,28 @@ set.priors <- function ( env ) {
 				if( verbose ) cat( paste0( "n/a (all ", prod(dim(A)), " values fixed)\n" ) )
 		}
 # browser()
-		# Q
-		if ( verbose ) cat( "                             diffusion matrix Q: " )
-		if ( any.free( Q ) ) {
-				invisible( make.priors( m.name="Q", m=Q, priors=priors, env=env, diag.prior = "dgamma(1,1)", offdiag.prior = "dnorm(0,0.1)", verbose=verbose ) )
-		} else {
-				if( verbose ) cat( paste0( "n/a (all ", prod(dim(Q)), " values fixed)\n" ) )
+		## process error matrix Q
+		# in jags/ctsem Q
+		# in ctstan cholQ
+		if ( engine %in% c("jags","ctsem") ) {		
+				# Q
+				if ( verbose ) cat( "                             diffusion matrix Q: " )
+				if ( any.free( Q ) ) {
+						invisible( make.priors( m.name="Q", m=Q, priors=priors, env=env, diag.prior = "dgamma(1,1)", offdiag.prior = "dnorm(0,0.1)", verbose=verbose ) )
+				} else {
+						if( verbose ) cat( paste0( "n/a (all ", prod(dim(Q)), " values fixed)\n" ) )
+				}		
+		}
+		if ( engine %in% c("ctstan") ) {		
+				# cholQ
+				if ( verbose ) cat( "                         diffusion matrix cholQ: " )
+				if ( any.free( cholQ ) ) {
+						invisible( make.priors( m.name="cholQ", m=cholQ, priors=priors, env=env, diag.prior = "dgamma(1,1)", offdiag.prior = "dnorm(0,0.1)", verbose=verbose ) )
+				} else {
+						if( verbose ) cat( paste0( "n/a (all ", prod(dim(cholQ)), " values fixed)\n" ) )
+				}		
 		}		
-
+		
 		# b
 		if ( verbose ) cat( "                   continuous time intercepts b: " )
 		if ( any.free( b ) ) {
@@ -33,7 +47,7 @@ set.priors <- function ( env ) {
 		} else {
 				if( verbose ) cat( paste0( "n/a (all ", prod(dim(b)), " values fixed)\n" ) )
 		}		
-
+# browser()
 		# Lambda
 		if ( verbose ) cat( "                          loading matrix Lambda: " )
 		if ( any.free( Lambda ) ) {
