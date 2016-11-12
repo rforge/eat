@@ -87,7 +87,7 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "            # loop over t=2,...,Tj personal time point               ")
 		x<-rbind(x, "            for (t in 2:Tj[j]) {                                     ")
 		x<-rbind(x, "                                                                     ")
-		x<-rbind(x, "                    theta[j,1:F,t] ~ dmnorm( At[,,t-1,Lpat.group[j]] %*% theta[j,,t-1] + bt[,t-1,Lpat.group[j]], Qt.prec[1:2,1:2,t,Lpat.group[j]] ) ")
+		x<-rbind(x, "                    theta[j,1:F,t] ~ dmnorm( At[,,t-1,Lpat.group[j]] %*% theta[j,,t-1] + bt[,t-1,Lpat.group[j]], Qt.prec[,,t,Lpat.group[j]] ) ")
 		x<-rbind(x, "                                                                     ")		
 		x<-rbind(x, "            }                                                        ")
 		x<-rbind(x, "    }                                                                ")
@@ -132,22 +132,27 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "    # Qtv for first time point                                       ")
 		x<-rbind(x, "    # for technical reasons, same values are set for all lag patterns (not necessary)  ")
 		x<-rbind(x, "    for(p in 1:P) {                                                  ")
-		x<-rbind(x, "            Qtv[1:4,1,p] <- ( -1 * Ah.inv[,] ) %*% rowQ[,1]          ")
+		x<-rbind(x, "            Qtv[1:(F*F),1,p] <- ( -1 * Ah.inv[,] ) %*% rowQ[,1]          ")
 		x<-rbind(x, "    }                                                                ")
+		
+		# mexp or exp
+# browser()		
+		if( F>1 ) fexp <- "mexp" else if ( F== 1 ) fexp <- "exp"
+		
 		x<-rbind(x, "    # loop over p=1,...,P lag patterns                               ")
 		x<-rbind(x, "    for(p in 1:P) {                                                  ")
 		x<-rbind(x, "            # loop over t=2,...,Tp pattern-specific time point       ")
 		x<-rbind(x, "            for (t in 2:Tp[p]) {                                     ")
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "                    # autoregression matrix / drift matrix           ")
-		x<-rbind(x, "                    At[1:2,1:2,t-1,p] <- mexp( A[,] * Lpat[p,t-1] )  ")
+		x<-rbind(x, paste0( "                    At[1:F,1:F,t-1,p] <- ",fexp,"( A[,] * Lpat[p,t-1] )  ") )
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "                    # intercepts                                     ")
-		x<-rbind(x, "                    bt[1:2,t-1,p] <- ( A.inv[,] %*% ( mexp( A[,] * Lpat[p,t-1] ) - I1 ) ) %*% b[,1]         ")
+		x<-rbind(x, paste0( "                    bt[1:F,t-1,p] <- ( A.inv[,] %*% ( ",fexp,"( A[,] * Lpat[p,t-1] ) - I1 ) ) %*% b[,1]         ") )
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "                    # Qtv is vectorized Qt matrix                    ")
-		x<-rbind(x, "                    #Qtv[1:4,t,p] <- ifelse( t==1, ( -1 * Ah.inv[,] ) %*% rowQ[,1] , ( Ah.inv[,] %*% ( mexp( Ah[,] * Lpat[p,t-1] ) - I2 ) ) %*% rowQ[,1] )     ")
-		x<-rbind(x, "                    Qtv[1:4,t,p] <- Ah.inv[,] %*% ( mexp( Ah[,] * Lpat[p,t-1] ) - I2 ) %*% rowQ[,1]     ")
+		x<-rbind(x, paste0( "                    #Qtv[1:4,t,p] <- ifelse( t==1, ( -1 * Ah.inv[,] ) %*% rowQ[,1] , ( Ah.inv[,] %*% ( ",fexp,"( Ah[,] * Lpat[p,t-1] ) - I2 ) ) %*% rowQ[,1] )     ") )
+		x<-rbind(x, paste0( "                    Qtv[1:(F*F),t,p] <- Ah.inv[,] %*% ( ",fexp,"( Ah[,] * Lpat[p,t-1] ) - I2 ) %*% rowQ[,1]     ") )
 		x<-rbind(x, "            }                                                        ")
 		x<-rbind(x, "    }                                                                ")
 		x<-rbind(x, "                                                                     ")
@@ -412,9 +417,13 @@ moveTo.par.env <- function( name, env, par.env ){
 make.inverse.1 <- function( name, dim ){
 		
 		x<-matrix( "", 1, 1 )
+		x<-rbind(x, paste0( "    ## inverse of ",name,"                                           " ) )		
+	
+		if (dim %in% 1) {
+				x<-rbind(x, paste0( "    ",name,".inv[1,1] <- (1/",name,"[1,1])" ) )
+		}
 		
 		if (dim %in% 2) {
-				x<-rbind(x, paste0( "    ## inverse of ",name,"                                           " ) )
 				x<-rbind(x, paste0( "    # determinant of ",name,"                                        " ) )
 				x<-rbind(x, paste0( "    ",name,".det <- ",name,"[1,1]*",name,"[2,2] - ",name,"[2,1]*",name,"[1,2] " ) )
 				x<-rbind(x, paste0( "    # ",name," is invertible if determinant is not 0                          " ) )
@@ -428,10 +437,9 @@ make.inverse.1 <- function( name, dim ){
 				x<-rbind(x, paste0( "    ",name,".help[2,2] <- ",name,"[1,1]                                            " ) )
 				x<-rbind(x, paste0( "    ",name,".help[1,2] <- -1*",name,"[1,2]                                         " ) )
 				x<-rbind(x, paste0( "    ",name,".help[2,1] <- -1*",name,"[2,1]                                         " ) )
-				x<-rbind(x, paste0( "    ",name,".inv[1:Aw,1:Aw] <- (1/",name,".det.adj * ",name,".help[,])             " ) )
+				x<-rbind(x, paste0( "    ",name,".inv[1:",dim,",1:",dim,"] <- (1/",name,".det.adj * ",name,".help[,])             " ) )
 		}
 		if (dim %in% 4) {
-				x<-rbind(x, paste0( "    ## inverse of ",name,"                                                                                                                                                                                                                                                                    ") )
 				x<-rbind(x, paste0( "    # http://stackoverflow.com/questions/1148309/inverting-a-4x4-matrix                                                                                                                                                                                                                       ") )
 				x<-rbind(x, paste0( "    ",name,".inv.help[1,1] <- ",name,"[2,2]*",name,"[3,3]*",name,"[4,4]-",name,"[2,2]*",name,"[3,4]*",name,"[4,3]-",name,"[3,2]*",name,"[2,3]*",name,"[4,4]+",name,"[3,2]*",name,"[2,4]*",name,"[4,3]+",name,"[4,2]*",name,"[2,3]*",name,"[3,4]-",name,"[4,2]*",name,"[2,4]*",name,"[3,3]     ") )
 				x<-rbind(x, paste0( "    ",name,".inv.help[2,1] <- -",name,"[2,1]*",name,"[3,3]*",name,"[4,4]+",name,"[2,1]*",name,"[3,4]*",name,"[4,3]+",name,"[3,1]*",name,"[2,3]*",name,"[4,4]-",name,"[3,1]*",name,"[2,4]*",name,"[4,3]-",name,"[4,1]*",name,"[2,3]*",name,"[3,4]+",name,"[4,1]*",name,"[2,4]*",name,"[3,3]    ") )
@@ -454,7 +462,7 @@ make.inverse.1 <- function( name, dim ){
 				x<-rbind(x, paste0( "    ",name,".invertible <- ifelse( ",name,".det==0, 0, 1 )                             ") )
 				x<-rbind(x, paste0( "    # if not invertible, modest mod of determinant                                     ") )
 				x<-rbind(x, paste0( "    ",name,".detmod1 ~ dbern(0.5)                                                      ") )
-				x<-rbind(x, paste0( "    ",name,".detmod2 <- ifelse( A.invertible==1, 0, (",name,".detmod1-0.5)/500 )       ") )
+				x<-rbind(x, paste0( "    ",name,".detmod2 <- ifelse( ",name,".invertible==1, 0, (",name,".detmod1-0.5)/500 )") )
 				x<-rbind(x, paste0( "    ",name,".det.adj <- ",name,".det + ",name,".detmod2                                ") )
 				x<-rbind(x, paste0( "    ",name,".inv <- ",name,".inv.help / ",name,".det.adj                               ") )
 		}
@@ -465,9 +473,16 @@ make.inverse.1 <- function( name, dim ){
 
 make.inverse.2 <- function( name, dim ){
 		
-		### *.prec.replace must exist
+		### *.prec.replace must exist (for dim>1)
 		
 		x<-matrix( "", 1, 1 )
+		
+		if (dim %in% 1) {
+				if (name %in% "Qt"){
+						x<-rbind(x, "                    # inverse of Qt                                 ")						
+						x<-rbind(x, "                    Qt.prec[1,1,t,p] <- (1/Qt[1,1,t,p])              ")
+				}
+		}
 		
 		if (dim %in% 2) {
 				if (name %in% "Qt"){

@@ -100,9 +100,14 @@ set.priors <- function ( env ) {
 		if ( exists("prec.t1") && any.free( prec.t1 ) ) {
 				# eval( parse ( text=paste0( "assign( 'prec.t1' , 'prec.t1' , envir=env )" ) ) )
 				# prec.t1 <- get( "prec.t1", envir=env )
-				if ( verbose ) cat( "   precision matrix of first time point prec.t1: Wishart distribution\n" )
-				# prior[[length(prior)+1]] <- make.priors( m.name="prec.t1", m=prec.t1, priors=priors, env=env, prior = "dgamma( 1, 1 )", verbose=verbose )
-				assign( "prec.t1.prior" , "dwish( I1 , F+1 )", envir=env )
+# browser()		
+				if ( verbose ) cat( "   precision matrix of first time point prec.t1: " )
+				if ( nrow( prec.t1 ) > 1 ) {
+						if ( verbose ) cat( "Wishart distribution\n" )
+						assign( "prec.t1.prior" , "dwish( I1 , F+1 )", envir=env )
+				} else if ( nrow( prec.t1 ) == 1 ) {
+						invisible( make.priors( m.name="prec.t1", m=prec.t1, priors=priors, env=env, diag.prior = "dgamma(1,1)", offdiag.prior = "dnorm(0,0.1)", verbose=verbose ) )
+				}
 		}
 		if ( exists("chol.var.t1") && any.free( chol.var.t1 ) ) {
 				# eval( parse ( text=paste0( "assign( 'chol.var.t1' , 'chol.var.t1' , envir=env )" ) ) )
