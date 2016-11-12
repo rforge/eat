@@ -87,7 +87,12 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "            # loop over t=2,...,Tj personal time point               ")
 		x<-rbind(x, "            for (t in 2:Tj[j]) {                                     ")
 		x<-rbind(x, "                                                                     ")
-		x<-rbind(x, "                    theta[j,1:F,t] ~ dmnorm( At[,,t-1,Lpat.group[j]] %*% theta[j,,t-1] + bt[,t-1,Lpat.group[j]], Qt.prec[,,t,Lpat.group[j]] ) ")
+# browser()
+		if( !person.var["b"] ) {
+		x<-rbind(x, "                    theta[j,1:F,t] ~ dmnorm( At[,,t-1,Lpat.group[j]] %*% theta[j,,t-1] + bt[,t-1,Lpat.group[j]], Qt.prec[,,t,Lpat.group[j]] ) ") }
+		if( person.var["b"] ) {
+		x<-rbind(x, "                    theta[j,1:F,t] ~ dmnorm( At[,,t-1,Lpat.group[j]] %*% theta[j,,t-1] + bt[,t-1,j], Qt.prec[,,t,Lpat.group[j]] ) ") }
+		
 		x<-rbind(x, "                                                                     ")		
 		x<-rbind(x, "            }                                                        ")
 		x<-rbind(x, "    }                                                                ")
@@ -117,8 +122,28 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "    # values/prior of diffusion matrix                               ")
 		x<-rbind(x, make.str( "Q" ) ); if( any.free( Q ) ) invisible(moveTo.par.env("Q",env,par.env)) else rm("Q", envir=env)
 		x<-rbind(x, "                                                                     ")	
-		x<-rbind(x, "    # values/prior of continuous time intercepts                     ")
+# browser()
+		if( person.var["b"] ) {		
+		x<-rbind(x, "    ## continuous time intercepts                                    ")
+		x<-rbind(x, "    # b varies over persons, i.e. for each person a separate b       ")		
+		# x<-rbind(x, "    for( j in 1:J ) {                                                ")		
+		# x<-rbind(x, "         bj[1:F,j] ~ dmnorm( b[,1], prec.b[,] )                      ")		
+		# x<-rbind(x, "    }                                                                ") }
+		bj. <- make.str( "bj" ); if( any.free( bj ) ) invisible(moveTo.par.env("bj",env,par.env)) else rm("bj", envir=env)
+		# mods to bj.
+		bj.1 <- bj.[ !grepl( "~", bj., fixed=TRUE ),,drop=FALSE ]
+		bj.2 <- bj.[ grepl( "~", bj., fixed=TRUE ),,drop=FALSE ]
+		bj.2[,1] <- sub( "bj\\[\\d+", "bj[1:F", bj.2[,1] )
+		bj.2 <- bj.2[!duplicated(bj.2),,drop=FALSE] 	
+		if( !identical( bj.1, character(0) ) ) x<-rbind(x,bj.1)
+		if( !identical( bj.2, character(0) ) ) x<-rbind(x,bj.2) }
+		
+		x<-rbind(x, "    # values/prior of continuous time intercepts                     ")		
 		x<-rbind(x, make.str( "b" ) ); if( any.free( b ) ) invisible(moveTo.par.env("b",env,par.env)) else rm("b", envir=env)
+		if( person.var["b"] ) {
+		x<-rbind(x, "    # values/prior of precision of b                                 ")
+		x<-rbind(x, ifelse( exists("prec.b.prior") && is.null( dim(prec.b.prior) ), paste0( "    prec.b[1:F,1:F] ~ ", prec.b.prior, "                                      " ), make.str( "prec.b" ) ) ); if( any.free( prec.b ) ) invisible(moveTo.par.env("prec.b",env,par.env)) else rm("prec.b", envir=env) }
+		
 		x<-rbind(x, "                                                                     ")			
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    # rowQ: stack Q row-wise into a column vector                    ")
@@ -132,7 +157,7 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "    # Qtv for first time point                                       ")
 		x<-rbind(x, "    # for technical reasons, same values are set for all lag patterns (not necessary)  ")
 		x<-rbind(x, "    for(p in 1:P) {                                                  ")
-		x<-rbind(x, "            Qtv[1:(F*F),1,p] <- ( -1 * Ah.inv[,] ) %*% rowQ[,1]          ")
+		x<-rbind(x, "            Qtv[1:(F*F),1,p] <- ( -1 * Ah.inv[,] ) %*% rowQ[,1]      ")
 		x<-rbind(x, "    }                                                                ")
 		
 		# mexp or exp
@@ -147,11 +172,19 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "                    # autoregression matrix / drift matrix           ")
 		x<-rbind(x, paste0( "                    At[1:F,1:F,t-1,p] <- ",fexp,"( A[,] * Lpat[p,t-1] )  ") )
 		x<-rbind(x, "                                                                     ")
-		x<-rbind(x, "                    # intercepts                                     ")
-		x<-rbind(x, paste0( "                    bt[1:F,t-1,p] <- ( A.inv[,] %*% ( ",fexp,"( A[,] * Lpat[p,t-1] ) - I1 ) ) %*% b[,1]         ") )
+		x<-rbind(x, "                    # continuous time intercepts                     ")
+		if( !person.var["b"] ) {	
+		x<-rbind(x, paste0( "                    bt[1:F,t-1,p] <- ( A.inv[,] %*% ( ",fexp,"( A[,] * Lpat[p,t-1] ) - I1 ) ) %*% b[,1]         ") ) }
+		if( person.var["b"] ) {
+		x<-rbind(x, "                    # b varies over persons, so loop over persons in specific pattern")
+		x<-rbind(x, "                    # PNj        ... number of persons in pattern    ")
+		x<-rbind(x, "                    # Pj (P x J) ... ragged matrix, indicators of persons in pattern")
+		x<-rbind(x, "                    for (j in 1:PNj[p]) {                            ")
+		x<-rbind(x, "                         bt[1:2,t-1,Pj[p,j]] <- ( A.inv[,] %*% ( mexp( A[,] * Lpat[p,t-1] ) - I1 ) ) %*% bj[,j]")
+		x<-rbind(x, "                    }                                                ") }
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "                    # Qtv is vectorized Qt matrix                    ")
-		x<-rbind(x, paste0( "                    #Qtv[1:4,t,p] <- ifelse( t==1, ( -1 * Ah.inv[,] ) %*% rowQ[,1] , ( Ah.inv[,] %*% ( ",fexp,"( Ah[,] * Lpat[p,t-1] ) - I2 ) ) %*% rowQ[,1] )     ") )
+		x<-rbind(x, paste0( "                    #Qtv[1:(F*F),t,p] <- ifelse( t==1, ( -1 * Ah.inv[,] ) %*% rowQ[,1] , ( Ah.inv[,] %*% ( ",fexp,"( Ah[,] * Lpat[p,t-1] ) - I2 ) ) %*% rowQ[,1] )     ") )
 		x<-rbind(x, paste0( "                    Qtv[1:(F*F),t,p] <- Ah.inv[,] %*% ( ",fexp,"( Ah[,] * Lpat[p,t-1] ) - I2 ) %*% rowQ[,1]     ") )
 		x<-rbind(x, "            }                                                        ")
 		x<-rbind(x, "    }                                                                ")
@@ -210,7 +243,7 @@ create.jags.syntax <- function ( env ) {
 		y<-rbind(y, "require( rjags )" )
 		y<-rbind(y, "" )
 		y<-rbind(y, "# JAGS Modules" )
-		y<-rbind(y, "load.module('msm') # for matrix exponential, mexp()" )
+		if( F>1 ) y<-rbind(y, "load.module('msm') # for matrix exponential, mexp()" )
 		y<-rbind(y, "load.module('glm') # for better glm sampler        " )
 		y<-rbind(y, "" )
 
@@ -268,6 +301,22 @@ create.jags.syntax <- function ( env ) {
 		y<-rbind(y, "# run                                                                ")		
 		# y<-rbind(y, "eval(parse(text=paste0(  model.name, .res <- jags.samples ( ',model.name,'.ini , variable.names=c('A','Q','b'), n.iter=iter, thin=thin, type='trace' , progress.bar = 'none', by=20 )' )), envir=globalenv() )" )
 # browser()
+
+		## add or delete person par
+		if( exists( "track.person.par" ) && "theta" %in% track.person.par ) {
+				# theta is not regularly created (makes no sense, since always estimated, never set)
+				# so create a structure for theta for further processing
+				thetas.dfr <- Reduce(function(x, y) merge(x, y, all=TRUE),list(data.frame("J"=1:J),data.frame("F"=1:F),data.frame("T"=1:T)),accumulate=FALSE )
+				thetas <- apply( thetas.dfr, 1, function(z) paste0( "theta_", paste( z, collapse="_" ) ) )
+				theta. <- array( thetas, dim=c(J,F,T) )
+				assign( "theta", theta., envir=par.env )
+		}
+		if( !exists( "track.person.par" ) || !"bj" %in% track.person.par ) {
+				# bj is regularly created, if it should not be tracked, delete it from par.env
+				if ( exists( "bj", envir=par.env ) ) rm( "bj", envir=par.env )
+		}		
+
+		
 		# all parameters from par.env must be tracked
 		pars <- ls(envir=par.env)
 		# sortieren

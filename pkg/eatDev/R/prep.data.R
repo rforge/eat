@@ -372,6 +372,17 @@ prep.data <- function ( env ) {
 		# NAs to labeled parameters
 		b <- label.pars(b,"b")
 
+		if( person.var["b"] ) {	
+				# person ct intercepts bj
+				if ( !exists("bj",inherits=FALSE) || is.null(bj) ) {
+						bj <- matrix( rep( NA, F*J ), ncol=J, nrow=F )
+						if ( !is.null( latent.names ) ) rownames( bj ) <- latent.names
+						default[length(default)+1] <- paste0( "                  continuous time intercepts bj: freely estimable FxJ (", F, "x", J, ") matrix" )
+				}
+				# NAs to labeled parameters
+				bj <- label.pars(bj,"bj")		
+		}
+		
 		# first time point mean
 		if ( !exists("mu.t1",inherits=FALSE) || is.null(mu.t1) ) {
 				# mu.t1 <- matrix( rep( NA, F ), ncol=1 )
@@ -387,8 +398,7 @@ prep.data <- function ( env ) {
 		
 		## first time point prec/var
 		# in jags prec.t1
-		# in ctstan chol.var.t1
-		# in ctsem var.t1
+		# in ctstan/ctsem chol.var.t1
 		if ( engine %in% c("jags") ) {		
 				if ( !exists("prec.t1",inherits=FALSE) || is.null(prec.t1) ) {
 						prec.t1 <- matrix( NA, nrow=F, ncol=F )
@@ -430,9 +440,41 @@ prep.data <- function ( env ) {
 		#		var.t1 <- var.t1.	
 		#}				
 		
+		## prec/var of b (TRAITVAR)
+		# in jags prec.b
+		# in ctstan/ctsem chol.var.b
+		if( person.var["b"] ) {	
+				if ( engine %in% c("jags") ) {		
+						if ( !exists("prec.b",inherits=FALSE) || is.null(prec.b) ) {
+								prec.b <- matrix( NA, nrow=F, ncol=F )
+								if ( !is.null( latent.names ) ) colnames( prec.b ) <- rownames( prec.b ) <- latent.names
+								default[length(default)+1] <- paste0( " lat. var. prec. of cont. intercepts prec.b: freely estimable symmetric FxF (", F, "x", F, ") matrix" )
+						}
+						# NAs to labeled parameters
+						prec.b. <- label.pars(prec.b,"prec.b")		
+						# make prec.b (potentially) symmetric again (do not overwrite user specific labeled parameters, even if unsymmetric matrix
+						prec.b.[upper.tri(prec.b.)][ is.na( prec.b[upper.tri(prec.b)] ) ]  <- prec.b.[lower.tri(prec.b.)][ is.na( prec.b[lower.tri(prec.b)] ) ]  
+						prec.b <- prec.b.	
+				}
+				if ( engine %in% c("ctstan","ctsem") ) {		
+						if ( !exists("chol.var.b",inherits=FALSE) || is.null(chol.var.b) ) {
+								chol.var.b <- matrix( NA, nrow=F, ncol=F )
+								if ( !is.null( latent.names ) ) colnames( chol.var.b ) <- rownames( chol.var.b ) <- latent.names
+								default[length(default)+1] <- paste0( "chol. var. matr. of cont. int. b chol.var.b: freely estimable symmetric FxF (", F, "x", F, ") matrix" )
+						}
+						# NAs to labeled parameters
+						chol.var.b. <- label.pars(chol.var.b,"chol.var.b")		
+						#make chol.var.b (potentially) symmetric again (do not overwrite user specific labeled parameters, even if unsymmetric matrix
+						#chol.var.b.[upper.tri(chol.var.b.)][ is.na( chol.var.b[upper.tri(chol.var.b)] ) ]  <- chol.var.b.[lower.tri(chol.var.b.)][ is.na( chol.var.b[lower.tri(chol.var.b)] ) ]  
+						# upper triangle is 0
+						chol.var.b.[upper.tri(chol.var.b.)] <- 0
+						chol.var.b <- chol.var.b.	
+				}
+		}
+		
 		# browser()		
 		### (over)write relevant variables to environment ###
-		obj <- c( "d", "dw", "dl", "col.y", "col.id", "col.item", "col.time", "R", "J", "I", "T", "Tj", "P", "Tp", "L", "Lpat", "Lpat.group", "Lambda", "beta", ifelse(exists("mu.beta"),"mu.beta",NA), ifelse(exists("prec.beta"),"prec.beta",NA), ifelse(measurement.model$family=="gaussian","E",NA), "F", "I1", "I2", "Aw", "I1w", "Qt.prec.replace", "A", "b", ifelse(exists("Q"),"Q",NA), ifelse(exists("cholQ"),"cholQ",NA), "mu.t1", ifelse(exists("prec.t1"),"prec.t1",NA), ifelse(exists("chol.var.t1"),"chol.var.t1",NA), ifelse(exists("var.t1"),"var.t1",NA) )
+		obj <- c( "d", "dw", "dl", "col.y", "col.id", "col.item", "col.time", "R", "J", "I", "T", "Tj", "P", "Tp", "PNj", "Pj", "L", "Lpat", "Lpat.group", "Lambda", "beta", ifelse(exists("mu.beta"),"mu.beta",NA), ifelse(exists("prec.beta"),"prec.beta",NA), ifelse(measurement.model$family=="gaussian","E",NA), "F", "I1", "I2", "Aw", "I1w", "Qt.prec.replace", "A", "b", ifelse(exists("bj"),"bj",NA), ifelse(exists("Q"),"Q",NA), ifelse(exists("cholQ"),"cholQ",NA), "mu.t1", ifelse(exists("prec.t1"),"prec.t1",NA), ifelse(exists("chol.var.t1"),"chol.var.t1",NA), ifelse(exists("var.t1"),"var.t1",NA), ifelse(exists("prec.b"),"prec.b",NA), ifelse(exists("chol.var.b"),"chol.var.b",NA) )
 		obj <- obj[!is.na(obj)]
 		eval( parse ( text=paste0( "assign( '",obj, "' , get('",obj,"') , envir=env )" ) ) )
 

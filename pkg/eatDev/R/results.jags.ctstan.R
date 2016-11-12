@@ -187,6 +187,12 @@ results.jags.ctstan <- function ( env, mode ) {
 						if (verbose) { cat( paste0( "      prec.beta -> var.beta\n" ) ); flush.console() }
 						est <- transform.var.matrix( parameters$prec.beta, "prec.beta", "var.beta", "solve( M )", est )				
 				}
+
+				# if prec.b exists, transform to variance
+				if( "prec.b" %in% est$name ) {
+						if (verbose) { cat( paste0( "      prec.b -> var.b\n" ) ); flush.console() }
+						est <- transform.var.matrix( parameters$prec.b, "prec.b", "var.b", "solve( M )", est )				
+				}
 				
 		}
 		

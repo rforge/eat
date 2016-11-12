@@ -47,7 +47,12 @@ set.priors <- function ( env ) {
 		} else {
 				if( verbose ) cat( paste0( "n/a (all ", prod(dim(b)), " values fixed)\n" ) )
 		}		
-# browser()
+		# person cont. intercepts bj
+		if ( exists("bj") && any.free( bj ) ) {
+				if ( verbose ) cat( "               person cont. time intercepts bj: " )
+				invisible( make.priors( m.name="bj", m=bj, priors=priors, env=env, prior = "dmnorm( b[,1], prec.b[,] )", diag.prior = "dmnorm( b[,1], prec.b[,] )", offdiag.prior = "dmnorm( b[,1], prec.b[,] )", verbose=verbose ) )
+		}		
+		
 		# Lambda
 		if ( verbose ) cat( "                          loading matrix Lambda: " )
 		if ( any.free( Lambda ) ) {
@@ -116,6 +121,30 @@ set.priors <- function ( env ) {
 				# prior[[length(prior)+1]] <- make.priors( m.name="chol.var.t1", m=chol.var.t1, priors=priors, env=env, prior = "dgamma( 1, 1 )", verbose=verbose )
 				assign( "chol.var.t1.prior" , "dwish( I1 , F+1 )", envir=env )		
 		}
+
+		## prec/var of b (TRAITVAR)
+		# in jags prec.b
+		# in ctstan/ctsem chol.var.b
+		if ( exists("prec.b") && any.free( prec.b ) ) {
+				# eval( parse ( text=paste0( "assign( 'prec.b' , 'prec.b' , envir=env )" ) ) )
+				# prec.b <- get( "prec.b", envir=env )
+# browser()		
+				if ( verbose ) cat( "    precision matrix of cont. intercepts prec.b: " )
+				if ( nrow( prec.b ) > 1 ) {
+						if ( verbose ) cat( "Wishart distribution\n" )
+						assign( "prec.b.prior" , "dwish( I1 , F+1 )", envir=env )
+				} else if ( nrow( prec.b ) == 1 ) {
+						invisible( make.priors( m.name="prec.b", m=prec.b, priors=priors, env=env, diag.prior = "dgamma(1,1)", offdiag.prior = "dnorm(0,0.1)", verbose=verbose ) )
+				}
+		}
+		if ( exists("chol.var.b") && any.free( chol.var.b ) ) {
+				# eval( parse ( text=paste0( "assign( 'chol.var.b' , 'chol.var.b' , envir=env )" ) ) )
+				# chol.var.b <- get( "chol.var.b", envir=env )
+				if ( verbose ) cat( "      chol. var. matr. of cont. int. chol.var.b: Wishart distribution\n" )
+				# prior[[length(prior)+1]] <- make.priors( m.name="chol.var.b", m=chol.var.b, priors=priors, env=env, prior = "dgamma( 1, 1 )", verbose=verbose )
+				assign( "chol.var.b.prior" , "dwish( I1 , F+1 )", envir=env )		
+		}		
+		
 		
 		# at the end line break on console
 		if ( verbose ) cat( paste0( "\n" ) )
