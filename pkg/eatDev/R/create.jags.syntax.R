@@ -133,7 +133,8 @@ create.jags.syntax <- function ( env ) {
 		# mods to bj.
 		bj.1 <- bj.[ !grepl( "~", bj., fixed=TRUE ),,drop=FALSE ]
 		bj.2 <- bj.[ grepl( "~", bj., fixed=TRUE ),,drop=FALSE ]
-		bj.2[,1] <- sub( "bj\\[\\d+", "bj[1:F", bj.2[,1] )
+		if( F>1 )  bj.2[,1] <- sub( "bj\\[\\d+", "bj[1:F", bj.2[,1] )
+		if( F==1 ) bj.2[,1] <- sub( "bj\\[\\d+", "bj[1", bj.2[,1] )
 		bj.2 <- bj.2[!duplicated(bj.2),,drop=FALSE] 	
 		if( !identical( bj.1, character(0) ) ) x<-rbind(x,bj.1)
 		if( !identical( bj.2, character(0) ) ) x<-rbind(x,bj.2) }
@@ -180,7 +181,7 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "                    # PNj        ... number of persons in pattern    ")
 		x<-rbind(x, "                    # Pj (P x J) ... ragged matrix, indicators of persons in pattern")
 		x<-rbind(x, "                    for (j in 1:PNj[p]) {                            ")
-		x<-rbind(x, "                         bt[1:2,t-1,Pj[p,j]] <- ( A.inv[,] %*% ( mexp( A[,] * Lpat[p,t-1] ) - I1 ) ) %*% bj[,j]")
+		x<-rbind(x, paste0( "                         bt[1:F,t-1,Pj[p,j]] <- ( A.inv[,] %*% ( ",fexp,"( A[,] * Lpat[p,t-1] ) - I1 ) ) %*% bj[,j]") )
 		x<-rbind(x, "                    }                                                ") }
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "                    # Qtv is vectorized Qt matrix                    ")

@@ -195,6 +195,7 @@ prep.data <- function ( env ) {
 				#}
 				
 		}
+# browser()
 		# mode: manifest to latent 1:1
 		# if ( all( sd(dim(Lambda))==0 ) & all( Lambda[lower.tri( Lambda )] == 0 ) & all( Lambda[upper.tri( Lambda )] == 0 ) & all( diag( Lambda ) == 1 )
 		man2lat <- ifelse ( sd(dim(Lambda))==0 & identical( Lambda, diag(1,dim(Lambda)[1]) ) , TRUE, FALSE )

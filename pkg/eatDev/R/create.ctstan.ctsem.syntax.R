@@ -24,12 +24,14 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
 		y<-rbind(y, "# no . in parameter names" )	
 		y<-rbind(y, 'eval( parse( text=paste0( "mu.t1[",1:length(mu.t1),"] <- gsub( \'.\', \'\', mu.t1[",1:length(mu.t1),"], fixed=TRUE  )" ) ) ) ')
 		if( mode %in% c("ctstan","ctsem") ) {
-		y<-rbind(y, 'eval( parse( text=paste0( "chol.var.t1[",1:length(chol.var.t1),"] <- gsub( \'.\', \'\', chol.var.t1[",1:length(chol.var.t1),"], fixed=TRUE  )" ) ) ) ') }
+		y<-rbind(y, 'eval( parse( text=paste0( "chol.var.t1[",1:length(chol.var.t1),"] <- gsub( \'.\', \'\', chol.var.t1[",1:length(chol.var.t1),"], fixed=TRUE  )" ) ) ) ')
+			if( person.var["b"] ) {
+			y<-rbind(y, 'eval( parse( text=paste0( "chol.var.b[",1:length(chol.var.b),"] <- gsub( \'.\', \'\', chol.var.b[",1:length(chol.var.b),"], fixed=TRUE  )" ) ) ) ') } }
 		# if( mode %in% "ctsem" ) {
 		# y<-rbind(y, 'eval( parse( text=paste0( "var.t1[",1:length(var.t1),"] <- gsub( \'.\', \'\', var.t1[",1:length(var.t1),"], fixed=TRUE  )" ) ) ) ') }
 		if( mode %in% "ctsem" && F==1 ) {
 		y<-rbind(y, "# object name must not be equal to parameter name" ) 
-		y<-rbind(y, 'pars <- c("A","cholQ","b","Lambda","beta",ifelse(exists("E"),"E",NA),ifelse(exists("chol.var.t1"),"chol.var.t1",NA),ifelse(exists("mu.t1"),"mu.t1",NA))' )
+		y<-rbind(y, 'pars <- c("A","cholQ","b","Lambda","beta",ifelse(exists("E"),"E",NA),ifelse(exists("chol.var.t1"),"chol.var.t1",NA),ifelse(exists("chol.var.b"),"chol.var.b",NA),ifelse(exists("mu.t1"),"mu.t1",NA))' )
 		y<-rbind(y, "pars <- pars[!is.na(pars)]" )
 		y<-rbind(y, 'eval( parse( text=paste0( pars, "2 <- ",pars,"; ",pars,"2[ is.na(suppressWarnings(as.numeric(",pars,"2))) ] <- paste0( ",pars,"[ is.na(suppressWarnings(as.numeric(",pars,"))) ] , \'_\' ); ",pars," <- ",pars,"2") ) ) ') }
 		# y<-rbind(y, "# T0VAR lower triangular (Note: T0VAR needs to be cholesky decomposed matrix)" )
@@ -59,16 +61,22 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
 		y<-rbind(y, paste0( "              T0VAR=chol.var.t1,                      " ) ) }
         # if( mode %in% "ctsem" ) {
 		# y<-rbind(y, paste0( "              T0VAR=var.t1,                           " ) ) }
+# browser()			
+        if( mode %in% c("ctstan","ctsem") ) {
+		y<-rbind(y, paste0( "              TRAITVAR=chol.var.b,                   " ) ) }
+		
 		if( mode %in% "ctsem" ) {
 		y<-rbind(y, paste0( "              type='omx'                              " ) ) }
 		if( mode %in% "ctstan" ) {
 		y<-rbind(y, paste0( "              type='stanct'                           " ) ) }
 		y<-rbind(y, paste0( "            )                                         " ) )
 		y<-rbind(y, "" )
-		
+# browser()		
 		if( mode %in% "ctstan" ) {
 		y<-rbind(y, "# individually varying parameters" )
 		y<-rbind(y, "m$parameters$indvarying <- FALSE" )
+		if( person.var["b"] ) { # if CINT varying, T0MEANS must be varying as well (Email Charlie 25.10.2016)
+		y<-rbind(y, "m$parameters$indvarying[ m$parameters$matrix %in% c('T0MEANS','CINT') ] <- TRUE" ) }
 		y<-rbind(y, "" ) }
 		
 		# m2$parameters$indvarying <- FALSE
@@ -116,7 +124,8 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
 		if( exists( "mu.t1" ) && any.free( mu.t1 ) ) invisible(moveTo.par.env("mu.t1",env,par.env))
 		if( exists( "prec.t1" ) && any.free( prec.t1 ) ) invisible(moveTo.par.env("prec.t1",env,par.env))
 		if( exists( "chol.var.t1" ) && any.free( chol.var.t1 ) ) invisible(moveTo.par.env("chol.var.t1",env,par.env))
-		if( exists( "var.t1" ) && any.free( var.t1 ) ) invisible(moveTo.par.env("var.t1",env,par.env))
+		if( exists( "chol.var.b" ) && any.free( chol.var.b ) ) invisible(moveTo.par.env("chol.var.b",env,par.env))
+		# if( exists( "var.t1" ) && any.free( var.t1 ) ) invisible(moveTo.par.env("var.t1",env,par.env))
 		if( exists( "A" ) && any.free( A ) ) invisible(moveTo.par.env("A",env,par.env))
 		if( exists( "Q" ) && any.free( Q ) ) invisible(moveTo.par.env("Q",env,par.env))
 		if( exists( "cholQ" ) && any.free( cholQ ) ) invisible(moveTo.par.env("cholQ",env,par.env))

@@ -259,7 +259,27 @@ get.par.list <- function( m, m.name, mode ){
 		} else if ( mode %in% "ctstan" ) {
 				# if ( !indvarying & !par %in% c("lp__") & !grepl("^eta",par) ){
 						# iterations/chains fuer parameter
-						m.$call <- paste0( "extract( r$results, pars=paste0('output_hmean_', '",m.$parameter.mod,"'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
+			
+						# determine if hmean or hsd
+						if( any( m.$name %in% c("chol.var.b") ) ) morsd <- "hsd" else morsd <- "hmean"
+
+						### mod for chol.var.b
+						if( any( m.$name %in% c("chol.var.b") ) ) {
+								# delete prefix "cholvar"
+								m.$parameter.mod <- sub( "cholvar", "", m.$parameter.mod )
+# browser()
+								# somehow parameters names are adjusted
+								# delete last doubled suffix _theta1 / _theta2
+								m.$parameter.mod <- sub( "\\_theta1$", "", m.$parameter.mod )
+								m.$parameter.mod <- sub( "\\_theta2$", "", m.$parameter.mod )
+								
+								# somehow offdiag are missing, delete for now
+								m. <- m.[ (m.$x==m.$y),  ]
+						}
+						
+						# call
+						m.$call <- paste0( "extract( r$results, pars=paste0('output_",morsd,"_', '",m.$parameter.mod,"'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
+						
 				# } else {
 						# x <- extract( fit, pars=par, permuted=FALSE, inc_warmup=TRUE )[,,1]
 				# }

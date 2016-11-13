@@ -50,7 +50,8 @@ set.priors <- function ( env ) {
 		# person cont. intercepts bj
 		if ( exists("bj") && any.free( bj ) ) {
 				if ( verbose ) cat( "               person cont. time intercepts bj: " )
-				invisible( make.priors( m.name="bj", m=bj, priors=priors, env=env, prior = "dmnorm( b[,1], prec.b[,] )", diag.prior = "dmnorm( b[,1], prec.b[,] )", offdiag.prior = "dmnorm( b[,1], prec.b[,] )", verbose=verbose ) )
+         		if ( F>1 )  invisible( make.priors( m.name="bj", m=bj, priors=priors, env=env, prior = "dmnorm( b[,1], prec.b[,] )", diag.prior = "dmnorm( b[,1], prec.b[,] )", offdiag.prior = "dmnorm( b[,1], prec.b[,] )", verbose=verbose ) )
+         		if ( F==1 ) invisible( make.priors( m.name="bj", m=bj, priors=priors, env=env, prior = "dnorm( b[1,1], prec.b[1,1] )", diag.prior = "dnorm( b[1,1], prec.b[1,1] )", offdiag.prior = "dnorm( b[1,1], prec.b[1,1] )", verbose=verbose ) )
 		}		
 		
 		# Lambda

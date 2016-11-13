@@ -40,8 +40,9 @@ results.ctsem <- function ( env ) {
 		if( verbose ){
 				cat( paste0( "\n" ) )
 				cat( paste0( "   renaming results:\n\n" ) )
-				if ( any( est$variable %in% "chol.var.t1" ) ) cat( paste0( "      chol.var.t1 -> var.t1   (Note: ctModel requires chol.var.t1 as input, but ctFit/ctsem outputs var.t1\n" ) )
-				if ( any( est$variable %in% "cholQ" ) ) cat( paste0( "      cholQ -> Q   (Note: ctModel requires cholQ as input, but ctFit/ctsem outputs Q\n" ) )
+				if ( any( est$name %in% "chol.var.t1" ) ) cat( paste0( "      chol.var.t1 -> var.t1   (Note: ctModel requires chol.var.t1 as input, but ctFit/ctsem outputs var.t1)\n" ) )
+				if ( any( est$name %in% "chol.var.b" ) ) cat( paste0( "      chol.var.b -> var.b   (Note: ctModel requires chol.var.b as input, but ctFit/ctsem outputs var.b)\n" ) )
+				if ( any( est$name %in% "cholQ" ) ) cat( paste0( "      cholQ -> Q   (Note: ctModel requires cholQ as input, but ctFit/ctsem outputs Q)\n" ) )
 		}
 		
 		# if ( any( est$name %in% "chol.var.t1" ) ) est$name[ est$name %in% "chol.var.t1" ] <- ""
