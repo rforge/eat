@@ -62,7 +62,9 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
         # if( mode %in% "ctsem" ) {
 		# y<-rbind(y, paste0( "              T0VAR=var.t1,                           " ) ) }
 # browser()			
-        if( mode %in% c("ctstan","ctsem") ) {
+        # no traitvar for ctstan (Email Charlie 14.11.16)
+		# if( mode %in% c("ctstan","ctsem") ) {
+		if( mode %in% c("ctsem") ) {
 		y<-rbind(y, paste0( "              TRAITVAR=chol.var.b,                   " ) ) }
 		
 		if( mode %in% "ctsem" ) {

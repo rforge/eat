@@ -207,6 +207,10 @@ results.jags.ctstan <- function ( env, mode ) {
 				if (verbose) { cat( paste0( "      chol.var.t1 -> var.t1\n" ) ); flush.console() }
 				est <- transform.var.matrix( parameters$chol.var.t1, "chol.var.t1", "var.t1", "solve( chol2inv( t( M ) ) )", est )
 
+				# diagonal of chol.var.b in ctstan is sd, transform to variance
+				if (verbose) { cat( paste0( "      chol.var.b -> var.b\n" ) ); flush.console() }
+				est <- transform.var.matrix( parameters$chol.var.b, "chol.var.b", "var.b", "M^2", est )
+				
 		}
 		
 		# return
@@ -302,7 +306,7 @@ transform.var.matrix <- function( matr, matr.name, matr.name.replace, transform.
 				if ( length(val) > 0 ) M[i] <- est[ est$variable %in% M[i], "value" ]
 		}
 		dim.M <- dim( M )
-		M <- as.numeric( M )
+		M <- suppressWarnings( as.numeric( M ) )
 		dim( M ) <- dim.M
 		
 		# transform

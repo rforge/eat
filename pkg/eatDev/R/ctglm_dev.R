@@ -55,7 +55,7 @@ colnames(LAMBDA) <- c("lat1","lat2")
 # m <- ctglm.model( engine="ctstan", d=d, Lambda=LAMBDA, measurement.model=gaussian(link="identity") )
 # m <- ctglm.model( engine="jags", d=d, Lambda=LAMBDA, measurement.model=gaussian(link="identity") )
 # m <- ctglm.model( engine="jags", d=ctEx2, measurement.model=gaussian(link="identity") )
-m <- ctglm.model( engine="ctstan", d=ctExample2, person.var=c("b"=TRUE), measurement.model=gaussian(link="identity") )
+m <- ctglm.model( engine="jags", d=ctExample2, person.var=c("b"=TRUE), measurement.model=gaussian(link="identity") )
 
 s <- ctglm.syntax( m=m )
 # ctglm.save.syntax( s, "C:/users/hechtmaz/Desktop/temp" )
