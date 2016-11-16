@@ -444,7 +444,8 @@ prep.data <- function ( env ) {
 		
 		## prec/var of b (TRAITVAR)
 		# in jags prec.b
-		# in ctstan/ctsem chol.var.b
+		# in ctsem chol.var.b
+		# in ctstan none
 		if( person.var["b"] ) {	
 				if ( engine %in% c("jags") ) {		
 						if ( !exists("prec.b",inherits=FALSE) || is.null(prec.b) ) {
@@ -458,7 +459,7 @@ prep.data <- function ( env ) {
 						prec.b.[upper.tri(prec.b.)][ is.na( prec.b[upper.tri(prec.b)] ) ]  <- prec.b.[lower.tri(prec.b.)][ is.na( prec.b[lower.tri(prec.b)] ) ]  
 						prec.b <- prec.b.	
 				}
-				if ( engine %in% c("ctstan","ctsem") ) {		
+				if ( engine %in% c("ctsem") ) {		
 						if ( !exists("chol.var.b",inherits=FALSE) || is.null(chol.var.b) ) {
 								chol.var.b <- matrix( NA, nrow=F, ncol=F )
 								if ( !is.null( latent.names ) ) colnames( chol.var.b ) <- rownames( chol.var.b ) <- latent.names
@@ -513,11 +514,16 @@ prep.data <- function ( env ) {
 
 # NAs to labeled parameters
 label.pars <- function(m,m.name) {
-
+# browser()
 		if( is.null(dim(m)) ) {
 				## vector
 				if ( is.null( names( m ) ) ) nams <- seq(along=m)[is.na(m)] else nams <- names( m )[is.na(m)]
-				m[is.na(m)] <- paste0( m.name, "_", nams )
+				# if only one element, then no numbering
+				if( length( nams ) > 1 ){
+						m[is.na(m)] <- paste0( m.name, "_", nams )
+				} else {
+						m[is.na(m)] <- paste0( m.name )
+				}
 		} else {
 
 				## arrays

@@ -14,6 +14,10 @@ ctglm.model <- function ( d, id="id", time="time", person.var=c("b"=TRUE), track
 		# engine
 		if ( is.character( engine ) && length( engine ) > 1 ) engine <- engine[1] else if( !is.character(engine) || !any("jags" %in% c("jags","ctstan","ctsem")) ) engine <- "jags"
 		
+		# track.person.par
+		# if someone puts "b" in, convert to "bj"
+		if( "b" %in% track.person.par ) track.person.par[ track.person.par %in% "b" ] <- "bj"
+		
 		# new environment
 		env <- new.env()
 		

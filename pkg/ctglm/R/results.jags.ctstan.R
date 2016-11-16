@@ -170,12 +170,14 @@ results.jags.ctstan <- function ( env, mode ) {
 				
 				return( ret )
 		}
+# browser()
 		est.l <- apply( pars, 1, extr )
 		est <- do.call( "rbind", est.l )
 	
 	
 		### software specific mods
 		
+		## conversions
 		if ( verbose && engine %in% c("jags","ctstan") ) {
 				cat( paste0( "\n   converting results:\n\n" ) )
 		}
@@ -213,9 +215,37 @@ results.jags.ctstan <- function ( env, mode ) {
 				est <- transform.var.matrix( parameters$chol.var.t1, "chol.var.t1", "var.t1", "solve( chol2inv( t( M ) ) )", est )
 
 				# diagonal of chol.var.b in ctstan is sd, transform to variance
-				if (verbose) { cat( paste0( "      chol.var.b -> var.b\n" ) ); flush.console() }
-				est <- transform.var.matrix( parameters$chol.var.b, "chol.var.b", "var.b", "M^2", est )
+				# if (verbose) { cat( paste0( "      chol.var.b -> var.b\n" ) ); flush.console() }
+				# est <- transform.var.matrix( parameters$chol.var.b, "chol.var.b", "var.b", "M^2", est )
 				
+		}
+
+# browser()	
+
+		## additional parameters		
+		if ( engine %in% "ctstan" ) {
+
+				### variance of b
+				# get all b
+				bs <- names( r$results )
+				bs <- bs[ grepl( "output_hsd_b", bs ) ]
+				bs.par.name <- sub( "output_hsd_", "", bs )
+				
+				if ( length(bs) > 0 ) {
+						
+						if ( verbose ) {
+								cat( paste0( "\n   additional results:\n\n" ) )
+						}
+# browser()				
+						pars2 <- data.frame( "name"="var.b", "parameter"=paste0("var.",bs.par.name), "call"=paste0("extract( r$results, pars=paste0('output_hsd_', '",bs.par.name,"'), permuted=FALSE, inc_warmup=TRUE )[,,1]"), stringsAsFactors=FALSE )
+						est.l2 <- apply( pars2, 1, extr )
+						est2 <- do.call( "rbind", est.l2 )
+						# square (because it's sd)
+						est2$value <- est2$value^2
+						
+						# bind on estimates
+						est <- rbind( est, est2 )
+				}
 		}
 		
 		# return
@@ -270,21 +300,22 @@ get.par.list <- function( m, m.name, mode ){
 						# iterations/chains fuer parameter
 			
 						# determine if hmean or hsd
-						if( any( m.$name %in% c("chol.var.b") ) ) morsd <- "hsd" else morsd <- "hmean"
-
-						### mod for chol.var.b
-						if( any( m.$name %in% c("chol.var.b") ) ) {
+						# if( any( m.$name %in% c("var.b") ) ) morsd <- "hsd" else morsd <- "hmean"
+						morsd <- "hmean"
+						
+						### mod for var.b
+						# if( any( m.$name %in% c("var.b") ) ) {
 								# delete prefix "cholvar"
-								m.$parameter.mod <- sub( "cholvar", "", m.$parameter.mod )
+								# m.$parameter.mod <- sub( "cholvar", "", m.$parameter.mod )
 # browser()
 								# somehow parameters names are adjusted
 								# delete last doubled suffix _theta1 / _theta2
-								m.$parameter.mod <- sub( "\\_theta1$", "", m.$parameter.mod )
-								m.$parameter.mod <- sub( "\\_theta2$", "", m.$parameter.mod )
+								# m.$parameter.mod <- sub( "\\_theta1$", "", m.$parameter.mod )
+								# m.$parameter.mod <- sub( "\\_theta2$", "", m.$parameter.mod )
 								
 								# somehow offdiag are missing, delete for now
-								m. <- m.[ (m.$x==m.$y),  ]
-						}
+								# m. <- m.[ (m.$x==m.$y),  ]
+						# }
 						
 						# call
 						m.$call <- paste0( "extract( r$results, pars=paste0('output_",morsd,"_', '",m.$parameter.mod,"'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
