@@ -467,6 +467,34 @@ run2 <- runModel(mod2)
 res2 <- getResults(run2)
 
 
+
+
+# run the model
+run2 <- runModel(mod2, wait = FALSE)
+
+# get the results
+res2 <- getResults(run2)
+
+### wle
+wle  <- wleFromRes(res2)
+
+### equating (wenn nicht verankert)
+eq1 <- equat1pl( results = res2, prmNorm = shw[,c("item", "xsi")])
+
+tf  <- transformToBista ( equatingList = eq1, refPop = data.frame ( domain = c("knowledge", "procedural"), m = c(0.078, -0.175), sd= c(1.219, 0.799)), cuts = list ( knowledge = list ( values = c(380,540)), procedural = list ( values = c ( 410, 550))))
+
+###
+### wenn ich zweidimensional equate, warum bekomme ich nur eine equatingkonstante ??
+###
+
+
+
+
+
+
+
+
+
 ################################################################################
 ###            Example 3: Multidimensional Rasch Model in TAM                ###
 ################################################################################
@@ -938,7 +966,7 @@ freq06<- jk2.table(datL = subSam, ID="id", imp = "imp", groups = c("model", "sex
 
 # create a new sub sample with both---the data of 2003 and 2013 ... only for domain
 # 'knowledge'. Note: if no linking error is defined, linking error of 0 is assumed.
-# (Due to unbalanced sample data, we switch to 'jk1' method for the remainder of 6b.)
+# (Due to unbalanced sample data, we switch to 'jk1' method for the remainder of 6c.)
 subS2 <- dTrend[which(dTrend[,"dimension"] == "knowledge"),]
 freq07<- jk2.table(datL = subS2, ID="id", imp = "imp", groups = c("model", "sex"),
          type = "jk1", group.differences.by = c("wholePop", "sex"), chiSquare = FALSE,

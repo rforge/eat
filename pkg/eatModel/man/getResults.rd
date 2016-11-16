@@ -65,20 +65,20 @@ Applies only if DIF analyses are performed before. When DIF-Parameter are evalua
 this specifies the critical p-value for confidence interval DIF.
 }
  \item{nplausible}{
-Applies only if software = 'tam': Number of plausible values to be drawn. Note: 
+Applies only if \code{software = "tam"}: Number of plausible values to be drawn. Note: 
 number of plausible values were already defined in \code{defineModel}, because 
 Conquest needs to know the number of PVs prior to estimation. In \code{TAM}, it 
 is possible to redefine the number of plausible values and overwrite the definition
 that was given in \code{defineModel}.
 }
 \item{ntheta}{
-Applies only if software = 'tam'. Following description is borrowed from the help 
+Applies only if \code{software = "tam"}. Following description is borrowed from the help 
 file of \code{tam.pv} from the \code{TAM} package: Number of ability nodes for 
 plausible value imputation. Note that in this function ability nodes are simulated 
 for the whole sample, not for every person (contrary to the software ConQuest).
 }
 \item{normal.approx}{
-Applies only if software = 'tam'. Following description is borrowed from the help 
+Applies only if \code{software = "tam"}. Following description is borrowed from the help 
 file of \code{tam.pv} from the \code{TAM} package: An optional logical indicating 
 whether the individual posterior distributions should be approximated by a normal 
 distribution? The default is \code{FALSE}. In the case \code{normal.approx=TRUE}
@@ -87,21 +87,21 @@ be substantially smaller than 2000, say 200 or 500. The normal approximation is
 implemented for unidimensional and multidimensional models.
 }
 \item{samp.regr}{
-Applies only if software = 'tam'. Following description is borrowed from the help 
+Applies only if \code{software = "tam"}. Following description is borrowed from the help 
 file of \code{tam.pv} from the \code{TAM} package: An optional logical indicating 
 whether regression coefficients should be fixed in the plausible value imputation or
 also sampled from their posterior distribution? The default is \code{FALSE}. Sampled 
 regression coefficients are obtained by nonparametric bootstrap.
 }
 \item{theta.model}{
-Applies only if software = 'tam'. Following description is borrowed from the help 
+Applies only if \code{software = "tam"}. Following description is borrowed from the help 
 file of \code{tam.pv} from the \code{TAM} package: Logical indicating whether the 
 theta grid from the \code{tamobj} object should be used for plausible value
 imputation. In case of \code{normal.approx=TRUE}, this should be sufficient in many 
 applications.
 }
 \item{np.adj}{
-Applies only if software = 'tam'. Following description is borrowed from the help 
+Applies only if \code{software = "tam"}. Following description is borrowed from the help 
 file of \code{tam.pv} from the \code{TAM} package: This parameter defines the 
 ``spread'' of the random theta values for drawing plausible values when 
 \code{normal.approx=FALSE}. If \eqn{s_{EAP}} denotes the standard deviation 

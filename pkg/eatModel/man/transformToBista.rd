@@ -6,7 +6,8 @@
 one for the item parameters on the bista metric and one for the person parameter
 (PVs) on the bista metric.}
 \usage{
-transformToBista ( equatingList, refPop, cuts, weights = NULL)}
+transformToBista ( equatingList, refPop, cuts, weights = NULL, defaultM = 500, 
+                   defaultSD = 100)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{equatingList}{
@@ -38,6 +39,14 @@ columns is individual caseweight. Necessary for the transformation of linking
 error for (ordered) factors and/or if descriptives of the reference population 
 should be computed directly from the data. See the examples of \code{defineModel}
 for further details. 
+}
+  \item{defaultM}{
+%%     ~~Describe \code{file} here~~
+Mean of the reference population on the ``bista'' metric. 
+}
+  \item{defaultSD}{
+%%     ~~Describe \code{file} here~~
+Standard deviation of the reference population in the ``bista'' metric. 
 }
 }
 \details{
