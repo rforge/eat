@@ -49,8 +49,8 @@ check.input <- function ( env ) {
 		   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "Lambda is not NULL or two-dimensional matrix | check Lambda" ) }
 		# measurement.model
 		if ( verbose ) cat( paste0( "                 measurement.model is supported: "  ) )
-		if ( ( measurement.model$family == "gaussian" & measurement.model$link == "identity" ) || ( measurement.model$family == "binomial" & measurement.model$link == "logit" ) ) { if ( verbose ) cat( "OK\n" ) }
-		   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "measurement.model is not gaussian(link='identity') or binomial(link='logit') | check measurement.model" ) }
+		if ( ( measurement.model$family == "gaussian" & measurement.model$link == "identity" ) || ( measurement.model$family == "binomial" & measurement.model$link == "logit" ) || ( measurement.model$family == "poisson" & measurement.model$link == "log" ) ) { if ( verbose ) cat( "OK\n" ) }
+		   else { if ( verbose ) cat( "FAIL\n" ); error[length(error)+1] <- paste0( "measurement.model is not gaussian(link='identity'), binomial(link='logit'), or poisson(link='log') | check measurement.model" ) }
 		# priors, NULL or list
 		if ( verbose ) cat( paste0( "                         priors is NULL or list: "  ) )
 		if ( is.null( priors ) || is.list( priors ) ) { if ( verbose ) cat( "OK\n" ) }

@@ -30,16 +30,20 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "    for (r in 1:R) {                                                 ")
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "        # distributional assumption                                  ")
-		if( measurement.model$family %in% "binomial" ) {
-		x<-rbind(x, "        dl[r,col.y] ~ dbern( mu.y[r] )                               ") }
 		if( measurement.model$family %in% "gaussian" ) {
 		x<-rbind(x, "        dl[r,col.y] ~ dnorm( mu.y[r], E[ dl[r,col.item], dl[r,col.item] ] ) ") }
+		if( measurement.model$family %in% "binomial" ) {
+		x<-rbind(x, "        dl[r,col.y] ~ dbern( mu.y[r] )                               ") }
+		if( measurement.model$family %in% "poisson" ) {
+		x<-rbind(x, "        dl[r,col.y] ~ dpois( mu.y[r] ) ") }
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "        # link                                                       ")
-		if( measurement.model$link %in% "logit" ) {
-		x<-rbind(x, "        mu.y[r] <- ilogit( eta[r] )                                  ") }
 		if( measurement.model$family %in% "gaussian" ) {
 		x<-rbind(x, "        mu.y[r] <- eta[r]                                            ") }		
+		if( measurement.model$link %in% "logit" ) {
+		x<-rbind(x, "        mu.y[r] <- ilogit( eta[r] )                                  ") }
+		if( measurement.model$link %in% "log" ) {
+		x<-rbind(x, "        log( mu.y[r] ) <- eta[r]                                     ") }
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "        # linear predictor                                           ")
 		# x<-rbind(x, "        eta[r] <- sum( Lambda[ dl[r,col.item],  , dl[r,col.time] ] * theta[ dl[r,col.id], , dl[r,col.time] ] )  +  beta[ dl[r,col.item], 1 ]  ")
