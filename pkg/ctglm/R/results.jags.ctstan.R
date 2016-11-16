@@ -1,6 +1,8 @@
 
 results.jags.ctstan <- function ( env, mode ) {
 # browser()		
+# TODO: verbose
+
 		# requireNamespace packages
 		requireNamespace( "ggplot2" )
 		requireNamespace( "shinystan" )
@@ -12,9 +14,18 @@ results.jags.ctstan <- function ( env, mode ) {
 		# defaults of burnin
 		if (!exists("burnin",mode="numeric")) burnin <- 0
 		
+		## iter must be adjusted
+		# if jags runs with thin, then results are of iter/thin length
+		thin <- r$runpar$thin
+		if( is.null( thin ) ) thin <- 1
+		iter <- floor( r$runpar$iter / thin )
+		if( thin > 1 ) {
+				cat( paste0( "iterations have been adjusted for thinning: ",r$runpar$iter," -> ",iter,"\n\n" ) )
+		}
+		
 		# burnin must be lower than iterations
-		if ( burnin >= r$runpar$iter ) {
-				cat( paste0( "burnin=", burnin, " is not lower than iter=", r$runpar$iter, "; now set to iter/2=", burnin <- floor( r$runpar$iter/2 ), " \n\n" ) )
+		if ( burnin >= iter ) {
+				cat( paste0( "burnin=", burnin, " is not lower than iter=", iter, "; now set to iter/2=", burnin <- floor( iter/2 ), " \n\n" ) )
 		}
 		
 		# output
@@ -106,7 +117,7 @@ results.jags.ctstan <- function ( env, mode ) {
 				if( is.numeric( xl$chains ) ) xl$chains <- factor( xl$chains, levels=sort(unique(xl$chains)), labels=paste0( "chain:", sort(unique(xl$chains)) ) )
 				
 				# delete burnin, original wide data
-				x2 <- x[((burnin+1):r$runpar$iter),,drop=FALSE]
+				x2 <- x[((burnin+1):iter),,drop=FALSE]
 				
 				### delete outlier chains
 				# means after burnin
