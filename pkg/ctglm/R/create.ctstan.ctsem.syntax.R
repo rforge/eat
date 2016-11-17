@@ -24,10 +24,9 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
 		y<-rbind(y, "# no . in parameter names" )	
 		y<-rbind(y, 'eval( parse( text=paste0( "mu.t1[",1:length(mu.t1),"] <- gsub( \'.\', \'\', mu.t1[",1:length(mu.t1),"], fixed=TRUE  )" ) ) ) ')
 		if( mode %in% c("ctstan","ctsem") ) {
-		y<-rbind(y, 'eval( parse( text=paste0( "chol.var.t1[",1:length(chol.var.t1),"] <- gsub( \'.\', \'\', chol.var.t1[",1:length(chol.var.t1),"], fixed=TRUE  )" ) ) ) ')
-			# if( person.var["b"] ) {
-			# y<-rbind(y, 'eval( parse( text=paste0( "chol.var.b[",1:length(chol.var.b),"] <- gsub( \'.\', \'\', chol.var.b[",1:length(chol.var.b),"], fixed=TRUE  )" ) ) ) ') }
-			}
+		y<-rbind(y, 'eval( parse( text=paste0( "chol.var.t1[",1:length(chol.var.t1),"] <- gsub( \'.\', \'\', chol.var.t1[",1:length(chol.var.t1),"], fixed=TRUE  )" ) ) ) ') }
+		if( mode %in% c("ctsem") && person.var["b"] ) {
+		y<-rbind(y, 'eval( parse( text=paste0( "chol.var.b[",1:length(chol.var.b),"] <- gsub( \'.\', \'\', chol.var.b[",1:length(chol.var.b),"], fixed=TRUE  )" ) ) ) ') }
 		# if( mode %in% "ctsem" ) {
 		# y<-rbind(y, 'eval( parse( text=paste0( "var.t1[",1:length(var.t1),"] <- gsub( \'.\', \'\', var.t1[",1:length(var.t1),"], fixed=TRUE  )" ) ) ) ') }
 		if( mode %in% "ctsem" && F==1 ) {
