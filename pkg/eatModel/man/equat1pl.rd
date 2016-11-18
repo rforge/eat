@@ -7,7 +7,7 @@ Moreover, optional elimination of items with linking DIF is allowed and linking 
 via the jackknife method if testlets are specified.}
 \usage{
 equat1pl(results , prmNorm , item = NULL, domain = NULL, testlet = NULL, value = NULL, 
-         excludeLinkingDif = TRUE, difBound = 1, iterativ = TRUE, 
+         excludeLinkingDif = TRUE, difBound = 1, iterativ = FALSE, 
          method = c("Mean.Mean", "Haebara", "Stocking.Lord"))}
 %- maybe also 'usage' for other objects documented here.
 \arguments{

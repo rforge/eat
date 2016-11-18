@@ -5,7 +5,7 @@
 \description{Function uses output of \code{transformToBista} to provide one data.frame
 with results from T1 and T2 along with original and transformed linking errors.}
 \usage{
-prepRep(calibT2, bistaTransfT1, bistaTransfT2) }
+prepRep(calibT2, bistaTransfT1, bistaTransfT2, makeIdsUnique = TRUE) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{calibT2}{
@@ -19,6 +19,10 @@ The object returned by \code{transformToBista} for the conditioning model at T1.
   \item{bistaTransfT2}{
 %%     ~~Describe \code{file} here~~
 The object returned by \code{transformToBista} for the conditioning model at T2. 
+}
+  \item{makeIdsUnique}{
+%%     ~~Describe \code{file} here~~
+Logical: Guarantee that person IDs do not overlap between t1 and t2?
 }
 }
 \details{

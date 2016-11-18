@@ -441,58 +441,55 @@ item <- itemFromRes ( res1 )
 
 
 ################################################################################
-###               Example 2: Multidimensional Rasch Model                    ###
+###        Example 2a: Multidimensional Rasch Model with anchoring           ###
 ################################################################################
 
-# Example 2: running a multidimensional Rasch model on a subset of items with latent
+# Example 2a: running a multidimensional Rasch model on a subset of items with latent
 # regression (sex). Use item parameter from the first model as anchor parameters
 # use only biology items from both domains (procedural/knowledge)
 
 # read in anchor parameters from the results object of the first example
-aPar <- itemFromRes ( res1 ) 
+aPar <- itemFromRes ( res1 )
 aPar <- aPar[,c("item", "est")]
 
 # defining the model: specifying q matrix now is necessary.
-# Please note that all latent regression variables have to be of class numeric. 
-# If regression variables are factors, dummy variables automatically will be used. 
+# Please note that all latent regression variables have to be of class numeric.
+# If regression variables are factors, dummy variables automatically will be used.
 # (This behavior is equivalent as in lm() for example.)
-mod2 <- defineModel(dat=datW, items= qMat[,1], id="id", analysis.name = "twodim",
+mod2a<- defineModel(dat=datW, items= qMat[,1], id="id", analysis.name = "twodim",
         qMatrix = qMat, HG.var = "sex", anchor = aPar, n.plausible = 20,
         conquest.folder = "N:/console_Feb2007.exe",  dir = "N:/test")
 
 # run the model
-run2 <- runModel(mod2)
+run2a<- runModel(mod2a)
 
 # get the results
-res2 <- getResults(run2)
+res2a<- getResults(run2a)
 
 
+################################################################################
+###        Example 2b: Multidimensional Rasch Model with equating            ###
+################################################################################
 
+# Example 2b: running a multidimensional Rasch model on a subset of items
+# defining the model: specifying q matrix now is necessary.
+mod2b<- defineModel(dat=datW, items= qMat[,1], id="id", analysis.name = "twodim2",
+        qMatrix = qMat, n.plausible = 20, conquest.folder = "N:/console_Feb2007.exe",
+        dir = "N:/test")
 
 # run the model
-run2 <- runModel(mod2, wait = FALSE)
+run2b<- runModel(mod2b)
 
 # get the results
-res2 <- getResults(run2)
-
-### wle
-wle  <- wleFromRes(res2)
+res2b<- getResults(run2b)
 
 ### equating (wenn nicht verankert)
-eq1 <- equat1pl( results = res2, prmNorm = shw[,c("item", "xsi")])
+eq2b <- equat1pl( results = res2b, prmNorm = aPar)
 
-tf  <- transformToBista ( equatingList = eq1, refPop = data.frame ( domain = c("knowledge", "procedural"), m = c(0.078, -0.175), sd= c(1.219, 0.799)), cuts = list ( knowledge = list ( values = c(380,540)), procedural = list ( values = c ( 410, 550))))
-
-###
-### wenn ich zweidimensional equate, warum bekomme ich nur eine equatingkonstante ??
-###
-
-
-
-
-
-
-
+### transformation to the 'bista' metric: needs reference population definition
+ref  <- data.frame ( domain = c("knowledge", "procedural"), m = c(0.078, -0.175), sd= c(1.219, 0.799))
+cuts <- list ( knowledge = list ( values = c(380,540)), procedural = list ( values = c ( 410, 550)))
+tf2b <- transformToBista ( equatingList = eq2b, refPop = ref, cuts = cuts)
 
 
 ################################################################################
@@ -684,7 +681,9 @@ View(dfr$personpars)
 # (item groups) and different person groups. This example mimics the routines 
 # necessary for the 'Laendervergleich/Bildungstrend' at the Institute for 
 # Educational Progress (IQB). Example 6 demonstrates routines without trend 
-# estimation. Example 6a demonstrates routines with trend estimation 
+# estimation. Example 6a demonstrates routines with trend estimation---hence,
+# example 6 mimics time of measurement 't1', example 6a mimics time of measurement
+# 't2'.
 
 # Preparation: assume time of measurement 't1' corresponds to the year 2003. 
 datT1<- reshape2::dcast(subset ( sciences, year == 2003), 
@@ -763,77 +762,81 @@ dfrT1P<- transformToBista ( equatingList = ankT1P, cuts=cuts )
 ################################################################################
 
 # Example 6a needs the objects created in example 6
-# Preparation: assume time of measurement 't2'. 
-datT2<- reshape2::dcast(subset ( sciences, year == 2013), 
+# Preparation: assume time of measurement 't2'.
+datT2<- reshape2::dcast(subset ( sciences, year == 2013),
         formula = id+grade+country~variable, value.var="value")
 
 # First step: item calibration in separate unidimensional models for each domain
 modsT2<- splitModels ( qMatrix = qMat, nCores = 1)
 
-# define 2 models. Items which occur only in the Q matrix will be ignored. 
-defT2 <- defineModel(dat = datT2, id = "id", check.for.linking = TRUE, 
+# define 2 models. Items which occur only in the Q matrix will be ignored.
+defT2 <- defineModel(dat = datT2, id = "id", check.for.linking = TRUE,
          splittedModels = modsT2, software = "tam")
 
-# run 2 models 
+# run 2 models
 runT2 <- runModel(defT2)
 
-# get the results 
+# get the results
 resT2 <- getResults(runT2)
 
 # collect item parameters
 itemT2<- itemFromRes(resT2)
 
-# Second step: compute linking constant between 't1' and 't2' with the exclusion 
-# of linking DIF items and computation of linking error according to a jackknife 
-# procedure. We use the 'itemT1' object created in example 6. To demonstrate the 
-# jackknife procedure, we create an arbitrary 'testlet' variable in 'itemT1'. The 
-# testlet variable indicates items which belong to a common stimulus. The linking 
+# Second step: compute linking constant between 't1' and 't2' with the exclusion
+# of linking DIF items and computation of linking error according to a jackknife
+# procedure. We use the 'itemT1' object created in example 6. To demonstrate the
+# jackknife procedure, we create an arbitrary 'testlet' variable in 'itemT1'. The
+# testlet variable indicates items which belong to a common stimulus. The linking
 # procedure is executed simultaneously for procedural and knowledge.
 itemT1[,"testlet"] <- substr(as.character(itemT1[,"item"]), 1, 7)
-L.t1t2<- equat1pl ( results = resT2, prmNorm = itemT1, item = "item", 
-         testlet = "testlet", value = "est", excludeLinkingDif = TRUE, 
+L.t1t2<- equat1pl ( results = resT2, prmNorm = itemT1, item = "item",
+         testlet = "testlet", value = "est", excludeLinkingDif = TRUE,
          difBound = 1)
 
 # Third step: transform item parameters of 't2' to the metric of 't1'
 # We now need to specify the 'refPop' argument. We use the values from 't1' which
-# serves as the reference. 
-T.t1t2<- transformToBista ( equatingList = L.t1t2, refPop=dfrT1P[["refPop"]], 
-         cuts = cuts)
+# serves as the reference.
+ref   <- dfrT1P[["refPop"]]
 
-# The object 'T.t1t2' now contains transformed person and item parameters with 
-# original and transformed linking errors. 
+### prepare the 'ref' object
+ref   <- ref[1:2, c("domain", "refMean", "refSD", "bistaMean","bistaSD")]
+T.t1t2<- transformToBista ( equatingList = L.t1t2, refPop=,ref, cuts = cuts)
 
-# Fourth step: drawing plausible values for 't2', using transformed item parameters
-# captured in 'T.t1t2'.          
-# create arbitrary principal components 
-for ( i in c("PC1", "PC2", "PC3", "PC4") ) { 
+# The object 'T.t1t2' now contains transformed person and item parameters with
+# original and transformed linking errors. See for example:
+View(T.t1t2$personpars)
+
+# Fourth step: drawing plausible values for 't2'. We use the transformed item
+# parameters (captured in 'T.t1t2') for anchoring
+# create arbitrary principal components
+for ( i in c("PC1", "PC2", "PC3", "PC4") ) {
       datT2[,i] <- rnorm( n = nrow(datT2), mean = 0, sd = 1.2)
-}         
+}
 
-# number of extracted principal components vary: four components for Berlin, 
+# number of extracted principal components vary: four components for Berlin,
 # three for Bavaria. Hence, Bavaria has no valid values on 'PC4'.
 datT2[which(datT2[,"country"] == "Bavaria"),"PC4"] <- NA
 
 # define person grouping
 persT2<- data.frame ( idstud = datT2[,"id"] , country = datT2[,"country"])
 
-# Running second step: split models according to person groups
+# Running second step: split models according to person groups (countries)
 # ('all.persons' must be FALSE, otherwise the whole group would be treated as
 # a separate distinct group.)
 modT2P<- splitModels ( person.groups = persT2 , all.persons = FALSE, nCores = 1)
 
-# define the 2 country-specific 2-dimensional models, specifying latent regression 
+# define the 2 country-specific 2-dimensional models, specifying latent regression
 # model and fixed item parameters. We used the transformed item parameters (captured
-# in 'T.t1t2[["itempars"]]' --- using the 'estTransf' column) for anchoring. 
-defT2P<- defineModel(dat = datT2, items = itemT2[,"item"], id = "id", 
-         check.for.linking = TRUE, splittedModels = modT2P, qMatrix = qMat, 
-         anchor = T.t1t2[["itempars"]][,c("item", "estTransf")], 
+# in 'T.t1t2[["itempars"]]' --- using the 'estTransf' column) for anchoring.
+defT2P<- defineModel(dat = datT2, items = itemT2[,"item"], id = "id",
+         check.for.linking = TRUE, splittedModels = modT2P, qMatrix = qMat,
+         anchor = T.t1t2[["itempars"]][,c("item", "estTransf")],
          HG.var = c("PC1", "PC2", "PC3", "PC4"), software = "tam")
 
-# run the 2 models 
+# run the 2 models
 runT2P<- runModel(defT2P)
 
-# get the results 
+# get the results
 resT2P<- getResults(runT2P)
 
 # equating is not necessary, as the models run with fixed item parameters
@@ -842,8 +845,7 @@ resT2P<- getResults(runT2P)
 ankT2P<- equat1pl ( results = resT2P)
 
 # transformation to the 'bista' metric, using the previously defined cut scores
-dfrT2P<- transformToBista ( equatingList = ankT2P, refPop=dfrT1P[["refPop"]], 
-         cuts=cuts ) 
+dfrT2P<- transformToBista ( equatingList = ankT2P, refPop=ref, cuts=cuts )
 
 # prepare data for jackknifing and trend estimation via 'eatRep'
 dTrend<- prepRep ( calibT2 = T.t1t2, bistaTransfT1 = dfrT1P, bistaTransfT2 = dfrT2P)

@@ -285,10 +285,10 @@ getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c(
                return(res)
                }}   
                
-equat1pl<- function ( results , prmNorm , item = NULL, domain = NULL, testlet = NULL, value = NULL, excludeLinkingDif = TRUE, difBound = 1, iterativ = TRUE, method = c("Mean.Mean", "Haebara", "Stocking.Lord") ) {
+equat1pl<- function ( results , prmNorm , item = NULL, domain = NULL, testlet = NULL, value = NULL, excludeLinkingDif = TRUE, difBound = 1, iterativ = FALSE, method = c("Mean.Mean", "Haebara", "Stocking.Lord") ) {
            method<- match.arg(method)
            nMods <- table(results[,"model"])
-           cat(paste("Found ", length(nMods), " model(s).\n   Equating is executed for each dimension in in model separately.\n",sep=""))
+           cat(paste("Found ", length(nMods), " model(s).\n   Equating is executed for each dimension in each model separately.\n",sep=""))
            dims  <- unique(unlist(by ( data = results, INDICES = results[,"model"], FUN = function ( x ) { names(table(as.character(itemFromRes(x)[,"dimension"])))})))
            if ( missing ( prmNorm) ) {                                          ### kein Equating: Rueckgabe NULL, 'results' wird durchgeschleift
                 cat("No norm parameter defined ('prmNorm' is missing). Treat current sample as drawn from the reference population.\n")
@@ -410,7 +410,8 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defau
        mr  <- FALSE                                                             ### default: 'refPop' fehlt nicht. Wenn doch, wird es aus Daten generiert und spaeter
        if(missing(refPop)) {                                                    ### (nachdem ggf. transformiert wurde!) auf Konsole angezeigt
           mr  <- TRUE
-          cat("'refPop' was not defined. Treat current sample as drawn from the reference population.\n")
+          cat("'refPop' was not defined. Treat current sample as drawn from the reference population.\n") 
+          flush.console()
        }
        if( missing(cuts)) { cutsMis <- TRUE }  else  { cutsMis <- FALSE }
        nam1<- names(equatingList[["items"]])
@@ -479,8 +480,8 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defau
                       if ( mr == TRUE ) {
                            if ( equatingList[["items"]][[mod]][[dims]][["eq"]][["B.est"]][[ equatingList[["items"]][[mod]][[dims]][["method"]] ]] != 0) {
                                 cat("W A R N I N G: Preceding Equating without 'refPop' definition. Sure you want to use current sample as drawn from the reference population?\n")
+                                refPop[mat,2] <- refPop[mat,2]+ equatingList[["items"]][[mod]][[dims]][["eq"]][["B.est"]][[ equatingList[["items"]][[mod]][[dims]][["method"]] ]]
                            }
-                           refPop[mat,2] <- refPop[mat,2]+ equatingList[["items"]][[mod]][[dims]][["eq"]][["B.est"]][[ equatingList[["items"]][[mod]][[dims]][["method"]] ]]
                       }
                       itFrame[,"estTransf625"]   <- itFrame[,"estTransf"] + log(0.625/(1-0.625))
                       itFrame[,"estTransfBista"] <- (itFrame[,"estTransf625"] - refPop[mat,2]) / refPop[mat,3] * refPop[mat,5] + refPop[mat,4]
@@ -518,7 +519,7 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defau
                                 cat(paste ( "Found ",length(mis)," missing values in the 'weights' frame.\n    Cases with missing values on weighting variable will be ignored for transformation.\n",sep=""))
                                 pvF <- pvF[-mis,]
                            }
-                           txt <- capture.output ( msdF <- jk2.mean ( datL = pvF, ID = attr(equatingList[["results"]], "all.Names")[["ID"]], imp = "imp", wgt = colnames(weights)[2], dependent = "value", na.rm = TRUE) )
+                           txt <- capture.output ( msdF <- jk2.mean ( datL = pvF, ID = attr(equatingList[["results"]], "all.Names")[["ID"]], imp = "imp", wgt = colnames(weights)[2], dependent = "valueTransfBista", na.rm = TRUE) )
                       }
                       msdFok <- c(msdF[intersect(which(msdF[,"parameter"] == "mean"), which(msdF[,"coefficient"] == "est")),"value"], msdF[intersect(which(msdF[,"parameter"] == "sd"), which(msdF[,"coefficient"] == "est")),"value"])
                       if ( cutsMis == FALSE & !is.null ( equatingList[["items"]] )) {
@@ -566,11 +567,7 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defau
        itempars   <- do.call("rbind", lapply ( modN, FUN = function ( x ) { x[["itempars"]]}))
        rp         <- do.call("rbind", lapply ( modN, FUN = function ( x ) { x[["rp"]]}))
     ### fuer Development: descriptives anzeigen
-       toPrint    <- rp                                                               
-       for ( u in c("refMean", "refSD")) { toPrint[,u] <- round(toPrint[,u], digits = 3)}
-       for ( u in c("bistaMean", "bistaSD", "focusMean", "focusSD")) { toPrint[,u] <- round(toPrint[,u], digits = 0)}
-       cat("\n"); print ( toPrint ) 
-       ret        <- list ( itempars = itempars, personpars = personpars, refPop = rp, all.Names = attr(equatingList[["results"]], "all.Names"))
+       ret        <- list ( itempars = itempars, personpars = personpars, refPop = refPop, means = rp, all.Names = attr(equatingList[["results"]], "all.Names"))
        class(ret) <- c("list", "transfBista")
        return( ret ) }
                 
@@ -2573,15 +2570,25 @@ item.diskrim <- function(daten, itemspalten, na = NA, streng = TRUE)
                  trennsch  <- data.frame(item.name=colnames(daten),item.diskrim = trennsch,stringsAsFactors = FALSE)
                  return(trennsch)}
               
-prepRep <- function ( calibT2, bistaTransfT1, bistaTransfT2) {
+prepRep <- function ( calibT2, bistaTransfT1, bistaTransfT2, makeIdsUnique = TRUE) {
            if ( !"transfBista" %in% class(calibT2) ) { stop("'calibT2' object must be of class 'transfBista'.\n")}
            if ( !"transfBista" %in% class(bistaTransfT1) ) { stop("'bistaTransfT2' object must be of class 'transfBista'.\n")}
            if ( !"transfBista" %in% class(bistaTransfT2) ) { stop("'bistaTransfT2' object must be of class 'transfBista'.\n")}
            if (!nrow(calibT2[["itempars"]]) < nrow(bistaTransfT1[["itempars"]])) { stop("Mismatch between 'calibT2' and 'bistaTransfT1'. \n")}
            if (!nrow(calibT2[["itempars"]]) < nrow(bistaTransfT2[["itempars"]])) { stop("Mismatch between 'calibT2' and 'bistaTransfT2'. \n")}
+     ### check: heissen die ID-Variablen etc. in beiden Datensaetzen gleich? ... falls nicht, misslingt unten das 'rbind'
+           idN <- bistaTransfT1[["all.Names"]][["ID"]]                          ### ggf. neue ID (falls nicht identisch in beiden Datensaetzen
+           if ( bistaTransfT1[["all.Names"]][["ID"]] != bistaTransfT2[["all.Names"]][["ID"]] ) {
+                cat(paste("Warning: ID variables do not match between t1 and t2. ID for t1: '",bistaTransfT1[["all.Names"]][["ID"]],"'. ID for t2: '",bistaTransfT2[["all.Names"]][["ID"]],"'. \n    IDs will be unified with '",bistaTransfT1[["all.Names"]][["ID"]],"'.\n",sep=""))
+                recStat <- paste ( "'", bistaTransfT2[["all.Names"]][["ID"]] , "' = '", bistaTransfT1[["all.Names"]][["ID"]], "'", sep="")
+                colnames ( bistaTransfT2[["personpars"]] ) <- recode ( colnames ( bistaTransfT2[["personpars"]] ), recStat)
+           }     
      ### finde Spalten mit Linkingfehlern
-           lc  <- colnames( calibT2[["personpars"]] ) [grep("^link", colnames(calibT2[["personpars"]]) )]
+           lc  <- colnames( calibT2[["personpars"]] ) [grep("^linking", colnames(calibT2[["personpars"]]) )]
            if(length(lc)==0) { stop("No columns with linking error information found in 'calibT2'.\n")}
+     ### benenne spalten in 'trend...' um
+           lcn <- paste("trend", eatRep:::remove.pattern(string = lc, pattern = "linking"), sep="")
+           colnames( calibT2[["personpars"]] ) [grep("^linking", colnames(calibT2[["personpars"]]) )] <- lcn
      ### suche Spalten zum Mergen
            merg<- c("group", "imp", "traitLevel", "dimension")
            frms<- list ( calibT2=calibT2, bistaTransfT1=bistaTransfT1, bistaTransfT2=bistaTransfT2 ) 
@@ -2594,11 +2601,16 @@ prepRep <- function ( calibT2, bistaTransfT1, bistaTransfT2) {
                   return(keep)})))
            if(length(toM)==0) { stop("Merging impossible.\n")}
      ### Reduziere Kalibrierungs-'datensatz' auf das Noetigste
-           red <- calibT2[["personpars"]][,c(toM,  lc)] 
+           red <- calibT2[["personpars"]][,c(toM,  lcn)] 
            red <- red[!duplicated(red),]
            dat1<- data.frame ( trend = "T1" , merge ( bistaTransfT1[["personpars"]], red, by = toM, all = TRUE))
      ### checks (sollten eigentlich ueberfluessig sein) 
            stopifnot ( nrow(dat1) == nrow(bistaTransfT1[["personpars"]]))
            dat2<- data.frame ( trend = "T2" , merge ( bistaTransfT2[["personpars"]], red, by = toM, all = TRUE))
            stopifnot ( nrow(dat2) == nrow(bistaTransfT2[["personpars"]]))
-           return(rbind ( dat1, dat2))}              
+     ### IDs unique machen (wenn gewuenscht)
+           if ( makeIdsUnique == TRUE ) { 
+                dat1[, idN] <- paste(dat1[, "trend"], dat1[, idN], sep="_")
+                dat2[, idN] <- paste(dat2[, "trend"], dat2[, idN], sep="_")
+           }     
+           return(rbind ( dat1, dat2))}

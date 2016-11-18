@@ -106,10 +106,6 @@ Martin Hecht
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\section{Warning}{
-This version is beta. Use with care.
-} 
-
 \seealso{
 \code{\link{defineModel}}
 }

@@ -69,7 +69,7 @@ information.
 Sebastian Weirich
 }
 \note{
-This version is beta. Please use with care!
+This version is alpha. Please use with care!
 %%  ~~further notes~~
 }
 
