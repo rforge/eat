@@ -1,5 +1,5 @@
 
-ctglm.results <- function ( r, plot.dir=NULL, verbose=TRUE, ... ) {
+ctglm.results <- function ( r, plot.dir=NULL, plot.person.par=FALSE, verbose=TRUE, ... ) {
 		
 # browser()
 		# create plot.dir if not exists

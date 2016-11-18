@@ -65,7 +65,7 @@ results.jags.ctstan <- function ( env, mode ) {
 		pars.l <- mapply( get.par.list, r$parameters, names( r$parameters ), MoreArgs=list(mode=mode), SIMPLIFY=FALSE )
 		pars <- do.call( "rbind", pars.l )
 		rownames( pars ) <- seq( along=rownames( pars ) )
-		
+# browser()
 		### for ctstan there musn't be . in the parameter names
 		# if ( mode %in% "ctstan" ) {
 				# pars$parameter.mod <- gsub( ".", "", pars$parameter, fixed=TRUE )
@@ -132,26 +132,40 @@ results.jags.ctstan <- function ( env, mode ) {
 						xl <- xl[ !( xl$chains %in% names(del)[del] & xl$iterations > burnin), ]
 				}
 # browser()
-				# Iteration-Plots fuer nicht ind varying
-				# if (!indvarying) {
-						# Iteration-Plots
-						# pdf( file.path( folder.plots, paste0( par, ".pdf" ) ) )
-						suppressWarnings(
-								pl <- ggplot(xl, aes(x=iterations, y=value, colour=chains)) + geom_point(shape=16, size=1.5, alpha=0.50) +
-								scale_colour_hue(l=50) + # Use a slightly darker palette than normal
-								geom_smooth(method="loess",
-										se=FALSE,    # Don't add shaded confidence region
-										fullrange=TRUE) + # Extend regression lines
-								geom_vline(xintercept = burnin+0.5) +
-								theme_bw() +
-								theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() )
-						)
-						suppressWarnings(
-								ggsave( file.path( plot.dir, paste0( z["parameter"], ".png" ) ), pl, width=2*29.7, height=21, units="cm", dpi=300 )
-						)
-						# dev.off()
-				# }
-			
+				if( !is.null( plot.dir ) ){
+						
+						# create plot.dir if not exists
+						if( !dir.exists( plot.dir ) ){
+								dir.create( plot.dir, recursive=FALSE )
+						}
+# browser()
+						# conditionally no plots for ind varying
+						if( ! ( z["name"] %in% c("theta","bj") && !plot.person.par ) ){
+						
+								# Iteration-Plots fuer nicht ind varying
+								# if (!indvarying) {
+										# Iteration-Plots
+										# pdf( file.path( folder.plots, paste0( par, ".pdf" ) ) )
+										suppressWarnings(
+												pl <- ggplot(xl, aes(x=iterations, y=value, colour=chains)) + geom_point(shape=16, size=1.5, alpha=0.50) +
+												scale_colour_hue(l=50) + # Use a slightly darker palette than normal
+												geom_smooth(method="loess",
+														se=FALSE,    # Don't add shaded confidence region
+														fullrange=TRUE) + # Extend regression lines
+												geom_vline(xintercept = burnin+0.5) +
+												theme_bw() +
+												theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank() )
+										)
+										suppressWarnings(
+												ggsave( file.path( plot.dir, paste0( z["parameter"], ".png" ) ), pl, width=2*29.7, height=21, units="cm", dpi=300 )
+										)
+										# dev.off()
+								# }
+						}
+						
+				}
+
+						
 				# mcmc-Objekt bauen
 				do <- paste0( "as.mcmc.list( list( ", paste( paste0( " as.mcmc( x2[,",1:r$runpar$chains,"] ) " ), collapse="," ) , " ) )" )
 				mcmclist <- eval( parse( text=do ) )
@@ -285,6 +299,8 @@ get.par.list <- function( m, m.name, mode ){
 		# NOT duplicated free parameters
 		m. <- m.[ !duplicated(m.$parameter) & is.na(suppressWarnings(as.numeric(m.$parameter))), ]
 # browser()
+		
+
 		### for ctstan/ctsem there musn't be . in the parameter names
 		if ( mode %in% c("ctstan","ctsem") ) {
 				m.$parameter.mod <- gsub( ".", "", m.$parameter, fixed=TRUE )
@@ -313,7 +329,7 @@ get.par.list <- function( m, m.name, mode ){
 						# determine if hmean or hsd
 						# if( any( m.$name %in% c("var.b") ) ) morsd <- "hsd" else morsd <- "hmean"
 						morsd <- "hmean"
-						
+# browser()
 						### mod for var.b
 						# if( any( m.$name %in% c("var.b") ) ) {
 								# delete prefix "cholvar"
@@ -328,8 +344,16 @@ get.par.list <- function( m, m.name, mode ){
 								# m. <- m.[ (m.$x==m.$y),  ]
 						# }
 						
-						# call
+						# standard call
 						m.$call <- paste0( "extract( r$results, pars=paste0('output_",morsd,"_', '",m.$parameter.mod,"'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
+						
+						# call for ind varying b (bj) 
+						if ( any( m.$name %in% "bj" ) ){
+								# CINT matrix in ctstan is other way round, so switch
+								cint.dfr <- m.[,!colnames(m.) %in% c("parameter","parameter.mod","name","call")]
+								cint.dfr <- cint.dfr[ , rev(colnames(cint.dfr)) ]
+								m.$call <- paste0( "extract( r$results, pars=paste0('CINT[",apply( cint.dfr , 1, function(z) paste0( z, collapse="," ) ),"]'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
+						}
 						
 				# } else {
 						# x <- extract( fit, pars=par, permuted=FALSE, inc_warmup=TRUE )[,,1]
