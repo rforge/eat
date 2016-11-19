@@ -11,4 +11,3 @@ Description: continuous time generalized linear mixed models
 License: GPL (>= 2)
 LazyLoad: yes
 LazyData: yes
-OS_type: windows

@@ -115,7 +115,7 @@ results.jags.ctstan <- function ( env, mode ) {
 				}
 				# chains to factor
 				if( is.numeric( xl$chains ) ) xl$chains <- factor( xl$chains, levels=sort(unique(xl$chains)), labels=paste0( "chain:", sort(unique(xl$chains)) ) )
-				
+# browser()				
 				# delete burnin, original wide data
 				x2 <- x[((burnin+1):iter),,drop=FALSE]
 				
@@ -130,6 +130,9 @@ results.jags.ctstan <- function ( env, mode ) {
 						
 						# aus Iterationsplot-Datensatz die geloeschte Kette hinter burnin rausnehmen, damit mans sieht
 						xl <- xl[ !( xl$chains %in% names(del)[del] & xl$iterations > burnin), ]
+				} else {
+						chains <- r$runpar$chains
+						### from here on chains!!!
 				}
 # browser()
 				if( !is.null( plot.dir ) ){
@@ -167,11 +170,11 @@ results.jags.ctstan <- function ( env, mode ) {
 
 						
 				# mcmc-Objekt bauen
-				do <- paste0( "as.mcmc.list( list( ", paste( paste0( " as.mcmc( x2[,",1:r$runpar$chains,"] ) " ), collapse="," ) , " ) )" )
+				do <- paste0( "as.mcmc.list( list( ", paste( paste0( " as.mcmc( x2[,",1:chains,"] ) " ), collapse="," ) , " ) )" )
 				mcmclist <- eval( parse( text=do ) )
 
 				# shinystan-Objekt bauen
-				do <- paste0( "as.shinystan( list( ", paste( paste0( "  as.matrix( data.frame( '",z["parameter"],"' = x2[,",1:r$runpar$chains,"] ) ) " ), collapse="," ) , " ) )" )
+				do <- paste0( "as.shinystan( list( ", paste( paste0( "  as.matrix( data.frame( '",z["parameter"],"' = x2[,",1:chains,"] ) ) " ), collapse="," ) , " ) )" )
 				sso <- eval( parse( text=do ) )
 				
 				psrf.coda <- gelman.diag( mcmclist )
