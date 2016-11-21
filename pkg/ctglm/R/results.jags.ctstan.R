@@ -194,10 +194,14 @@ results.jags.ctstan <- function ( env, mode ) {
 		## jags
 		if ( engine %in% "jags" ) {
 				
-				# prec.t1 in ctstan is precision matrix, transform to variance matrix
+				# prec.t1 in jags is precision matrix, transform to variance matrix
 				if (verbose) { cat( paste0( "      prec.t1 -> var.t1\n" ) ); flush.console() }
 				est <- transform.var.matrix( parameters$prec.t1, "prec.t1", "var.t1", "solve( M )", est )
-# browser()				
+# browser()			
+				# prec.mu.t1.j in jags is precision matrix, transform to variance matrix
+				if (verbose) { cat( paste0( "      prec.mu.t1.j -> var.mu.t1.j\n" ) ); flush.console() }
+				est <- transform.var.matrix( parameters$prec.mu.t1.j, "prec.mu.t1.j", "var.mu.t1.j", "solve( M )", est )
+	
 				# if prec.beta exists, transform to variance
 				if( "prec.beta" %in% est$name ) {
 						if (verbose) { cat( paste0( "      prec.beta -> var.beta\n" ) ); flush.console() }
@@ -234,19 +238,38 @@ results.jags.ctstan <- function ( env, mode ) {
 		## additional parameters		
 		if ( engine %in% "ctstan" ) {
 
+				if ( verbose ) {
+						cat( paste0( "\n   additional results:\n\n" ) )
+				}		
+		
 				### variance of b
 				# get all b
 				bs <- names( r$results )
 				bs <- bs[ grepl( "output_hsd_b", bs ) ]
 				bs.par.name <- sub( "output_hsd_", "", bs )
-				
+# browser()				
 				if ( length(bs) > 0 ) {
-						
-						if ( verbose ) {
-								cat( paste0( "\n   additional results:\n\n" ) )
-						}
 # browser()				
 						pars2 <- data.frame( "name"="var.b", "parameter"=paste0("var.",bs.par.name), "call"=paste0("extract( r$results, pars=paste0('output_hsd_', '",bs.par.name,"'), permuted=FALSE, inc_warmup=TRUE )[,,1]"), stringsAsFactors=FALSE )
+						est.l2 <- apply( pars2, 1, extr )
+						est2 <- do.call( "rbind", est.l2 )
+						# square (because it's sd)
+						est2$value <- est2$value^2
+						
+						# bind on estimates
+						est <- rbind( est, est2 )
+				}
+				
+				### variance of mu.t1.j
+				# get all mu.t1.j
+				bs <- names( r$results )
+				bs <- bs[ grepl( "output_hsd_mut1", bs ) ]
+				bs.par.name <- sub( "output_hsd_", "", bs )
+# browser()				
+				bs.par.name.new <- sub( "mut1", "var.mu.t1.j", bs.par.name )
+				if ( length(bs) > 0 ) {
+# browser()				
+						pars2 <- data.frame( "name"="var.mu.t1.j", "parameter"=bs.par.name.new, "call"=paste0("extract( r$results, pars=paste0('output_hsd_', '",bs.par.name,"'), permuted=FALSE, inc_warmup=TRUE )[,,1]"), stringsAsFactors=FALSE )
 						est.l2 <- apply( pars2, 1, extr )
 						est2 <- do.call( "rbind", est.l2 )
 						# square (because it's sd)

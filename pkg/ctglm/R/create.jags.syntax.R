@@ -94,7 +94,11 @@ create.jags.syntax <- function ( env ) {
 		if( F==1 ) mu.t1.j.2[,1] <- sub( "mu.t1.j\\[\\d+", "mu.t1.j[1", mu.t1.j.2[,1] )
 		mu.t1.j.2 <- mu.t1.j.2[!duplicated(mu.t1.j.2),,drop=FALSE] 	
 		if( !identical( mu.t1.j.1, character(0) ) ) x<-rbind(x,mu.t1.j.1)
-		if( !identical( mu.t1.j.2, character(0) ) ) x<-rbind(x,mu.t1.j.2) }		
+		if( !identical( mu.t1.j.2, character(0) ) ) x<-rbind(x,mu.t1.j.2) 
+		x<-rbind(x, "                                                                     ")		
+		x<-rbind(x, "    # values/prior for prec.mu.t1.j                                         ")	
+		x<-rbind(x, ifelse( exists("prec.mu.t1.j.prior") && is.null( dim(prec.mu.t1.j.prior) ), paste0( "    prec.mu.t1.j[1:F,1:F] ~ ", prec.mu.t1.j.prior, "                                      " ), make.str( "prec.mu.t1.j" ) ) ); if( any.free( prec.mu.t1.j ) ) invisible(moveTo.par.env("prec.mu.t1.j",env,par.env)) else rm("prec.mu.t1.j", envir=env)
+		}		
 		
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    # loop over persons j                                            ")
@@ -284,7 +288,12 @@ create.jags.syntax <- function ( env ) {
 				# !!!! because of dwish, complete starting value is needed, so assign upper with values of lower triangle
 				prec.t1.startingvalue[upper.tri(prec.t1.startingvalue)] <- prec.t1.startingvalue[lower.tri(prec.t1.startingvalue)]
 		}
-
+		if ( exists("prec.mu.t1.j") && any.free( prec.mu.t1.j ) ) {
+				invisible( make.priors( "prec.mu.t1.j", prec.mu.t1.j, diag.prior = 1, offdiag.prior = 0,env=environment(), mode="startingvalue", verbose=FALSE ) )
+				# !!!! because of dwish, complete starting value is needed, so assign upper with values of lower triangle
+				prec.mu.t1.j.startingvalue[upper.tri(prec.mu.t1.j.startingvalue)] <- prec.mu.t1.j.startingvalue[lower.tri(prec.mu.t1.j.startingvalue)]
+		}
+		
 		# list with starting values
 		startingvalues <- list()
 		do <- do.call( "c", sapply( c("A","Q","b","beta","mu.beta","prec.beta","mu.t1","prec.t1"), function(x) if (exists(paste0(x,".startingvalue"))) paste0( "startingvalues$", x ," <- ", x,".startingvalue" ) else NULL, simplify=FALSE ) )

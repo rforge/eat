@@ -105,10 +105,21 @@ set.priors <- function ( env ) {
 		# person mu.t1 prior
 		if ( exists("mu.t1.j") && any.free( mu.t1.j ) ) {
 				if ( verbose ) cat( "           person cont. time intercepts mu.t1.j: " )
-         		if ( F>1 )  invisible( make.priors( m.name="mu.t1.j", m=mu.t1.j, priors=priors, env=env, prior = "dmnorm( mu.t1[], prec.t1[,] )", diag.prior = "dmnorm( mu.t1[], prec.t1[,] )", offdiag.prior = "dmnorm( mu.t1[], prec.t1[,] )", verbose=verbose ) )
-         		if ( F==1 ) invisible( make.priors( m.name="mu.t1.j", m=mu.t1.j, priors=priors, env=env, prior = "dnorm( mu.t1[1], prec.t1[1,1] )", diag.prior = "dnorm( mu.t1[1], prec.t1[1,1] )", offdiag.prior = "dnorm( mu.t1[1], prec.t1[1,1] )", verbose=verbose ) )
+         		if ( F>1 )  invisible( make.priors( m.name="mu.t1.j", m=mu.t1.j, priors=priors, env=env, prior = "dmnorm( mu.t1[], prec.mu.t1.j[,] )", diag.prior = "dmnorm( mu.t1[], prec.mu.t1.j[,] )", offdiag.prior = "dmnorm( mu.t1[], prec.mu.t1.j[,] )", verbose=verbose ) )
+         		if ( F==1 ) invisible( make.priors( m.name="mu.t1.j", m=mu.t1.j, priors=priors, env=env, prior = "dnorm( mu.t1[1], prec.mu.t1.j[1,1] )", diag.prior = "dnorm( mu.t1[1], prec.mu.t1.j[1,1] )", offdiag.prior = "dnorm( mu.t1[1], prec.mu.t1.j[1,1] )", verbose=verbose ) )
 		}		
-
+		# precision of mu.t1.j
+		if ( exists("prec.mu.t1.j") && any.free( prec.mu.t1.j ) ) {
+				if ( verbose ) cat( "      precision matrix of mu.t1.j, prec.mu.t1.j: " )
+				if ( nrow( prec.t1 ) > 1 ) {
+						if ( verbose ) cat( "Wishart distribution\n" )
+						assign( "prec.mu.t1.j.prior" , "dwish( I1 , F+1 )", envir=env )
+				} else if ( nrow( prec.t1 ) == 1 ) {
+						invisible( make.priors( m.name="prec.mu.t1.j", m=prec.mu.t1.j, priors=priors, env=env, diag.prior = "dgamma(1,1)", offdiag.prior = "dnorm(0,0.1)", verbose=verbose ) )
+				}
+		}
+		
+		
 		
 		## first time point prec/var
 		# in jags prec.t1
