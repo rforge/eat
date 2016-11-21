@@ -404,7 +404,7 @@ equAux  <- function ( x, y ) {
            }
            return(eq)}     
 
-transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defaultM = 500, defaultSD = 100 ) {
+transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defaultM = 500, defaultSD = 100 ) {  
     ### wenn equatet wurde, sollte auch 'refPop' definiert sein (es sei denn, es wurde verankert skaliert)
     ### wenn 'refPop' fehlt, wird es fuer alle gegebenen Dimensionen anhand der Gesamtstichprobe berechnet
        mr  <- FALSE                                                             ### default: 'refPop' fehlt nicht. Wenn doch, wird es aus Daten generiert und spaeter
@@ -444,9 +444,19 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defau
                  rp <- data.frame ( domain = dimname , m = msd[intersect(which(msd[,"parameter"] == "mean"), which(msd[,"coefficient"] == "est")),"value"], sd = msd[intersect(which(msd[,"parameter"] == "sd"), which(msd[,"coefficient"] == "est")),"value"])
                  return(list (msd = msd , rp=rp))})
        names(refList) <- dims
+    ### wenn 'refPop' nicht definiert wurde, wird es hier mit Werten gesetzt, die direkt aus der Stichprobe (= Normpopulation) berechnet wurden   
+       ref    <- do.call("rbind", lapply(refList, FUN = function ( u ) { u[["rp"]] }))
        if ( mr == TRUE ) {
-          refPop <- do.call("rbind", lapply(refList, FUN = function ( u ) { u[["rp"]] }))
-       }
+          refPop <- ref
+       }   else  { 
+    ### wenn 'refPop' NUR FUER EINE DIMENSION nicht definiert wurde, werden hier die nicht definierten ('NA') Werte durch Werte aus der Stichprobe (= Normpopulation fuer genau diese Dimension) ersetzt
+          mis <- which(is.na(refPop))
+          if ( length(mis) >0) { 
+               stopifnot ( nrow(ref ) == nrow(refPop))
+               mat <- merge( 1:nrow(refPop), 1:ncol(refPop), by = NULL)         ### rauskriegen, in welchen Zeilen und Spalten die werte fehlen
+               refPop[unique(mat[mis,"x"]), unique(mat[mis,"y"])] <- ref[unique(mat[mis,"x"]), unique(mat[mis,"y"])]
+          }
+       }        
        if(ncol ( refPop ) == 3) {
           cat ( paste("The 'refPop' data.frame does not include information about reference population mean/SD on Bista metric. Values will be defaulted to ",defaultM,"/",defaultSD,".\n",sep=""))
           refPop[,4] <- defaultM; refPop[,5] <- defaultSD
@@ -597,7 +607,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                 if("defineConquest" %in% class(defineModelObj)) {               ### hier fuer conquest
                    oldPfad <- getwd()
                    setwd(defineModelObj$dir)
-                   system(paste(defineModelObj$conquest.folder," ",defineModelObj$input,sep=""),invisible=!show.dos.console,show.output.on.console=show.output.on.console, wait=wait) 
+                   suppressWarnings(system(paste(defineModelObj$conquest.folder," ",defineModelObj$input,sep=""),invisible=!show.dos.console,show.output.on.console=show.output.on.console, wait=wait) )
                    if(wait == FALSE) { Sys.sleep(0.2) }
                    setwd(oldPfad)                                               ### untere Zeile: Rueckgabeobjekt definieren: Conquest
                    class(defineModelObj) <- c("runConquest", "list")
@@ -2446,10 +2456,7 @@ getConquestVersion <- function ( path.conquest , path.temp , asDate = TRUE ) {
 		path.conquest <- normalizePath ( path.conquest )
 		cmd <- paste ( "\"", path.conquest, "\" \"", f , "\"" , sep ="")
 		r <- NULL
-		ow <- getOption ( "warn" )
-		options ( warn = -1 )
-		try ( r <- system ( command = cmd , intern = TRUE ) , silent = TRUE )
-		options ( warn = ow )
+		suppressWarnings(try ( r <- system ( command = cmd , intern = TRUE ) , silent = TRUE ))
 		file.remove ( f )
 		if ( !is.null ( r ) ) {
 				r <- r[1]
