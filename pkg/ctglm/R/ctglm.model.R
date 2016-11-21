@@ -1,22 +1,21 @@
 
-# d               data in standard ctsem format
-# id              name of person id variable in data set
-# time            name of time variable in data set 
-### timepoint.sep separator of manifest variable names and time point suffix Tx, default: "_"
-### lag.names     vector of variable names for the time lags as they appear in the data set; if standard naming (dT1, dT2, ...) is used, setting lag.names is not necessary
-# Lambda          loading matrix, dimensions must be number of items x number of latent variables; defaults to diag(1,number of items) to map each manifest variable to one latent variable (so no measurement model is specified)
-# verbose         print information
-
-# ctglm.model <- function ( d, id=NULL, timepoint.sep="_", lag.names=NULL, Lambda=NULL, measurement.model=gaussian(link="identity"), ..., priors=NULL, verbose=TRUE ) {
-# ctglm.model <- function ( d, id=NULL, timepoint.sep="_", lag.names=NULL, Lambda=NULL, measurement.model=binomial(link="logit"), engine="jags", ..., priors=NULL, verbose=TRUE ) {
-ctglm.model <- function ( d, id="id", time="time", person.var=c("b"=TRUE), track.person.par=NULL, Lambda=NULL, measurement.model=binomial(link="logit"), engine=c("jags","ctstan","ctsem"), ..., priors=NULL, verbose=TRUE ) {
+ctglm.model <- function ( d, id="id", time="time", person.var=c("b"=TRUE,"mu.t1"=TRUE), track.person.par=NULL, Lambda=NULL, measurement.model=binomial(link="logit"), engine=c("jags","ctstan","ctsem"), ..., priors=NULL, verbose=TRUE ) {
 # browser()		
 		# engine
-		if ( is.character( engine ) && length( engine ) > 1 ) engine <- engine[1] else if( !is.character(engine) || !any("jags" %in% c("jags","ctstan","ctsem")) ) engine <- "jags"
+		if ( is.character( engine ) && length( engine ) > 1 ) engine <- engine[1] else if( !is.character(engine) || !any(engine %in% c("jags","ctstan","ctsem")) ) { if(verbose) cat(paste0("engine='",engine,"' is not correctly specified | engine set to 'jags'\n\n")); engine <- "jags" }
 		
+		# person.var
+		if( person.var["b"] && !person.var["mu.t1"] ){
+				if( verbose ) cat( paste0( "if 'b' varies over persons, 'mu.t1' should also vary over persons | person.var['mu.t1'] has been set to TRUE\n\n" ) )
+				person.var["mu.t1"] <- TRUE
+		}
+
 		# track.person.par
 		# if someone puts "b" in, convert to "bj"
 		if( "b" %in% track.person.par ) track.person.par[ track.person.par %in% "b" ] <- "bj"
+		# if someone puts "mu.t1" in, convert to "mu.t1"
+		if( "mu.t1" %in% track.person.par ) track.person.par[ track.person.par %in% "mu.t1" ] <- "mu.t1.j"
+		
 		
 		# new environment
 		env <- new.env()

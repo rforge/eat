@@ -40,25 +40,6 @@ results.jags.ctstan <- function ( env, mode ) {
 				cat( paste0( "   fetching results:\n\n" ) )
 				flush.console()
 		}
-		
-		# function to extract parameters and calculate statistics
-		# y <- data.frame( rep( 1:length(unique(dl[,"id"])), each=n.latent ), rep(1:1, length(unique(dl[,"id"]))) )
-		# T0MEANS.strings <- apply( y, 1, function(z) paste0( "T0MEANS[", paste(z,collapse=",")  ,"]" ) )
-		# CINT.strings <- apply( y, 1, function(z) paste0( "CINT[", paste(z,collapse=",")  ,"]" ) )
-		# pars <- c(T0MEANS.strings,CINT.strings,"T0mean_eta1","T0mean_eta2","drift_eta1_eta1","drift_eta2_eta2","drift_eta1_eta2","drift_eta2_eta1","diffusion_eta1_eta1","diffusion_eta2_eta2","diffusion_eta2_eta1","cint_eta1","cint_eta2",paste0("manifestmeans_Y",1:n.manifest) )
-		# pars <- c(T0MEANS.strings,"T0mean_eta1","T0mean_eta2","drift_eta1_eta1","drift_eta2_eta2","drift_eta1_eta2","drift_eta2_eta1","diffusion_eta1_eta1","diffusion_eta2_eta2","diffusion_eta2_eta1","cint_eta1","cint_eta2",paste0("manifestmeans_Y",1:n.manifest) )
-		# pars <- c(T0MEANS.strings,"T0mean_eta1","T0mean_eta2","drift_eta1_eta1","drift_eta2_eta2","drift_eta1_eta2","drift_eta2_eta1","diffusion_eta1_eta1","diffusion_eta2_eta2","diffusion_eta2_eta1","cint_eta1","cint_eta2",iM[,1][ grepl( "^m", iM[,1] ) ] )
-		# pars <- c(T0MEANS.strings,CINT.strings,"T0mean_eta1","T0mean_eta2","drift_eta1_eta1","drift_eta2_eta2","drift_eta1_eta2","drift_eta2_eta1","diffusion_eta1_eta1","diffusion_eta2_eta2","diffusion_eta2_eta1","cint_eta1","cint_eta2",iM[,1][ grepl( "^m", iM[,1] ) ] )
-		# pars <- c(paste0("output_tip_time_on_",c("T0means_eta1","T0means_eta2","cint_eta1","cint_eta2")),T0MEANS.strings,CINT.strings,"T0mean_eta1","T0mean_eta2","drift_eta1_eta1","drift_eta2_eta2","drift_eta1_eta2","drift_eta2_eta1","diffusion_eta1_eta1","diffusion_eta2_eta2","diffusion_eta2_eta1","cint_eta1","cint_eta2",iM[,1][ grepl( "^m", iM[,1] ) ] )
-		#pars <- c(T0MEANS.strings,CINT.strings,"lp__","T0mean_eta1","drift_eta1_eta1","diffusion_eta1_eta1","cint_eta1",iM[,1][ grepl( "^m", iM[,1] ) ] )
-		# pars <- c("drift_eta1_eta1","diffusion_eta1_eta1",iM[,1][ grepl( "^m", iM[,1] ) ],"lp__","cint_eta1","T0mean_eta1", add.pars )
-		# pars <- c("T0mean_eta1","T0mean_eta2","drift_eta1_eta1","drift_eta2_eta2","drift_eta1_eta2","drift_eta2_eta1","diffusion_eta1_eta1","diffusion_eta2_eta2","diffusion_eta2_eta1","cint_eta1","cint_eta2",paste0("manifestmeans_Y",1:n.manifest) )
-		# pars <- c(T0MEANS.strings,"T0mean_eta1","T0mean_eta2","drift_eta1_eta1","drift_eta2_eta2","drift_eta1_eta2","drift_eta2_eta1","diffusion_eta1_eta1","diffusion_eta2_eta2","diffusion_eta2_eta1","cint_eta1","cint_eta2" )
-		# pars <- c(T0MEANS.strings,CINT.strings,"T0mean_eta1","T0mean_eta2","drift_eta1_eta1","drift_eta2_eta2","drift_eta1_eta2","drift_eta2_eta1","diffusion_eta1_eta1","diffusion_eta2_eta2","diffusion_eta2_eta1","cint_eta1","cint_eta2" )
-		
-		#indvarying[1:(length(c(T0MEANS.strings,CINT.strings)))] <- TRUE
-		# indvarying[1:length(c(T0MEANS.strings))] <- TRUE
-		
 
 # browser()
 		# make list of all parameters
@@ -143,7 +124,7 @@ results.jags.ctstan <- function ( env, mode ) {
 						}
 # browser()
 						# conditionally no plots for ind varying
-						if( ! ( z["name"] %in% c("theta","bj") && !plot.person.par ) ){
+						if( ! ( z["name"] %in% c("theta","bj","mu.t1.j") && !plot.person.par ) ){
 						
 								# Iteration-Plots fuer nicht ind varying
 								# if (!indvarying) {
@@ -356,6 +337,14 @@ get.par.list <- function( m, m.name, mode ){
 								cint.dfr <- m.[,!colnames(m.) %in% c("parameter","parameter.mod","name","call")]
 								cint.dfr <- cint.dfr[ , rev(colnames(cint.dfr)) ]
 								m.$call <- paste0( "extract( r$results, pars=paste0('CINT[",apply( cint.dfr , 1, function(z) paste0( z, collapse="," ) ),"]'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
+						}
+
+						# call for ind varying mu.t1 (mu.t1.j) 
+						if ( any( m.$name %in% "mu.t1.j" ) ){
+								# T0MEANS matrix in ctstan is other way round, so switch
+								t0means.dfr <- m.[,!colnames(m.) %in% c("parameter","parameter.mod","name","call")]
+								t0means.dfr <- t0means.dfr[ , rev(colnames(t0means.dfr)) ]
+								m.$call <- paste0( "extract( r$results, pars=paste0('T0MEANS[",apply( t0means.dfr , 1, function(z) paste0( z, collapse="," ) ),"]'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
 						}
 						
 				# } else {

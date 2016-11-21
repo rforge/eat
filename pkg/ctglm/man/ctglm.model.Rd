@@ -8,7 +8,9 @@ ctglm model definition
 define ctglm model
 }
 \usage{
-ctglm.model ( d, id="id", time="time", person.var=c("b"=TRUE), track.person.par=NULL, Lambda=NULL, measurement.model=binomial(link="logit"), engine=c("jags","ctstan","ctsem"), ..., priors=NULL, verbose=TRUE )
+ctglm.model( d, id="id", time="time", person.var=c("b"=TRUE,"mu.t1"=TRUE),
+track.person.par=NULL, Lambda=NULL, measurement.model=binomial(link="logit"),
+engine=c("jags","ctstan","ctsem"), ..., priors=NULL, verbose=TRUE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -16,12 +18,12 @@ ctglm.model ( d, id="id", time="time", person.var=c("b"=TRUE), track.person.par=
   \item{id}{name of id column in data frame}
   \item{time}{name of time column in data frame}
   \item{person.var}{parameters that vary over persons}
-  \item{track.person.par}{track person parameters (in jags/ctstan), may very much slow down estimation, possible values: c("theta","b")}
+  \item{track.person.par}{track person parameters (in jags/ctstan), may very much slow down run time, possible values: c("bj","mu.t1.j","theta"), "theta" only implemented in jags right now}
   \item{Lambda}{loading matrix of items and latent variables}
   \item{measurement.model}{measurement model}
   \item{engine}{software used for estimation}
   \item{...}{additional parameters}
-  \item{priors}{priors for jags/ctstan}
+  \item{priors}{priors for jags}
   \item{verbose}{output messages to console}
 }
 %% \details{}

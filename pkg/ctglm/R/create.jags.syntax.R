@@ -82,11 +82,29 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    ### CONTINUOUS TIME MODEL ###                                    ")
 		x<-rbind(x, "                                                                     ")
+		
+		if( person.var["mu.t1"] ) {
+		x<-rbind(x, "    ## personal t1 means                                               ")
+		x<-rbind(x, "    # mu.t1 varies over persons, i.e. for each person a separate mu.t1 ")		
+		mu.t1.j. <- make.str( "mu.t1.j" ); if( any.free( mu.t1.j ) ) invisible(moveTo.par.env("mu.t1.j",env,par.env)) else rm("mu.t1.j", envir=env)
+		# mods to mu.t1.j.
+		mu.t1.j.1 <- mu.t1.j.[ !grepl( "~", mu.t1.j., fixed=TRUE ),,drop=FALSE ]
+		mu.t1.j.2 <- mu.t1.j.[ grepl( "~", mu.t1.j., fixed=TRUE ),,drop=FALSE ]
+		if( F>1 )  mu.t1.j.2[,1] <- sub( "mu.t1.j\\[\\d+", "mu.t1.j[1:F", mu.t1.j.2[,1] )
+		if( F==1 ) mu.t1.j.2[,1] <- sub( "mu.t1.j\\[\\d+", "mu.t1.j[1", mu.t1.j.2[,1] )
+		mu.t1.j.2 <- mu.t1.j.2[!duplicated(mu.t1.j.2),,drop=FALSE] 	
+		if( !identical( mu.t1.j.1, character(0) ) ) x<-rbind(x,mu.t1.j.1)
+		if( !identical( mu.t1.j.2, character(0) ) ) x<-rbind(x,mu.t1.j.2) }		
+		
+		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    # loop over persons j                                            ")
 		x<-rbind(x, "    for (j in 1:J) {                                                 ")
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "            # first time point                                       ")
-		x<-rbind(x, "            theta[j,1:F,1] ~ dmnorm( mu.t1, prec.t1 )                ")
+		if( !person.var["mu.t1"] ) {
+		x<-rbind(x, "            theta[j,1:F,1] ~ dmnorm( mu.t1, prec.t1 )                ") }
+		if( person.var["mu.t1"] ) {
+		x<-rbind(x, "            theta[j,1:F,1] ~ dmnorm( mu.t1.j[,j], prec.t1 )              ") }
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "            # loop over t=2,...,Tj personal time point               ")
 		x<-rbind(x, "            for (t in 2:Tj[j]) {                                     ")
@@ -320,7 +338,9 @@ create.jags.syntax <- function ( env ) {
 				# bj is regularly created, if it should not be tracked, delete it from par.env
 				if ( exists( "bj", envir=par.env ) ) rm( "bj", envir=par.env )
 		}		
-
+		if( !exists( "track.person.par" ) || !"mu.t1.j" %in% track.person.par ) {
+				if ( exists( "mu.t1.j", envir=par.env ) ) rm( "mu.t1.j", envir=par.env )
+		}		
 		
 		# all parameters from par.env must be tracked
 		pars <- ls(envir=par.env)

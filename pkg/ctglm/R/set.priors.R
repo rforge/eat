@@ -96,9 +96,19 @@ set.priors <- function ( env ) {
 				# eval( parse ( text=paste0( "assign( 'mu.t1' , 'mu.t1' , envir=env )" ) ) )
 				# mu.t1 <- get( "mu.t1", envir=env )
 				if ( verbose ) cat( "          mean vector of first time point mu.t1: " )
-				invisible( make.priors( m.name="mu.t1", m=mu.t1, priors=priors, env=env, prior = "dnorm(0,0.1)", verbose=verbose ) )
+# browser()				
+				if( measurement.model$family %in% c("binomial") ) pr <- "dnorm(0,1)" else pr <- "dnorm(0,0.1)"
+				invisible( make.priors( m.name="mu.t1", m=mu.t1, priors=priors, env=env, prior = pr , verbose=verbose ) )
+				rm( pr )
 		}
 # browser()	
+		# person mu.t1 prior
+		if ( exists("mu.t1.j") && any.free( mu.t1.j ) ) {
+				if ( verbose ) cat( "           person cont. time intercepts mu.t1.j: " )
+         		if ( F>1 )  invisible( make.priors( m.name="mu.t1.j", m=mu.t1.j, priors=priors, env=env, prior = "dmnorm( mu.t1[], prec.t1[,] )", diag.prior = "dmnorm( mu.t1[], prec.t1[,] )", offdiag.prior = "dmnorm( mu.t1[], prec.t1[,] )", verbose=verbose ) )
+         		if ( F==1 ) invisible( make.priors( m.name="mu.t1.j", m=mu.t1.j, priors=priors, env=env, prior = "dnorm( mu.t1[1], prec.t1[1,1] )", diag.prior = "dnorm( mu.t1[1], prec.t1[1,1] )", offdiag.prior = "dnorm( mu.t1[1], prec.t1[1,1] )", verbose=verbose ) )
+		}		
+
 		
 		## first time point prec/var
 		# in jags prec.t1

@@ -77,8 +77,11 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
 		if( mode %in% "ctstan" ) {
 		y<-rbind(y, "# individually varying parameters" )
 		y<-rbind(y, "m$parameters$indvarying <- FALSE" )
-		if( person.var["b"] ) { # if CINT varying, T0MEANS must be varying as well (Email Charlie 25.10.2016)
-				y<-rbind(y, "m$parameters$indvarying[ m$parameters$matrix %in% c('T0MEANS','CINT') ] <- TRUE" )
+		if( person.var["b"] ) { 
+				y<-rbind(y, "m$parameters$indvarying[ m$parameters$matrix %in% c('CINT') ] <- TRUE" )
+				}
+		if( person.var["mu.t1"] ) { 
+				y<-rbind(y, "m$parameters$indvarying[ m$parameters$matrix %in% c('T0MEANS') ] <- TRUE" )
 				}
 		y<-rbind(y, "" ) }
 		
@@ -133,7 +136,9 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
 		if( exists( "Q" ) && any.free( Q ) ) invisible(moveTo.par.env("Q",env,par.env))
 		if( exists( "cholQ" ) && any.free( cholQ ) ) invisible(moveTo.par.env("cholQ",env,par.env))
 		if( exists( "b" ) && any.free( b ) ) invisible(moveTo.par.env("b",env,par.env))
-		if( mode %in% "ctstan" && exists( "bj" ) && any.free( bj ) ) invisible(moveTo.par.env("bj",env,par.env))
+# browser()		
+		if( mode %in% "ctstan" && exists( "bj" ) && any.free( bj ) && "bj" %in% track.person.par ) invisible(moveTo.par.env("bj",env,par.env))
+		if( mode %in% "ctstan" && exists( "mu.t1.j" ) && any.free( mu.t1.j ) && "mu.t1.j" %in% track.person.par ) invisible(moveTo.par.env("mu.t1.j",env,par.env))
 		
 		## create return object
 		ret <- list()
