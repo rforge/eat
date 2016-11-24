@@ -1,4 +1,4 @@
-readDaemonXlsx <- function(filename, type = c("ZKDaemon", "Merkmalsauszug") ) {
+readDaemonXlsx <- function(filename, type = c("ZKDaemon", "Merkmalsauszug", "Itemkennwertetabelle") ) {
 
   type<- match.arg(type)
 	inL <- list() 
@@ -9,9 +9,11 @@ readDaemonXlsx <- function(filename, type = c("ZKDaemon", "Merkmalsauszug") ) {
   if ( type == "Merkmalsauszug" ) { 
 	     sheetNameVec <- c("Aufgabenmerkmale", "Itemmerkmale")
 	}
-	
+  if ( type == "Itemkennwertetabelle" ) { 
+	     sheetNameVec <- "Daten"
+	}
 	for(pp in sheetNameVec) {
-		if ( pp == "Aufgabenmerkmale") { starteMit <- 4 } else { starteMit <- 1 } 
+		if ( pp %in% c("Aufgabenmerkmale", "Itemkennwertetabelle")) { starteMit <- 4 } else { starteMit <- 1 } 
     if(inherits(try( inL[[pp]] <- read.xlsx2(filename, sheetName=pp, as.data.frame=TRUE, header=TRUE, startRow = starteMit, colClasses="character", stringsAsFactors=FALSE), silent=TRUE)	, "try-error")) {
 			cat(paste("No .xlsx sheet '", pp, "' available. InputList will be created without '", pp, "'.\n", sep = ""))
 		} else {
