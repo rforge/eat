@@ -50,6 +50,7 @@ results.ctsem <- function ( env ) {
 		est$name <- sub( "^\\.", "", est$name )
 		est$variable <- sub( "^chol", "", est$variable )
 		est$variable <- sub( "^\\.", "", est$variable )
+		est$engine <- engine
 		
 		# return
 		rownames( est ) <- seq( along=rownames( est ) )

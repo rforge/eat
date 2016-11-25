@@ -199,9 +199,11 @@ results.jags.ctstan <- function ( env, mode ) {
 				est <- transform.var.matrix( parameters$prec.t1, "prec.t1", "var.t1", "solve( M )", est )
 # browser()			
 				# prec.mu.t1.j in jags is precision matrix, transform to variance matrix
-				if (verbose) { cat( paste0( "      prec.mu.t1.j -> var.mu.t1.j\n" ) ); flush.console() }
-				est <- transform.var.matrix( parameters$prec.mu.t1.j, "prec.mu.t1.j", "var.mu.t1.j", "solve( M )", est )
-	
+				if( "prec.mu.t1.j" %in% est$name ) {
+						if (verbose) { cat( paste0( "      prec.mu.t1.j -> var.mu.t1.j\n" ) ); flush.console() }
+						est <- transform.var.matrix( parameters$prec.mu.t1.j, "prec.mu.t1.j", "var.mu.t1.j", "solve( M )", est )
+				}
+				
 				# if prec.beta exists, transform to variance
 				if( "prec.beta" %in% est$name ) {
 						if (verbose) { cat( paste0( "      prec.beta -> var.beta\n" ) ); flush.console() }

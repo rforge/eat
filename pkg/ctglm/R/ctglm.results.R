@@ -27,6 +27,12 @@ ctglm.results <- function ( r, plot.dir=NULL, plot.person.par=FALSE, verbose=TRU
 				e <- NULL
 		}
 		
+# browser()		
+		# add model names
+		e$model.name <- get( "model.name", envir=env )
+		vorn <- c("model.name","engine")
+		e <- e[ , c(vorn, colnames(e)[!colnames(e) %in% vorn]) ]
+		
 		if ( verbose ) cat( paste0( "\nDONE | :-)\n" ) )
 		
 		# return

@@ -52,17 +52,20 @@ run.jags <- function ( env ) {
 		# return list
 		ret <- list()
 
-		# first entry: engine
+		# first entry: model name
+		ret$model.name <- model.name		
+		
+		# second entry: engine
 		ret$engine <- engine
 
-		# secondfourth entry: runtime
+		# third entry: runtime
 		ret$runtime <- runtime		
 		
-		# third entry: results
+		# fourth entry: results
 		ret$results <- res
 		names( ret$results )
 
-		## fourth entry: parameters
+		## fifth entry: parameters
 		# for better usability parameter from par.env will be put into list
 		pl <- list()
 		# do <- paste0( "pl$'", ls( envir=get("par.env",env) ) , "' <- get( '", ls( envir=get("par.env",env) ) ,"', envir=get('par.env',env) )" )
@@ -71,10 +74,10 @@ run.jags <- function ( env ) {
 		ret$parameters <- pl
 		names( ret$parameters )
 
-		## fifth entry: seeds
+		## sixth entry: seeds
 		ret$seeds <- seeds	
 		
-		## sixth entry: run parameter
+		## seventh entry: run parameter
 		ret$runpar <- list( "adapt"=adapt, "iter"=iter, "chains"=chains, "thin"=thin )
 		
 		## sortieren von results/parameters

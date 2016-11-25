@@ -82,23 +82,39 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    ### CONTINUOUS TIME MODEL ###                                    ")
 		x<-rbind(x, "                                                                     ")
-		
+# browser()		
+		stationarity <- TRUE
 		if( person.var["mu.t1"] ) {
-		x<-rbind(x, "    ## personal t1 means                                               ")
-		x<-rbind(x, "    # mu.t1 varies over persons, i.e. for each person a separate mu.t1 ")		
-		mu.t1.j. <- make.str( "mu.t1.j" ); if( any.free( mu.t1.j ) ) invisible(moveTo.par.env("mu.t1.j",env,par.env)) else rm("mu.t1.j", envir=env)
-		# mods to mu.t1.j.
-		mu.t1.j.1 <- mu.t1.j.[ !grepl( "~", mu.t1.j., fixed=TRUE ),,drop=FALSE ]
-		mu.t1.j.2 <- mu.t1.j.[ grepl( "~", mu.t1.j., fixed=TRUE ),,drop=FALSE ]
-		if( F>1 )  mu.t1.j.2[,1] <- sub( "mu.t1.j\\[\\d+", "mu.t1.j[1:F", mu.t1.j.2[,1] )
-		if( F==1 ) mu.t1.j.2[,1] <- sub( "mu.t1.j\\[\\d+", "mu.t1.j[1", mu.t1.j.2[,1] )
-		mu.t1.j.2 <- mu.t1.j.2[!duplicated(mu.t1.j.2),,drop=FALSE] 	
-		if( !identical( mu.t1.j.1, character(0) ) ) x<-rbind(x,mu.t1.j.1)
-		if( !identical( mu.t1.j.2, character(0) ) ) x<-rbind(x,mu.t1.j.2) 
-		x<-rbind(x, "                                                                     ")		
-		x<-rbind(x, "    # values/prior for prec.mu.t1.j                                         ")	
-		x<-rbind(x, ifelse( exists("prec.mu.t1.j.prior") && is.null( dim(prec.mu.t1.j.prior) ), paste0( "    prec.mu.t1.j[1:F,1:F] ~ ", prec.mu.t1.j.prior, "                                      " ), make.str( "prec.mu.t1.j" ) ) ); if( any.free( prec.mu.t1.j ) ) invisible(moveTo.par.env("prec.mu.t1.j",env,par.env)) else rm("prec.mu.t1.j", envir=env)
-		}		
+				if (! stationarity ){
+						x<-rbind(x, "    ## personal t1 means                                               ")
+						x<-rbind(x, "    # mu.t1 varies over persons, i.e. for each person a separate mu.t1 ")		
+						mu.t1.j. <- make.str( "mu.t1.j" ); if( any.free( mu.t1.j ) ) invisible(moveTo.par.env("mu.t1.j",env,par.env)) else rm("mu.t1.j", envir=env)
+						# mods to mu.t1.j.
+						mu.t1.j.1 <- mu.t1.j.[ !grepl( "~", mu.t1.j., fixed=TRUE ),,drop=FALSE ]
+						mu.t1.j.2 <- mu.t1.j.[ grepl( "~", mu.t1.j., fixed=TRUE ),,drop=FALSE ]
+						if( F>1 )  mu.t1.j.2[,1] <- sub( "mu.t1.j\\[\\d+", "mu.t1.j[1:F", mu.t1.j.2[,1] )
+						if( F==1 ) mu.t1.j.2[,1] <- sub( "mu.t1.j\\[\\d+", "mu.t1.j[1", mu.t1.j.2[,1] )
+						mu.t1.j.2 <- mu.t1.j.2[!duplicated(mu.t1.j.2),,drop=FALSE] 	
+						if( !identical( mu.t1.j.1, character(0) ) ) x<-rbind(x,mu.t1.j.1)
+						if( !identical( mu.t1.j.2, character(0) ) ) x<-rbind(x,mu.t1.j.2) 
+						x<-rbind(x, "                                                                     ")		
+						x<-rbind(x, "    # values/prior for prec.mu.t1.j                                         ")	
+						x<-rbind(x, ifelse( exists("prec.mu.t1.j.prior") && is.null( dim(prec.mu.t1.j.prior) ), paste0( "    prec.mu.t1.j[1:F,1:F] ~ ", prec.mu.t1.j.prior, "                                      " ), make.str( "prec.mu.t1.j" ) ) ); if( any.free( prec.mu.t1.j ) ) invisible(moveTo.par.env("prec.mu.t1.j",env,par.env)) else rm("prec.mu.t1.j", envir=env)
+				}
+				if (stationarity){				
+						mu.t1.j. <- make.str( "mu.t1.j" )
+						mu.t1.j.1 <- mu.t1.j.[ !grepl( "~", mu.t1.j., fixed=TRUE ),,drop=FALSE ]
+						mu.t1.j.2 <- mu.t1.j.[ grepl( "~", mu.t1.j., fixed=TRUE ),,drop=FALSE ]
+						if( F>1 )  mu.t1.j.2[,1] <- sub( "mu.t1.j\\[\\d+", "mu.t1.j[1:F", mu.t1.j.2[,1] )
+						if( F==1 ) mu.t1.j.2[,1] <- sub( "mu.t1.j\\[\\d+", "mu.t1.j[1", mu.t1.j.2[,1] )
+						mu.t1.j.2 <- mu.t1.j.2[!duplicated(mu.t1.j.2),,drop=FALSE]
+						mu.t1.j.3 <- sub( "^(.*)~.*$", "\\1", mu.t1.j.2 )
+						mu.t1.j.4 <- matrix( paste0( mu.t1.j.3, " <- -1 * A.inv[,] %*% bj[,", as.integer( sub( "^.*,(.*)\\].*$", "\\1", mu.t1.j.3 ) ) ,"]" ), ncol=1 )
+						if( !identical( mu.t1.j.4, character(0) ) ) x<-rbind(x,mu.t1.j.4)
+						# push to parameter env, because we want results for that
+						if( any.free( mu.t1.j ) ) invisible(moveTo.par.env("mu.t1.j",env,par.env)) else rm("mu.t1.j", envir=env)
+				}
+		}
 		
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    # loop over persons j                                            ")
@@ -127,7 +143,15 @@ create.jags.syntax <- function ( env ) {
 		# x<-rbind(x, "    ## Note: values are commented (already set in R)                 ")
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    # values/prior of mean of first time point                       ")
+		if( !person.var["mu.t1"] || !stationarity ) {
 		x<-rbind(x, make.str( "mu.t1" ) ); if( any.free( mu.t1 ) ) invisible(moveTo.par.env("mu.t1",env,par.env)) else rm("mu.t1", envir=env)
+		} else {
+		x<-rbind(x, "    for (f in 1:F) {" )
+		x<-rbind(x, "         mu.t1[f] <- mean( mu.t1.j[f,] )" )
+		x<-rbind(x, "    }" )
+		if( any.free( mu.t1 ) ) invisible(moveTo.par.env("mu.t1",env,par.env)) else rm("mu.t1", envir=env)
+		}
+		
 		x<-rbind(x, "                                                                     ")
 # browser()		
 		x<-rbind(x, "    # values/prior of precision of first time point                  ")
@@ -282,7 +306,7 @@ create.jags.syntax <- function ( env ) {
 		if ( exists("beta") && any.free( beta ) ) invisible( make.priors( "beta", beta, prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
 		if ( exists("mu.beta") && any.free( mu.beta ) ) invisible( make.priors( "mu.beta", mu.beta, prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
 		if ( exists("prec.beta") && any.free( prec.beta ) ) invisible( make.priors( "prec.beta", prec.beta, diag.prior = 1, offdiag.prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
-		if ( exists("mu.t1") && any.free( mu.t1 ) ) invisible( make.priors( "mu.t1", mu.t1, prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
+		if ( !stationarity && exists("mu.t1") && any.free( mu.t1 ) ) invisible( make.priors( "mu.t1", mu.t1, prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
 		if ( exists("prec.t1") && any.free( prec.t1 ) ) {
 				invisible( make.priors( "prec.t1", prec.t1, diag.prior = 1, offdiag.prior = 0,env=environment(), mode="startingvalue", verbose=FALSE ) )
 				# !!!! because of dwish, complete starting value is needed, so assign upper with values of lower triangle
