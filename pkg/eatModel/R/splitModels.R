@@ -341,9 +341,11 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 		
 		# Ausgabe wie viele Modelle generiert werden
 		if ( verbose ) {
+
 				# wenn zu viele Modelle werden noch zusaetzlich - gebraucht
 				zus <- ""
-				if ( nrow ( m ) > 31 ) zus <- paste(rep("-", nrow ( m ) - 31 - nchar ( as.character ( nrow ( m ) ) ) ),collapse="")
+				# MH 5.12.16: versteh ich nicht was das soll, auskommentiert
+				# if ( nrow ( m ) > 31 ) zus <- paste(rep("-", nrow ( m ) - 31 - nchar ( as.character ( nrow ( m ) ) ) ),collapse="")
 				out.str <- paste0 ( "-------------------------------",paste(rep("-",nchar ( as.character ( nrow ( m ) ) )),collapse=""),zus,"\nsplitModels: generating " , nrow ( m ) , " models\n" )
 				cat ( out.str )
 				flush.console()
