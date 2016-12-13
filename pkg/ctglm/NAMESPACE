@@ -10,16 +10,5 @@ import(ggplot2)
 import(rstan)
 import(shinystan)
 import(coda)
-
-
-
-
-
-
-
-
-
-
-
-
+importFrom(plyr,rbind.fill)
 

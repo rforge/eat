@@ -3,7 +3,7 @@ Type: Package
 Title: ctglm
 Version: 0.0.4
 Depends: R (>= 3.0.0)
-Imports: ctsem, reshape2, ggplot2, rstan, shinystan, coda
+Imports: ctsem, reshape2, ggplot2, rstan, shinystan, coda, plyr
 Date: 2016-12-13
 Author: Martin Hecht
 Maintainer: Martin Hecht <martin.hecht@hu-berlin.de>
