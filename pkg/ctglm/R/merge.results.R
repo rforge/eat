@@ -1,6 +1,9 @@
 
 merge.results <- function( ..., consistent=TRUE, noNAcol=TRUE ) {
-
+		
+		# packages
+		requireNamespace( "plyr" ) # rbind.fill
+		
 		# arguments from ...
 		# if( length( list(...) ) > 0 ) {
 				# eval( parse ( text=paste0( "assign( '",names(list(...)), "' , list(...)$'",names(list(...)),"' , envir=env )" ) ) )
@@ -46,7 +49,7 @@ merge.results <- function( ..., consistent=TRUE, noNAcol=TRUE ) {
 						return( ret )
 				}
 				d.l <- sapply( fls, load.fls, simplify=FALSE )
-				d <- do.call( "rbind", d.l )
+				d <- do.call( "rbind.fill", d.l )
 				rownames( d ) <- seq( along=rownames( d ) )
 
 				# keep only parameter that are in all analyses
