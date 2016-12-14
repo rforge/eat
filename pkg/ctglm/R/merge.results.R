@@ -1,8 +1,11 @@
 
-merge.results <- function( ..., consistent=TRUE, noNAcol=TRUE, pattern="\\.[Rdata$|rda$]", results.identifier='is.data.frame( d ) && all( c( "model.name","engine","name","variable","value" ) %in% colnames( d ) )' ) {
+merge.results <- function( ..., consistent=TRUE, noNAcol=TRUE, pattern="\\.\\b(Rdata|rda)\\b$", results.identifier=NULL ) {
 		
 		# packages
 		requireNamespace( "plyr" ) # rbind.fill
+		
+		# default results.identifier (for ctglm results)
+		if( is.null( results.identifier ) ) results.identifier <- 'is.data.frame( d ) && all( c( "model.name","engine","name","variable","value" ) %in% colnames( d ) )'
 		
 		# arguments from ...
 		# if( length( list(...) ) > 0 ) {
@@ -19,7 +22,7 @@ merge.results <- function( ..., consistent=TRUE, noNAcol=TRUE, pattern="\\.[Rdat
 		
 		### folders
 		if ( length( fols ) > 0 ) {
-				
+# browser()				
 				fls.l <- sapply( fols, list.files, pattern=pattern, full.names=TRUE, simplify=FALSE )
 				fls <- do.call( "rbind", fls.l )
 
