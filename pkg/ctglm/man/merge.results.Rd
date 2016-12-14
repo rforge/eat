@@ -8,13 +8,15 @@ ctglm syntax/call creation
 run ctglm model
 }
 \usage{
-merge.results ( ..., consistent=TRUE, noNAcol=TRUE )
+merge.results ( ..., consistent=TRUE, noNAcol=TRUE, pattern="\\.[Rdata$|rda$]", results.identifier='is.data.frame( d ) && all( c( "model.name","engine","name","variable","value" ) %in% colnames( d ) )' )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{...}{result data frames from ctglm.results() or folder with .Rdata files}
   \item{consistent}{only parameter (column variable) that are in all analyses will be kept}
   \item{noNAcol}{columns with NAs will be dropped}
+  \item{pattern}{argument from list.files to identify Rdata files}
+  \item{results.identifier}{how to identify object "d" as results}
 }
 %% \details{}
 \value{

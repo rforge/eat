@@ -1,5 +1,5 @@
 
-merge.results <- function( ..., consistent=TRUE, noNAcol=TRUE ) {
+merge.results <- function( ..., consistent=TRUE, noNAcol=TRUE, pattern="\\.[Rdata$|rda$]", results.identifier='is.data.frame( d ) && all( c( "model.name","engine","name","variable","value" ) %in% colnames( d ) )' ) {
 		
 		# packages
 		requireNamespace( "plyr" ) # rbind.fill
@@ -20,10 +20,8 @@ merge.results <- function( ..., consistent=TRUE, noNAcol=TRUE ) {
 		### folders
 		if ( length( fols ) > 0 ) {
 				
-				fls.l <- sapply( fols, list.files, pattern="\\.[Rdata$|rda$]", full.names=TRUE, simplify=FALSE )
+				fls.l <- sapply( fols, list.files, pattern=pattern, full.names=TRUE, simplify=FALSE )
 				fls <- do.call( "rbind", fls.l )
-				# !!!!!!!!temp!!!!!!!!!
-				# fls <- fls[1:10]
 
 				load.fls <- function( fl, verbose=TRUE ) {
 				# browser()
@@ -38,7 +36,7 @@ merge.results <- function( ..., consistent=TRUE, noNAcol=TRUE ) {
 						d <- get( d.nam[1] )
 						
 						# identify if its results object
-						if( is.data.frame( d ) && all( c( "model.name","engine","name","variable","value" ) %in% colnames( d ) ) ) {
+						if( eval( parse( text=results.identifier ) ) ) {
 								ret <- d
 								if( verbose ) cat( " -> added to results\n" )
 						} else {
