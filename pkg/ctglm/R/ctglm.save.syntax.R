@@ -44,10 +44,61 @@ ctglm.save.syntax <- function( s, dir, ... ) {
 
 		# modified call
 		call2 <- do.call( "rbind", list( call[1:(ind+1),,drop=FALSE], add, call[(ind+2):nrow(call),,drop=FALSE] ) )		
-		
+
 		# write call
 		path.rcall <- file.path( dir, paste0( get( "model.name", envir=env ), ".R" ) )		
 		write.table( call2, file=path.rcall, row.names=FALSE, col.names=FALSE, quote=FALSE )
+		
+		## save stan syntax
+		if( s$engine %in% "ctstan" ){
+				
+				call3 <- call2
+	# browser()			
+				# create dry run (fit=FALSE) 
+				call3[ grep( "fit=TRUE", call3[,1] ) ] <- "fit=FALSE,"
+				# no output with print
+				call3[ grep( "print", call3[,1], fixed=TRUE ) ] <- ""
+				# no output of ctStanFit
+				call3[ grep( "m <- ctModel( Tpoints=T,", call3[,1], fixed=TRUE ) ] <- "m <- invisible( ctModel( Tpoints=T,"
+				# somewhat dangerous here with the ) , might match other line too, might be accidently changed in create syntax
+				call3[ grep( "            )", call3[,1], fixed=TRUE ) ] <- "            ))"
+								
+				# no output of ctStanFit
+				call3[ grep( "r <- ctStanFit( datalong=d,", call3[,1], fixed=TRUE ) ] <- "r <- invisible( ctStanFit( datalong=d,"
+				# somewhat dangerous here with the ) , might match other line too, might be accidently changed in create syntax
+				call3[ grep( "              )", call3[,1], fixed=TRUE ) ] <- "              ))"
+				
+				
+				# identify ctstan model block
+				m1 <- which( grepl( "m <- invisible( ctModel( Tpoints=T,", call3, fixed=TRUE ) )
+				m2 <- which( grepl( "^\\s*\\))\\s*$", call3 ) )[1]
+				
+				# identify run block
+				r1 <- which( grepl( "r <- invisible( ctStanFit( datalong=d,", call3, fixed=TRUE ) )
+				r2 <- which( grepl( "^\\s*\\))\\s*$", call3 ) )[2]
+	
+				# run call
+				for (z in 1:(m1-1)){
+						# if( TRUE ) { cat( paste0( call3[z,], "\n" ) ); flush.console() }
+						eval( parse( text= call3[z,] ) )
+				}
+				eval( parse( text= call3[m1:m2,] ) )
+				for (z in (m2+1):(r1-1)){
+						# if( TRUE ) { cat( paste0( call[z,], "\n" ) ); flush.console() }
+						eval( parse( text= call3[z,] ) )
+				}
+				# if( TRUE ) { cat( paste0( call[r1:r2,], "\n" ) ); flush.console() }
+				eval( parse( text= call3[r1:r2,] ) )
+				for (z in (r2+1):nrow(call3)){
+						# if( TRUE ) { cat( paste0( call[z,], "\n" ) ); flush.console() }
+						eval( parse( text= call3[z,] ) )
+				}		
+# browser()				
+				path.stan.syntax <- file.path( dir, paste0( get( "model.name", envir=env ), ".stan.txt" ) )		
+				write.table( r, file=path.stan.syntax, row.names=FALSE, col.names=FALSE, quote=FALSE )
+				
+		}
+
 		
 		return( TRUE )
 	

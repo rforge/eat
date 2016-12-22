@@ -354,14 +354,17 @@ get.par.list <- function( m, m.name, mode ){
 						# }
 						
 						# standard call
-						m.$call <- paste0( "extract( r$results, pars=paste0('output_",morsd,"_', '",m.$parameter.mod,"'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
+						# m.$call <- paste0( "extract( r$results, pars=paste0('output_",morsd,"_', '",m.$parameter.mod,"'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
+						## since ctsem version 2.1.0: r$results$stanfit
+						## since ctsem version 2.1.0: no output as prefix
+						m.$call <- paste0( "extract( r$results$stanfit, pars=paste0('",morsd,"_', '",m.$parameter.mod,"'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
 						
 						# call for ind varying b (bj) 
 						if ( any( m.$name %in% "bj" ) ){
 								# CINT matrix in ctstan is other way round, so switch
 								cint.dfr <- m.[,!colnames(m.) %in% c("parameter","parameter.mod","name","call")]
 								cint.dfr <- cint.dfr[ , rev(colnames(cint.dfr)) ]
-								m.$call <- paste0( "extract( r$results, pars=paste0('CINT[",apply( cint.dfr , 1, function(z) paste0( z, collapse="," ) ),"]'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
+								m.$call <- paste0( "extract( r$results$stanfit, pars=paste0('CINT[",apply( cint.dfr , 1, function(z) paste0( z, collapse="," ) ),"]'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
 						}
 
 						# call for ind varying mu.t1 (mu.t1.j) 
@@ -369,7 +372,7 @@ get.par.list <- function( m, m.name, mode ){
 								# T0MEANS matrix in ctstan is other way round, so switch
 								t0means.dfr <- m.[,!colnames(m.) %in% c("parameter","parameter.mod","name","call")]
 								t0means.dfr <- t0means.dfr[ , rev(colnames(t0means.dfr)) ]
-								m.$call <- paste0( "extract( r$results, pars=paste0('T0MEANS[",apply( t0means.dfr , 1, function(z) paste0( z, collapse="," ) ),"]'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
+								m.$call <- paste0( "extract( r$results$stanfit, pars=paste0('T0MEANS[",apply( t0means.dfr , 1, function(z) paste0( z, collapse="," ) ),"]'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
 						}
 						
 				# } else {

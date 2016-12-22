@@ -3,7 +3,7 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
 
 		# get variables from env
 		eval( parse( text=paste0( "assign( '",ls(envir=env), "' , get('",ls(envir=env),"', envir=env ) )" ) ) )
-# browser()
+		
 		### call matrix (1 column)
 		y<-matrix( paste0( "### R syntax for ", model.name ), 1, 1 )
 		y<-rbind(y,paste0( "### engine: ", engine ) )
@@ -15,7 +15,8 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
 		
 		if( mode %in% "ctstan" ) {
 		y<-rbind(y, "# rstan package" )
-		y<-rbind(y, "requireNamespace( 'rstan' )" )
+		# y<-rbind(y, "requireNamespace( 'rstan' )" )
+		y<-rbind(y, "require( 'rstan' )" )
 		y<-rbind(y, "rstan_options(auto_write = TRUE)" )
 		y<-rbind(y, "options(mc.cores = parallel::detectCores())" ) }
 		y<-rbind(y, "" ) 
@@ -102,12 +103,14 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
         
 		if( mode %in% "ctstan" ) {
 		y<-rbind(y, paste0( "r <- ctStanFit( datalong=d,                                           ") ) 
-        y<-rbind(y, paste0( "                ctstanmodelobj=m,                                     ") ) 
+        # y<-rbind(y, paste0( "                ctstanmodelobj=m,                                     ") ) 
+        y<-rbind(y, paste0( "                ctstanmodel=m,                                     ") ) 
         y<-rbind(y, paste0( "                iter=iter,                                            ") )  
         y<-rbind(y, paste0( "                plot=FALSE,                                           ") )   
         y<-rbind(y, paste0( "                chains=chains,                                        ") ) 
         y<-rbind(y, paste0( "                fit=TRUE,                                             ") )    
         y<-rbind(y, paste0( "                kalman=FALSE,                                         ") )    
+        y<-rbind(y, paste0( "                stationary=FALSE,                                     ") )    
         # y<-rbind(y, paste0( "                noncentered=TRUE,                                     ") )  
         if( measurement.model$family %in% "gaussian" ) {          
         y<-rbind(y, paste0( "                binomial=FALSE                                        ") ) }
