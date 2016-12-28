@@ -284,7 +284,15 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "    # Ah matrix                                                      ")
 		x<-rbind(x, "    Ah[1:(I1w*Aw),1:(I1w*Aw)] <- Ah1[,] + Ah2[,]                     ")
 		x<-rbind(x, "                                                                     ")
+
+# browser()		
+		# additional jags syntax
+		if( exists( "jags.add" ) && !is.null( jags.add ) && is.matrix( jags.add ) && ncol( jags.add )==1 && is.character( jags.add[,1] ) ) {
+				x<-rbind(x, jags.add)
+		}
+
 		x<-rbind(x, "}                                                                    ")
+		
 		
 		### call matrix (1 column)
 		y<-matrix( paste0( "### R syntax for ", model.name ), 1, 1 )

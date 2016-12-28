@@ -157,7 +157,7 @@ results.jags.ctstan <- function ( env, mode ) {
 				# shinystan-Objekt bauen
 				do <- paste0( "as.shinystan( list( ", paste( paste0( "  as.matrix( data.frame( '",z["parameter"],"' = x2[,",1:chains,"] ) ) " ), collapse="," ) , " ) )" )
 				sso <- eval( parse( text=do ) )
-				
+# browser()				
 				psrf.coda <- gelman.diag( mcmclist )
 				psrf.ss <- retrieve( sso, "Rhat" )
 				effN.coda <- effectiveSize( mcmclist )
@@ -168,7 +168,7 @@ results.jags.ctstan <- function ( env, mode ) {
 				# return data.frame
 				# ret <- data.frame( "variable"=z["parameter"], "value"=unname(stats$statistics["Mean"]), "SD"=unname(stats$statistics["SD"]), "Naive SE"=unname(stats$statistics["Naive SE"]), "Time-series SE"=unname(stats$statistics["Time-series SE"]), "psrf.coda"=unname(psrf.coda$psrf[1,1]), "psrf.UL.coda"=unname(psrf.coda$psrf[1,2]), "psrf.ss"=psrf.ss, "effN.coda"=unname(effN.coda), "effN.ss"=effN.ss, "relMCSE"=relMCSE )
 # browser()
-				ret <- data.frame( "name"=z["name"], "variable"=z["parameter"], "value"=retrieve(sso,"mean"), "sd"=retrieve(sso,"sd"), "mcse.ss"=retrieve( sso, "mcse" ), "relative.mcse.ss"=relMCSE.ss, "psrf.coda"=unname(psrf.coda$psrf[1,1]), "psrf.UL.coda"=unname(psrf.coda$psrf[1,2]), "psrf.ss"=psrf.ss, "effN.coda"=unname(effN.coda), "effN.ss"=effN.ss, "engine"=engine, stringsAsFactors=FALSE )
+				ret <- data.frame( "name"=z["name"], "variable"=z["parameter"], "value"=unname(retrieve(sso,"quantiles")["50%"]), "mean"=retrieve(sso,"mean"), "sd"=retrieve(sso,"sd"), "mcse.ss"=retrieve( sso, "mcse" ), "relative.mcse.ss"=relMCSE.ss, "psrf.coda"=unname(psrf.coda$psrf[1,1]), "psrf.UL.coda"=unname(psrf.coda$psrf[1,2]), "psrf.ss"=psrf.ss, "effN.coda"=unname(effN.coda), "effN.ss"=effN.ss, "engine"=engine, stringsAsFactors=FALSE )
 				
 				# if( chains==1 ) { psrf.est <- psrf.UL <-NA } else { psrf <- gelman.diag( mcmclist ); psrf.est <- unname(psrf$psrf[1,1]); psrf.UL <- unname(psrf$psrf[1,2]) }
 				# effN <- effectiveSize( mcmclist )

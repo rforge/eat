@@ -1,5 +1,5 @@
 
-ctglm.syntax <- function ( m, model.name="model", verbose=TRUE ) {
+ctglm.syntax <- function ( m, model.name="model", ..., verbose=TRUE ) {
 		
 # browser()		
 		# new environment
@@ -11,9 +11,9 @@ ctglm.syntax <- function ( m, model.name="model", verbose=TRUE ) {
 		vars <- c("model.name")
 		eval( parse ( text=paste0( "assign( '",vars, "' , get('",vars,"') , envir=env )" ) ) )
 		# additional arguments from ...
-		# if( length( list(...) ) > 0 ) {
-				# eval( parse ( text=paste0( "assign( '",names(list(...)), "' , list(...)$'",names(list(...)),"' , envir=env )" ) ) )
-		# }
+		if( length( list(...) ) > 0 ) {
+				eval( parse ( text=paste0( "assign( '",names(list(...)), "' , list(...)$'",names(list(...)),"' , envir=env )" ) ) )
+		}
 # browser()		
 		### call software specific syntax/call generator
 		if( get( "engine", envir=env ) %in% "jags" ) {
