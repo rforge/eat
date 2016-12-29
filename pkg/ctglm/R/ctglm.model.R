@@ -5,10 +5,10 @@ ctglm.model <- function ( d, id="id", time="time", person.var=c("b"=TRUE,"mu.t1"
 		if ( is.character( engine ) && length( engine ) > 1 ) engine <- engine[1] else if( !is.character(engine) || !any(engine %in% c("jags","ctstan","ctsem")) ) { if(verbose) cat(paste0("engine='",engine,"' is not correctly specified | engine set to 'jags'\n\n")); engine <- "jags" }
 		
 		# person.var
-		if( person.var["b"] && !person.var["mu.t1"] ){
-				if( verbose ) cat( paste0( "if 'b' varies over persons, 'mu.t1' should also vary over persons | person.var['mu.t1'] has been set to TRUE\n\n" ) )
-				person.var["mu.t1"] <- TRUE
-		}
+		# if( person.var["b"] && !person.var["mu.t1"] ){
+				# if( verbose ) cat( paste0( "if 'b' varies over persons, 'mu.t1' should also vary over persons | person.var['mu.t1'] has been set to TRUE\n\n" ) )
+				# person.var["mu.t1"] <- TRUE
+		# }
 
 		# track.person.par
 		# if someone puts "b" in, convert to "bj"
