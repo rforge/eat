@@ -131,9 +131,9 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "                                                                     ")
 # browser()
 		if( !person.var["b"] ) {
-		x<-rbind(x, "                    theta[j,1:F,t] ~ dmnorm( At[,,t-1,Lpat.group[j]] %*% theta[j,,t-1] + bt[,t-1,Lpat.group[j]], Qt.prec[,,t,Lpat.group[j]] ) ") }
+		x<-rbind(x, paste0( "                    theta[j,1:F,t] ~ d",ifelse(F>1,"m",""),"norm( At[,,t-1,Lpat.group[j]] %*% theta[j,,t-1] + bt[,t-1,Lpat.group[j]], Qt.prec[,,t,Lpat.group[j]] ) ") ) }
 		if( person.var["b"] ) {
-		x<-rbind(x, "                    theta[j,1:F,t] ~ dmnorm( At[,,t-1,Lpat.group[j]] %*% theta[j,,t-1] + bt[,t-1,j], Qt.prec[,,t,Lpat.group[j]] ) ") }
+		x<-rbind(x, paste0("                    theta[j,1:F,t] ~ d",ifelse(F>1,"m",""),"norm( At[,,t-1,Lpat.group[j]] %*% theta[j,,t-1] + bt[,t-1,j], Qt.prec[,,t,Lpat.group[j]] ) ") ) }
 		
 		x<-rbind(x, "                                                                     ")		
 		x<-rbind(x, "            }                                                        ")
