@@ -1,14 +1,21 @@
 
-ctglm.syntax <- function ( m, model.name="model", ..., verbose=TRUE ) {
+ctglm.syntax <- function ( m, model.name="model", cores=detectCores(), ..., verbose=TRUE ) {
 		
-# browser()		
+# browser()
+		# cores modden
+		if( !exists("cores") ) cores <- 1L
+		if( exists("cores") && !is.numeric(cores) ) cores <- 1L
+		if( exists("cores") && is.numeric(cores) && !is.integer(cores) ) cores <- as.integer( floor( cores ) )
+		if( exists("cores") && is.numeric(cores) && cores < 1 ) cores <- 1L
+		if( exists("cores") && is.numeric(cores) && ( cores.max <- detectCores() ) < cores ) cores <- cores.max
+
 		# new environment
 		env <- new.env()
 		
 		# put all variables (values of list m) into environment
 		eval( parse ( text=paste0( "assign( '",names(m), "' , m$'",names(m),"' , envir=env )" ) ) )
 		# put additional vars into environment
-		vars <- c("model.name")
+		vars <- c("model.name","cores","verbose")
 		eval( parse ( text=paste0( "assign( '",vars, "' , get('",vars,"') , envir=env )" ) ) )
 		# additional arguments from ...
 		if( length( list(...) ) > 0 ) {

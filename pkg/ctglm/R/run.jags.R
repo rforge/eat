@@ -42,12 +42,38 @@ run.jags <- function ( env ) {
 		# call[run.row,1] <- sub( "=iter", paste0("=",iter), call[run.row,1] )
 		# call[run.row,1] <- sub( "=thin", paste0("=",thin), call[run.row,1] )
 		
-		# run call step by step
-		for (z in 1:nrow(call)){
-				if( verbose ) { cat( paste0( call[z,], "\n" ) ); flush.console() }
-				eval( parse( text= call[z,] ) )
+		### run syntax
+		
+		# identify jags parallel model block
+# browser()		
+		m1 <- which( grepl( "^# parallel chains", call ) )
+		if( !identical( m1, integer(0) ) ){
+				m2 <- which( grepl( "^}$", call ) )[1]		
+# browser()			
+				# before
+				for (z in 1:(m1-1)){
+						if( verbose ) { cat( paste0( call[z,], "\n" ) ); flush.console() }
+						eval( parse( text= call[z,] ) )
+				}
+				
+				# block
+				if( verbose ) { cat( paste0( call[m1:m2,], "\n" ) ); flush.console() }
+				eval( parse( text= call[m1:m2,] ) )
+				
+				# after
+				for (z in (m2+1):nrow(call)){
+						if( verbose ) { cat( paste0( call[z,], "\n" ) ); flush.console() }
+						eval( parse( text= call[z,] ) )
+				}
+		} else {
+				## no parallel run
+				# run call step by step
+				for (z in 1:nrow(call)){
+						if( verbose ) { cat( paste0( call[z,], "\n" ) ); flush.console() }
+						eval( parse( text= call[z,] ) )
+				}
 		}
-
+		
 # browser()		
 		# return list
 		ret <- list()

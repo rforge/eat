@@ -1,6 +1,6 @@
 
 create.ctstan.ctsem.syntax <- function ( env, mode ) {
-
+# browser()
 		# get variables from env
 		eval( parse( text=paste0( "assign( '",ls(envir=env), "' , get('",ls(envir=env),"', envir=env ) )" ) ) )
 		
@@ -18,8 +18,8 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
 		# y<-rbind(y, "requireNamespace( 'rstan' )" )
 		y<-rbind(y, "require( 'rstan' )" )
 		y<-rbind(y, "rstan_options(auto_write = TRUE)" )
-		y<-rbind(y, "options(mc.cores = parallel::detectCores())" ) }
-		y<-rbind(y, "" ) 
+		y<-rbind(y, paste0( "options(mc.cores = ",cores,")" )) }
+		y<-rbind(y, "" )
 		### modifications, must also be incorporated in results.ctsem and/or results.jags.ctstan
 		y<-rbind(y, "## modifications" )
 		y<-rbind(y, "# no . in parameter names" )	
@@ -100,7 +100,8 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
 		y<-rbind(y, paste0( "r <- ctFit( datawide=dw,                                              ") ) 
         y<-rbind(y, paste0( "            ctmodelobj=m                                              ") )		
         y<-rbind(y, paste0( "          )                                                           ") ) }		
-        
+
+### TODO in naechster Version: cores        
 		if( mode %in% "ctstan" ) {
 		y<-rbind(y, paste0( "r <- ctStanFit( datalong=d,                                           ") ) 
         # y<-rbind(y, paste0( "                ctstanmodelobj=m,                                     ") ) 
@@ -140,8 +141,8 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
 		if( exists( "cholQ" ) && any.free( cholQ ) ) invisible(moveTo.par.env("cholQ",env,par.env))
 		if( exists( "b" ) && any.free( b ) ) invisible(moveTo.par.env("b",env,par.env))
 # browser()		
-		if( mode %in% "ctstan" && exists( "bj" ) && any.free( bj ) && "bj" %in% track.person.par ) invisible(moveTo.par.env("bj",env,par.env))
-		if( mode %in% "ctstan" && exists( "mu.t1.j" ) && any.free( mu.t1.j ) && "mu.t1.j" %in% track.person.par ) invisible(moveTo.par.env("mu.t1.j",env,par.env))
+		if( exists( "track.person.par" ) && !is.null( track.person.par ) && mode %in% "ctstan" && exists( "bj" ) && any.free( bj ) && "bj" %in% track.person.par ) invisible(moveTo.par.env("bj",env,par.env))
+		if( exists( "track.person.par" ) && !is.null( track.person.par ) && mode %in% "ctstan" && exists( "mu.t1.j" ) && any.free( mu.t1.j ) && "mu.t1.j" %in% track.person.par ) invisible(moveTo.par.env("mu.t1.j",env,par.env))
 		
 		## create return object
 		ret <- list()

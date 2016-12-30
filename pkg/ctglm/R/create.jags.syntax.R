@@ -83,7 +83,7 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "    ### CONTINUOUS TIME MODEL ###                                    ")
 		x<-rbind(x, "                                                                     ")
 # browser()		
-		stationarity <- TRUE
+		if( !exists( "stationarity" ) ) stationarity <- FALSE
 		if( person.var["mu.t1"] ) {
 				if (! stationarity ){
 						x<-rbind(x, "    ## personal t1 means                                               ")
@@ -293,13 +293,21 @@ create.jags.syntax <- function ( env ) {
 
 		x<-rbind(x, "}                                                                    ")
 		
+		# operating system
+		os <- Sys.info()["sysname"]
+		# parallelization yes/no
+		parall <- exists("cores") && !is.null(cores) && cores > 1 && os %in% c("Windows","Linux")
 		
 		### call matrix (1 column)
 		y<-matrix( paste0( "### R syntax for ", model.name ), 1, 1 )
 		y<-rbind(y,paste0( "### engine: ", engine )	)
 		y<-rbind(y, "" )
-		y<-rbind(y, "# rjags package" )
+		y<-rbind(y, "# packages" )
 		y<-rbind(y, "require( 'rjags' )" )
+		if( parall ){
+		y<-rbind(y, "require( 'doParallel' )                                              ")		
+		y<-rbind(y, "require( 'abind' )                                                   ")		
+		y<-rbind(y, "#require( 'ctglm' )                                                   ") }		
 		y<-rbind(y, "" )
 		y<-rbind(y, "# JAGS Modules" )
 		if( F>1 ) y<-rbind(y, "load.module('msm') # for matrix exponential, mexp()" )
@@ -354,15 +362,34 @@ create.jags.syntax <- function ( env ) {
 		y<-rbind(y, "# start time                                                         ")
 		y<-rbind(y, "start <- Sys.time()                                                  ")
 		y<-rbind(y, "" )	
-		y<-rbind(y, "# initialization/adaptation                                          ")
+# browser()
+		# parallelization
+		if( parall ){
+		y<-rbind(y, "## parallelization                                                   ")
+		y<-rbind(y, "# create cluster                                                     ")
+		if( os %in% "Windows" ){
+		y<-rbind(y, paste0( "cl <- makePSOCKcluster(",cores,")                            ")) }
+		if( os %in% "Linux" ){
+		y<-rbind(y, paste0( "cl <- makeForkCluster(",cores,")                             ")) }		
+		y<-rbind(y, "# register cluster                                                   ")
+		y<-rbind(y, "registerDoParallel(cl)                                               ")
+		y<-rbind(y, "" )
+		y<-rbind(y, "# parallel chains                                                    ")
+		y<-rbind(y, "res.l <- foreach(chain=1:chains, .packages='rjags') %dopar% {        ")
+		y<-rbind(y, "" )
+		}
+		
+		indent <- ifelse( parall, "     ", "" )
+		
+		y<-rbind(y, paste0( indent, "# initialization/adaptation                                          ") )
 		# globalenv !!! 
 		# y<-rbind(y, "eval(parse(text=paste0(  name, ".ini <- jags.model ( file = mf , data=globalenv(), inits=sL, n.chains = ",chains,", n.adapt=",adapt,", quiet=FALSE )"  )),envir=globalenv() )" )
 		# y<-rbind(y, "eval(parse(text=paste0(  name, ".ini <- jags.model ( file = mf , data=globalenv(), n.chains = ",chains,", n.adapt=",adapt,", quiet=FALSE )"  )),envir=globalenv() )" )
 		# y<-rbind(y, "eval(parse(text=paste0(  model.name, .ini <- jags.model ( file = bugs.file , data=data.env, n.chains=chains, n.adapt=adapt, quiet=FALSE ) )),envir=data.env )" )
 		# y<-rbind(y, "eval(parse(text=paste0(  model.name, .ini <- jags.model ( file = bugs.file , data=data.env, n.chains=chains, n.adapt=adapt, quiet=FALSE ) )),envir=globalenv())" )
-		y<-rbind(y, paste0( "ini <- jags.model ( file = bugs.file , data=data.env, n.chains=chains, n.adapt=adapt, inits=inits, quiet=FALSE )" ) )
+		y<-rbind(y, paste0( indent, "ini <- jags.model ( file = bugs.file , data=data.env, n.chains=",ifelse(parall,"1","chains"),", n.adapt=adapt, inits=inits",ifelse(parall,"[chain]",""),", quiet=FALSE )" ) )
 		y<-rbind(y, "" )
-		y<-rbind(y, "# run                                                                ")		
+		y<-rbind(y, paste0( indent, "# run                                                                ") )
 		# y<-rbind(y, "eval(parse(text=paste0(  model.name, .res <- jags.samples ( ',model.name,'.ini , variable.names=c('A','Q','b'), n.iter=iter, thin=thin, type='trace' , progress.bar = 'none', by=20 )' )), envir=globalenv() )" )
 # browser()
 
@@ -392,7 +419,16 @@ create.jags.syntax <- function ( env ) {
 		if( !identical( ord, integer(0) ) ) pars <- c( pars[ord], pars[ !pars %in% pars[ord] ] )
 		par.string <- paste0( "c(", paste( paste0("'", pars, "'"), collapse="," ) ,")" )
 		
-		y<-rbind(y, paste0( "res <- jags.samples ( ini, variable.names=",par.string,", n.iter=iter, thin=thin, type='trace' , progress.bar = 'text', by=20 )" ) )
+		y<-rbind(y, paste0( indent, "res <- jags.samples ( ini, variable.names=",par.string,", n.iter=iter, thin=thin, type='trace' , progress.bar = 'text', by=20 )" ) )
+		
+		# parallelization, get results
+		if( parall ){
+		y<-rbind(y, "" )
+		y<-rbind(y, "}" )
+		y<-rbind(y, "" )
+		y<-rbind(y, "# combine results from parallel computing" )
+		y<-rbind(y, "res <- mcarray.chains.combine( res.l )" ) }
+		
 		y<-rbind(y, "" )
 		y<-rbind(y, "# run time                                                           ")		
 		y<-rbind(y, "runtime <- Sys.time() - start                                        ")		

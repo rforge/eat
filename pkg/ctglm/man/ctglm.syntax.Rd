@@ -8,12 +8,13 @@ ctglm syntax/call creation
 create ctglm syntax/call
 }
 \usage{
-ctglm.syntax ( m, model.name="model", ..., verbose=TRUE )
+ctglm.syntax ( m, model.name="model", cores=detectCores(), ..., verbose=TRUE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{m}{ctglm model object (from ctglm.model)}
   \item{model.name}{name of the model}
+  \item{cores}{number of cores}
   \item{...}{additional arguments. jags.add: additional jags syntax (must be 1-column matrix)}
   \item{verbose}{output messages to console}
 }

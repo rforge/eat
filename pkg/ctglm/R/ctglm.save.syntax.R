@@ -35,11 +35,25 @@ ctglm.save.syntax <- function( s, dir, ... ) {
 		add <- matrix( paste0( "# load data/objects" ), ncol=1 )
 		add <- rbind( add, paste0( "( load( '", path.rdata, "' ) )" ) )
 		add <- rbind( add, "" )
-		
+		# generate/add bugs file for jags
+		if( s$engine %in% "jags" ){
+				bugs.file <- file.path( dir, paste0( get( "model.name", envir=env ), ".bugs" ) )
+				write.table( s$syntax, bugs.file, quote=FALSE, row.names=FALSE, col.names=FALSE )
+				add <- rbind( add, paste0( "# bugs file" ) )
+				add <- rbind( add, paste0( "bugs.file <- '", bugs.file, "'" ) )
+				add <- rbind( add, "" )				
+		}
 		# at this point no run parameters are usually not set, default
 		add <- rbind( add, '# run parameters defaults' )
 		add <- rbind( add, 'if (!exists("iter",mode="numeric")) iter <- 10' )
 		add <- rbind( add, 'if (!exists("chains",mode="numeric")) chains <- 2' )
+# browser()		
+		# if jags, add adapt and thin
+		if( s$engine %in% "jags" ){
+				add <- rbind( add, 'if (!exists("adapt",mode="numeric")) adapt <- 0' )
+				add <- rbind( add, 'if (!exists("thin",mode="numeric")) thin <- 1' )
+		}
+		
 		add <- rbind( add, "" )
 
 		# modified call

@@ -1,13 +1,13 @@
 Package: ctglm
 Type: Package
 Title: ctglm
-Version: 0.0.7
+Version: 0.0.9
 Depends: R (>= 3.0.0)
-Imports: ctsem, reshape2, ggplot2, rstan, shinystan, coda, plyr
-Date: 2016-12-28
+Imports: ctsem, reshape2, ggplot2, rstan, shinystan, coda, plyr, abind, doParallel, parallel, stats, utils
+Date: 2016-12-29
 Author: Martin Hecht
 Maintainer: Martin Hecht <martin.hecht@hu-berlin.de>
-Description: continuous time generalized linear models
+Description: This package provides functions to estimate continuous time generalized linear models.
 License: GPL (>= 2)
 LazyLoad: yes
 LazyData: yes
