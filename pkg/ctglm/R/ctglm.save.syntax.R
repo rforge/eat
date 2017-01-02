@@ -108,7 +108,7 @@ ctglm.save.syntax <- function( s, dir, ... ) {
 						eval( parse( text= call3[z,] ) )
 				}		
 # browser()				
-				path.stan.syntax <- file.path( dir, paste0( get( "model.name", envir=env ), ".stan.txt" ) )		
+				path.stan.syntax <- file.path( dir, paste0( get( "model.name", envir=env ), ".stan" ) )		
 				write.table( r, file=path.stan.syntax, row.names=FALSE, col.names=FALSE, quote=FALSE )
 				
 		}

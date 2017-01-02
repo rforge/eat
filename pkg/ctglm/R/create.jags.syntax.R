@@ -122,9 +122,9 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "            # first time point                                       ")
 		if( !person.var["mu.t1"] ) {
-		x<-rbind(x, "            theta[j,1:F,1] ~ dmnorm( mu.t1, prec.t1 )                ") }
+		x<-rbind(x, paste0( "            theta[j,1:F,1] ~ d",ifelse(F>1,"m",""),"norm( mu.t1, prec.t1 )                ") ) }
 		if( person.var["mu.t1"] ) {
-		x<-rbind(x, "            theta[j,1:F,1] ~ dmnorm( mu.t1.j[,j], prec.t1 )              ") }
+		x<-rbind(x, paste0( "            theta[j,1:F,1] ~ d",ifelse(F>1,"m",""),"norm( mu.t1.j[,j], prec.t1 )              ") ) }
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "            # loop over t=2,...,Tj personal time point               ")
 		x<-rbind(x, "            for (t in 2:Tj[j]) {                                     ")
@@ -308,6 +308,7 @@ create.jags.syntax <- function ( env ) {
 		y<-rbind(y, "require( 'doParallel' )                                              ")		
 		y<-rbind(y, "require( 'abind' )                                                   ")		
 		y<-rbind(y, "#require( 'ctglm' )                                                   ") }		
+		y<-rbind(y, "print( installed.packages()[ installed.packages()[,1] %in% c(",paste( paste0( "'", na.omit( c('rjags' , ifelse( parall, 'ctglm', NA) ) ), "'" ) , collapse="," ),"), c(1,3) ] )" )
 		y<-rbind(y, "" )
 		y<-rbind(y, "# JAGS Modules" )
 		if( F>1 ) y<-rbind(y, "load.module('msm') # for matrix exponential, mexp()" )

@@ -10,7 +10,7 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
 		y<-rbind(y, "" )
 		y<-rbind(y, "# ctsem package" )
 		y<-rbind(y, "require( 'ctsem' )" )
-		y<-rbind(y, "print( installed.packages()[ installed.packages()[,1] %in% c('ctsem'), c(1,3) ] )" )
+		y<-rbind(y, "print( installed.packages()[ installed.packages()[,1] %in% c('ctsem','rstan'), c(1,3) ] )" )
 		y<-rbind(y, "" )
 		
 		if( mode %in% "ctstan" ) {
@@ -18,7 +18,7 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
 		# y<-rbind(y, "requireNamespace( 'rstan' )" )
 		y<-rbind(y, "require( 'rstan' )" )
 		y<-rbind(y, "rstan_options(auto_write = TRUE)" )
-		y<-rbind(y, paste0( "options(mc.cores = ",cores,")" )) }
+		y<-rbind(y, paste0( "# options(mc.cores = ",cores,") # cores is set in ctStanFit " )) }
 		y<-rbind(y, "" )
 		### modifications, must also be incorporated in results.ctsem and/or results.jags.ctstan
 		y<-rbind(y, "## modifications" )
@@ -112,12 +112,13 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
         y<-rbind(y, paste0( "                fit=TRUE,                                             ") )    
         y<-rbind(y, paste0( "                kalman=FALSE,                                         ") )    
         y<-rbind(y, paste0( "                stationary=FALSE,                                     ") )    
+        y<-rbind(y, paste0( "                cores=",cores,",                                     ") )  
         # y<-rbind(y, paste0( "                noncentered=TRUE,                                     ") )  
         if( measurement.model$family %in% "gaussian" ) {          
         y<-rbind(y, paste0( "                binomial=FALSE                                        ") ) }
         if( measurement.model$family %in% "binomial" ) {          
         y<-rbind(y, paste0( "                binomial=TRUE                                         ") ) }
-        y<-rbind(y, paste0( "              )                                                       ") ) }
+		y<-rbind(y, paste0( "              )                                                       ") ) }
 		y<-rbind(y, "" )	
 		
 		y<-rbind(y, "# run time                                                           ")		
