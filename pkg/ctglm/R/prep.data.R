@@ -334,10 +334,16 @@ prep.data <- function ( env ) {
 		A <- label.pars(A,"A")
 	
 # browser()	
+		make.sym <- function( m, m. ){
+				if( any ( is.na( m[upper.tri(m)] ) ) ) m.[upper.tri(m.)][ is.na( m[upper.tri(m)] ) ]  <- t(m.[lower.tri(m.)])[ is.na( m[upper.tri(m)] ) ] 
+				return( m. )
+		}
+
 		## process error matrix Q
 		# in jags/ctsem Q
 		# in ctstan cholQ
 		if ( engine %in% c("jags") ) {
+# browser()				
 				if ( !exists("Q",inherits=FALSE) || is.null(Q) ) {
 						Q <- matrix( NA, nrow=F, ncol=F )
 						if ( !is.null( latent.names ) ) colnames( Q ) <- rownames( Q ) <- latent.names
@@ -345,9 +351,11 @@ prep.data <- function ( env ) {
 				}
 				# NAs to labeled parameters
 				Q. <- label.pars(Q,"Q")		
+# browser()				
 				# make Q (potentially) symmetric again (do not overwrite user specific labeled parameters, even if unsymmetric matrix
-				Q.[upper.tri(Q.)][ is.na( Q[upper.tri(Q)] ) ]  <- Q.[lower.tri(Q.)][ is.na( Q[lower.tri(Q)] ) ]  
-				Q <- Q.
+				# Q.[upper.tri(Q.)][ is.na( Q[upper.tri(Q)] ) ]  <- Q.[lower.tri(Q.)][ is.na( Q[lower.tri(Q)] ) ]  
+				# if( any ( is.na( Q[upper.tri(Q)] ) ) ) Q.[upper.tri(Q.)][ is.na( Q[upper.tri(Q)] ) ]  <- t(Q.[lower.tri(Q.)])[ is.na( Q[upper.tri(Q)] ) ] 
+				Q <- make.sym( Q, Q. )
 		}
 		if ( engine %in% c("ctstan","ctsem") ) {
 				if ( !exists("cholQ",inherits=FALSE) || is.null(cholQ) ) {
@@ -417,8 +425,9 @@ prep.data <- function ( env ) {
 						# NAs to labeled parameters
 						prec.mu.t1.j. <- label.pars(prec.mu.t1.j,"prec.mu.t1.j")		
 						# make prec.mu.t1.j (potentially) symmetric again (do not overwrite user specific labeled parameters, even if unsymmetric matrix
-						prec.mu.t1.j.[upper.tri(prec.mu.t1.j.)][ is.na( prec.mu.t1.j[upper.tri(prec.mu.t1.j)] ) ]  <- prec.mu.t1.j.[lower.tri(prec.mu.t1.j.)][ is.na( prec.mu.t1.j[lower.tri(prec.mu.t1.j)] ) ]  
-						prec.mu.t1.j <- prec.mu.t1.j.	
+						# if( any ( is.na( prec.mu.t1.j ) ) ) prec.mu.t1.j.[upper.tri(prec.mu.t1.j.)][ is.na( prec.mu.t1.j[upper.tri(prec.mu.t1.j)] ) ]  <- prec.mu.t1.j.[lower.tri(prec.mu.t1.j.)][ is.na( prec.mu.t1.j[lower.tri(prec.mu.t1.j)] ) ]  
+						# prec.mu.t1.j <- prec.mu.t1.j.	
+						prec.mu.t1.j <- make.sym( prec.mu.t1.j, prec.mu.t1.j. )
 				}
 	
 		}
@@ -436,8 +445,9 @@ prep.data <- function ( env ) {
 				# NAs to labeled parameters
 				prec.t1. <- label.pars(prec.t1,"prec.t1")		
 				# make prec.t1 (potentially) symmetric again (do not overwrite user specific labeled parameters, even if unsymmetric matrix
-				prec.t1.[upper.tri(prec.t1.)][ is.na( prec.t1[upper.tri(prec.t1)] ) ]  <- prec.t1.[lower.tri(prec.t1.)][ is.na( prec.t1[lower.tri(prec.t1)] ) ]  
-				prec.t1 <- prec.t1.	
+				# if( any ( is.na( prec.t1 ) ) ) prec.t1.[upper.tri(prec.t1.)][ is.na( prec.t1[upper.tri(prec.t1)] ) ]  <- prec.t1.[lower.tri(prec.t1.)][ is.na( prec.t1[lower.tri(prec.t1)] ) ]  
+				# prec.t1 <- prec.t1.
+				prec.t1 <- make.sym( prec.t1, prec.t1. )
 		}
 		if ( engine %in% c("ctstan","ctsem") ) {		
 				if ( !exists("chol.var.t1",inherits=FALSE) || is.null(chol.var.t1) ) {
@@ -482,8 +492,9 @@ prep.data <- function ( env ) {
 						# NAs to labeled parameters
 						prec.b. <- label.pars(prec.b,"prec.b")		
 						# make prec.b (potentially) symmetric again (do not overwrite user specific labeled parameters, even if unsymmetric matrix
-						prec.b.[upper.tri(prec.b.)][ is.na( prec.b[upper.tri(prec.b)] ) ]  <- prec.b.[lower.tri(prec.b.)][ is.na( prec.b[lower.tri(prec.b)] ) ]  
-						prec.b <- prec.b.	
+						# if( any ( is.na( prec.b ) ) ) prec.b.[upper.tri(prec.b.)][ is.na( prec.b[upper.tri(prec.b)] ) ]  <- prec.b.[lower.tri(prec.b.)][ is.na( prec.b[lower.tri(prec.b)] ) ]  
+						# prec.b <- prec.b.	
+						prec.b <- make.sym( prec.b, prec.b. )
 				}
 				if ( engine %in% c("ctsem") ) {		
 						if ( !exists("chol.var.b",inherits=FALSE) || is.null(chol.var.b) ) {

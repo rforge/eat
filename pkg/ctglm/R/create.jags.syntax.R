@@ -170,6 +170,7 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, make.str( "A" ) ); if( any ( is.parameter( A ) ) ) invisible(moveTo.par.env("A",env,par.env)) else rm("A", envir=env)
 		x<-rbind(x, "                                                                     ")		
 		x<-rbind(x, "    # values/prior of diffusion matrix                               ")
+# browser()		
 		x<-rbind(x, make.str( "Q" ) ); if( any ( is.parameter( Q ) ) ) invisible(moveTo.par.env("Q",env,par.env)) else rm("Q", envir=env)
 		x<-rbind(x, "                                                                     ")	
 # browser()
@@ -304,18 +305,21 @@ create.jags.syntax <- function ( env ) {
 		y<-rbind(y, "" )
 		y<-rbind(y, "# packages" )
 		y<-rbind(y, "require( 'rjags' )" )
+		
 		if( parall ){
-		y<-rbind(y, "require( 'doParallel' )                                              ")		
-		y<-rbind(y, "require( 'abind' )                                                   ")		
-		y<-rbind(y, "#require( 'ctglm' )                                                   ") }		
+		y<-rbind(y, "require( 'doParallel' ) # function foreach %dopar%                   ")		
+		y<-rbind(y, "require( 'abind' )      # required by ctglm                          ")		
+		y<-rbind(y, "#require( 'ctglm' )      # function mcarray.chains.combine            ") }		
 		y<-rbind(y, "" )
 		y<-rbind(y, "# package versions" )
 		y<-rbind(y, paste0( "print( installed.packages()[ installed.packages()[,1] %in% c(",paste( paste0( "'", na.omit( c('rjags' , ifelse( parall, 'ctglm', NA) ) ), "'" ) , collapse="," ),"), c(1,3) ] )" ) )
 		y<-rbind(y, "" )
+		
+		if( !parall ){
 		y<-rbind(y, "# JAGS Modules" )
 		if( F>1 ) y<-rbind(y, "load.module('msm') # for matrix exponential, mexp()" )
 		y<-rbind(y, "load.module('glm') # for better glm sampler        " )
-		y<-rbind(y, "" )
+		y<-rbind(y, "" ) }
 
 		# create starting values
 		# function make.priors with mode="startingvalue" is used
@@ -381,7 +385,7 @@ create.jags.syntax <- function ( env ) {
 		y<-rbind(y, "# parallel chains                                                    ")
 		y<-rbind(y, "res.l <- foreach(chain=1:chains, .packages='rjags') %dopar% {        ")
 		y<-rbind(y, "" )
-		y<-rbind(y, paste0( indent, "# JAGS Modules (need to be reloaded in parallel mode)" ) )
+		y<-rbind(y, paste0( indent, "# JAGS Modules (need to be loaded here in parallel mode)" ) )
 		if( F>1 ) y<-rbind(y, paste0( indent, "load.module('msm') # for matrix exponential, mexp()" ) )
 		y<-rbind(y, paste0( indent, "load.module('glm') # for better glm sampler        " ) )
 		y<-rbind(y, "" )
@@ -467,7 +471,7 @@ create.jags.syntax <- function ( env ) {
 }
 
 make.str <- function( y.name ) {
-		
+# browser()		
 		# environment where objects are
 		env <- parent.frame()
 		
@@ -490,6 +494,16 @@ make.str <- function( y.name ) {
 		}
 		y.$par <- apply( y., 1, function ( z ) eval( parse( text= paste0( y.name,"[", paste(z,collapse=","), "]" ) ), envir=env ) )
 # browser()
+		# sort out code, keep for later adding
+		if ( any ( is.code( y.$par ) ) ){
+				code <- sub( "^[^;]*;(.*)$", "\\1", y.$par[ is.code( y.$par ) ] )
+				add.code <- matrix( paste0( "    ", gsub( "^\\s*", "", do.call( "c", strsplit(code,";") ) ) ), ncol=1 )
+				y.$par[ is.code( y.$par ) ] <- sub( "^([^;]*);.*$", "\\1", y.$par[ is.code( y.$par ) ] )
+		} else {
+				add.code <- NULL
+		}
+# browser()		
+		
 		# tag duplicated free parameters and generate values to set duplicated
 		y.$dupl <- as.integer( duplicated(y.$par) & is.na(suppressWarnings(as.numeric(y.$par)))  )
 		dupl <- unique( y.$par[ duplicated( y.$par ) & is.na(suppressWarnings(as.numeric(y.$par))) ] )
@@ -510,35 +524,70 @@ make.str <- function( y.name ) {
 		} else {
 				y.$val <- ""
 		}
-	
+
+# if( any( grepl( "Q", y.$par ) ) ) browser()	
 		
 		# loop over long structure, generate strings
 		make.str2 <- function( z ) {
 # browser()
+# if( grepl( "Q", z["par"] ) ) browser()
 				dupl <- z[ length(z)-1 ]
 				val <- z[ length(z) ]
+				par <- z["par"]
 				z <- z[ -c(length(z)-2,length(z)-1,length(z)) ]
 				
 				if ( dupl %in% "0" ){
-# browser()				
+# if( grepl( "Q", par ) ) browser()			
 						# name of parameter
 						nam <- paste0( y.name, "[", paste( z, collapse=","), "]" )
 			
+						# value of parameter
+						par.val <- eval( parse( text=nam ), envir=env )
+						
+						# value of prior
+						p.name <- paste0( y.name, ".prior" )
+						if ( exists( p.name, envir=env) ){
+								p.val <- eval( parse( text=paste0( p.name, "[", paste( z, collapse=","), "]" ) ), envir=env )
+						} else {
+								p.val <- NA
+						}
+						is.prior <- !is.na( p.val )
+						
 						# determine if fixed value or freely estimated
-						as.num <- suppressWarnings( as.numeric( eval( parse( text=nam ), envir=env ) ) )
-						is.fixed <- !is.na( as.num )
+						# as.num <- suppressWarnings( as.numeric( eval( parse( text=nam ), envir=env ) ) )
+						# is.fixed <- !is.na( as.num )
+						
+						# is fixed value or a parameter
+						
 		# browser()				
-						# operator: <- or ~
-						op <- ifelse( is.fixed, " <- ", " ~ " )
+						# operator: <- (for fixed oder parameter) or ~ (for prior)
+						# op <- ifelse( is.parameter( par.val ) | is.fixed( par.val ), " <- ", " ~ " )
+						op <- ifelse( is.prior, " ~ ", " <- " )
 						# if fixed, uncomment in jags syntax, because already set in R
 						# com <- ifelse( is.fixed, "# ", "" )
-						com <- ""
-						
-						# value
-						val <- ifelse( is.fixed, as.character( as.num ), eval( parse( text=paste0( y.name, ".prior", "[", paste( z, collapse=","), "]" ) ), envir=env ) )
+						# com <- ""
+# browser()						
+						# value to be set
+						set.val <- "TODO"
+						# parameter
+						if( is.parameter( par.val ) ) set.val <- par
+						# fixed value (numeric)
+						if( !is.na( suppressWarnings( as.numeric( par ) ) ) ) set.val <- as.numeric( par ) 
+						# prior
+						if( is.prior ) set.val <- p.val
+	
+						# val <- ifelse( is.fixed, as.character( as.num ), eval( parse( text=paste0( y.name, ".prior", "[", paste( z, collapse=","), "]" ) ), envir=env ) )
+						# val <- ifelse( is.fixed, "", eval( parse( text=paste0( y.name, ".prior", "[", paste( z, collapse=","), "]" ) ), envir=env ) )
+						# if( is.parameter( par.val ) ) set.val <- par 
+						# if prior exists dann prior setzen
+		
+	
+						# get("Q",envir=env)
+						# get("Q.prior",envir=env)
 						
 						# string
-						s <- paste0( "    ", com, nam, op, val )
+						# s <- paste0( "    ", com, nam, op, set.val )
+						s <- paste0( "    ",  nam, op, set.val )
 				
 				} else {
 						
@@ -558,6 +607,11 @@ make.str <- function( y.name ) {
 		
 		# as column vector
 		s <- matrix( s, ncol=1 )
+
+		# add.code
+		if ( !is.null( add.code ) ){
+				s <- rbind( s, add.code )
+		}
 		
 		# return
 		return( s )

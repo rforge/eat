@@ -21,7 +21,12 @@ ctglm.syntax <- function ( m, model.name="model", cores=detectCores(), ..., verb
 		if( length( list(...) ) > 0 ) {
 				eval( parse ( text=paste0( "assign( '",names(list(...)), "' , list(...)$'",names(list(...)),"' , envir=env )" ) ) )
 		}
-# browser()		
+# browser()	
+
+		### TODO matrices consistent callen (falls noch jemand nach model dran rum gefummelt hat)
+	
+	
+	
 		### call software specific syntax/call generator
 		if( get( "engine", envir=env ) %in% "jags" ) {
 				s <- create.jags.syntax( env )
