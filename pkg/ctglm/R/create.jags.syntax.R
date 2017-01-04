@@ -54,7 +54,7 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "                                                                     ")
 		if ( exists( "E" ) ) {
 		x<-rbind(x, "    # precision of measurement errors                                ")
-		x<-rbind(x, make.str( "E" ) ); if( any.free( E ) ) invisible(moveTo.par.env("E",env,par.env)) else rm("E", envir=env)
+		x<-rbind(x, make.str( "E" ) ); if( any ( is.parameter( E ) ) ) invisible(moveTo.par.env("E",env,par.env)) else rm("E", envir=env)
 		x<-rbind(x, "                                                                     ") }		
 		# if( measurement.model$family %in% "gaussian" ) {		
 		# x<-rbind(x, "    # precision of measurement errors                                ")
@@ -63,18 +63,18 @@ create.jags.syntax <- function ( env ) {
 		# x<-rbind(x, "    }                                                                ") 
 		# x<-rbind(x, "                                                                     ") }
 		x<-rbind(x, "    # values/priors of item easiness                                 ")
-		x<-rbind(x, make.str( "beta" ) ); if( any.free( beta ) ) invisible(moveTo.par.env("beta",env,par.env)) else rm("beta", envir=env)
+		x<-rbind(x, make.str( "beta" ) ); if( any ( is.parameter( beta ) ) ) invisible(moveTo.par.env("beta",env,par.env)) else rm("beta", envir=env)
 		x<-rbind(x, "                                                                     ")
 		if ( exists( "mu.beta" ) ) {
 		x<-rbind(x, "    # values/priors of mean of item easiness                         ")
-		x<-rbind(x, make.str( "mu.beta" ) ); if( any.free( mu.beta ) ) invisible(moveTo.par.env("mu.beta",env,par.env)) else rm("mu.beta", envir=env)
+		x<-rbind(x, make.str( "mu.beta" ) ); if( any ( is.parameter( mu.beta ) ) ) invisible(moveTo.par.env("mu.beta",env,par.env)) else rm("mu.beta", envir=env)
 		x<-rbind(x, "                                                                     ") }
 		if ( exists( "mu.beta" ) ) {
 		x<-rbind(x, "    # values/priors of precision of item easiness                    ")
-		x<-rbind(x, make.str( "prec.beta" ) ); if( any.free( prec.beta ) ) invisible(moveTo.par.env("prec.beta",env,par.env)) else rm("prec.beta", envir=env)
+		x<-rbind(x, make.str( "prec.beta" ) ); if( any ( is.parameter( prec.beta ) ) ) invisible(moveTo.par.env("prec.beta",env,par.env)) else rm("prec.beta", envir=env)
 		x<-rbind(x, "                                                                     ") }
 		x<-rbind(x, "    # values/priors of Lambda                                        ")
-		x<-rbind(x, make.str( "Lambda" ) ); if( any.free( Lambda ) ) invisible(moveTo.par.env("Lambda",env,par.env)) else rm("Lambda", envir=env)
+		x<-rbind(x, make.str( "Lambda" ) ); if( any ( is.parameter( Lambda ) ) ) invisible(moveTo.par.env("Lambda",env,par.env)) else rm("Lambda", envir=env)
 		x<-rbind(x, "                                                                     ")		
 		# x<-rbind(x, "    # standard deviation of latent scale                             ")
 		# x<-rbind(x, "    #sd.eta <- sd(eta[])                                             ")
@@ -88,7 +88,7 @@ create.jags.syntax <- function ( env ) {
 				if (! stationarity ){
 						x<-rbind(x, "    ## personal t1 means                                               ")
 						x<-rbind(x, "    # mu.t1 varies over persons, i.e. for each person a separate mu.t1 ")		
-						mu.t1.j. <- make.str( "mu.t1.j" ); if( any.free( mu.t1.j ) ) invisible(moveTo.par.env("mu.t1.j",env,par.env)) else rm("mu.t1.j", envir=env)
+						mu.t1.j. <- make.str( "mu.t1.j" ); if( any ( is.parameter( mu.t1.j ) ) ) invisible(moveTo.par.env("mu.t1.j",env,par.env)) else rm("mu.t1.j", envir=env)
 						# mods to mu.t1.j.
 						mu.t1.j.1 <- mu.t1.j.[ !grepl( "~", mu.t1.j., fixed=TRUE ),,drop=FALSE ]
 						mu.t1.j.2 <- mu.t1.j.[ grepl( "~", mu.t1.j., fixed=TRUE ),,drop=FALSE ]
@@ -99,7 +99,7 @@ create.jags.syntax <- function ( env ) {
 						if( !identical( mu.t1.j.2, character(0) ) ) x<-rbind(x,mu.t1.j.2) 
 						x<-rbind(x, "                                                                     ")		
 						x<-rbind(x, "    # values/prior for prec.mu.t1.j                                         ")	
-						x<-rbind(x, ifelse( exists("prec.mu.t1.j.prior") && is.null( dim(prec.mu.t1.j.prior) ), paste0( "    prec.mu.t1.j[1:F,1:F] ~ ", prec.mu.t1.j.prior, "                                      " ), make.str( "prec.mu.t1.j" ) ) ); if( any.free( prec.mu.t1.j ) ) invisible(moveTo.par.env("prec.mu.t1.j",env,par.env)) else rm("prec.mu.t1.j", envir=env)
+						x<-rbind(x, ifelse( exists("prec.mu.t1.j.prior") && is.null( dim(prec.mu.t1.j.prior) ), paste0( "    prec.mu.t1.j[1:F,1:F] ~ ", prec.mu.t1.j.prior, "                                      " ), make.str( "prec.mu.t1.j" ) ) ); if( any ( is.parameter( prec.mu.t1.j ) ) ) invisible(moveTo.par.env("prec.mu.t1.j",env,par.env)) else rm("prec.mu.t1.j", envir=env)
 				}
 				if (stationarity){				
 						mu.t1.j. <- make.str( "mu.t1.j" )
@@ -112,7 +112,7 @@ create.jags.syntax <- function ( env ) {
 						mu.t1.j.4 <- matrix( paste0( mu.t1.j.3, " <- -1 * A.inv[,] %*% bj[,", as.integer( sub( "^.*,(.*)\\].*$", "\\1", mu.t1.j.3 ) ) ,"]" ), ncol=1 )
 						if( !identical( mu.t1.j.4, character(0) ) ) x<-rbind(x,mu.t1.j.4)
 						# push to parameter env, because we want results for that
-						if( any.free( mu.t1.j ) ) invisible(moveTo.par.env("mu.t1.j",env,par.env)) else rm("mu.t1.j", envir=env)
+						if( any ( is.parameter( mu.t1.j ) ) ) invisible(moveTo.par.env("mu.t1.j",env,par.env)) else rm("mu.t1.j", envir=env)
 				}
 		}
 		
@@ -144,18 +144,18 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    # values/prior of mean of first time point                       ")
 		if( !person.var["mu.t1"] || !stationarity ) {
-		x<-rbind(x, make.str( "mu.t1" ) ); if( any.free( mu.t1 ) ) invisible(moveTo.par.env("mu.t1",env,par.env)) else rm("mu.t1", envir=env)
+		x<-rbind(x, make.str( "mu.t1" ) ); if( any ( is.parameter( mu.t1 ) ) ) invisible(moveTo.par.env("mu.t1",env,par.env)) else rm("mu.t1", envir=env)
 		} else {
 		x<-rbind(x, "    for (f in 1:F) {" )
 		x<-rbind(x, "         mu.t1[f] <- mean( mu.t1.j[f,] )" )
 		x<-rbind(x, "    }" )
-		if( any.free( mu.t1 ) ) invisible(moveTo.par.env("mu.t1",env,par.env)) else rm("mu.t1", envir=env)
+		if( any ( is.parameter( mu.t1 ) ) ) invisible(moveTo.par.env("mu.t1",env,par.env)) else rm("mu.t1", envir=env)
 		}
 		
 		x<-rbind(x, "                                                                     ")
 # browser()		
 		x<-rbind(x, "    # values/prior of precision of first time point                  ")
-		x<-rbind(x, ifelse( exists("prec.t1.prior") && is.null( dim(prec.t1.prior) ), paste0( "    prec.t1[1:F,1:F] ~ ", prec.t1.prior, "                                      " ), make.str( "prec.t1" ) ) ); if( any.free( prec.t1 ) ) invisible(moveTo.par.env("prec.t1",env,par.env)) else rm("prec.t1", envir=env)
+		x<-rbind(x, ifelse( exists("prec.t1.prior") && is.null( dim(prec.t1.prior) ), paste0( "    prec.t1[1:F,1:F] ~ ", prec.t1.prior, "                                      " ), make.str( "prec.t1" ) ) ); if( any ( is.parameter( prec.t1 ) ) ) invisible(moveTo.par.env("prec.t1",env,par.env)) else rm("prec.t1", envir=env)
 		# prec.t1 is symmetric, needs definition of upper to lower elements
 		# nasty workaround here
 		# prec.t1.prior <- prec.t1
@@ -167,10 +167,10 @@ create.jags.syntax <- function ( env ) {
 		
 		x<-rbind(x, "                                                                     ")
 		x<-rbind(x, "    # values/prior of drift matrix                                   ")
-		x<-rbind(x, make.str( "A" ) ); if( any.free( A ) ) invisible(moveTo.par.env("A",env,par.env)) else rm("A", envir=env)
+		x<-rbind(x, make.str( "A" ) ); if( any ( is.parameter( A ) ) ) invisible(moveTo.par.env("A",env,par.env)) else rm("A", envir=env)
 		x<-rbind(x, "                                                                     ")		
 		x<-rbind(x, "    # values/prior of diffusion matrix                               ")
-		x<-rbind(x, make.str( "Q" ) ); if( any.free( Q ) ) invisible(moveTo.par.env("Q",env,par.env)) else rm("Q", envir=env)
+		x<-rbind(x, make.str( "Q" ) ); if( any ( is.parameter( Q ) ) ) invisible(moveTo.par.env("Q",env,par.env)) else rm("Q", envir=env)
 		x<-rbind(x, "                                                                     ")	
 # browser()
 		if( person.var["b"] ) {		
@@ -179,7 +179,7 @@ create.jags.syntax <- function ( env ) {
 		# x<-rbind(x, "    for( j in 1:J ) {                                                ")		
 		# x<-rbind(x, "         bj[1:F,j] ~ dmnorm( b[,1], prec.b[,] )                      ")		
 		# x<-rbind(x, "    }                                                                ") }
-		bj. <- make.str( "bj" ); if( any.free( bj ) ) invisible(moveTo.par.env("bj",env,par.env)) else rm("bj", envir=env)
+		bj. <- make.str( "bj" ); if( any ( is.parameter( bj ) ) ) invisible(moveTo.par.env("bj",env,par.env)) else rm("bj", envir=env)
 		# mods to bj.
 		bj.1 <- bj.[ !grepl( "~", bj., fixed=TRUE ),,drop=FALSE ]
 		bj.2 <- bj.[ grepl( "~", bj., fixed=TRUE ),,drop=FALSE ]
@@ -190,10 +190,10 @@ create.jags.syntax <- function ( env ) {
 		if( !identical( bj.2, character(0) ) ) x<-rbind(x,bj.2) }
 		
 		x<-rbind(x, "    # values/prior of continuous time intercepts                     ")		
-		x<-rbind(x, make.str( "b" ) ); if( any.free( b ) ) invisible(moveTo.par.env("b",env,par.env)) else rm("b", envir=env)
+		x<-rbind(x, make.str( "b" ) ); if( any ( is.parameter( b ) ) ) invisible(moveTo.par.env("b",env,par.env)) else rm("b", envir=env)
 		if( person.var["b"] ) {
 		x<-rbind(x, "    # values/prior of precision of b                                 ")
-		x<-rbind(x, ifelse( exists("prec.b.prior") && is.null( dim(prec.b.prior) ), paste0( "    prec.b[1:F,1:F] ~ ", prec.b.prior, "                                      " ), make.str( "prec.b" ) ) ); if( any.free( prec.b ) ) invisible(moveTo.par.env("prec.b",env,par.env)) else rm("prec.b", envir=env) }
+		x<-rbind(x, ifelse( exists("prec.b.prior") && is.null( dim(prec.b.prior) ), paste0( "    prec.b[1:F,1:F] ~ ", prec.b.prior, "                                      " ), make.str( "prec.b" ) ) ); if( any ( is.parameter( prec.b ) ) ) invisible(moveTo.par.env("prec.b",env,par.env)) else rm("prec.b", envir=env) }
 		
 		x<-rbind(x, "                                                                     ")			
 		x<-rbind(x, "                                                                     ")
@@ -308,7 +308,9 @@ create.jags.syntax <- function ( env ) {
 		y<-rbind(y, "require( 'doParallel' )                                              ")		
 		y<-rbind(y, "require( 'abind' )                                                   ")		
 		y<-rbind(y, "#require( 'ctglm' )                                                   ") }		
-		y<-rbind(y, "print( installed.packages()[ installed.packages()[,1] %in% c(",paste( paste0( "'", na.omit( c('rjags' , ifelse( parall, 'ctglm', NA) ) ), "'" ) , collapse="," ),"), c(1,3) ] )" )
+		y<-rbind(y, "" )
+		y<-rbind(y, "# package versions" )
+		y<-rbind(y, paste0( "print( installed.packages()[ installed.packages()[,1] %in% c(",paste( paste0( "'", na.omit( c('rjags' , ifelse( parall, 'ctglm', NA) ) ), "'" ) , collapse="," ),"), c(1,3) ] )" ) )
 		y<-rbind(y, "" )
 		y<-rbind(y, "# JAGS Modules" )
 		if( F>1 ) y<-rbind(y, "load.module('msm') # for matrix exponential, mexp()" )
@@ -317,19 +319,19 @@ create.jags.syntax <- function ( env ) {
 
 		# create starting values
 		# function make.priors with mode="startingvalue" is used
-		if ( exists("A") && any.free( A ) ) invisible( make.priors( "A", A, diag.prior = -0.5, offdiag.prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
-		if ( exists("Q") && any.free( Q ) ) invisible( make.priors( "Q", Q, diag.prior = 0.5, offdiag.prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
-		if ( exists("b") && any.free( b ) ) invisible( make.priors( "b", b, prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
-		if ( exists("beta") && any.free( beta ) ) invisible( make.priors( "beta", beta, prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
-		if ( exists("mu.beta") && any.free( mu.beta ) ) invisible( make.priors( "mu.beta", mu.beta, prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
-		if ( exists("prec.beta") && any.free( prec.beta ) ) invisible( make.priors( "prec.beta", prec.beta, diag.prior = 1, offdiag.prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
-		if ( !stationarity && exists("mu.t1") && any.free( mu.t1 ) ) invisible( make.priors( "mu.t1", mu.t1, prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
-		if ( exists("prec.t1") && any.free( prec.t1 ) ) {
+		if ( exists("A") && any ( is.parameter( A ) ) ) invisible( make.priors( "A", A, diag.prior = -0.5, offdiag.prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
+		if ( exists("Q") && any ( is.parameter( Q ) ) ) invisible( make.priors( "Q", Q, diag.prior = 0.5, offdiag.prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
+		if ( exists("b") && any ( is.parameter( b ) ) ) invisible( make.priors( "b", b, prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
+		if ( exists("beta") && any ( is.parameter( beta ) ) ) invisible( make.priors( "beta", beta, prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
+		if ( exists("mu.beta") && any ( is.parameter( mu.beta ) ) ) invisible( make.priors( "mu.beta", mu.beta, prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
+		if ( exists("prec.beta") && any ( is.parameter( prec.beta ) ) ) invisible( make.priors( "prec.beta", prec.beta, diag.prior = 1, offdiag.prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
+		if ( !stationarity && exists("mu.t1") && any ( is.parameter( mu.t1 ) ) ) invisible( make.priors( "mu.t1", mu.t1, prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
+		if ( exists("prec.t1") && any ( is.parameter( prec.t1 ) ) ) {
 				invisible( make.priors( "prec.t1", prec.t1, diag.prior = 1, offdiag.prior = 0,env=environment(), mode="startingvalue", verbose=FALSE ) )
 				# !!!! because of dwish, complete starting value is needed, so assign upper with values of lower triangle
 				prec.t1.startingvalue[upper.tri(prec.t1.startingvalue)] <- prec.t1.startingvalue[lower.tri(prec.t1.startingvalue)]
 		}
-		if ( exists("prec.mu.t1.j") && any.free( prec.mu.t1.j ) ) {
+		if ( exists("prec.mu.t1.j") && any ( is.parameter( prec.mu.t1.j ) ) ) {
 				invisible( make.priors( "prec.mu.t1.j", prec.mu.t1.j, diag.prior = 1, offdiag.prior = 0,env=environment(), mode="startingvalue", verbose=FALSE ) )
 				# !!!! because of dwish, complete starting value is needed, so assign upper with values of lower triangle
 				prec.mu.t1.j.startingvalue[upper.tri(prec.mu.t1.j.startingvalue)] <- prec.mu.t1.j.startingvalue[lower.tri(prec.mu.t1.j.startingvalue)]
@@ -365,6 +367,7 @@ create.jags.syntax <- function ( env ) {
 		y<-rbind(y, "" )	
 # browser()
 		# parallelization
+		indent <- ifelse( parall, "     ", "" )
 		if( parall ){
 		y<-rbind(y, "## parallelization                                                   ")
 		y<-rbind(y, "# create cluster                                                     ")
@@ -378,9 +381,13 @@ create.jags.syntax <- function ( env ) {
 		y<-rbind(y, "# parallel chains                                                    ")
 		y<-rbind(y, "res.l <- foreach(chain=1:chains, .packages='rjags') %dopar% {        ")
 		y<-rbind(y, "" )
+		y<-rbind(y, paste0( indent, "# JAGS Modules (need to be reloaded in parallel mode)" ) )
+		if( F>1 ) y<-rbind(y, paste0( indent, "load.module('msm') # for matrix exponential, mexp()" ) )
+		y<-rbind(y, paste0( indent, "load.module('glm') # for better glm sampler        " ) )
+		y<-rbind(y, "" )
 		}
 		
-		indent <- ifelse( parall, "     ", "" )
+
 		
 		y<-rbind(y, paste0( indent, "# initialization/adaptation                                          ") )
 		# globalenv !!! 

@@ -8,17 +8,15 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
 		y<-matrix( paste0( "### R syntax for ", model.name ), 1, 1 )
 		y<-rbind(y,paste0( "### engine: ", engine ) )
 		y<-rbind(y, "" )
-		y<-rbind(y, "# ctsem package" )
+		y<-rbind(y, "# packages" )
 		y<-rbind(y, "require( 'ctsem' )" )
-		y<-rbind(y, "print( installed.packages()[ installed.packages()[,1] %in% c('ctsem','rstan'), c(1,3) ] )" )
-		y<-rbind(y, "" )
-		
 		if( mode %in% "ctstan" ) {
-		y<-rbind(y, "# rstan package" )
-		# y<-rbind(y, "requireNamespace( 'rstan' )" )
 		y<-rbind(y, "require( 'rstan' )" )
 		y<-rbind(y, "rstan_options(auto_write = TRUE)" )
 		y<-rbind(y, paste0( "# options(mc.cores = ",cores,") # cores is set in ctStanFit " )) }
+		y<-rbind(y, "" )
+		y<-rbind(y, "# package versions" )
+		y<-rbind(y, "print( installed.packages()[ installed.packages()[,1] %in% c('ctsem','rstan'), c(1,3) ] )" )
 		y<-rbind(y, "" )
 		### modifications, must also be incorporated in results.ctsem and/or results.jags.ctstan
 		y<-rbind(y, "## modifications" )

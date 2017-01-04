@@ -245,7 +245,7 @@ prep.data <- function ( env ) {
 		# beta.all.free <- all( is.na( suppressWarnings( as.numeric( beta.vec ) ) ) )
 		
 		# if all beta free, mean and precision of item distribution
-		if ( all.free( beta ) ){
+		if ( all ( is.parameter ( beta ) ) ){
 		
 				## beta mean
 				if ( !exists("mu.beta",inherits=FALSE) || is.null(mu.beta) ) {
