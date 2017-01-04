@@ -11,9 +11,10 @@ call \code{runModel} with the argument returned by \code{defineModel}.}
 defineModel (dat, items, id, splittedModels = NULL,
    irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
    qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL, anchor = NULL, 
-   check.for.linking = TRUE, boundary = 6, remove.boundary = FALSE, remove.no.answers = TRUE,
-   remove.no.answersHG = TRUE, remove.missing.items = TRUE, remove.constant.items = TRUE, 
-   remove.failures = FALSE, remove.vars.DIF.missing = TRUE, remove.vars.DIF.constant = TRUE, 
+   domainCol=NULL, itemCol=NULL, valueCol=NULL, check.for.linking = TRUE, boundary = 6, 
+   remove.boundary = FALSE, remove.no.answers = TRUE, remove.no.answersHG = TRUE, 
+   remove.missing.items = TRUE, remove.constant.items = TRUE, remove.failures = FALSE, 
+   remove.vars.DIF.missing = TRUE, remove.vars.DIF.constant = TRUE, 
    verbose=TRUE, software = c("conquest","tam"), dir = NULL, analysis.name, 
    withDescriptives = TRUE, model.statement = "item",  compute.fit = TRUE, 
    n.plausible=5, seed = NULL, conquest.folder=NULL,constraints=c("cases","none","items"),
@@ -82,9 +83,34 @@ Optional: Name or column number of one weighting variable.
   \item{anchor}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Optional: A named data frame with anchor parameters. The first column contains the
-names of all items which are used to be anchor items and should be named item.
+names of all items which are used to be anchor items and may be named item.
 The second column contains anchor parameters. Anchor items can be a subset of the
-items in the dataset and vice versa.
+items in the dataset and vice versa. If the data frame contains more than two 
+columns, columns must be named explicitly using the following arguments 
+\code{domainCol}, \code{itemCol}, and \code{valueCol}.
+}
+  \item{domainCol}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: Only necessary if the \code{anchor} argument was used to define
+anchor parameters. Moreover, specifying \code{domainCol} is only necessary, if the
+item identifiers in \code{anchor} are not unique---for example, if a specific item
+occurs with two parameters, one domain-specific item parameter and one additional
+``global'' item parameter. The domain column than must specify which parameter 
+belongs to which domain. 
+}
+  \item{itemCol}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: Only necessary if the \code{anchor} argument was used to define
+anchor parameters. Moreover, specifying \code{itemCol} is only necessary, if the
+\code{anchor} data frame has more than two columns. The \code{itemCol} column than 
+must specify which column contains the item identifier. 
+}
+  \item{valueCol}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Optional: Only necessary if the \code{anchor} argument was used to define
+anchor parameters. Moreover, specifying \code{valueCol} is only necessary, if the
+\code{anchor} data frame has more than two columns. The \code{valueCol} column than 
+must specify which column contains the item parameter values. 
 }
   \item{check.for.linking}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -797,9 +823,6 @@ L.t1t2<- equat1pl ( results = resT2, prmNorm = itemT1, item = "item",
 # We now need to specify the 'refPop' argument. We use the values from 't1' which
 # serves as the reference.
 ref   <- dfrT1P[["refPop"]]
-
-### prepare the 'ref' object
-ref   <- ref[1:2, c("domain", "refMean", "refSD", "bistaMean","bistaSD")]
 T.t1t2<- transformToBista ( equatingList = L.t1t2, refPop=,ref, cuts = cuts)
 
 # The object 'T.t1t2' now contains transformed person and item parameters with
@@ -848,7 +871,8 @@ ankT2P<- equat1pl ( results = resT2P)
 dfrT2P<- transformToBista ( equatingList = ankT2P, refPop=ref, cuts=cuts )
 
 # prepare data for jackknifing and trend estimation via 'eatRep'
-dTrend<- prepRep ( calibT2 = T.t1t2, bistaTransfT1 = dfrT1P, bistaTransfT2 = dfrT2P)
+dTrend<- prepRep ( calibT2 = T.t1t2, bistaTransfT1 = dfrT1P, bistaTransfT2 = dfrT2P,
+         makeIdsUnique = FALSE)
 
 
 ################################################################################
@@ -904,7 +928,7 @@ m05   <- jk2.mean(datL = subSam, ID="id", imp = "imp", groups = c("sex", "model"
 subS2 <- dTrend[which(dTrend[,"dimension"] == "knowledge"),]
 m06   <- jk2.mean(datL = subS2, ID="id", imp = "imp", groups = c("sex", "model"),
          group.differences.by = c("wholePop", "sex"), type = "jk1",wgt = "wgt",
-         PSU = "idclass", trend = "year", linkErr = "linkingErrorTransfBista",
+         PSU = "idclass", trend = "year", linkErr = "trendErrorTransfBista",
          dependent = "valueTransfBista")
 
 # additionally: repeat this analysis for both domains, 'knowledge' and 'procedural',
@@ -913,7 +937,7 @@ m07   <- do.call("rbind", by ( data = dTrend, INDICES = dTrend[,"dimension"],
          FUN = function ( subdat ) {
          m07a <- jk2.mean(datL = subdat, ID="id", imp = "imp", groups = c("sex", "model"),
                  group.differences.by = c("wholePop", "sex"), type = "jk1",wgt = "wgt",
-                 PSU = "idclass", trend = "year", linkErr = "linkingErrorTransfBista",
+                 PSU = "idclass", trend = "year", linkErr = "trendErrorTransfBista",
                  dependent = "valueTransfBista")
          return(m07a)}))
 
@@ -973,7 +997,7 @@ subS2 <- dTrend[which(dTrend[,"dimension"] == "knowledge"),]
 freq07<- jk2.table(datL = subS2, ID="id", imp = "imp", groups = c("model", "sex"),
          type = "jk1", group.differences.by = c("wholePop", "sex"), chiSquare = FALSE,
          wgt = "wgt", PSU = "idclass", trend = "trend",
-         linkErr = "linkingErrorTraitLevel", dependent = "traitLevel")
+         linkErr = "trendErrorTraitLevel", dependent = "traitLevel")
 
 # additionally: repeat this analysis for both domains, 'knowledge' and 'procedural',
 # using a 'by'-loop. Now we use the whole 'dTrend' data instead of subsamples
@@ -982,7 +1006,7 @@ freq08<- do.call("rbind", by ( data = dTrend, INDICES = dTrend[,"dimension"],
          f08 <- jk2.table(datL = subdat, ID="id", imp = "imp", groups = c("model", "sex"),
                 type = "jk1", group.differences.by = c("wholePop", "sex"), chiSquare = FALSE,
                 wgt = "wgt", PSU = "idclass", trend = "trend",
-                linkErr = "linkingErrorTraitLevel", dependent = "traitLevel")
+                linkErr = "trendErrorTraitLevel", dependent = "traitLevel")
          return(f08)}))
 
 

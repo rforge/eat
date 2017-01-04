@@ -57,11 +57,13 @@ example \code{"c:/programme/conquest/console_Feb2007.exe"}.
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-A data frame with 5 columns. 
+A list of two data frames, including the complete table and the reduced table with
+the following 5 columns. 
   \describe{
     \item{Score}{Students raw score}
     \item{Estimate}{Estimated individual WLE according to the raw score.}
-    \item{std.error}{Standard error of the individual WLE estimate.}
+    \item{std.error}{Standard error of the individual WLE estimate. This column is 
+    not included in the reduced table.}
     \item{estBista}{Transformed WLE}
     \item{ks}{competence level}
  }
@@ -94,7 +96,7 @@ cuts   <- list ( values = 330+0:4*75, labels = c("1a", "1b", 2:5) )
 # create the equivalence table
 ret <- simEquiTable( anchor = anchor, cutScores = cuts , mRef = -0.05, sdRef = 0.9, 
        dir = "c:/users/weirichs/test", conquest.folder = "N:/console_Feb2007.exe")
-View(ret)       
+View(ret$short)       
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
