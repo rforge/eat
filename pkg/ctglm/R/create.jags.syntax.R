@@ -155,7 +155,9 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, "                                                                     ")
 # browser()		
 		x<-rbind(x, "    # values/prior of precision of first time point                  ")
-		x<-rbind(x, ifelse( exists("prec.t1.prior") && is.null( dim(prec.t1.prior) ), paste0( "    prec.t1[1:F,1:F] ~ ", prec.t1.prior, "                                      " ), make.str( "prec.t1" ) ) ); if( any ( is.parameter( prec.t1 ) ) ) invisible(moveTo.par.env("prec.t1",env,par.env)) else rm("prec.t1", envir=env)
+		# x<-rbind(x, ifelse( exists("prec.t1.prior") && is.null( dim(prec.t1.prior) ), paste0( "    prec.t1[1:F,1:F] ~ ", prec.t1.prior, "                                      " ), make.str( "prec.t1" ) ) ); if( any ( is.parameter( prec.t1 ) ) ) invisible(moveTo.par.env("prec.t1",env,par.env)) else rm("prec.t1", envir=env)
+		x<-rbind(x, make.str( "prec.t1" ) ); if( any ( is.parameter( prec.t1 ) ) ) invisible(moveTo.par.env("prec.t1",env,par.env)) else rm("prec.t1", envir=env)
+
 		# prec.t1 is symmetric, needs definition of upper to lower elements
 		# nasty workaround here
 		# prec.t1.prior <- prec.t1
@@ -194,7 +196,9 @@ create.jags.syntax <- function ( env ) {
 		x<-rbind(x, make.str( "b" ) ); if( any ( is.parameter( b ) ) ) invisible(moveTo.par.env("b",env,par.env)) else rm("b", envir=env)
 		if( person.var["b"] ) {
 		x<-rbind(x, "    # values/prior of precision of b                                 ")
-		x<-rbind(x, ifelse( exists("prec.b.prior") && is.null( dim(prec.b.prior) ), paste0( "    prec.b[1:F,1:F] ~ ", prec.b.prior, "                                      " ), make.str( "prec.b" ) ) ); if( any ( is.parameter( prec.b ) ) ) invisible(moveTo.par.env("prec.b",env,par.env)) else rm("prec.b", envir=env) }
+		# x<-rbind(x, ifelse( exists("prec.b.prior") && is.null( dim(prec.b.prior) ), paste0( "    prec.b[1:F,1:F] ~ ", prec.b.prior, "                                      " ), make.str( "prec.b" ) ) ); if( any ( is.parameter( prec.b ) ) ) invisible(moveTo.par.env("prec.b",env,par.env)) else rm("prec.b", envir=env) }
+# browser()	
+		x<-rbind(x, make.str( "prec.b" ) ); if( any ( is.parameter( prec.b ) ) ) invisible(moveTo.par.env("prec.b",env,par.env)) else rm("prec.b", envir=env) }
 		
 		x<-rbind(x, "                                                                     ")			
 		x<-rbind(x, "                                                                     ")
@@ -288,7 +292,10 @@ create.jags.syntax <- function ( env ) {
 
 # browser()		
 		# additional jags syntax
-		if( exists( "jags.add" ) && !is.null( jags.add ) && is.matrix( jags.add ) && ncol( jags.add )==1 && is.character( jags.add[,1] ) ) {
+		if( exists( "jags.add" ) && !is.null( jags.add ) ) {
+				if ( !is.matrix( jags.add ) ) jags.add <- matrix( jags.add, ncol=1 )
+				jags.add <- rbind( "## Additional/user code", jags.add )
+				jags.add <- rbind( jags.add, "" )
 				x<-rbind(x, jags.add)
 		}
 
@@ -324,6 +331,7 @@ create.jags.syntax <- function ( env ) {
 		# create starting values
 		# function make.priors with mode="startingvalue" is used
 		if ( exists("A") && any ( is.parameter( A ) ) ) invisible( make.priors( "A", A, diag.prior = -0.5, offdiag.prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
+# browser()		
 		if ( exists("Q") && any ( is.parameter( Q ) ) ) invisible( make.priors( "Q", Q, diag.prior = 0.5, offdiag.prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
 		if ( exists("b") && any ( is.parameter( b ) ) ) invisible( make.priors( "b", b, prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
 		if ( exists("beta") && any ( is.parameter( beta ) ) ) invisible( make.priors( "beta", beta, prior = 0, env=environment(), mode="startingvalue", verbose=FALSE ) )
@@ -421,9 +429,31 @@ create.jags.syntax <- function ( env ) {
 		if( !exists( "track.person.par" ) || !"mu.t1.j" %in% track.person.par ) {
 				if ( exists( "mu.t1.j", envir=par.env ) ) rm( "mu.t1.j", envir=par.env )
 		}		
+
+		# mod7: delete code in parameters
+		invisible( make.matrices.consistent( par.env , mods=7 ) )
 		
 		# all parameters from par.env must be tracked
 		pars <- ls(envir=par.env)
+# browser()		
+		# mix in track.include / track.exclude 
+		if ( exists( "track.include" ) && is.list( track.include ) && length( track.include ) > 0 ) {
+				# include in tracking
+				pars <- unique( c( pars, names( track.include ) ) )
+				# for automatic results retrieval structure of objects need to be known
+				# if not user set (i.e. NULL) it is assumed as a scalar
+				# in this case there is one parameter of the same name
+				if( any( isnull <- sapply( track.include, is.null ) ) ) track.include[ isnull ] <- names( track.include[ isnull ] )
+				# put into par.env
+				eval( parse( text=paste0( "assign( '", names(track.include), "' , track.include$'", names(track.include), "' , envir=par.env )" ) ) )
+		}
+		if ( exists( "track.exclude" ) && is.character( track.exclude ) && length( track.exclude ) > 0 ) {
+				# exclude from tracking
+				if ( any ( del <- pars %in% track.exclude ) ) pars <- pars[ !del ]
+				# also delete from par.env (ctglm.results depends on clean par.env)
+				if ( any ( del <- ls(envir=par.env) %in% track.exclude ) ) rm( list=ls(envir=par.env)[del], envir=par.env ) 
+		}
+		
 		# sortieren
 		### ist glaub ich ziemlich sinnlos, da jags eh nicht die Reihenfolge hat dann
 		ord <- match( c("A","Q","b"), pars )

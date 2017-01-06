@@ -189,7 +189,8 @@ make.priors <- function( m.name, m, env, priors=NULL, mode=c("prior","startingva
 # browser()	
 # browser()
 		# free parameters
-		free <- default <- is.parameter ( m )
+		free <- default <- is.parameter ( m ) & !is.par.plus.redefined ( m )
+		
 		
 		# user set prior
 		if( exists( paste0( m.name, '.', mode ), envir=env ) ) {

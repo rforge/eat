@@ -54,7 +54,8 @@ ctglm.model <- function ( d, id="id", time="time", person.var=c("b"=TRUE,"mu.t1"
 		# make user set matrices and prior matrices consistent again
 		# this time include mod 3 (constraint transformed to parameter; contraint)
 # browser()
-		invisible( make.matrices.consistent( env=env, mods=c(1,2,3,4,5) ) )		
+		invisible( make.matrices.consistent( env=env, mods=c(1,2,3,4,5,6) ) )		
+		# invisible( make.matrices.consistent( env=env, mods=c(3,6) ) )	
 		
 		# independent of verbose, output errors to console
 		if( length(error)>0 ) {
@@ -87,7 +88,7 @@ ctglm.model <- function ( d, id="id", time="time", person.var=c("b"=TRUE,"mu.t1"
 		first <- first[!is.na(first)]
 		last <- c("engine")
 		el <- el[ c( match( first, el ) , which( !el %in% c( first, last ) ), match( last, el ) ) ]
-		
+	
 		# create return list
 		ret <- list()
 		do <- paste0( "ret$'", el, "' <- get( '", el, "', envir=env )" )
@@ -100,7 +101,7 @@ ctglm.model <- function ( d, id="id", time="time", person.var=c("b"=TRUE,"mu.t1"
 		
 }
 
-make.matrices.consistent <- function( env, known.matrices=NULL, mods=c(1,2,3,4,5) ) {
+make.matrices.consistent <- function( env, known.matrices=NULL, mods=c(1,2,3,4,5,6,7) ) {
 # browser()
 		# known matrices
 		if ( is.null( known.matrices ) ) known.matrices <- c("A","Q","cholQ","b","bj","Lambda","beta","E","prec.beta","mu.t1","mu.t1.j","prec.mu.t1.j","prec.t1","chol.var.t1","prec.b","chol.var.b")
@@ -108,6 +109,9 @@ make.matrices.consistent <- function( env, known.matrices=NULL, mods=c(1,2,3,4,5
 		## prior mods functions
 		# x ~ distr  zu  distr
 		mod1 <- function(m) { m[ is.prior.formula( m ) & !is.na( m ) ] <- paste0( gsub( "\\s", "", sub( "^[^~].*~(.*)$", "\\1",m[ is.prior.formula( m ) & !is.na( m ) ]) ) ); return(m) }
+		# set all parameters in M.prior to NA if not prior
+		# cat(paste0(nam,"\n")); if(nam=="beta") browser(); 
+		mod6 <- function(m,nam) { if( exists( paste0( nam, "" ), envir=matrix.env, mode="character" ) ) m[ is.parameter( get( paste0( nam, "" ), envir=matrix.env ) ) & is.code ( get( paste0( nam, "" ), envir=matrix.env ) ) ] <- NA; return( m ) }
 		
 		## matrices mods functions
 		# x ~ distr  zu x
@@ -117,8 +121,10 @@ make.matrices.consistent <- function( env, known.matrices=NULL, mods=c(1,2,3,4,5
 		# priors in M zu NA
 		mod4 <- function(m) { m[ is.prior( m ) & !is.na( m )  ] <- NA; return(m) }
 		# x; x ~ distr   zu   x ~ distr
-		mod5 <- function(m) { m[ is.par.plus.priorformula(m) ] <- paste0( gsub( "\\s", "", sub( "^[^j]*;(.*)$", "\\1", m[ is.par.plus.priorformula(m) ] ) ) ); return(m) }
-		
+		mod5 <- function(m) { m[ is.par.plus.priorformula(m) ] <- paste0( gsub( "\\s", "", sub( "^[^;]*;(.*)$", "\\1", m[ is.par.plus.priorformula(m) ] ) ) ); return(m) }
+		# delete code in parameters
+		mod7 <- function(m) { m[ is.parameter(m) & is.code(m) ] <- paste0( gsub( "\\s", "", sub( "^([^;]*);(.*)$", "\\1", m[ is.parameter(m) & is.code(m) ] ) ) ); return(m) }
+			
 		# matrix.env
 		matrix.env <- new.env()
 		userset.matrices <- ls(envir=env)[ ls(envir=env) %in% known.matrices ]
@@ -179,7 +185,11 @@ make.matrices.consistent <- function( env, known.matrices=NULL, mods=c(1,2,3,4,5
 				if( any( mods %in% 3 ) ) eval( parse( text=paste0( "assign('",ls(envir=matrix.env), "', mod3(get('",ls(envir=matrix.env),"',envir=matrix.env)), envir=matrix.env)" ) ) )
 				if( any( mods %in% 4 ) ) eval( parse( text=paste0( "assign('",ls(envir=matrix.env), "', mod4(get('",ls(envir=matrix.env),"',envir=matrix.env)), envir=matrix.env)" ) ) )
 				if( any( mods %in% 5 ) ) eval( parse( text=paste0( "assign('",ls(envir=matrix.env), "', mod5(get('",ls(envir=matrix.env),"',envir=matrix.env)), envir=matrix.env)" ) ) )
+				if( any( mods %in% 7 ) ) eval( parse( text=paste0( "assign('",ls(envir=matrix.env), "', mod7(get('",ls(envir=matrix.env),"',envir=matrix.env)), envir=matrix.env)" ) ) )
 # browser()
+				# m[ !is.prior( o ) ] <- NA
+				# ( m <- get("Q.prior",envir=prior.env) )
+				# ( o <- get("Q",envir=matrix.env) )
 				# test
 				# get("Q",envir=matrix.env)
 				# get("Q.prior",envir=prior.env )	
@@ -188,6 +198,7 @@ make.matrices.consistent <- function( env, known.matrices=NULL, mods=c(1,2,3,4,5
 		if ( length( ls(envir=prior.env) ) > 0 ) {
 				## mods in priors
 				if( any( mods %in% 1 ) ) eval( parse( text=paste0( "assign('",ls(envir=prior.env), "', mod1(get('",ls(envir=prior.env),"',envir=prior.env)), envir=prior.env)" ) ) )
+				if( any( mods %in% 6 ) ) eval( parse( text=paste0( "assign('",ls(envir=prior.env), "', mod6(get('",ls(envir=prior.env),"',envir=prior.env),'",sub("\\.prior$","",ls(envir=prior.env)),"'), envir=prior.env)" ) ) )
 		}
 # browser()		
 		# test
@@ -249,21 +260,43 @@ is.prior.formula <- function( m ){
 		return( m2 )
 }
 is.prior <- function( m ){
-		m2 <- grepl( "^[^;|^~]*dnorm.*$", m )
+		priors <- c("dbin","dbinom","dchisqr","dchisq","dgen.gamma","dggamma","dnegbin","dnbinom","dweib","dweibull","ddirch","ddirich","dmulti","dmt","dwish","dmnorm","dpois","dhyper","dcat","dbern","dbetabin","dunif","dt","dpar","dnorm","dnchisqr","dlnorm","dlogis","dgamma","df","dexp","ddexp","dbeta")
+# browser()		
+		m2 <- grepl( paste0("^[^;~]*[",paste(paste0("\\b",priors,"\\b"),collapse="|"),"]\\s*\\(.*\\)*$"), m )
+		m2 <- grepl( paste0("^[^;~|<-]*[",paste(paste0("\\b",priors,"\\b"),collapse="|"),"]\\s*\\(.*\\)*$"), m )
 		dim( m2 ) <- dim( m )
 		# is.na( m2 ) <- is.na( m )
 		if( any( is.na( m2 ) ) ) m2[ is.na ( m2 ) ] <- FALSE 
 		return( m2 )
 }
 is.par.plus.priorformula <- function( m ){
-		m2 <- grepl( "^.*;[^j]*~.*", m )
+		# m2 <- is.parameter( sub( "^([^;]);.*", "\\1", m ) ) & is.prior.formula( sub( "^[^;];(.*)", "\\1", m ) )
+		m2 <- is.parameter( sub( "^([^;]*);.*", "\\1", m ) ) & is.prior.formula( sub( "^[^;]*;(.*)", "\\1", m ) )
 		dim( m2 ) <- dim( m )
 		# is.na( m2 ) <- is.na( m )
 		if( any( is.na( m2 ) ) ) m2[ is.na ( m2 ) ] <- FALSE 
 		m2 <- m2 & is.parameter( m ) & is.code ( m )
 		return( m2 )
 }
-
+# is parameter that is redefined,  par; par <- 
+is.par.plus.redefined <- function( m ){
+# browser()		
+		# potential parameter
+		( potpar <- sub( "^([^;]*);.*$", "\\1", m ) )
+		
+		# gucken ob nicht redefined
+		if ( !is.null ( dim ( m ) ) ) nr <- prod( dim ( m ) ) else nr <- length( m )
+		m3 <- sapply( 1:nr , function( nr ) grepl( paste0( "^[^;]*;.*",gsub(".","\\.",potpar[nr],fixed=TRUE),"[^;]*<-.*$" ), m[nr] ) )
+		dim( m3 ) <- dim( m )
+		
+		# is parameter und nicht redefined
+		m2 <- is.parameter( potpar ) & m3
+		# dim( m2 ) <- dim( m )
+		# is.na( m2 ) <- is.na( m )
+		if( any( is.na( m2 ) ) ) m2[ is.na ( m2 ) ] <- FALSE 
+		# m2 <- m2 & is.parameter( m ) & is.code ( m )
+		return( m2 )
+}
 
 # m <- matrix( c(1,1.2,1.2,1), 2, 2 )
 # m <- matrix( c("1","1.2"," 1.2 "," 1   ; "), 2, 2 )
