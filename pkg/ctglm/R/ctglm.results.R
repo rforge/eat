@@ -1,12 +1,17 @@
 
-ctglm.results <- function ( r, plot.dir=NULL, plot.person.par=FALSE, verbose=TRUE, ... ) {
+ctglm.results <- function ( r, plot.dir=NULL, plot.person.par=FALSE, cores=detectCores(), verbose=TRUE, ... ) {
 		
 # browser()
 		# create plot.dir if not exists
 		if( !is.null( plot.dir ) && !dir.exists( plot.dir ) ) dir.create( plot.dir )
-		
+
 		# new environment
 		env <- new.env()
+
+		# cores modden
+		if( !exists("cores") ) cores <- 1L
+		cores <- get.cores( cores )
+		assign( "cores", cores, envir=env )
 		
 		# put values of list r into environment
 		eval( parse ( text=paste0( "assign( '",names(r), "' , r$'",names(r),"' , envir=env )" ) ) )

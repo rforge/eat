@@ -60,8 +60,6 @@ results.jags.ctstan <- function ( env, mode ) {
 		# est.l <- try( mapply( extr, pars, SIMPLIFY=FALSE ) )
 		extr <- function( z ) {
 				
-				
-				
 				if ( verbose ) cat( paste0( "      ", z["parameter"], "\n" ) ); flush.console()
 				
 				# if ( !indvarying & !par %in% c("lp__") & !grepl("^eta",par) ){
@@ -179,10 +177,30 @@ results.jags.ctstan <- function ( env, mode ) {
 				
 				return( ret )
 		}
-# browser()
-		est.l <- apply( pars, 1, extr )
+
+		# operating system
+		os <- Sys.info()["sysname"]
+		# parallelization yes/no
+		parall <- exists("cores") && !is.null(cores) && cores > 1 && os %in% c("Windows","Linux")
+		if( parall ){
+
+				if( os %in% "Windows" )	eval( parse( text=paste0( "cl <- makePSOCKcluster(",cores,")")) )
+				if( os %in% "Linux" )	eval( parse( text=paste0( "cl <- makeForkCluster(",cores,")")) )
+				registerDoParallel(cl)
+
+				est.l. <- foreach(par=1:nrow(pars),.export="r",.packages=c("reshape2","ggplot2","coda","shinystan")) %dopar% {        
+						# calc results for all parameters
+						est.l <- apply( pars[par,], 1, extr )
+				}
+				est.l <- unlist( est.l., recursive=FALSE )
+		
+				stopCluster(cl)
+		} else {
+				# calc results for all parameters
+				est.l <- apply( pars, 1, extr )
+		}
 		est <- do.call( "rbind", est.l )
-	
+# browser()
 	
 		### software specific mods
 		

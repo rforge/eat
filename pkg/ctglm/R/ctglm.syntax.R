@@ -4,11 +4,8 @@ ctglm.syntax <- function ( m, model.name="model", cores=detectCores(), ..., verb
 # browser()
 		# cores modden
 		if( !exists("cores") ) cores <- 1L
-		if( exists("cores") && !is.numeric(cores) ) cores <- 1L
-		if( exists("cores") && is.numeric(cores) && !is.integer(cores) ) cores <- as.integer( floor( cores ) )
-		if( exists("cores") && is.numeric(cores) && cores < 1 ) cores <- 1L
-		if( exists("cores") && is.numeric(cores) && ( cores.max <- detectCores() ) < cores ) cores <- cores.max
-
+		cores <- get.cores( cores )
+		
 		# new environment
 		env <- new.env()
 		
@@ -80,4 +77,12 @@ ctglm.syntax <- function ( m, model.name="model", cores=detectCores(), ..., verb
 		
 		# return
 		return( s )
+}
+
+get.cores <- function(cores){
+		if( !is.numeric(cores) ) cores <- 1L
+		if( is.numeric(cores) && !is.integer(cores) ) cores <- as.integer( floor( cores ) )
+		if( is.numeric(cores) && cores < 1 ) cores <- 1L
+		if( is.numeric(cores) && ( cores.max <- detectCores() ) < cores ) cores <- cores.max
+		return(cores)
 }

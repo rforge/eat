@@ -468,6 +468,9 @@ create.jags.syntax <- function ( env ) {
 		y<-rbind(y, "" )
 		y<-rbind(y, "}" )
 		y<-rbind(y, "" )
+		y<-rbind(y, "# stop cluster" )
+		y<-rbind(y, "stopCluster(cl)" )
+		y<-rbind(y, "" )
 		y<-rbind(y, "# combine results from parallel computing" )
 		y<-rbind(y, "res <- mcarray.chains.combine( res.l )" ) }
 		
