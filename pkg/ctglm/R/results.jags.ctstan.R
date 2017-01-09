@@ -187,8 +187,11 @@ results.jags.ctstan <- function ( env, mode ) {
 				if( os %in% "Windows" )	eval( parse( text=paste0( "cl <- makePSOCKcluster(",cores,")")) )
 				if( os %in% "Linux" )	eval( parse( text=paste0( "cl <- makeForkCluster(",cores,")")) )
 				registerDoParallel(cl)
-
-				est.l. <- foreach(par=1:nrow(pars),.export="r",.packages=c("reshape2","ggplot2","coda","shinystan")) %dopar% {        
+				
+				pack <- c("reshape2","ggplot2","coda","shinystan",ifelse(engine %in% "ctstan","rstan",NA) )
+				pack <- pack[!is.na(pack)]
+				
+				est.l. <- foreach(par=1:nrow(pars),.export="r",.packages=pack) %dopar% {        
 						# calc results for all parameters
 						est.l <- apply( pars[par,], 1, extr )
 				}
