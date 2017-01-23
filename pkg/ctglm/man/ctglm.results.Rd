@@ -8,7 +8,7 @@ ctglm syntax/call creation
 run ctglm model
 }
 \usage{
-ctglm.results ( r, plot.dir=NULL, plot.person.par=FALSE, cores=detectCores(), verbose=TRUE, ... )
+ctglm.results ( r, plot.dir=NULL, plot.person.par=FALSE, cores=detectCores(), value=c("mode","median","mean"), verbose=TRUE, ... )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -16,6 +16,7 @@ ctglm.results ( r, plot.dir=NULL, plot.person.par=FALSE, cores=detectCores(), ve
   \item{plot.dir}{plot directory (for jags/ctstan)}
   \item{plot.person.par}{plot person parameters}
   \item{cores}{number of cores}  
+  \item{value}{the parameter that is used for additional computations}  
   \item{verbose}{output messages to console}
   \item{...}{additional parameters}
 }

@@ -29,6 +29,14 @@ ctglm.save.syntax <- function( s, dir, ... ) {
 		# modify to include load of objects
 		# i.e. load objects from dir/file.name
 		call <- get( "call", envir=env )
+		
+		# if jags, remove # in #require(ctglm)
+		if( s$engine %in% "jags" ){
+				if ( length( indd <- grep( "#require( 'ctglm' )", call, fixed=TRUE ) ) == 1 ) {
+						call[ indd ] <- sub( "#", "", call[ indd ] )
+				}
+		}
+		
 		# where is ### engine
 		ind <- grep( "### engine:", call[,1] )
 		# add load

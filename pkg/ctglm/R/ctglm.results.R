@@ -1,10 +1,16 @@
 
-ctglm.results <- function ( r, plot.dir=NULL, plot.person.par=FALSE, cores=detectCores(), verbose=TRUE, ... ) {
+ctglm.results <- function ( r, plot.dir=NULL, plot.person.par=FALSE, cores=detectCores(), value=c("mode","median","mean"), verbose=TRUE, ... ) {
 		
 # browser()
+		# warnings loeschen
+		assign("last.warning", NULL, envir = baseenv())
+		
 		# create plot.dir if not exists
 		if( !is.null( plot.dir ) && !dir.exists( plot.dir ) ) dir.create( plot.dir )
 
+		# value auf 1 beschraenken
+		if( length( value ) > 1 ) value <- value[1]
+		
 		# new environment
 		env <- new.env()
 
@@ -16,6 +22,7 @@ ctglm.results <- function ( r, plot.dir=NULL, plot.person.par=FALSE, cores=detec
 		# put values of list r into environment
 		eval( parse ( text=paste0( "assign( '",names(r), "' , r$'",names(r),"' , envir=env )" ) ) )
 		# put all variables (values of arguments of function) into environment
+# browser()		
 		vars <- ls()[ !ls() %in% "r" ]
 		eval( parse ( text=paste0( "assign( '",vars, "' , get('",vars,"') , envir=env )" ) ) )
 		# additional arguments from ...
@@ -33,12 +40,16 @@ ctglm.results <- function ( r, plot.dir=NULL, plot.person.par=FALSE, cores=detec
 		}
 		
 # browser()		
-		# add model names
-		e$model.name <- get( "model.name", envir=env )
-		vorn <- c("model.name","engine")
-		e <- e[ , c(vorn, colnames(e)[!colnames(e) %in% vorn]) ]
-		
-		if ( verbose ) cat( paste0( "\nDONE | :-)\n" ) )
+		if ( !is.null( e ) ) {
+				# add model names
+				e$model.name <- get( "model.name", envir=env )
+				vorn <- c("model.name","engine")
+				e <- e[ , c(vorn, colnames(e)[!colnames(e) %in% vorn]) ]
+		}
+# browser()		
+		if ( verbose ) {
+				cat( paste0( "\nDONE | :-)\n" ) )				
+		}
 		
 		# return
 		return( e )
