@@ -18,7 +18,7 @@ Load <- function( file, exportIfOverlap = c("nothing","onlyNew","all") ){
          }
     }
     if ( length ( obj ) > 0 ) {
-         do <- paste("assign( obj[",1:length(obj),"], get( obj[",1:length(obj),"], envir=env ), env=parent.env(environment() ) )",sep="")
+         do <- paste("assign( obj[",1:length(obj),"], get( obj[",1:length(obj),"], envir=env ))",sep="")
          eval(parse(text=do))
     }
 }
@@ -504,7 +504,7 @@ equat1pl<- function ( results , prmNorm , item = NULL, domain = NULL, testlet = 
                                if  ( length(names(table(as.character(it[,"dimension"])))) > 1) {  cat(paste("    Name of current dimension: ",names(table(prmDim[,"dimension"]))," \n",sep=""))}
                                cat(paste("    Number of linking items: " , eq[["descriptives"]][["N.Items"]],"\n",sep=""))
                                if ( !is.null(allN[["testlet"]]) ) { cat(paste( "    Number of testlets:      ",  eq[["ntl"]],"\n",sep="")) }
-                               if ( length( prbl ) > 0 ) {                              ### Gibt es Items mit linking dif?
+                               if ( length( prbl ) > 0 ) {                      ### Gibt es Items mit linking dif?
                                     cat(paste ( "\nDimension '", prmDim[1,"dimension"], "': ", length( prbl), " of ", nrow( eq[["anchor"]]), " items with linking DIF > ",difBound," identified.\n",sep=""))
                                     dskr <- data.frame ( item = eq[["anchor"]][prbl,"item"], dif = dif[prbl], linking.constant = eq[["B.est"]][[method]], linkerror = eq[["descriptives"]][["linkerror"]] )
                                     if ( !excludeLinkingDif) { info<- dskr }
@@ -513,7 +513,7 @@ equat1pl<- function ( results , prmNorm , item = NULL, domain = NULL, testlet = 
                                               cat(paste("   Exclude ",length( prbl), " items.\n",sep=""))
                                               qp1 <- prmM[-match ( dskr[,"item"], prmM[,allN[["item"]]]),]
                                               eq1 <- equAux ( x=prmDim[ ,c("item", "est")], y = qp1[,c(allN[["item"]], allN[["value"]], allN[["testlet"]])] )
-                                              info<- data.frame ( method = "nonIterativ", rbind ( data.frame ( itemExcluded = "" , linking.constant = eq[["B.est"]][[method]], linkerror = eq[["descriptives"]][["linkerror"]] ), data.frame ( itemExcluded = paste ( prmM[match ( dskr[,"item"], prmM[,allN[["item"]]]),"item"] , collapse = ", "), linking.constant = eq1[["B.est"]][[method]], linkerror = eq1[["descriptives"]][["linkerror"]] ) ))
+                                              info<- data.frame ( method = "nonIterativ", rbind ( data.frame ( itemExcluded = "" , linking.constant = eq[["B.est"]][[method]], linkerror = eq[["descriptives"]][["linkerror"]] ), data.frame ( itemExcluded = paste ( prmM[match ( dskr[,"item"], prmM[,allN[["item"]]]),allN[["item"]]] , collapse = ", "), linking.constant = eq1[["B.est"]][[method]], linkerror = eq1[["descriptives"]][["linkerror"]] ) ))
                                               eq  <- eq1
     ### hier beginnt iterativer Ausschluss von Linking-DIF
                                          }  else  {
@@ -533,12 +533,12 @@ equat1pl<- function ( results , prmNorm , item = NULL, domain = NULL, testlet = 
                                               }
                                          }
                                     }
-                               }  else  {                                               ### hier folgt der Abschnitt, wenn es keine Linking-Dif Items gibt
+                               }  else  {                                       ### hier folgt der Abschnitt, wenn es keine Linking-Dif Items gibt
                                     info <- data.frame ( linking.constant = eq[["B.est"]][[method]], linkerror = eq[["descriptives"]][["linkerror"]] )
                                }
                                cat("\n")
                                infPrint <- data.frame ( lapply ( info , FUN = function ( x ) {if(class(x) == "numeric") { x <- round(x, digits = 3)}; return(x) }))
-                               print(infPrint)
+                               print(infPrint); flush.console()
                                cat("\n")
                                ret <- list ( eq = eq, items = prmDim, info = info, method = method )
                                return ( ret ) }, simplify =FALSE)
@@ -1422,6 +1422,12 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
 checkQmatrixConsistency <-  function(qmat) {  
              if(class(qmat) != "data.frame")    { qmat     <- data.frame(qmat, stringsAsFactors = FALSE)}
              if(class(qmat[,1]) != "character") { qmat[,1] <- as.character(qmat[,1])}
+             nClass<- sapply(qmat, class)
+             ind   <- which (!nClass %in% c("integer", "numeric"))
+             if ( length ( ind ) > 1) { 
+                  cat(paste("Warning: Found non-numeric indicator column(s) in the Q matrix. Transform column(s) '",paste(colnames(qmat)[ind[-1]], collapse = "', '") ,"' into numeric format.\n",sep=""))
+                  for ( a in ind[-1] ) { qmat[,a] <- as.numeric(as.character(qmat[,a] ))}
+             }     
              werte <- eatRep:::table.unlist(qmat[,-1,drop=FALSE], useNA="always")
              if(length(setdiff( names(werte) , c("0","1", "NA")))<0) {stop("Q matrix must not contain entries except '0' and '1'.\n")}
              if(werte[match("NA", names(werte))] > 0) {stop("Missing values in Q matrix.\n")}
