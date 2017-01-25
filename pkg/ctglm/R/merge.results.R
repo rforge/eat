@@ -5,7 +5,7 @@ merge.results <- function( ..., consistent=TRUE, noNAcol=TRUE, pattern="\\.\\b(R
 		requireNamespace( "plyr" ) # rbind.fill
 		
 		# default results.identifier (for ctglm results)
-		if( is.null( results.identifier ) ) results.identifier <- 'is.data.frame( d ) && all( c( "model.name","engine","name","variable","value" ) %in% colnames( d ) )'
+		if( is.null( results.identifier ) ) results.identifier <- 'is.data.frame( d ) && all( c( "model.name","engine","name","variable","mode","median","mean" ) %in% colnames( d ) )'
 		
 		# arguments from ...
 		# if( length( list(...) ) > 0 ) {
