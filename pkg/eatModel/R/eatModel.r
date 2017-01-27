@@ -316,7 +316,7 @@ simEquiTable <- function ( anchor, mRef, sdRef, addConst = 500, multConst = 100,
                               if ( length( unique ( sks[,col] )) > 1) { 
     ### hier werden spaltenspezifisch die Nachkommastellen bestimmt, auf die gerundet werden soll 
                                    dig <- as.numeric(recode ( col, "'Score'=0; 'Estimate'=2; 'estBista'=0"))
-                                   ret <- paste ( round(min(sks[,col]), digits = dig), round(max(sks[,col]), digits = dig), sep=" - ")
+                                   ret <- paste ( round(min(sks[,col]), digits = dig), round(max(sks[,col]), digits = dig), sep=" bis ")
                               }  else  {
                                    ret <- unique ( sks[,col] )
                               }
@@ -2796,7 +2796,7 @@ prepRep <- function ( calibT2, bistaTransfT1, bistaTransfT2, makeIdsUnique = TRU
            stopifnot ( nrow(dat2) == nrow(bistaTransfT2[["personpars"]]))
      ### IDs unique machen (wenn gewuenscht)
            if ( makeIdsUnique == TRUE ) { 
-                dat1[, idN] <- paste(dat1[, "trend"], dat1[, idN], sep="_")
-                dat2[, idN] <- paste(dat2[, "trend"], dat2[, idN], sep="_")
+                dat1[, paste(idN, "unique", sep="_")] <- paste(dat1[, "trend"], dat1[, idN], sep="_")
+                dat2[, paste(idN, "unique", sep="_")] <- paste(dat2[, "trend"], dat2[, idN], sep="_")
            }     
            return(rbind ( dat1, dat2))}

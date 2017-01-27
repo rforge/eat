@@ -467,6 +467,36 @@ item <- itemFromRes ( res1 )
 
 
 ################################################################################
+###       Example 1a: Unidimensional Rasch Model with DIF estimation         ###
+################################################################################
+
+# nearly the same procedure as in example 1. Using 'sex' as DIF variable
+# note that 'sex' is a factor variable here. Conquest needs all explicit variables
+# to be numeric. Variables will be automatically transformed to numeric by 
+# 'defineModels'. However, it might be the better idea to transform the variable
+# manually. 
+datW[,"sexNum"] <- car::recode ( datW[,"sex"] , "'male'=0; 'female'=1", 
+                   as.factor.result = FALSE)
+                   
+# as we have defined a new variable ('sexNum') in the data, it is a good idea 
+# to explicitly specify item columns ... instead of saying 'items= -c(1:3)' which
+# means: Everything except column 1 to 3 are item columns
+items<- grep("^Bio|^Che|^Phy", colnames(datW))
+
+# Caution: two items ("ChePro48", "PhyPro01") are excluded because they are 
+# constant in one of the DIF groups
+mod1a<- defineModel(dat=datW, items= items, id="id", DIF.var = "sexNum", 
+        analysis.name = "unidimDIF", conquest.folder = "N:/console_Feb2007.exe",  
+        dir = "N:/temp")
+
+# run the model
+run1a<- runModel(mod1a)
+
+# get the results
+res1a<- getResults(run1a)
+
+
+################################################################################
 ###        Example 2a: Multidimensional Rasch Model with anchoring           ###
 ################################################################################
 
