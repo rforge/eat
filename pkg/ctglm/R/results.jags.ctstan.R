@@ -187,9 +187,8 @@ results.jags.ctstan <- function ( env, mode ) {
 						# put all chains in one long chain
 						onechain <- do.call( "c", sapply( mcmclist, as.numeric, simplify=FALSE ) )
 		# browser()				
-						
 						# return data.frame
-						ret <- data.frame( "name"=z["name"], "variable"=z["parameter"], "mode"=mlv( onechain, method="density" )$M, "median"=unname(retrieve(sso,"quantiles")["50%"]), "mean"=retrieve(sso,"mean"), "sd"=retrieve(sso,"sd"), "mcse.ss"=retrieve( sso, "mcse" ), "relative.mcse.ss"=relMCSE.ss, "psrf.coda"=psrf.coda, "psrf.UL.coda"=psrf.UL.coda, "psrf.ss"=psrf.ss, "effN.coda"=unname(effN.coda), "effN.ss"=effN.ss, "engine"=engine, stringsAsFactors=FALSE )
+						ret <- data.frame( "name"=z["name"], "variable"=z["parameter"], "mode"=mlv( onechain, method="density" )$M, "median"=unname(retrieve(sso,"quantiles")["50%"]), "mean"=retrieve(sso,"mean"), "hdi95.lb" = unname(retrieve(sso,"quantiles")["2.5%"]), "hdi95.ub" = unname(retrieve(sso,"quantiles")["97.5%"]), "sd"=retrieve(sso,"sd"), "mcse.ss"=retrieve( sso, "mcse" ), "relative.mcse.ss"=relMCSE.ss, "psrf.coda"=psrf.coda, "psrf.UL.coda"=psrf.UL.coda, "psrf.ss"=psrf.ss, "effN.coda"=unname(effN.coda), "effN.ss"=effN.ss, "engine"=engine, stringsAsFactors=FALSE )
 						
 						# if( chains==1 ) { psrf.est <- psrf.UL <-NA } else { psrf <- gelman.diag( mcmclist ); psrf.est <- unname(psrf$psrf[1,1]); psrf.UL <- unname(psrf$psrf[1,2]) }
 						# effN <- effectiveSize( mcmclist )
