@@ -7,9 +7,10 @@ call \code{runModel} with the argument returned by \code{defineModel} to start t
 The last step then is to create a results frame using \code{getResults}. }
 \usage{
 getResults(runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c("pv", "wle", "eap"), 
-    omitFit = FALSE, omitRegr = FALSE, omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6, 
-    sig.dif.bound = 0.3, p.value = 0.9, nplausible = NULL, ntheta = 2000, normal.approx = FALSE, 
-    samp.regr = FALSE, theta.model=FALSE, np.adj=8)}
+    q3MinObs = 0, q3MinType = c("singleObs", "marginalSum"), omitFit = FALSE, 
+    omitRegr = FALSE, omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6, 
+    sig.dif.bound = 0.3, p.value = 0.9, nplausible = NULL, ntheta = 2000, 
+    normal.approx = FALSE, samp.regr = FALSE, theta.model=FALSE, np.adj=8)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{runModelObj}{
@@ -32,6 +33,18 @@ package.
 %%     ~~Describe \code{file} here~~
 Specify whether the Q3 statistic should be estimated using PVs, WLEs or EAPs 
 as the theta variable.
+}
+  \item{q3MinObs}{
+%%     ~~Describe \code{file} here~~
+Q3 statistic might be untrustworthy if item covariance estimation is based on very
+few onservations. Define the minimum number of observation which should be fulfilled
+for Q3 estimation. 
+}
+  \item{q3MinType}{
+%%     ~~Describe \code{file} here~~
+If \code{"singleObs"}, \code{q3MinObs} argument is based on the least number of observations in 
+the 2x2 0/1 frequency table of item pairs. If \code{"marginalSum"}, \code{q3MinObs} argument is based on 
+the sum of marginals in the 2x2 0/1 frequency table of item pairs. 
 }
   \item{omitFit}{
 %%     ~~Describe \code{file} here~~

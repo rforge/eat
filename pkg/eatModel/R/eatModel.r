@@ -1,3 +1,50 @@
+nObsItemPairs <- function ( responseMatrix, q3MinType) { 
+                 spl <- data.frame ( combn(colnames(responseMatrix),2), stringsAsFactors = FALSE)
+                 splM<- do.call("rbind", lapply ( spl, FUN = function ( y ) {
+                        if ( q3MinType == "singleObs" ) { 
+                             minVal <- min ( table(data.frame ( responseMatrix[,y])))
+                        }  else  { 
+                             minVal <- min(c(rowSums(table(data.frame ( responseMatrix[,y]))), colSums(table(data.frame ( responseMatrix[,y])))))
+                        }
+                        ret <- data.frame ( Var1 = sort(y)[1], Var2 = sort(y)[2], minValue = minVal)     
+                        return(ret)}))
+                 return(splM)}       
+
+
+mergeAttr <- function ( x, y, by = intersect(names(x), names(y)), by.x = by, by.y = by, all = FALSE, all.x = all, all.y = all, sort = TRUE, suffixes = c(".x",".y")) {
+             doppel<- intersect ( colnames(x) , setdiff ( colnames(y), by.y))   ### uebereinstimmende dateinamen in beiden datensaetzen? (ausser die variablen, die germergt werden sollen 
+             if ( length ( doppel ) > 0) {                                      ### wenn je, muessen sie umbenannt werden
+                  altNeuX <- data.frame ( alt = colnames(x)[match(doppel, colnames(x))], neu = paste ( colnames(x)[match(doppel, colnames(x))], suffixes[1], sep=""), stringsAsFactors = FALSE)
+                  recStatX<- paste("'",altNeuX[,"alt"] , "' = '" , altNeuX[,"neu"],"'",sep="", collapse="; ")
+                  colnames(x) <- recode (colnames(x) , recStatX)           ### nun noch dasselbe fuer die y-Variablen 
+                  altNeuY <- data.frame ( alt = colnames(y)[match(doppel, colnames(y))], neu = paste ( colnames(y)[match(doppel, colnames(y))], suffixes[2], sep=""), stringsAsFactors = FALSE)
+                  recStatY<- paste("'",altNeuY[,"alt"] , "' = '" , altNeuY[,"neu"],"'",sep="", collapse="; ")
+                  colnames(y) <- recode (colnames(y) , recStatY)
+             }     
+             dats  <- list ( x=x, y=y)                                          ### welche Attribute gibt es ueberhaupt? 
+             attrNa<- unique(unlist(lapply ( dats , FUN = function ( d ) {      ### hier die Labels (= Attribute) fuer beide Datensaetze sammeln, 
+                      at <- lapply ( d, attributes)                             ### ggf. umbenennen, wenn sich Variablen ueberschneiden
+                      atn<- unique(unlist(lapply ( at, names)))
+                      return(atn)})))
+             attrXY<- lapply ( attrNa, FUN = function ( a ) {                   
+                      atr <- lapply ( dats, FUN = function ( dat ) { sapply ( dat, attr, a)})
+                      atr <- c ( atr[[1]], atr[[2]])                            ### Hotfix: doppelte weg (duerfte max. nur die ID sein, nicht schlimm
+                      weg <- which(duplicated(names(atr)))
+                      if(length(weg)>0) { atr <- atr[-weg]}
+                      return(atr) })
+             names(attrXY) <- attrNa                                         
+             datM  <- merge ( x=x, y=y, by=by, by.x=by.x, by.y=by.y, all=all, all.x=all.x, all.y=all.y, sort=sort, suffixes =suffixes)
+             for ( i in names(attrXY) ) {                                       ### nach dem Mergen Attribute variablenweise neu vergeben, separat fuer variablen- und wertelabels 
+                      mat <- data.frame ( attrNummer = 1:length(attrXY[[i]]), matchInData = match ( names ( attrXY[[i]] ), colnames( datM) ) )
+                      stopifnot ( !length( which(is.na(mat[,"matchInData"]))) > length(unique(c(by, by.x, by.y))) )             
+                      mat <- mat[which(!is.na(mat[,"matchInData"])),]
+                      for ( j in 1:nrow(mat) ) {                                ### obere Zeile, check: darf nichts geben, was nicht gematcht werden kann 
+                            stopifnot ( colnames(datM)[mat[j,"matchInData" ] ] == names(attrXY[[i]])[mat[j,"attrNummer"]])
+                            attr(datM[, mat[j,"matchInData" ]], i) <- attrXY[[i]][[mat[j,"attrNummer"]]]  
+                      }
+             }
+             return(datM)}                         
+
 Load <- function( file, exportIfOverlap = c("nothing","onlyNew","all") ){
         ovl <- match.arg(exportIfOverlap)
         env <- new.env()
@@ -326,9 +373,10 @@ simEquiTable <- function ( anchor, mRef, sdRef, addConst = 500, multConst = 100,
                 return(list ( complete = equ, short = shrt))}
 
 
-getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c("pv", "wle", "eap"), omitFit = FALSE, omitRegr = FALSE, omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6, sig.dif.bound = 0.3, p.value = 0.9, 
+getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c("pv", "wle", "eap"), q3MinObs = 0, q3MinType = c("singleObs", "marginalSum"), omitFit = FALSE, omitRegr = FALSE, omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6, sig.dif.bound = 0.3, p.value = 0.9, 
               nplausible = NULL, ntheta = 2000, normal.approx = FALSE, samp.regr = FALSE, theta.model=FALSE, np.adj=8 ) { 
-            q3theta <- match.arg(q3theta )
+            q3MinType<- match.arg(q3MinType)
+            q3theta  <- match.arg(q3theta )
             if("runMultiple" %in% class(runModelObj)) {                         ### Mehrmodellfall
                 if(is.null ( attr(runModelObj, "nCores") ) | attr(runModelObj, "nCores") == 1 ) {         
                    res <- lapply( runModelObj, FUN = function ( r ) {           ### erstmal single core auswertung
@@ -1513,7 +1561,7 @@ converged<- function (dir, logFile) {
             }
             return(isConv)}
 
-getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Names, abs.dif.bound , sig.dif.bound, p.value, deskRes, discrim, omitFit, omitRegr, omitWle, omitPV, daten, Q3=Q3, q3theta=q3theta ) {
+getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Names, abs.dif.bound , sig.dif.bound, p.value, deskRes, discrim, omitFit, omitRegr, omitWle, omitPV, daten, Q3=Q3, q3theta=q3theta, q3MinObs =  q3MinObs, q3MinType = q3MinType) {
          allFiles <- list.files(path=path, pattern = analysis.name, recursive = FALSE)
          qL       <- melt(qMatrix, id.vars = colnames(qMatrix)[1], variable.name = "dimensionName", na.rm=TRUE)
          qL       <- qL[which(qL[,"value"] != 0 ) , ]
@@ -1704,13 +1752,19 @@ getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Name
                   drinP <- match(theta[,1], daten[,"ID"])                       ### ggf.: welche Personen im Datensatz stehen nicht im PV-File
                   stopifnot(length(which(is.na(drinP))) == 0 ); stopifnot(length(which(is.na(drinI))) == 0 )
                   txt   <- capture.output ( q3.res<- Q3(dat = daten[drinP,drinI], theta = theta[,2], b = shw[["item"]][,"ESTIMATE"], progress = FALSE) )
-                  matL  <- reshapeQ3 (q3.res$q3.matrix)
-                  ret   <- rbind ( ret, data.frame ( model = model.name, source = "conquest", var1 = matL[,"Var1"],  var2 = matL[,"Var2"] , type = "fixed",indicator.group = "items",group = paste(names(table(shw1[,"group"])), collapse="_"), par = "q3", derived.par = NA, value = matL[,"value"] , stringsAsFactors = FALSE))
+                  nObs  <- NULL
+                  if ( !is.null(q3MinObs) ) {                                   ### untere Zeile: paarweise Anzahl Beobachtungen je Itempaar 
+                        if ( q3MinObs > 1 ) { nObs <- nObsItemPairs ( responseMatrix = daten[,all.Names[["variablen"]]], q3MinType = q3MinType ) }
+                  }      
+                  matL  <- reshapeQ3 (mat = q3.res$q3.matrix, q3MinObs = q3MinObs, nObs = nObs)
+                  if( nrow(matL)>0) { 
+                        ret   <- rbind ( ret, data.frame ( model = model.name, source = "conquest", var1 = matL[,"Var1"],  var2 = matL[,"Var2"] , type = "fixed",indicator.group = "items",group = paste(names(table(shw1[,"group"])), collapse="_"), par = "q3", derived.par = NA, value = matL[,"value"] , stringsAsFactors = FALSE))   
+                  }    
               }
          }                                          
          return(ret)}
 
-getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV, nplausible , ntheta , normal.approx, samp.regr, theta.model, np.adj, Q3=Q3) {
+getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV, nplausible , ntheta , normal.approx, samp.regr, theta.model, np.adj, Q3=Q3, q3MinObs =  q3MinObs, q3MinType = q3MinType) {
          if( omitRegr == FALSE ) { txt <- capture.output ( regr     <- tam.se(runModelObj)) }
          qMatrix  <- attr(runModelObj, "qMatrix")
          qL       <- melt(qMatrix, id.vars = colnames(qMatrix)[1], variable.name = "dimensionName", na.rm=TRUE)
@@ -1841,18 +1895,35 @@ getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV, n
               eaps[grep("^SD.",as.character(eaps[,"variable"])),"par"]   <- "se"
               ret  <- rbind ( ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = eaps[,"pid"], var2 = NA , type = "indicator", indicator.group = "persons", group = eaps[,"group"], par = "eap", derived.par = eaps[,"par"], value = eaps[,"value"] , stringsAsFactors = FALSE))
          }
-    ### Sektion 'Q3 erzeugen' 
-         if ( Q3 == TRUE ) {
+    ### Sektion 'Q3 erzeugen'
+         if ( Q3 == TRUE ) {                                                    
+              nObs <- NULL
+              if ( !is.null(q3MinObs) ) {                                       ### untere Zeile: paarweise Anzahl Beobachtungen je Itempaar 
+                    if ( q3MinObs > 1 ) { nObs <- nObsItemPairs ( responseMatrix = runModelObj$resp, q3MinType = q3MinType ) }
+              }      
               mat  <- tam.modelfit ( tamobj = runModelObj, progress = FALSE ) 
-              matL <- reshapeQ3 (mat$Q3.matr)
-              ret  <- rbind ( ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = matL[,"Var1"], var2 = matL[,"Var2"] , type = "fixed",indicator.group = "items", group = paste(names(table(shw1[,"group"])), collapse="_"), par = "q3", derived.par = NA, value = matL[,"value"] , stringsAsFactors = FALSE))
+              matL <- reshapeQ3 (mat = mat$Q3.matr, q3MinObs = q3MinObs, nObs = nObs)
+              if( nrow(matL)>0) { 
+                  ret  <- rbind ( ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = matL[,"Var1"], var2 = matL[,"Var2"] , type = "fixed",indicator.group = "items", group = paste(names(table(shw1[,"group"])), collapse="_"), par = "q3", derived.par = NA, value = matL[,"value"] , stringsAsFactors = FALSE))
+              }    
          }                                          
          return(ret)}
          
 ### Hilfsfunktion zur Vereinheitlichung der Q3-Matrix         
-reshapeQ3 <- function ( mat ) { 
+reshapeQ3 <- function ( mat, q3MinObs, nObs ) { 
              for (ii in 1:(nrow(mat)-1)) { mat[ii,ii:ncol(mat)] <- NA}          ### entferne alles oberhalb der Hauptdiagonale 
              matL <- melt ( mat , na.rm = TRUE)                       ### das entfernt alle doppelten Eintraege
+             if ( !is.null(nObs)) {                                             ### dass hier soll nur passieren, wenn Eintraege aus der Q3 Matrix ggf. entfernt werden 
+                   check<- do.call("rbind", apply(matL[,-ncol(matL)], MARGIN = 1, FUN = function ( y ) { ret <- sort ( y); ret <- data.frame ( Var1 = ret[1], Var2 = ret[2], stringsAsFactors = FALSE); return(ret)}))
+                   matL <- data.frame ( check, value = matL[,"value"], stringsAsFactors = FALSE)
+                   matL <- merge ( matL, nObs, by = c("Var1", "Var2"), all = TRUE)
+                   matL <- matL[which(!is.na(matL[,"value"])),]
+                   weg  <- which(matL[,"minValue"] < q3MinObs)
+                   if (length(weg)>0) { matL <- matL[-weg,]}
+             }
+             if ( nrow(matL) == 0 ) { 
+                   cat("No observations left in Q3 matrix.\n")
+             }      
              return(matL)}
 
 ### Extraktorfunktionen
