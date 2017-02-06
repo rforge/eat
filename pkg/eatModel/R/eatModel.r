@@ -1004,7 +1004,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
      ### wenn multicore handling, dann wird das Objekt "model" an cores verteilt und dort weiter verarbeitet. Ausserdem werden Konsolenausgaben in stringobjekt "txt" weitergeleitet
                      }  else  { 
                         txt    <- capture.output ( models <- lapply( mods, FUN = doAufb))
-                        # if(!exists("detectCores"))   {library(parallel)}
+                        if(!exists("detectCores"))   {library(parallel)}
                         doIt<- function (laufnummer,  ... ) { 
                                if(!exists("getResults"))  { library(eatModel) }
                                strI<- paste(unlist(lapply ( names ( models[[laufnummer]]) , FUN = function ( nameI ) { paste ( nameI, " = models[[laufnummer]][[\"",nameI,"\"]]", sep="")})), collapse = ", ")
@@ -1073,7 +1073,8 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                      nValid      <- table(datL.valid[,all.Names[["ID"]]])
                      inval       <- nValid[which(nValid<boundary)]
                      if(length(inval)>0) { 
-                        cat(paste( length(inval), " subject(s) with less than ",boundary," valid item responses: ", paste(names(inval),inval,sep=": ", collapse="; "),"\n",sep=""))
+                        if ( length( inval > 5)) { auswahl  <- sort ( inval)[c(1, round(length(inval)/2)  ,length(inval))] }  else { auswahl <- sort (inval)[c(1, 3 , length(inval))] }
+                        cat(paste( length(inval), " subject(s) with less than ",boundary," valid item responses: ", paste(names(auswahl),auswahl,sep=": ", collapse="; ")," ... \n",sep=""))
                         if(remove.boundary==TRUE) { 
                            cat(paste("subjects with less than ",boundary," valid responses will be removed.\n    Caution! This can result in loosing some items likewise.\n",sep="") )
                            weg <- match(names(inval), dat[,all.Names[["ID"]]])
@@ -1296,7 +1297,10 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                       per0  <- NULL
                       if(length(allFal)>0) { 
                          num <- rowSums(datMax[ which ( datMax[,1] %in% allFal), -1], na.rm = TRUE)
-                         cat(paste( length(allFal), " subject(s) do not solve any item:\n   ", paste(allFal, " (",num," false)",sep="",collapse=", "),"\n",sep=""))
+                         numF<- data.frame ( id = allFal, anzahl = num)
+                         numF<- data.frame(numF[sort(numF[,"anzahl"],decreasing=FALSE,index.return=TRUE)$ix,])
+                         if ( nrow( numF) > 5) { auswahl  <- numF[c(1, round(nrow(numF)/2), nrow(numF)),] }  else { auswahl <- na.omit(numF[c(1, 2, nrow(numF)),]) }
+                         cat(paste( length(allFal), " subject(s) do not solve any item:\n   ", paste(auswahl[,"id"], " (",auswahl[,"anzahl"]," false)",sep="",collapse=", ")," ... \n",sep=""))
                          if (remove.failures == TRUE)  { 
                              cat("   Remove subjects without any correct response.\n"); flush.console()
                              weg <- na.omit(match(allFal, dat[,all.Names[["ID"]]]))
@@ -1306,13 +1310,15 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                       }
                       if(length(allTru)>0) { 
                          num <- rowSums(datMax[ which ( datMax[,1] %in% allTru), -1], na.rm = TRUE)
-                         cat(paste( length(allTru), " subject(s) solved each item: ", paste(allTru, " (",num ," correct)",sep="", collapse=", "),"\n",sep=""))
+                         numT<- data.frame ( id = allTru, anzahl = num)
+                         numT<- data.frame(numT[sort(numT[,"anzahl"],decreasing=FALSE,index.return=TRUE)$ix,])
+                         if ( nrow( numT) > 5) { auswahl  <- numT[c(1, round(nrow(numT)/2), nrow(numT)),] }  else { auswahl <- na.omit(numT[c(1, 2, nrow(numT)),]) }
+                         cat(paste( length(allTru), " subject(s) solved each item: ", paste(auswahl[,"id"], " (",auswahl[,"anzahl"] ," correct)",sep="", collapse=", ")," ... \n",sep=""))
                       }
      ### Sektion 'Verlinkung pruefen' ###
                       if(check.for.linking == TRUE) {                           ### Dies geschieht auf dem nutzerspezifisch reduzierten/selektierten Datensatz
                          linkNaKeep <- checkLink(dataFrame = dat[,all.Names[["variablen"]], drop = FALSE], remove.non.responser = FALSE, verbose = FALSE )
                          linkNaOmit <- checkLink(dataFrame = dat[,all.Names[["variablen"]], drop = FALSE], remove.non.responser = TRUE, verbose = FALSE )
-                         if(linkNaKeep == FALSE & linkNaOmit == FALSE ) {cat("WARNING! Dataset is NOT completely linked (even if cases with missings on all items are removed).\n")}
                          if(linkNaKeep == FALSE & linkNaOmit == TRUE )  {cat("Note: Dataset is not completely linked. This is probably only due to missings on all cases.\n")}
                          if(linkNaKeep == TRUE )                        {cat("Dataset is completely linked.\n")}
                       }
@@ -1539,6 +1545,12 @@ checkLink <- function(dataFrame, remove.non.responser = FALSE, sysmis = NA, verb
              }
              if (length(all.cases) != nrow(dataFrame))   {
                 if (verbose == TRUE) {cat("WARNING! Dataset is not completely linked.\n") }
+                if ( remove.non.responser == TRUE ) { 
+                     missed <- setdiff ( 1:nrow(dataFrame), all.cases)
+                     misFra <- melt ( data.frame ( id = 1:length(missed), dataFrame[missed,]), id.vars = "id", na.rm=TRUE)
+                     cat ( paste ( "W A R N I N G !   Dataset is NOT completely linked (even if cases with missings on all items are removed).\n                  ",length(missed)," cases unconnected. Following items are unconnected: \n",sep=""))
+                     cat("                  "); cat ( paste ( unique(as.character(misFra[,"variable"])), collapse = ", ")); cat("\n")
+                }
                 return(FALSE)
              }
              if (length(all.cases) == nrow(dataFrame))   {
