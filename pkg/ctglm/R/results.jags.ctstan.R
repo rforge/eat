@@ -267,13 +267,19 @@ results.jags.ctstan <- function ( env, mode ) {
 				if ( engine %in% "ctstan" ) {
 		# browser()		
 						# cholQ in ctstan is cholesky matrix, transform to variance matrix
-						if (verbose) { cat( paste0( "      cholQ -> Q\n" ) ); flush.console() }
+						if (verbose) { cat( paste0( "            cholQ -> Q\n" ) ); flush.console() }
 						est <- transform.var.matrix( parameters$cholQ, "cholQ", "Q", "solve( chol2inv( t( M ) ) )", est, value )
 						
 						# chol.var.t1 in ctstan is cholesky matrix, transform to variance matrix
 						if (verbose) { cat( paste0( "      chol.var.t1 -> var.t1\n" ) ); flush.console() }
 						est <- transform.var.matrix( parameters$chol.var.t1, "chol.var.t1", "var.t1", "solve( chol2inv( t( M ) ) )", est, value )
 
+						# sd.b to var.b
+						if (verbose) { cat( paste0( "             sd.b -> var.b\n" ) ); flush.console() }
+# browser()						
+						### Achtung, nur für sd->var, nicht für corr->cov, muss noch abgefangen werden
+						est <- transform.var.matrix( parameters$sd.b, "sd.b", "var.b", "M^2", est, value )
+						
 						# diagonal of chol.var.b in ctstan is sd, transform to variance
 						# if (verbose) { cat( paste0( "      chol.var.b -> var.b\n" ) ); flush.console() }
 						# est <- transform.var.matrix( parameters$chol.var.b, "chol.var.b", "var.b", "M^2", est )
@@ -291,21 +297,21 @@ results.jags.ctstan <- function ( env, mode ) {
 				
 						### variance of b
 						# get all b
-						bs <- names( r$results )
-						bs <- bs[ grepl( "output_hsd_b", bs ) ]
-						bs.par.name <- sub( "output_hsd_", "", bs )
-
-						if ( length(bs) > 0 ) {
-		# browser()				
-								pars2 <- data.frame( "name"="var.b", "parameter"=paste0("var.",bs.par.name), "call"=paste0("extract( r$results, pars=paste0('output_hsd_', '",bs.par.name,"'), permuted=FALSE, inc_warmup=TRUE )[,,1]"), stringsAsFactors=FALSE )
-								est.l2 <- apply( pars2, 1, extr )
-								est2 <- do.call( "rbind", est.l2 )
-								# square (because it's sd)
-								est2[,value] <- est2[,value]^2
-								
-								# bind on estimates
-								est <- rbind( est, est2 )
-						}
+						#bs <- names( r$results )
+						#bs <- bs[ grepl( "output_hsd_b", bs ) ]
+						#bs.par.name <- sub( "output_hsd_", "", bs )
+                        #
+						#if ( length(bs) > 0 ) {
+		                #
+						#		pars2 <- data.frame( "name"="var.b", "parameter"=paste0("var.",bs.par.name), "call"=paste0("extract( r$results, pars=paste0('output_hsd_', '",bs.par.name,"'), permuted=FALSE, inc_warmup=TRUE )[,,1]"), stringsAsFactors=FALSE )
+						#		est.l2 <- apply( pars2, 1, extr )
+						#		est2 <- do.call( "rbind", est.l2 )
+						#		# square (because it's sd)
+						#		est2[,value] <- est2[,value]^2
+						#		
+						#		# bind on estimates
+						#		est <- rbind( est, est2 )
+						#}
 						
 						### variance of mu.t1.j
 						# get all mu.t1.j
@@ -380,11 +386,15 @@ get.par.list <- function( m, m.name, mode ){
 		} else if ( mode %in% "ctstan" ) {
 				# if ( !indvarying & !par %in% c("lp__") & !grepl("^eta",par) ){
 						# iterations/chains fuer parameter
-			
+	
 						# determine if hmean or hsd
-						# if( any( m.$name %in% c("var.b") ) ) morsd <- "hsd" else morsd <- "hmean"
-						morsd <- "hmean"
-# browser()
+						if( any( m.$name %in% c("sd.b") ) ) morsd <- "hsd" else morsd <- "hmean"
+						# morsd <- "hmean"
+# browser()				
+# if( any( m.$name %in% c("var.b") ) ) browser()
+						# spezial
+						if( any( m.$name %in% c("sd.b") ) ) m.$parameter.mod <- "b"
+						
 						### mod for var.b
 						# if( any( m.$name %in% c("var.b") ) ) {
 								# delete prefix "cholvar"

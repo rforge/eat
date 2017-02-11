@@ -139,6 +139,7 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
 		if( exists( "Q" ) && any( is.parameter ( Q ) ) ) invisible(moveTo.par.env("Q",env,par.env))
 		if( exists( "cholQ" ) && any( is.parameter ( cholQ ) ) ) invisible(moveTo.par.env("cholQ",env,par.env))
 		if( exists( "b" ) && any( is.parameter ( b ) ) ) invisible(moveTo.par.env("b",env,par.env))
+		if( exists( "sd.b" ) && any( is.parameter ( sd.b ) ) ) invisible(moveTo.par.env("sd.b",env,par.env))
 # browser()		
 		if( exists( "track.person.par" ) && !is.null( track.person.par ) && mode %in% "ctstan" && exists( "bj" ) && any( is.parameter ( bj ) ) && "bj" %in% track.person.par ) invisible(moveTo.par.env("bj",env,par.env))
 		if( exists( "track.person.par" ) && !is.null( track.person.par ) && mode %in% "ctstan" && exists( "mu.t1.j" ) && any( is.parameter ( mu.t1.j ) ) && "mu.t1.j" %in% track.person.par ) invisible(moveTo.par.env("mu.t1.j",env,par.env))

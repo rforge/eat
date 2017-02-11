@@ -496,6 +496,19 @@ prep.data <- function ( env ) {
 						# prec.b <- prec.b.	
 						prec.b <- make.sym( prec.b, prec.b. )
 				}
+				if ( engine %in% c("ctstan") ) {		
+						if ( !exists("sd.b",inherits=FALSE) || is.null(sd.b) ) {
+								sd.b <- matrix( NA, nrow=F, ncol=F )
+								if ( !is.null( latent.names ) ) colnames( sd.b ) <- rownames( sd.b ) <- latent.names
+								default[length(default)+1] <- paste0( "     lat. var. sd. of cont. intercepts sd.b: freely estimable symmetric FxF (", F, "x", F, ") matrix" )
+						}
+						# NAs to labeled parameters
+						sd.b. <- label.pars(sd.b,"sd.b")		
+						# make sd.b (potentially) symmetric again (do not overwrite user specific labeled parameters, even if unsymmetric matrix
+						# if( any ( is.na( sd.b ) ) ) sd.b.[upper.tri(sd.b.)][ is.na( sd.b[upper.tri(sd.b)] ) ]  <- sd.b.[lower.tri(sd.b.)][ is.na( sd.b[lower.tri(sd.b)] ) ]  
+						# sd.b <- sd.b.	
+						sd.b <- make.sym( sd.b, sd.b. )
+				}		
 				if ( engine %in% c("ctsem") ) {		
 						if ( !exists("chol.var.b",inherits=FALSE) || is.null(chol.var.b) ) {
 								chol.var.b <- matrix( NA, nrow=F, ncol=F )
@@ -514,7 +527,7 @@ prep.data <- function ( env ) {
 		
 		# browser()		
 		### (over)write relevant variables to environment ###
-		obj <- c( "d", "dw", "dl", "col.y", "col.id", "col.item", "col.time", "R", "J", "I", "T", "Tj", "P", "Tp", "PNj", "Pj", "L", "Lpat", "Lpat.group", "Lambda", "beta", ifelse(exists("mu.beta"),"mu.beta",NA), ifelse(exists("prec.beta"),"prec.beta",NA), ifelse(measurement.model$family=="gaussian","E",NA), "F", "I1", "I2", "Aw", "I1w", "Qt.prec.replace", "A", "b", ifelse(exists("bj"),"bj",NA), ifelse(exists("Q"),"Q",NA), ifelse(exists("cholQ"),"cholQ",NA), "mu.t1", ifelse(exists("mu.t1.j"),"mu.t1.j",NA), ifelse(exists("prec.mu.t1.j"),"prec.mu.t1.j",NA), ifelse(exists("prec.t1"),"prec.t1",NA), ifelse(exists("chol.var.t1"),"chol.var.t1",NA), ifelse(exists("var.t1"),"var.t1",NA), ifelse(exists("prec.b"),"prec.b",NA), ifelse(exists("chol.var.b"),"chol.var.b",NA) )
+		obj <- c( "d", "dw", "dl", "col.y", "col.id", "col.item", "col.time", "R", "J", "I", "T", "Tj", "P", "Tp", "PNj", "Pj", "L", "Lpat", "Lpat.group", "Lambda", "beta", ifelse(exists("mu.beta"),"mu.beta",NA), ifelse(exists("prec.beta"),"prec.beta",NA), ifelse(measurement.model$family=="gaussian","E",NA), "F", "I1", "I2", "Aw", "I1w", "Qt.prec.replace", "A", "b", ifelse(exists("bj"),"bj",NA), ifelse(exists("Q"),"Q",NA), ifelse(exists("cholQ"),"cholQ",NA), "mu.t1", ifelse(exists("mu.t1.j"),"mu.t1.j",NA), ifelse(exists("prec.mu.t1.j"),"prec.mu.t1.j",NA), ifelse(exists("prec.t1"),"prec.t1",NA), ifelse(exists("chol.var.t1"),"chol.var.t1",NA), ifelse(exists("var.t1"),"var.t1",NA), ifelse(exists("prec.b"),"prec.b",NA), ifelse(exists("sd.b"),"sd.b",NA), ifelse(exists("chol.var.b"),"chol.var.b",NA) )
 		obj <- obj[!is.na(obj)]
 		eval( parse ( text=paste0( "assign( '",obj, "' , get('",obj,"') , envir=env )" ) ) )
 
