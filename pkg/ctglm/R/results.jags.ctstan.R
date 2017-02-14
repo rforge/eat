@@ -285,16 +285,13 @@ results.jags.ctstan <- function ( env, mode ) {
 						# est <- transform.var.matrix( parameters$chol.var.b, "chol.var.b", "var.b", "M^2", est )
 						
 				}
-
+				
+				if ( verbose && engine %in% c("jags","ctstan") ) cat( "\n" )
 		# browser()	
 
 				## additional parameters		
 				if ( engine %in% "ctstan" ) {
 
-						if ( verbose ) {
-								cat( paste0( "\n   additional results:\n\n" ) )
-						}		
-				
 						### variance of b
 						# get all b
 						#bs <- names( r$results )
@@ -322,6 +319,8 @@ results.jags.ctstan <- function ( env, mode ) {
 						bs.par.name.new <- sub( "mut1", "var.mu.t1.j", bs.par.name )
 						if ( length(bs) > 0 ) {
 		# browser()				
+								
+		
 								pars2 <- data.frame( "name"="var.mu.t1.j", "parameter"=bs.par.name.new, "call"=paste0("extract( r$results, pars=paste0('output_hsd_', '",bs.par.name,"'), permuted=FALSE, inc_warmup=TRUE )[,,1]"), stringsAsFactors=FALSE )
 								est.l2 <- apply( pars2, 1, extr )
 								est2 <- do.call( "rbind", est.l2 )
@@ -331,6 +330,12 @@ results.jags.ctstan <- function ( env, mode ) {
 								# bind on estimates
 								est <- rbind( est, est2 )
 						}
+				
+						if ( verbose && length(bs) > 0 ) {
+								cat( paste0( "\n   additional results:\n\n" ) )
+								cat( paste0( "             var.mu.t1.j\n" ) ); flush.console()
+						}								
+				
 				}
 				rownames( est ) <- seq( along=rownames( est ) )
 		} 

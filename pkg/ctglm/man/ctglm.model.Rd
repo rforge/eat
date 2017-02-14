@@ -22,11 +22,18 @@ engine=c("jags","ctstan","ctsem"), ..., priors=NULL, verbose=TRUE )
   \item{Lambda}{loading matrix of items and latent variables}
   \item{measurement.model}{measurement model}
   \item{engine}{software used for estimation}
-  \item{...}{additional parameters}
+  \item{...}{additional parameters, see details}
   \item{priors}{priors for jags}
   \item{verbose}{output messages to console}
 }
-%% \details{}
+\details{
+additionally parameters:
+-- delete.persons without varying responses (IRT) from data set, options:
+		   "persons_without_response_variance_at_at_least_one_timepoint"
+           "persons_without_response_variance_at_all_timepoints"
+-- novar.out.dir: directory where "no variance" descriptives (as list in Rdata file) is outputted, path is <novar.out.dir>/<model.name>_novar.Rdata
+-- model.name: name of model
+}
 \value{
 returns a ctglm model list
 }

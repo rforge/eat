@@ -38,6 +38,45 @@ ctglm.results <- function ( r, plot.dir=NULL, plot.person.par=FALSE, cores=detec
 		} else {
 				e <- NULL
 		}
+
+	
+		## mod person results with original ids
+		if( "original.ids" %in% names(list(...)) ){
+				original.ids <- list(...)$original.ids
+	
+				# ct intercepts bj
+				bj <- e$variable[grepl("^bj_",e$variable)]
+				if( length( bj ) > 0 ){
+						if( verbose ) cat( paste0("   modding person parameters bj with original ids\n") )
+						bjd <- data.frame( "variable"=bj, "new.id" = sub("bj_","",bj) )
+						bjd <- merge( bjd, original.ids, by="new.id", sort=FALSE )
+						bjd$new.variable <- paste0( "bj_", bjd$original.id )
+						cn <- colnames(e)
+						e$nr <- 1:nrow(e)
+						e <- merge( e, bjd[,c("variable","new.variable")], by="variable", all.x=TRUE, sort=FALSE )
+						e$variable[e$variable %in% bjd$variable] <- e$new.variable[e$variable %in% bjd$variable]
+						e <- e[ order( e$nr ) , ]
+						rownames( e ) <- seq( along=rownames( e ) )
+						e <- e[, cn, drop=FALSE ]
+				}
+				
+				# mu.t1.j
+				mu.t1.j <- e$variable[grepl("^mu\\.t1\\.j_",e$variable)]
+				if( length( mu.t1.j ) > 0 ){
+						if( verbose ) cat( paste0("   modding person parameters mu.t1.j with original ids\n") )
+# browser()						
+						mtd <- data.frame( "variable"=mu.t1.j, "new.id" = sub("mu\\.t1\\.j_","",mu.t1.j) )
+						mtd <- merge( mtd, original.ids, by="new.id", sort=FALSE )
+						mtd$new.variable <- paste0( "mu.t1.j_", mtd$original.id )
+						cn <- colnames(e)
+						e$nr <- 1:nrow(e)
+						e <- merge( e, mtd[,c("variable","new.variable")], by="variable", all.x=TRUE, sort=FALSE )
+						e$variable[e$variable %in% mtd$variable] <- e$new.variable[e$variable %in% mtd$variable]
+						e <- e[ order( e$nr ) , ]
+						rownames( e ) <- seq( along=rownames( e ) )
+						e <- e[, cn, drop=FALSE ]
+				}				
+		}
 		
 # browser()		
 		if ( !is.null( e ) ) {

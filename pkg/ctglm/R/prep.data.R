@@ -23,6 +23,53 @@ prep.data <- function ( env ) {
 				# } 
 		# }
 # browser()	
+		### IRT check data if variance per person/time point
+		## save descriptives if novar.out.dir is set
+		if( measurement.model$family %in% "binomial" ){
+				if(exists("novar.out.dir") && !is.null( novar.out.dir ) && is.character( novar.out.dir ) ){
+						if( !dir.exists( novar.out.dir ) ) dir.create( novar.out.dir, recursive=TRUE )
+						if( !( exists("model.name") && !is.null(model.name) && is.character(model.name) ) ) model.name <- "model"
+						outfile <- file.path( novar.out.dir, paste0( model.name, "_novar.Rdata" ) )
+				} else {
+						outfile <- NULL
+				}
+				if(!exists("delete.persons")) delete.persons <- NULL
+				
+				# only if dir is set (that means user wants statistics)
+				# or if delete is set (that means user wants to delete persons)
+				if( !is.null( outfile ) || !is.null( delete.persons ) ){
+						novar <- check.novar( d, delete.persons=delete.persons, outfile=outfile, verbose=verbose )
+
+						if(!is.null(delete.persons) && length( novar$deleted.person.ids ) > 0 ){
+			
+								# rename ids ascending
+								# if( length( novar$deleted.person.ids ) > 0 ){
+										
+										# overwrite d with dataset with deleted persons
+										d <- novar$d
+										
+										## ctstan/jags needs ascending ids
+										## renaming needed
+										## original ids and new ids are saved
+										if( verbose ){
+												cat( paste0( "Some persons have been deleted from data.\n") )
+												cat( paste0( "As ascending id numbers are required, ids are renamed!!!\n") )
+												cat( paste0( "To get original ids in results set original.ids in ctglm.results() to <model.object>$original.ids\n") )
+										}
+										original.ids <- d[!duplicated(d[,"id"]),"id",drop=FALSE]
+										colnames(original.ids) <- "original.id"
+										original.ids <- cbind( original.ids, 1:length(unique(original.ids[,"original.id"])) )
+										colnames(original.ids)[2] <- "new.id"
+										d <- merge( d, original.ids, by.x="id", by.y="original.id", all.x=TRUE, all.y=FALSE, sort=FALSE )
+										d[,"id"] <- d[,"new.id"]
+										d <- d[,-ncol(d),drop=FALSE]
+										assign( "original.ids", original.ids, envir=env )
+								# }
+								
+						}						
+				}
+		}
+		
 		### !!! d is now long !!!
 		# long d to wide dw (with lag variables)
 		dw <- ctLongToWide ( d=d, id=id, time=time, manifestNames=colnames(d)[!colnames(d) %in% c(id,time)], TDpredNames = NULL, TIpredNames = NULL)
@@ -635,3 +682,76 @@ label.pars <- function(m,m.name) {
 	
 		return(m)
 }
+
+## IRT check data if variance per person/time point and delete
+## delete options:
+##         persons_without_response_variance_at_at_least_one_timepoint
+##         persons_without_response_variance_at_all_timepoints
+check.novar <- function( d, delete.persons=NULL, outfile=NULL, verbose=TRUE ){
+# browser()		
+		check <- function( z ){
+				all( z %in% 0 ) | all( z %in% 1 )
+		}
+		p <- apply( d[, -which( colnames( d ) %in% c("id","time") ) ], 1, check )		
+		
+		# novar nach wide (id x time)
+		# acast geht nicht, deshalb dcast
+		d1 <- data.frame( cbind( d , as.integer( p ) ) )
+		colnames( d1 )[ncol(d1)] <- "novar"
+		d2 <- dcast( d1[,c("id","time","novar")], id ~ time, value.var="novar" )
+		colnames(d2)[-1] <- paste0( "time", colnames(d2)[-1] )
+		
+		# Nnovar
+		d2$Nnovar <- rowSums( d2[,-1] )
+		# any novar
+		# d2$ANYnovar <- as.integer ( any( d2[,-c(1,ncol(d2))] %in% 1 ) )
+		d2$ANYnovar <- as.integer( d2$Nnovar > 0 )
+		# all novar
+		d2$ALLnovar <- as.integer( d2$Nnovar == (length(colnames(d2)) - 3) )
+		
+		# descriptives
+		descr1 <- data.frame( describe( d2$Nnovar ), stringsAsFactors=FALSE )
+		descr1$vars <- "Nnovar"
+		colnames( descr1 )[1] <- "var"
+		rownames(descr1) <- 1
+		descr <- list( "Nnovar" = descr1 )
+		descr$ANYnovar <- table( factor( d2$ANYnovar, levels=c(0,1), labels=c("Npersons_with_response_variance","Npersons_without_response_variance_at_at_least_one_timepoint") ) )
+		descr$ALLnovar <- table( factor( d2$ALLnovar, levels=c(0,1), labels=c("Npersons_with_response_variance","Npersons_without_response_variance_at_all_timepoints") ) )
+		
+		# delete persons
+		if (!is.null( delete.persons )) {
+				del.ids <- numeric(0)
+				if( delete.persons %in% "persons_without_response_variance_at_at_least_one_timepoint" ){
+						del.ids <- d2$id[ d2$ANYnovar==1 ]
+						if( verbose ) cat( paste0( "deleting ", length(del.ids), " persons without response variance at at least one timepoint\n" ) )
+				}
+				if( delete.persons %in% "persons_without_response_variance_at_all_timepoints" ){
+						del.ids <- d2$id[ d2$ANYnovar==1 ]
+						if( verbose ) cat( paste0( "deleting ", length(del.ids), " persons without response variance at all timepoints\n" ) )
+				}
+				if( length( del.ids ) > 0 ){
+						d <- d[ !d[,"id"] %in% del.ids, ]
+				}
+		} else {
+				
+		}
+		
+		# return object
+		l <- list( "novar" = d2 )
+		l$"novar_descr" <- descr
+		if (!is.null( delete.persons )) {
+				l$deleted.person.ids <- del.ids
+				l$d <- d
+		}
+		
+		# save on disk
+		if( !is.null( outfile ) ){
+# browser()				
+				novar <- l[c("novar","novar_descr")]
+				save( novar, file=outfile )
+		}
+		
+		return( l )
+
+}
+	
