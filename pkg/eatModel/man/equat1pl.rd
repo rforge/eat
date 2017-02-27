@@ -8,12 +8,15 @@ via the jackknife method if testlets are specified.}
 \usage{
 equat1pl(results , prmNorm , item = NULL, domain = NULL, testlet = NULL, value = NULL, 
          excludeLinkingDif = TRUE, difBound = 1, iterativ = FALSE, 
-         method = c("Mean.Mean", "Haebara", "Stocking.Lord"))}
+         method = c("Mean.Mean", "Haebara", "Stocking.Lord"), itemF = NULL, 
+         domainF = NULL, valueF = NULL)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{results}{
 %%     ~~Describe \code{file} here~~
-The object returned by \code{getResults}.
+The object returned by \code{getResults}. Alternatively, a data.frame with item
+parameters of the focus group. In this case, additional arguments (\code{itemF}, 
+\code{domainF}, and \code{valueF}) have to be defined.
 }
   \item{prmNorm}{
 %%     ~~Describe \code{file} here~~
@@ -60,6 +63,18 @@ Logical. Should the exclusion of linking DIF items executed in an iterative loop
   \item{method}{
 %%     ~~Describe \code{file} here~~
 Linking method
+}
+  \item{itemF}{
+%%     ~~Describe \code{file} here~~
+Optional: Give the number or name of the item column in results. 
+}
+  \item{domainF}{
+%%     ~~Describe \code{file} here~~
+Optional: Give the number or name of the domain column in results. 
+}
+  \item{valueF}{
+%%     ~~Describe \code{file} here~~
+Optional: Give the number or name of the parameter column in results. 
 }
 }
 \details{
