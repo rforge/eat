@@ -93,7 +93,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
           group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, forcePooling = TRUE, boundary = 3, doCheck = TRUE,
           separate.missing.indicator = FALSE, expected.values = NULL, probs = NULL, nBoot = NULL, bootMethod = NULL, formula=NULL, family=NULL, 
           forceSingularityTreatment = FALSE, glmTransformation = c("none", "sdY"), correct, onlyCheck = FALSE)    {
-          if(!exists("rbind.fill"))   {library(plyr)}
+          # if(!exists("rbind.fill"))   {library(plyr)}
           checkForPackage (namePackage = "reshape", targetPackage = "eatRep")
           toCall<- match.arg(toCall)
           type  <- match.arg(arg = toupper(type), choices = c("JK1", "JK2", "BRR"))
@@ -129,14 +129,14 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
           }  else  { 
     ### wie in 'defineModel': Funktion ruft sich selber auf, wenn Trend bestimmt werden soll und/oder Differenzen zur Gesamtpopulation bestimmt werden sollen.
     ### aeussere Schleife: Trend. check: only two groups in trend variable
-              if(!is.null(allNam[["trend"]])) {                                     ### Achtung: hier wenn Trendberechnung geschehen soll 
+              if(!is.null(allNam[["trend"]])) {                                 ### Achtung: hier wenn Trendberechnung geschehen soll 
     ### check: nur zwei Gruppen in Trendvariablen?
                   lev <- sort ( unique(datL[,allNam[["trend"]]]))
                   if(length(lev) != 2) {stop(paste(length(lev), " levels ('",paste(lev, collapse="', '"),"') found for the 'trend' variable '",allNam[["trend"]],"'. 2 levels are allowed.\n",sep=""))}
     ### check: alle Kombinationen von faktoren in beiden datensaetzen? 
                   if (!is.null(allNam[["group"]])) {  
                        foo <- lapply(allNam[["group"]], FUN = function ( gr ) { 
-                              ch <- by(data = datL, INDICES = datL[,allNam[["trend"]]], FUN = function ( subdat ) { table(subdat[,gr]) } )
+                              ch <- by(data = datL, INDICES = datL[,allNam[["trend"]]], FUN = function ( subdat ) { table(subdat[,gr]) }, simplify = FALSE )
                               if ( !all ( names(ch[[1]]) == names(ch[[2]]))) { stop(paste("Error in grouping variable '",gr,"': Levels do not match. Levels in trend group '",names(ch)[1],"': \n    ", paste(names(ch[[1]]), collapse = ", "),"\nLevels in trend group '",names(ch)[2],"': \n    ", paste(names(ch[[2]]), collapse = ", "),sep="")) } } )
                   }            
     ### repliziere Analyse zweimal, d.h. fuer beide Trendgruppen ... hier single core 
@@ -147,10 +147,10 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                                do    <- paste ( "foo <- eatRep ( ", paste(names(formals(eatRep)), recode(names(formals(eatRep)), "'trend'='NULL'; 'datL'='subdat'; 'group.differences.by'='gdb'"), sep =" = ", collapse = ", "), ")",sep="")
                                eval(parse(text=do))
                                foo[,allNam[["trend"]]] <- subdat[1,allNam[["trend"]] ]
-                               return(foo)}) 
-                  }  else {                                                         ### jetzt multicore
-                        if(!exists("detectCores"))   {library(parallel)}
-                        spl <- by ( data = datL, INDICES = datL[,allNam[["trend"]]], FUN = function ( subdat ) { return(subdat)})
+                               return(foo)}, simplify = FALSE) 
+                  }  else {                                                     ### jetzt multicore
+                        # if(!exists("detectCores"))   {library(parallel)}
+                        spl <- by ( data = datL, INDICES = datL[,allNam[["trend"]]], FUN = function ( subdat ) { return(subdat)}, simplify = FALSE)
                         doIt<- function (laufnummer,  ... ) { 
                                if(!exists("jk2.mean"))  { library(eatRep) }
                                # if(!exists("jk2.mean")) {source("c:/Users/weirichs/Dropbox/R/Funktion.rsy")}
@@ -168,8 +168,8 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                   }      
     ### 'resT' aufbereiten, Linkingfehler ranmatchen, Trend berechnen ... wenn es keinen linkingfehler gibt, wird er auf 0 gesetzt 
                   ch3  <- data.frame ( do.call("rbind", lapply(resT, dim) ))
-                  ch3  <- lapply(ch3, FUN = function ( y ) { if ( length(unique(y)) != 1) {browser()} } )
-                  if (!all(colnames(resT[[1]]) == colnames(resT[[2]]))) {browser()}
+                  ch3  <- lapply(ch3, FUN = function ( y ) { if ( length(unique(y)) != 1) {stop("error 1")} } )
+                  if (!all(colnames(resT[[1]]) == colnames(resT[[2]]))) {stop("error 2")}
                   resT1<- dcast ( rbind(resT[[1]], resT[[2]]) , as.formula ( paste ( " ... ~ coefficient + ",allNam[["trend"]],sep="") ) )
                   resT1[,"est_trend"]<- resT1[,paste("est_",lev[2],sep="")] - resT1[,paste("est_",lev[1],sep="")]
     ### Linkingfehler mergen ... kompliziert! ... 
@@ -179,30 +179,35 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                        if ( length( unique(datL[, allNam[["linkErr"]]])) == 1 ) {## Achtung, krass kompliziert: wenn der Linkingfehler nicht fuer alle Zeilen gleich ist,
                             le <- unique(datL[, allNam[["linkErr"]]])           ### muss er innerhalb jeder Gruppe von 'parameter' gleich sein
                        }  else  {                                               ### 'leF' = linking error frame
-                            stopifnot ( length(table(datL[, allNam[["dependent"]] ]))  < 20 )
-                            leF<- do.call("rbind", by(data = datL, INDICES = datL[,allNam[["dependent"]] ], FUN = function ( z ) { 
-                                  if ( !length(unique(z[, allNam[["linkErr"]] ] )) == 1 ) {
+                            nle<- length(unique(datL[, allNam[["linkErr"]]]))   ### Anzahl der Linkfehler ... wenn das ungleich der Anzahl der Kategorien ist ... dann wurde jk2.mean ueber den Wrapper mit 'chiSquare == FALSE' aufgerufen
+                            if ( nle == length(unique ( datL[,allNam[["dependent"]] ])) ) { 
+                                 leF<- do.call("rbind", by(data = datL, INDICES = datL[,allNam[["dependent"]] ], FUN = function ( z ) { 
+                                       if ( !length(unique(z[, allNam[["linkErr"]] ] )) == 1 ) {
     ### obere Zeile darf, wenn ueberhaupt, nur dann TRUE sein, wenn 'jk2.table' ueber 'chiSquare == FALSE' mit dem 'jk2.mean'-Wrapper aufgerufen wurde ... doofes Problem: hat man eine kategoriale 
     ### Variable und erzeugt die Haeufigkeitstabelle, indem man dichotome Indikatoren generiert und fuer diese den Mittelwert bestimmt, wird der nicht mittransformiert 
-                                       stopifnot(length(unique(datL[,allNam[["dependent"]]])) == 2)
-                                       stopifnot(all(sort(unique(datL[,allNam[["dependent"]]])) == 0:1 ))
-                                       stopifnot(length(unique(datL[,allNam[["linkErr"]]])) == 2)
-                                       lef1<- datL[ which(datL[,allNam[["dependent"]]] == 1) ,allNam[["linkErr"]] ]
-                                       stopifnot ( length(unique(lef1)) == 1)
-                                       lef1<- unique(lef1)
-                                  }  else  { 
-                                       lef1<- unique(z[,allNam[["linkErr"]]])
-                                  }     
-                                  return ( data.frame ( parameter = unique ( z[,allNam[["dependent"]]]), lef = lef1) ) } ))
+                                            stopifnot(length(unique(datL[,allNam[["dependent"]]])) == 2)
+                                            stopifnot(all(sort(unique(datL[,allNam[["dependent"]]])) == 0:1 ))
+                                            stopifnot(length(unique(datL[,allNam[["linkErr"]]])) == 2)
+                                            lef1<- datL[ which(datL[,allNam[["dependent"]]] == 1) ,allNam[["linkErr"]] ]
+                                            stopifnot ( length(unique(lef1)) == 1)
+                                            lef1<- unique(lef1)
+                                       }  else  { 
+                                            lef1<- unique(z[,allNam[["linkErr"]]])
+                                       }     
+                                       return ( data.frame ( parameter = unique ( z[,allNam[["dependent"]]]), lef = lef1) ) } ))
+                            }  else  {           
+                                 stopifnot(all(sort(unique(datL[,allNam[["dependent"]]])) == 0:1 ))
+                                 z  <- datL[which(datL[,allNam[["dependent"]]] == 1 ) ,]
+                                 stopifnot(length(unique(z[,allNam[["linkErr"]]]))==1)
+                                 le <- unique(z[,allNam[["linkErr"]]])
+                            }
                             if ( toCall != "mean") { 
+                                  stop("weiter machen...")
                                   stopifnot ( all ( sort ( unique ( leF[,"parameter"]) ) == sort(unique(resT1[,"parameter"]))))
                                   rtf<- merge ( resT1, leF, by = "parameter", all = TRUE)
                                   stopifnot ( nrow(rtf) == nrow(resT1))
                                   le <- rtf[,"lef"]
-                            }  else  { 
-                                  stopifnot(length(unique(leF[,"lef"])) == 1 )
-                                  le <- unique(leF[,"lef"])
-                            }      
+                            }       
                        }     
                   }                  
                   resT1[,"se_trend"] <- sqrt(resT1[,paste("se_",lev[2],sep="")]^2 + resT1[,paste("se_",lev[1],sep="")]^2 + le^2)
@@ -265,7 +270,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                  }  else  {
     ### obere Zeile: Ende der inneren Schleife
                        if( length( setdiff ( allNam[["group.differences.by"]],allNam[["group"]])) != 0) {stop("Variable in 'group.differences.by' must be included in 'groups'.\n")}
-                       if(toCall == "glm") {.GlobalEnv$glm.family <- family}                 ### Hotfix!
+                       if(toCall == "glm") {.GlobalEnv$glm.family <- family}    ### Hotfix!
     ### Anzahl der Analysen definieren ueber den 'super splitter' und Analysen einzeln (ueber 'lapply') starten
                        toAppl<- superSplitter(group = allNam[["group"]], group.splits = group.splits, group.differences.by = allNam[["group.differences.by"]], group.delimiter = group.delimiter , dependent=allNam[["dependent"]] )
                        cat(paste(length(toAppl)," analyse(s) overall according to: 'group.splits = ",paste(group.splits, collapse = " ") ,"'.", sep=""))
@@ -286,7 +291,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                        }  else  { cat("\nAssume unnested structure with ",length(table(datL[,allNam[["imp"]]]))," imputations.\n",sep="")}
                        datL[,"isClear"] <- TRUE
                        if( is.null(allNam[["nest"]]) ) { datL[,"nest"]  <- 1; allNam[["nest"]]  <- "nest" }
-                       if(!is.null(allNam[["group"]])) {                                     ### untere Zeile: das, damit leere Gruppen nicht ueber by() mit geschleift werden, wie es passiert, wenn Gruppen als Faktoren definiert sind
+                       if(!is.null(allNam[["group"]])) {                        ### untere Zeile: das, damit leere Gruppen nicht ueber by() mit geschleift werden, wie es passiert, wenn Gruppen als Faktoren definiert sind
                            for ( jj in allNam[["group"]] )  { datL[,jj] <- as.character(datL[,jj]) } 
                        }
     ### check: abhaengige Var. numerisch?
@@ -323,11 +328,11 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                            if(length(miss)>0) { cat(paste("Warning! Unexpected missings in variable(s) ",paste(names(miss), collapse=", "),".\n",sep=""))}
     ### check: gleichviele Imputationen je Nest und Gruppe?
                            if(doCheck == TRUE) {
-                              impNes<- table ( by(data = datL, INDICES = datL[, c(allNam[["nest"]], toAppl[[gr]]) ], FUN = function ( x ) { length(table(as.character(x[,allNam[["imp"]]])))}) )
+                              impNes<- table ( by(data = datL, INDICES = datL[, c(allNam[["nest"]], toAppl[[gr]]) ], FUN = function ( x ) { length(table(as.character(x[,allNam[["imp"]]])))}, simplify = FALSE) )
                               if(length(impNes) != 1 ) {cat("Warning: Number of imputations differ across nests and/or groups!"); print(impNes)}
     ### check: gleichviele PSUs je nest?
                               if(!is.null(allNam[["PSU"]]))  { 
-                                  psuNes<- table ( by(data = datL, INDICES = datL[,allNam[["nest"]]], FUN = function ( x ) { length(table(as.character(x[,allNam[["PSU"]]])))}) )
+                                  psuNes<- table ( by(data = datL, INDICES = datL[,allNam[["nest"]]], FUN = function ( x ) { length(table(as.character(x[,allNam[["PSU"]]])))}, simplify = FALSE) )
                                   if(length(psuNes) != 1 ) {cat("Warning: Number of PSUs differ across nests!"); print(psuNes)}
                               }    
     ### check: sind fuer jede Gruppe alle Faktorstufen in allen nests und allen imputationen vorhanden? z.B. nicht in einer Imputation nur Jungen
@@ -336,7 +341,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                                           cat(paste(" W A R N I N G !  '",allNam[["ID"]],"' variable is not unique within nests and imputations. Analysis will be most likely biased!\n",sep=""))
                                        }   
                                        if( length(toAppl[[gr]])>0) { ret <- lapply( toAppl[[gr]], FUN = function ( y ) {table(x[,y])}) } else {ret <- 1}
-                                       return(ret) })
+                                       return(ret) }, simplify = FALSE)
                               impNes<- data.frame ( do.call("rbind", lapply(impNes, FUN = function ( x ) { unlist(lapply(x, FUN = length)) })) )
                               if ( !all ( sapply(impNes, FUN = function ( x ) { length(table(x)) } ) == 1) ) { cat("Warning: Number of units in at least one group differs across imputations!\n")}
     ### Achtung!! jetzt der check, der in der alten Version ueber 'checkData' gemacht wurde!
@@ -347,7 +352,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                                               cat("Warning! Found group with less than 2 PSUs. Please check your data!\n"); flush.console()
                                               sub.dat[,"isClear"] <- FALSE 
                                            }
-                                       }                                                     ### untere Zeile: prueft; es darf GAR KEINE Missings geben 
+                                       }                                        ### untere Zeile: prueft; es darf GAR KEINE Missings geben 
                                        if( (toCall == "table" & separate.missing.indicator == FALSE) | (toCall %in% c("mean", "quantile", "glm") & na.rm==FALSE ) )  {    
                                           nObserved <- length(which(is.na(sub.dat[, allNam[["dependent"]]])))
                                            if(nObserved>0) { 
@@ -358,7 +363,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                                                    cat("Warning! Found unexpected missing data in dependent variable for at least one group although 'separate.missing.indicator' was set to 'FALSE'. \n    Sure that this is intended? Try to continue execution ... \n"); flush.console()
                                               }     
                                            }
-                                       }                                                     ### untere Zeile: prueft; es darf NICHT ALLES missing sein
+                                       }                                        ### untere Zeile: prueft; es darf NICHT ALLES missing sein
                                        if ( toCall %in% c("mean", "quantile", "glm") & na.rm==TRUE) { 
                                            nMissing <- length(which(is.na(sub.dat[, allNam[["dependent"]]])))
                                            if(nMissing == nrow(sub.dat))  { 
@@ -386,11 +391,11 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                            }   
     ### nun wird der Datensatz zuerst nach Nests und je Nest nach Imputationen geteilt 
                            anaA<- do.call("rbind", by(data = datL, INDICES = datL[,"isClear"], FUN = function ( datL1 ) {
-                                  if(datL1[1,"isClear"] == TRUE) {                           ### nur fuer isClear==TRUE werden Analysen gemacht
+                                  if(datL1[1,"isClear"] == TRUE) {              ### nur fuer isClear==TRUE werden Analysen gemacht
                                      ana <- do.call("rbind", by(data = datL1, INDICES = datL1[,allNam[["nest"]]], FUN = function ( datN ) {
                                             anaI <- do.call("rbind", by(data = datN, INDICES = datN[,allNam[["imp"]]], FUN = function ( datI ) {
     ### nun muss die Funktion (mean, table, glm ... ) und die Methode (JK2, BRR, oder konventionell) definiert werden
-                                                    if( toCall == "mean" ) {                 ### hier wird an die meanfunktion uebergeben
+                                                    if( toCall == "mean" ) {    ### hier wird an die meanfunktion uebergeben
                                                         if ( doJK == TRUE ) {
                                                             ana.i <- jackknife.mean (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA)
                                                         }  else  { 
@@ -432,6 +437,25 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                            return(anaA)}))
                        rownames(allRes) <- NULL;  cat("\n")
                        return(allRes) }}} }
+
+### vergleicht Trends zwischen Gruppen 
+compareTrends <- function ( resultFrame ) { 
+          tv  <- which ( sapply (resultFrame, FUN = function ( x ) { length( grep("^trend$", x) > 0) }) > 0 ) 
+    ### trendvariable finden
+          if ( length( tv ) == 0 ) { stop ("Cannot found any trend variable.\n")}
+          if ( length( tv ) > 1  ) { stop (paste ("Found more than one trend variable: '",paste(names(tv), collapse = "', '"),"'.\n",sep=""))}
+          sel <- resultFrame[which(resultFrame[,names(tv)] == "trend"),]
+    ### Trends nach allen Parametern getrennt vergleichen 
+          tr  <- do.call("rbind", by ( data = sel, INDICES = sel[,"parameter"], FUN = function ( prm ) { 
+                 spl <- data.frame ( combn(unique(prm[,"group"]),2), stringsAsFactors = FALSE)
+                 vgl <- do.call("rbind", lapply ( spl, FUN = function ( gr ) { 
+                        prms<- prm[which(prm[,"group"] %in% gr),]
+                        estD<- diff ( prms[which(prms[,"coefficient"] == "est"),"value"] ) 
+                        seD <- sqrt ( sum(prms[which(prms[,"coefficient"] == "se"),"value"]^2) ) 
+                        ret <- data.frame ( group = paste ("compareTrend=",gr[1],"|__|",gr[2],sep=""), prms[1:2,c("depVar", "modus", "parameter")], coefficient = c("est", "se"), value = c(estD, seD))
+                        return(ret)}))
+                 return(vgl) }))  
+          return(tr)}           
           
 checkRegression <- function ( dat, allNam ) {
                    ch <- lapply( allNam[["independent"]], FUN = function ( i ) {

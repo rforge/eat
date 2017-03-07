@@ -198,6 +198,11 @@ means6 <- jk2.mean(datL = readingTrend, ID="idstud", type = "JK2", PSU = "JKZone
           repInd = "JKrep", imp="imputation", groups = c("country", "sex"),
           group.differences.by = c("wholePop", "sex"), trend = "trend", 
           linkErr = "linkE", dependent = "score", na.rm=FALSE, doCheck=TRUE)
+          
+\dontrun{
+### compare trends between groups
+means6a<- compareTrends( means6 )
+}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

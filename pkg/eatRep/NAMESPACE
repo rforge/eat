@@ -17,5 +17,6 @@ export(dM)
 export(dT)
 export(dQ)
 export(dG)
+export(compareTrends)
 
 
