@@ -447,13 +447,17 @@ compareTrends <- function ( resultFrame ) {
           sel <- resultFrame[which(resultFrame[,names(tv)] == "trend"),]
     ### Trends nach allen Parametern getrennt vergleichen 
           tr  <- do.call("rbind", by ( data = sel, INDICES = sel[,"parameter"], FUN = function ( prm ) { 
-                 spl <- data.frame ( combn(unique(prm[,"group"]),2), stringsAsFactors = FALSE)
-                 vgl <- do.call("rbind", lapply ( spl, FUN = function ( gr ) { 
-                        prms<- prm[which(prm[,"group"] %in% gr),]
-                        estD<- diff ( prms[which(prms[,"coefficient"] == "est"),"value"] ) 
-                        seD <- sqrt ( sum(prms[which(prms[,"coefficient"] == "se"),"value"]^2) ) 
-                        ret <- data.frame ( group = paste ("compareTrend=",gr[1],"|__|",gr[2],sep=""), prms[1:2,c("depVar", "modus", "parameter")], coefficient = c("est", "se"), value = c(estD, seD))
-                        return(ret)}))
+                 if ( length (unique(prm[,"group"])) < 2 ) { 
+                      vgl <- NULL 
+                 }  else  {      
+                      spl <- data.frame ( combn(unique(prm[,"group"]),2), stringsAsFactors = FALSE)
+                      vgl <- do.call("rbind", lapply ( spl, FUN = function ( gr ) { 
+                             prms<- prm[which(prm[,"group"] %in% gr),]
+                             estD<- diff ( prms[which(prms[,"coefficient"] == "est"),"value"] ) 
+                             seD <- sqrt ( sum(prms[which(prms[,"coefficient"] == "se"),"value"]^2) ) 
+                             ret <- data.frame ( group = paste ("compareTrend=",gr[1],"|__|",gr[2],sep=""), prms[1:2,c("depVar", "modus", "parameter")], coefficient = c("est", "se"), value = c(estD, seD))
+                             return(ret)}))
+                 }            
                  return(vgl) }))  
           return(tr)}           
           
