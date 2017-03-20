@@ -54,7 +54,7 @@ table.unlist <- function(dataFrame, verbose = TRUE, useNA = c("no","ifany", "alw
                 return(freqT)}
 
 
-as.numeric.if.possible <- function(dataFrame, set.numeric=TRUE, transform.factors=FALSE, maintain.factor.scores = TRUE, verbose=TRUE)   {
+as.numeric.if.possible <- function(dataFrame, set.numeric=TRUE, transform.factors=FALSE, maintain.factor.scores = TRUE, verbose=TRUE, ignoreAttributes = FALSE)   {
             wasInputVector  <- FALSE
             if( !"data.frame" %in% class(dataFrame) ) {
               if(verbose == TRUE )  {cat(paste("Warning! Argument of 'as.numeric.if.possible' has to be of class 'data.frame'. Object will be converted to data.frame. Labels might be lost.\n",sep="")) }
@@ -108,11 +108,13 @@ as.numeric.if.possible <- function(dataFrame, set.numeric=TRUE, transform.factor
               }
               if(wasInputVector == TRUE) {dataFrame <- unname(unlist(dataFrame))}
             }                                                                   ### Attribute wieder ranklatschen
-            for ( u in names(currentAttr)) { 
-               stopifnot( u %in% colnames(dataFrame))
-               if ( length ( currentAttr[[u]] ) >0)  { 
-                    for ( j in names(currentAttr[[u]]) ) { attr(dataFrame [,u], j) <- currentAttr[[u]][[j]] }
-               }
+            if ( ignoreAttributes == FALSE ) {
+                 for ( u in names(currentAttr)) {
+                    stopifnot( u %in% colnames(dataFrame))
+                    if ( length ( currentAttr[[u]] ) >0 )  {
+                         for ( j in names(currentAttr[[u]]) ) { attr(dataFrame [,u], j) <- currentAttr[[u]][[j]] }
+                    }
+                 }
             }
             return(dataFrame)        
           }
