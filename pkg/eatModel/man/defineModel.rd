@@ -23,7 +23,7 @@ defineModel (dat, items, id, splittedModels = NULL,
    nodes=NULL, p.nodes=2000, f.nodes=2000,converge=0.001,deviancechange=0.0001,
    equivalence.table=c("wle","mle","NULL"), use.letters=FALSE,
    allowAllScoresEverywhere = TRUE, guessMat = NULL, est.slopegroups = NULL,
-   progress = FALSE, increment.factor=1 , fac.oldxsi=0, 
+   fixSlopeMat = NULL, progress = FALSE, increment.factor=1 , fac.oldxsi=0, 
    export = list(logfile = TRUE, systemfile = FALSE, history = TRUE,
    covariance = TRUE, reg_coefficients = TRUE, designmatrix = FALSE))}
 %- maybe also 'usage' for other objects documented here.
@@ -307,6 +307,16 @@ and should be named "item". The second column is numerical (integer values
 recommended) and allocates the items to groups. For each group of items, a
 separate discrimination parameter is estimated. Without specifying \code{est.slopegroups}, 
 a discrimination parameter for each item is estimated.
+}
+  \item{fixSlopeMat}{
+%%     ~~Describe \code{dif.term} here~~
+Applies only if \code{software = "tam"} for 2PL models. Optionally, a named data frame
+with two columns indicating for which items a fixed discrimation should be assumed. 
+The first column contains the names of the items which discrimination should be fixed. 
+The second column is numerical and contains the discrimination value. Note: To date, 
+this works only for between item dimensionality models. Within item dimensionality 
+models must be specified directly in TAM, using the \code{B.fixed} argument of \code{tam.mml}. 
+Items which discrimation should be estimated should not occur in this data frame. 
 }
   \item{progress}{
 %%     ~~Describe \code{dif.term} here~~

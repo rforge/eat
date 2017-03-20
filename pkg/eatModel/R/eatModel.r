@@ -334,10 +334,11 @@ num.to.cat <- function(x, cut.points, cat.values = NULL)    {
               stopifnot(is.numeric(x))
               if(is.null(cat.values)) {cat.values <- 1:(length(cut.points)+1)}
               stopifnot(length(cut.points)+1 == length(cat.values))
-              repeating <- 1:length(cut.points)                                 ### create string
-              part.1 <- paste("ifelse(x < cut.points[",repeating,"],cat.values[",repeating,"]",collapse=", ")
-              part.2 <- paste("ret <- ", part.1, ", \"",cat.values[length(cat.values)], "\"", paste(rep(")",length(cut.points),sep=""),collapse=""), sep="", collapse="")
-              eval ( parse ( text = part.2 ) )
+              ret <- rep ( cat.values[1], times = length(x))
+              for ( a in 1:length(cut.points) ) { 
+                   crit <- which(x > cut.points[a])
+                   if ( length(crit) > 0 ) { ret[crit] <- cat.values[a+1] }
+              }     
               attr(ret, "cat.values") <- cat.values
               return(ret)}
 
@@ -383,17 +384,17 @@ getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c(
                           do    <- paste ( "ret <- getResults ( ", paste(names(formals(getResults)), recode(names(formals(getResults)), "'runModelObj'='r'"), sep =" = ", collapse = ", "), ")",sep="")
                           eval(parse(text=do))
                           att <- list ( list ( model.name = ret[1,"model"], all.Names = attr(ret, "all.Names"), dif.settings = attr(ret, "dif.settings") ))
-                          stopifnot ( length(unique(ret[1,"model"])) == 1 )     ### grosser scheiss: baue Hilfsobjekt fuer Attribute (intern notwendige Zusatzinformationen) separat zusammen
-                          return(list ( ret = ret, att = att))})                ### schlimmer Code, darf nie jemand sehen!!
-                   }  else  {                                                   ### jetzt multicore: muss dasselbe Objekt zurueckgeben!
-                   # if(!exists("detectCores"))   {library(parallel)}
+                          if(!is.null(ret)) { stopifnot ( length(unique(ret[1,"model"])) == 1 )}
+                          return(list ( ret = ret, att = att))})                ### grosser scheiss: baue Hilfsobjekt fuer Attribute (intern notwendige Zusatzinformationen) separat zusammen
+                   }  else  {                                                   ### schlimmer Code, darf nie jemand sehen!!
+                 # if(!exists("detectCores"))   {library(parallel)}             ### jetzt multicore: muss dasselbe Objekt zurueckgeben!
                    doIt<- function (laufnummer,  ... ) { 
                           if(!exists("getResults"))  { library(eatModel) }
                           if(!exists("tam.mml") &  length(grep("tam.", class(runModelObj[[1]])))>0 ) {library(TAM, quietly = TRUE)} 
                           do    <- paste ( "ret <- getResults ( ", paste(names(formals(getResults)), recode(names(formals(getResults)), "'runModelObj'='runModelObj[[laufnummer]]'"), sep =" = ", collapse = ", "), ")",sep="")
                           eval(parse(text=do))
                           att <- list ( list ( model.name = ret[1,"model"], all.Names = attr(ret, "all.Names"), dif.settings = attr(ret, "dif.settings") ))
-                          stopifnot ( length(unique(ret[1,"model"])) == 1 )
+                          if(!is.null(ret)) { stopifnot ( length(unique(ret[1,"model"])) == 1 )}
                           return(list ( ret = ret, att = att))}
                    beg <- Sys.time()
                    cl  <- makeCluster(attr(runModelObj, "nCores"), type = "SOCK")
@@ -420,7 +421,9 @@ getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c(
                     eval(parse(text=do))                                        ### obere Zeile: baue Aufruf zusammen; rufe 'getConquestResults' mit seinen eigenen Argumenten auf
                     dir <- runModelObj[["dir"]]                                 ### wo Argumente neu vergeben werden, geschieht das in dem 'recode'-Befehl; so wird als 'path'-
                     name<- runModelObj[["analysis.name"]]                       ### Argument 'runModelObj$dir' uebergeben
-                    attr(res, "all.Names") <- runModelObj[["all.Names"]]        ### Alternativ: es wurde mit TAM gerechnet 
+                    if(!is.null(res)) {
+                        attr(res, "all.Names") <- runModelObj[["all.Names"]]
+                    }                                                           ### Alternativ: es wurde mit TAM gerechnet
                }  else  {                                                       ### logisches Argument: wurde mit Tam gerechnet?
                     isTa<- TRUE                                                 ### hier wird ggf. die Anzahl der zu ziehenden PVs ueberschrieben
                     if ( Q3 == TRUE ) {
@@ -436,60 +439,62 @@ getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c(
                     name<- attr(runModelObj, "analysis.name")
                     attr(res, "all.Names") <- attr(runModelObj, "all.Names")
                }
-               attr(res, "dif.settings")   <- list (abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value) 
-               if(!is.null(dir)) { 
-                    item<-itemFromRes ( res ) 
-                    if ( file.exists(file.path(dir, paste(name, "_items.csv",sep=""))) & overwrite == FALSE) { 
-                         cat(paste("Item results cannot be saved, file '",  file.path(dir, paste(name, "_items.csv",sep="")),"' already exists.\n    Please remove/rename existing file or use 'overwrite=TRUE'.\n",sep=""))
-                    }  else  { 
-                         write.csv2(item, file.path(dir, paste(name, "_items.csv",sep="")), na="", row.names = FALSE)
-                    }                                                           ### untere Zeilen: speichere wunschgemaess alle Personenparameter in einer Tabelle im Wideformat
-                    txt <- capture.output ( wle <- wleFromRes(res) )            ### 'capture.output' wird benutzt um Warnungen in wleFromRes() zu unterdruecken
-                    if (!is.null ( wle ) ) { 
-                         wleL<- melt ( wle, id.vars = c(attr(res, "all.Names")[["ID"]], "dimension"), measure.vars = c("wle_est", "wle_se"), na.rm = TRUE)
-                         form<- as.formula ( paste ( attr(res, "all.Names")[["ID"]], "~dimension+variable",sep=""))
-                         wleW<- dcast ( wleL, form, value.var = "value" )
-                    }     
-                    txt <- capture.output ( pv  <- pvFromRes(res) ) 
-                    if(!is.null(pv)) { 
-                         pvL <- melt ( pv, id.vars = c( attr(res, "all.Names")[["ID"]] , "dimension"), na.rm = TRUE)
-                         form<- as.formula ( paste ( attr(res, "all.Names")[["ID"]], "~dimension+variable",sep=""))
-                         pvW <- dcast ( pvL, form, value.var = "value" )
-                    }
-                    txt <- capture.output ( eap <- eapFromRes(res) ) 
-                    if(!is.null(eap)) { 
-                         eapL<- melt ( eap, id.vars = c(attr(res, "all.Names")[["ID"]], "dimension"), measure.vars = c("EAP", "SE.EAP"), na.rm = TRUE)
-                         form<- as.formula ( paste ( attr(res, "all.Names")[["ID"]], "~dimension+variable",sep=""))
-                         eapW<- dcast ( eapL, form, value.var = "value" )
-                    }                                                           ### Hier wird geprueft, welche Personenparameter vorliegen
-                    alls<- list ( wle, pv, eap )                                ### wenn es Personenparameter gibt, werden sie eingelesen
-                    allP<- NULL                                                 ### alle vorhandenen Personenparamater werden zum Speichern in einen gemeinsamen Dataframe gemergt
-                    notN<- which ( unlist(lapply ( alls, FUN = function ( x ) { !is.null(x)})) ) 
-                    if ( length( notN ) >= 1 ) { allP <- alls[[notN[1]]] }
-                    if ( length( notN ) > 1 )  { 
-                         for ( u in notN[-1] )   { 
-                               allP <- merge ( allP, alls[[notN[u]]], by = c ( attr(res, "all.Names")[["ID"]], "dimension"), all = TRUE)
-                         }      
-                    }     
-                    if ( !is.null(allP)) {
-                          if ( file.exists(file.path(dir, paste(name, "_persons.csv",sep=""))) & overwrite == FALSE) { 
-                               cat(paste("Person estimates cannot be saved, file '",  file.path(dir, paste(name, "_persons.csv",sep="")),"' already exists.\n    Please remove/rename existing file or use 'overwrite=TRUE'.\n",sep=""))
-                          }  else  { 
-                               write.csv2(allP, file.path(dir, paste(name, "_persons.csv",sep="")), na="", row.names = FALSE)
-                          }     
-                    }
-                    if ( Q3 == TRUE ) {
-                          q3m <- q3FromRes ( res )  
-                          if ( file.exists(file.path(dir, paste(name, "_q3.csv",sep=""))) & overwrite == FALSE) { 
-                               cat(paste("Item results cannot be saved, file '",  file.path(dir, paste(name, "_q3.csv",sep="")),"' already exists.\n    Please remove/rename existing file or use 'overwrite=TRUE'.\n",sep=""))
-                          }  else  { 
-                               write.csv2(q3m, file.path(dir, paste(name, "_q3.csv",sep="")), na="", row.names = FALSE)
-                          }                                                         
-                    }         
+               if(!is.null(res)) {
+                   attr(res, "dif.settings")   <- list (abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value)
+                   if(!is.null(dir)) {
+                        item<-itemFromRes ( res )
+                        if ( file.exists(file.path(dir, paste(name, "_items.csv",sep=""))) & overwrite == FALSE) {
+                             cat(paste("Item results cannot be saved, file '",  file.path(dir, paste(name, "_items.csv",sep="")),"' already exists.\n    Please remove/rename existing file or use 'overwrite=TRUE'.\n",sep=""))
+                        }  else  {
+                             write.csv2(item, file.path(dir, paste(name, "_items.csv",sep="")), na="", row.names = FALSE)
+                        }                                                       ### untere Zeilen: speichere wunschgemaess alle Personenparameter in einer Tabelle im Wideformat
+                        txt <- capture.output ( wle <- wleFromRes(res) )        ### 'capture.output' wird benutzt um Warnungen in wleFromRes() zu unterdruecken
+                        if (!is.null ( wle ) ) {
+                             wleL<- melt ( wle, id.vars = c(attr(res, "all.Names")[["ID"]], "dimension"), measure.vars = c("wle_est", "wle_se"), na.rm = TRUE)
+                             form<- as.formula ( paste ( attr(res, "all.Names")[["ID"]], "~dimension+variable",sep=""))
+                             wleW<- dcast ( wleL, form, value.var = "value" )
+                        }
+                        txt <- capture.output ( pv  <- pvFromRes(res) )
+                        if(!is.null(pv)) {
+                             pvL <- melt ( pv, id.vars = c( attr(res, "all.Names")[["ID"]] , "dimension"), na.rm = TRUE)
+                             form<- as.formula ( paste ( attr(res, "all.Names")[["ID"]], "~dimension+variable",sep=""))
+                             pvW <- dcast ( pvL, form, value.var = "value" )
+                        }
+                        txt <- capture.output ( eap <- eapFromRes(res) )
+                        if(!is.null(eap)) {
+                             eapL<- melt ( eap, id.vars = c(attr(res, "all.Names")[["ID"]], "dimension"), measure.vars = c("EAP", "SE.EAP"), na.rm = TRUE)
+                             form<- as.formula ( paste ( attr(res, "all.Names")[["ID"]], "~dimension+variable",sep=""))
+                             eapW<- dcast ( eapL, form, value.var = "value" )
+                        }                                                       ### Hier wird geprueft, welche Personenparameter vorliegen
+                        alls<- list ( wle, pv, eap )                            ### wenn es Personenparameter gibt, werden sie eingelesen
+                        allP<- NULL                                             ### alle vorhandenen Personenparamater werden zum Speichern in einen gemeinsamen Dataframe gemergt
+                        notN<- which ( unlist(lapply ( alls, FUN = function ( x ) { !is.null(x)})) )
+                        if ( length( notN ) >= 1 ) { allP <- alls[[notN[1]]] }
+                        if ( length( notN ) > 1 )  {
+                             for ( u in notN[-1] )   {
+                                   allP <- merge ( allP, alls[[notN[u]]], by = c ( attr(res, "all.Names")[["ID"]], "dimension"), all = TRUE)
+                             }
+                        }
+                        if ( !is.null(allP)) {
+                              if ( file.exists(file.path(dir, paste(name, "_persons.csv",sep=""))) & overwrite == FALSE) {
+                                   cat(paste("Person estimates cannot be saved, file '",  file.path(dir, paste(name, "_persons.csv",sep="")),"' already exists.\n    Please remove/rename existing file or use 'overwrite=TRUE'.\n",sep=""))
+                              }  else  {
+                                   write.csv2(allP, file.path(dir, paste(name, "_persons.csv",sep="")), na="", row.names = FALSE)
+                              }
+                        }
+                        if ( Q3 == TRUE ) {
+                              q3m <- q3FromRes ( res )
+                              if ( file.exists(file.path(dir, paste(name, "_q3.csv",sep=""))) & overwrite == FALSE) {
+                                   cat(paste("Item results cannot be saved, file '",  file.path(dir, paste(name, "_q3.csv",sep="")),"' already exists.\n    Please remove/rename existing file or use 'overwrite=TRUE'.\n",sep=""))
+                              }  else  {
+                                   write.csv2(q3m, file.path(dir, paste(name, "_q3.csv",sep="")), na="", row.names = FALSE)
+                              }
+                        }
+                   }
+                   rownames(res) <- NULL
                }
-               rownames(res) <- NULL
                return(res)
-               }}   
+               }}
                
 equat1pl<- function ( results , prmNorm , item = NULL, domain = NULL, testlet = NULL, value = NULL, excludeLinkingDif = TRUE, difBound = 1, iterativ = FALSE, method = c("Mean.Mean", "Haebara", "Stocking.Lord"),
            itemF = NULL, domainF = NULL, valueF = NULL) {
@@ -854,7 +859,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                 if("defineTam" %in% class(defineModelObj)) {                    ### exportiere alle Objekte aus defineModelObj in environment 
                    for ( i in names( defineModelObj )) { assign(i, defineModelObj[[i]]) } 
                    if ( show.output.on.console == TRUE ) { control$progress <- TRUE } 
-                   # if(!exists("tam.mml"))       {library(TAM, quietly = TRUE)}  ### March, 2, 2013: fuer's erste ohne DIF, ohne polytome Items, ohne mehrgruppenanalyse, ohne 2PL
+                 #  if(!exists("tam.mml"))       {library(TAM, quietly = TRUE)}  ### March, 2, 2013: fuer's erste ohne DIF, ohne polytome Items, ohne mehrgruppenanalyse, ohne 2PL
                    if(!is.null(anchor)) { 
                        stopifnot(ncol(anchor) == 2 )                            ### Untere Zeile: Wichtig! Sicherstellen, dass Reihenfolge der Items in Anker-Statement
                        notInData   <- setdiff(anchor[,1], all.Names[["variablen"]])
@@ -884,7 +889,36 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                                  cat("Remove these item(s) from design matrix.\n")
                                  est.slopegroups <- est.slopegroups[-match(weg2,est.slopegroups[,1]),]
                               }
-                              est.slopegroups <- est.slopegroups[match(all.Names[["variablen"]], est.slopegroups[,1]),2]
+                              est.slopegroups <- as.numeric(as.factor(est.slopegroups[match(all.Names[["variablen"]], est.slopegroups[,1]),2]))
+                          }
+                          if(!is.null(fixSlopeMat))  {
+                              cat ( "W A R N I N G:  To date, fixing slopes only works for dichotomous between item-multidimensionality models.\n")
+                              estVar          <- TRUE
+                              weg2            <- setdiff(fixSlopeMat[,1], all.Names[["variablen"]])
+                              if(length(weg2)>0) {
+                                 cat(paste("Following ",length(weg2), " Items in matrix for items with fixed slopes ('fixSlopeMat') which are not in dataset:\n",sep=""))
+                                 cat("   "); cat(paste(weg2, collapse=", ")); cat("\n")
+                                 cat("Remove these item(s) from 'fixSlopeMat' matrix.\n")
+                                 fixSlopeMat <- eatRep:::facToChar ( fixSlopeMat[-match(weg2,fixSlopeMat[,1]),] )
+                                 fixSlopeMat[,"reihenfolge"] <- 1:nrow(fixSlopeMat)
+                              }                                                 ### Achtung, grosser Scheiss: wenn man nicht (wie oben) eine Reihenfolgespalte angibt, aendert die untere 'by'-Schleife die Sortierung!
+                              dims  <- (1:ncol(qMatrix))[-1]                    ### Slopematrix muss itemweise zusammengebaut werden
+                              slopMa<- do.call("rbind", by ( data = fixSlopeMat, INDICES = fixSlopeMat[,"reihenfolge"], FUN = function (zeile ) { 
+                                       zeile <- zeile[,-ncol(zeile)]
+                                       stopifnot ( nrow(zeile) == 1 )            
+                                       qSel  <- qMatrix[which( qMatrix[,1] == zeile[[1]]),]
+                                       anzKat<- length(unique(na.omit(daten[,as.character(zeile[[1]])])))
+                                       zeilen<- anzKat * length(dims)           ### fuer jedes Items gibt es [Anzahl Kategorien] * [Anzahl Dimensionen] Zeilen in der TAM matrix 
+                                       block <- cbind ( rep ( match(zeile[[1]], all.Names[["variablen"]]), times = zeilen), rep ( 1:anzKat, each = length(dims) ), dimsI <- rep ( 1:length(dims), times = anzKat), rep(0, zeilen))
+                                       matchI<- match(dims, which ( suppressWarnings(as.numeric(zeile)) != 0 ))
+                                       stopifnot ( length( na.omit(matchI )) == 1)
+                                       match2<- intersect(which(block[,2] == max(block[,2])), which(block[,3] == (dims-1)))
+                                       stopifnot ( length( na.omit(match2 )) == 1)
+                                       block[match2,4] <- zeile[[2]]
+                                       return(block) }))
+                          }  else  {
+                              estVar          <- FALSE
+                              slopMa          <- NULL
                           }
                           if( irtmodel == "3PL") {
                               if(!is.null(guessMat)) {
@@ -898,15 +932,15 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                                  gues <- guessMat[ match( all.Names[["variablen"]], guessMat[,1]) , "guessingGroup"]
                                  gues[which(is.na(gues))] <- 0
                               }  else  { gues <- NULL }   
-                              mod  <- tam.mml.3pl(resp = daten[,all.Names[["variablen"]]], pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, pweights = wgt, est.guess =gues, control = control)
-                          }  else { mod     <- tam.mml.2pl(resp = daten[,all.Names[["variablen"]]], pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, irtmodel = irtmodel, est.slopegroups=est.slopegroups,pweights = wgt, control = control) }
+                              mod  <- tam.mml.3pl(resp = daten[,all.Names[["variablen"]]], pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, pweights = wgt, est.guess =gues, B.fixed = slopMa, est.variance = estVar, control = control)
+                          }  else { mod     <- tam.mml.2pl(resp = daten[,all.Names[["variablen"]]], pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, irtmodel = irtmodel, est.slopegroups=est.slopegroups,pweights = wgt, B.fixed = slopMa, est.variance = estVar, control = control) }
                       }
                    } else {
                      assign(paste("DIF_",all.Names[["DIF.var"]],sep="") , as.data.frame (daten[,all.Names[["DIF.var"]]]) )
                      formel   <- as.formula(paste("~item - ",paste("DIF_",all.Names[["DIF.var"]],sep="")," + item * ",paste("DIF_",all.Names[["DIF.var"]],sep=""),sep=""))
                      facetten <- as.data.frame (daten[,all.Names[["DIF.var"]]])
                      colnames(facetten) <- paste("DIF_",all.Names[["DIF.var"]],sep="")
-                     mod      <- tam.mml.mfr(resp = daten[,all.Names[["variablen"]]], facets = facetten, constraint = constraint, formulaA = formel, pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, irtmodel = irtmodel, pweights = wgt, control = control)
+                     mod      <- tam.mml.mfr(resp = daten[,all.Names[["variablen"]]], facets = facetten, constraint = constraint, formulaA = formel, pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, irtmodel = irtmodel, pweights = wgt, B.fixed = slopMa, est.variance = estVar, control = control)
                    }
                    attr(mod, "qMatrix")      <- defineModelObj[["qMatrix"]]     ### hier werden fuer 'tam' zusaetzliche Objekte als Attribute an das Rueckgabeobjekt angehangen
                    attr(mod, "n.plausible")  <- defineModelObj[["n.plausible"]] ### Grund: Rueckgabeobjekt soll weitgehend beibehalten werden, damit alle 'tam'-Funktionen, die darauf aufsetzen, lauffaehig sind
@@ -925,7 +959,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                analysis.name, withDescriptives = TRUE, model.statement = "item",  compute.fit = TRUE, n.plausible=5, seed = NULL, conquest.folder=NULL,
                constraints=c("cases","none","items"),std.err=c("quick","full","none"), distribution=c("normal","discrete"), method=c("gauss", "quadrature", "montecarlo"), 
                n.iterations=2000,nodes=NULL, p.nodes=2000, f.nodes=2000,converge=0.001,deviancechange=0.0001, equivalence.table=c("wle","mle","NULL"), use.letters=FALSE, 
-               allowAllScoresEverywhere = TRUE, guessMat = NULL, est.slopegroups = NULL, progress = FALSE, increment.factor=1 , fac.oldxsi=0, 
+               allowAllScoresEverywhere = TRUE, guessMat = NULL, est.slopegroups = NULL, fixSlopeMat = NULL, progress = FALSE, increment.factor=1 , fac.oldxsi=0,
                export = list(logfile = TRUE, systemfile = FALSE, history = TRUE, covariance = TRUE, reg_coefficients = TRUE, designmatrix = FALSE) )   {
                   misItems <- missing(items)
                   eatRep:::checkForPackage (namePackage = "eatRest", targetPackage = "eatModel")
@@ -1036,7 +1070,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
      ### wenn multicore handling, dann wird das Objekt "model" an cores verteilt und dort weiter verarbeitet. Ausserdem werden Konsolenausgaben in stringobjekt "txt" weitergeleitet
                      }  else  { 
                         txt    <- capture.output ( models <- lapply( mods, FUN = doAufb))
-                        # if(!exists("detectCores"))   {library(parallel)}
+                       # if(!exists("detectCores"))   {library(parallel)}
                         doIt<- function (laufnummer,  ... ) { 
                                if(!exists("getResults"))  { library(eatModel) }
                                strI<- paste(unlist(lapply ( names ( models[[laufnummer]]) , FUN = function ( nameI ) { paste ( nameI, " = models[[laufnummer]][[\"",nameI,"\"]]", sep="")})), collapse = ", ")
@@ -1094,7 +1128,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                      doppelt     <- which(duplicated(dat[,all.Names[["ID"]]]))
                      if(length(doppelt)>0)  {stop(paste( length(doppelt) , " duplicate IDs found!",sep=""))}
                      if(!is.null(dir)) {                                        ### Sofern ein verzeichnis angegeben wurde (nicht NULL), 
-                        dir         <- eatRep:::crop(dir,"/")                            ### das Verzeichnis aber nicht existiert, wird es jetzt erzeugt
+                        dir         <- eatRep:::crop(dir,"/")                   ### das Verzeichnis aber nicht existiert, wird es jetzt erzeugt
                         if(dir.exists(dir) == FALSE) { 
                            cat(paste("Warning: Specified folder '",dir,"' does not exist. Create folder ... \n",sep="")); flush.console()
                            dir.create(dir, recursive = TRUE)
@@ -1431,7 +1465,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                           cat(paste("Q matrix specifies ",ncol(qMatrix)-1," dimension(s).\n",sep=""))
                           control <- list ( nodes = nodes , snodes = snodes , QMC=QMC, convD = deviancechange ,conv = converge , convM = .0001 , Msteps = 4 , maxiter = n.iterations, max.increment = 1 , 
                                      min.variance = .001 , progress = progress , ridge=0 , seed = seed , xsi.start0=FALSE,  increment.factor=increment.factor , fac.oldxsi= fac.oldxsi) 
-                          ret     <- list ( software = software, constraint = match.arg(constraints) , qMatrix=qMatrix, anchor=ankFrame[["resTam"]],  all.Names=all.Names, daten=daten, irtmodel=irtmodel, est.slopegroups = est.slopegroups, guessMat=guessMat, control = control, n.plausible=n.plausible, dir = dir, analysis.name=analysis.name, deskRes = deskRes, discrim = discrim, perNA=perNA, per0=per0, perExHG = perExHG, itemsExcluded = namen.items.weg)
+                          ret     <- list ( software = software, constraint = match.arg(constraints) , qMatrix=qMatrix, anchor=ankFrame[["resTam"]],  all.Names=all.Names, daten=daten, irtmodel=irtmodel, est.slopegroups = est.slopegroups, guessMat=guessMat, control = control, n.plausible=n.plausible, dir = dir, analysis.name=analysis.name, deskRes = deskRes, discrim = discrim, perNA=perNA, per0=per0, perExHG = perExHG, itemsExcluded = namen.items.weg, fixSlopeMat = fixSlopeMat)
                           class(ret) <-  c("defineTam", "list")
                           return ( ret )    }   }  }
                           
@@ -1591,19 +1625,23 @@ checkLink <- function(dataFrame, remove.non.responser = FALSE, sysmis = NA, verb
              }  }
 
 converged<- function (dir, logFile) { 
-            logF  <- scan(file = file.path ( dir, logFile ), what="character",sep="\n",quiet=TRUE)
-            last  <- logF[length(logF)] 
-            if ( !eatRep:::crop(last) == "=>quit;" ) { 
-               if ( length( grep("quit;" , last)) == 0 ) { 
-                   cat(paste("Warning: Model seems not to have converged. Log file unexpectedly finishs with '",last,"'.\nReading in model output might fail.\n", sep=""))
-                   isConv <- FALSE
-               }  else  { 
-                   isConv <- TRUE   
-               }    
-            }  else  {       
             isConv <- TRUE
-            }
-            return(isConv)}
+            if (!file.exists(file.path ( dir, logFile ))) {
+                 cat(paste("Warning: Model seems not to have converged. Cannot find log file '",file.path ( dir, logFile ),"'.\n",sep=""))
+                 isConv <- FALSE
+            }  else  {
+                 logF  <- scan(file = file.path ( dir, logFile ), what="character",sep="\n",quiet=TRUE)
+                 if(length(logF) == 0 ) {
+                    cat(paste("Warning: Model seems not to have converged. Log file '",file.path ( dir, logFile ),"' is empty.\n",sep=""))
+                    isConv <- FALSE
+                 }  else  {
+                    last  <- logF[length(logF)]
+                    if ( !eatRep:::crop(last) == "=>quit;" ) {
+                       if ( length( grep("quit;" , last)) == 0 ) {
+                           cat(paste("Warning: Model seems not to have converged. Log file unexpectedly finishs with '",last,"'.\nReading in model output might fail.\n", sep=""))
+                           isConv <- FALSE
+                       }  }  }  }
+            return(isConv)  }
 
 getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Names, abs.dif.bound , sig.dif.bound, p.value, deskRes, discrim, omitFit, omitRegr, omitWle, omitPV, daten, Q3=Q3, q3theta=q3theta, q3MinObs =  q3MinObs, q3MinType = q3MinType) {
          allFiles <- list.files(path=path, pattern = analysis.name, recursive = FALSE)
@@ -1763,8 +1801,10 @@ getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Name
                   ret  <- rbind ( ret, data.frame ( model = model.name, source = "conquest", var1 = eaps[,"ID"], var2 = NA , type = "indicator", indicator.group = "persons", group = foo[,"group"], par = "eap",  derived.par = foo[,"derived.par"], value = eaps[,"value"] , stringsAsFactors = FALSE))
               }
          }     
-         attr(ret, "isConverged") <- isConv
-         attr(ret, "available")   <- list ( itn = itnFile %in% allFiles, shw = shwFile %in% allFiles, wle = (wleFile %in% allFiles) & (omitWle == FALSE), pv = (pvFile %in% allFiles) & (omitPV == FALSE))
+         if(!is.null(ret)) {
+             attr(ret, "isConverged") <- isConv
+             attr(ret, "available")   <- list ( itn = itnFile %in% allFiles, shw = shwFile %in% allFiles, wle = (wleFile %in% allFiles) & (omitWle == FALSE), pv = (pvFile %in% allFiles) & (omitPV == FALSE))
+         }
     ### Sektion 'Q3 erzeugen' 
          theta <- NULL
          if ( Q3 == TRUE ) {
@@ -2163,35 +2203,20 @@ get.plausible <- function(file, quiet = FALSE, forConquestResults = FALSE)  {   
                  }  else { 
                  return(PV)}}
                  
-get.wle <- function(file)      {                                                ### alte und neue Version der Funktion: neue beginnt dort, wo if(n.wle != round(n.wle))
-            input <- scan(file, what = "character", sep = "\n", quiet = TRUE)   ### in neuer Funktion wird nicht mehr der relative Anteil geloester Aufgaben angegeben
-            input <- eatRep:::crop(input)                                       ### hauptsaechlich das Problem: wie benenne ich die Spalten korrekt?
-            input <- strsplit(input," +")                                       ### loescht erste und letzte Leerzeichen einer Stringkette (benoetigt Paket "gregmisc")
-            n.spalten <- max ( sapply(input,FUN=function(ii){ length(ii) }) )   ### Untere Zeile gibt die maximale Spaltenanzahl: Dies minus eins und dann geteilt durch 4 ergibt Anzahl an WLEs
-            n.wle <- (n.spalten-1) / 4                                          ### Spaltenanzahl sollte ganzzahlig sein.
+get.wle <- function(file)      {
+            input <- eatRep:::crop(scan(file, what = "character", sep = "\n", quiet = TRUE))
+            input <- strsplit(input," +")                                       ### 'eatRep:::crop' loescht erste und letzte Leerzeichen einer Stringkette
+            n.spalten <- max ( sapply(input,FUN=function(ii){ length(ii) }) )   ### Untere Zeile gibt die maximale Spaltenanzahl:
+            n.wle <- floor((n.spalten-1) / 4)                                   ### Dies minus eins und dann geteilt durch 4 ergibt Anzahl an WLEs (mehr oder weniger)
             input <- eatRep:::as.numeric.if.possible(data.frame( matrix( t( sapply(input,FUN=function(ii){ ii[1:n.spalten] }) ),length(input),byrow = FALSE), stringsAsFactors = FALSE), set.numeric = TRUE, verbose = FALSE)
-            if(n.wle == round(n.wle))
-              {cat(paste("Found valid WLEs of ", nrow(na.omit(input))," persons for ", n.wle, " dimension(s).\n",sep=""))
-               spalten <- unlist( lapply(1:n.wle,FUN=function(ii){c(2*ii,2*ii+1,2*ii+1,2*n.wle+2*ii,2*n.wle+2*ii+1,2*n.wle+2*ii)  }) )
-               input   <- data.frame(input[,c(1,spalten)], stringsAsFactors=FALSE)# Obere Zeile: Ein paar Spalten werden zweimal ausgegeben, in diese werden spaeter die "Rel.Freq" und transformierte WLEs eingetragen
-               for (i in 1:n.wle) {input[,6*i-2] <- input[,6*i-4] / input[,6*i-3]## trage "Rel.Freq" ein! Untere Zeile: rechne in PISA-Metrik um!
-                                   input[,6*i+1] <- input[,6*i-1] / sd(input[,6*i-1], na.rm = TRUE) * 100 + 500}
-               colnames(input) <- c("case",as.character(sapply(1:n.wle,FUN=function(ii){paste(c("n.solved","n.total","per.solved","wle","std.wle","wle.500"),ii,sep=".")})))
-               weg.damit <- grep("500", colnames(input))                        ### loesche Spalten mit WLE.500 (falsch)
-               input     <- input[,-weg.damit]}
-            if(n.wle != round(n.wle)) 
-              {col.min.na  <- which( rowSums(is.na(input)) == min(rowSums(is.na(input))))[1]### Zeile mit den am wenigsten fehlenden Elementen
-               col.numeric <- which ( sapply(input, FUN=function(ii) {class(ii)}) == "numeric" )
-               col.real.numbers <- na.omit(unlist ( lapply (col.numeric , FUN= function(ii) { ifelse(input[col.min.na,ii] == round(input[col.min.na,ii]), NA, ii)}) ) )
-               cat(paste("Found valid WLEs of ", nrow(na.omit(input))," person(s) for ", length(col.real.numbers)/2, " dimension(s).\n",sep=""))
-               namen.1 <- as.vector( sapply(1:(length(col.real.numbers)/2),FUN=function(ii){c("n.solved","n.total")}))
-               namen.2 <- as.vector( sapply(1:(length(col.real.numbers)/2),FUN=function(ii){c("wle","std.wle")}))
-               namen.1 <- paste(namen.1,rep(1:(length(namen.1)/2),each=2),sep=".")# obere Zeile: benenne nun!
-               namen.2 <- paste(namen.2,rep(1:(length(namen.2)/2),each=2),sep=".")
-               namen   <- c(namen.1,namen.2)
-               colnames(input)[1:2] <- c("case","ID")
-               if(length(col.real.numbers) > 0) {colnames(input)[(ncol(input)- length(namen)+1): ncol(input)] <- namen} }
-            return(input)}
+            valid <- na.omit(input)
+            cat(paste("Found valid WLEs of ", nrow(valid)," person(s) for ", n.wle, " dimension(s).\n",sep=""))
+            if (nrow(valid) != nrow(input)) { cat(paste("    ",nrow(input)-nrow(valid)," persons with missings on at least one latent dimension.\n",sep="")) }
+            namen1<- rep ( x = c("n.solved", "n.total", "wle", "std.wle"), times = n.wle)
+            namen2<- rep ( paste(".", 1:n.wle, sep=""), each = 4)               ### untere Zeile: wenn es keine Spalte 'case' gibt, wird die erste Spalte mit 'ID' benannt
+            colnames(valid)[(ncol(valid)-length(namen2)):1] <- c("ID","case")[(ncol(valid)-length(namen2)):1]
+            colnames(valid)[(ncol(valid)-length(namen2)+1):ncol(valid)] <- paste(namen1,namen2,sep="")
+            return(valid)}
 
 get.shw <- function(file, dif.term, split.dif = TRUE, abs.dif.bound = 0.6, sig.dif.bound = 0.3, p.value = 0.9) {
             options(warn = -1)                                                  ### warnungen aus
@@ -2705,8 +2730,8 @@ isLetter <- function ( string ) {
 fromMinToMax <- function(dat, score.matrix, qmatrix, allowAllScoresEverywhere, use.letters)    {
                 all.values <- alply(as.matrix(score.matrix), .margins = 1, .fun = function(ii) {names(eatRep:::table.unlist(dat[,na.omit(as.numeric(ii[grep("^X", names(ii))])), drop = FALSE]))  })
                 if ( allowAllScoresEverywhere == TRUE ) {                       ### obere Zeile: WICHTIG: "alply" ersetzt "apply"! http://stackoverflow.com/questions/6241236/force-apply-to-return-a-list
-                    all.values <- lapply(all.values, FUN = function(ii) {sort(eatRep:::as.numeric.if.possible(unique( unlist ( all.values ) ), verbose = FALSE ) ) } )
-                }
+                    all.values <- lapply(all.values, FUN = function(ii) {sort(eatRep:::as.numeric.if.possible(unique( unlist ( all.values ) ), verbose = FALSE, ignoreAttributes = TRUE ) ) } )
+                }     
                 if(use.letters == TRUE )  {minMaxRawdata  <- unlist ( lapply( all.values, FUN = function (ii) {paste("(",paste(LETTERS[which(LETTERS == ii[1]) : which(LETTERS == ii[length(ii)])], collapse=" "),")") } ) ) }
                 if(use.letters == FALSE ) {minMaxRawdata  <- unlist ( lapply( all.values, FUN = function (ii) {paste("(",paste(ii[1] : ii[length(ii)],collapse = " "),")")  } ) ) }
                 scoring <- unlist( lapply( minMaxRawdata , FUN = function(ii) { paste("(", paste( 0 : (length(unlist(strsplit(ii, " ")))-3), collapse = " "),")")}) )
@@ -2724,7 +2749,7 @@ fromMinToMax <- function(dat, score.matrix, qmatrix, allowAllScoresEverywhere, u
                     }
                 }
                 options(warn = 0)                                               ### warnungen wieder an
-                return(score.matrix)}
+                return(score.matrix)}    
                  
 userSpecifiedList <- function ( l, l.default ) {
 		if ( !is.null ( names ( l ) ) ) {
@@ -2915,3 +2940,47 @@ prepRep <- function ( calibT2, bistaTransfT1, bistaTransfT2, makeIdsUnique = TRU
                 dat2[, paste(idN, "unique", sep="_")] <- paste(dat2[, "trend"], dat2[, idN], sep="_")
            }     
            return(rbind ( dat1, dat2))}
+
+plotICC <- function ( resultsObj, defineModelObj, item = NULL, personsPerGroup = 30, pdfFolder = NULL ) {
+           it  <- itemFromRes ( resultsObj )
+           eapA<- eapFromRes (resultsObj)                                       ### eap fuer alle; muss wideformat haben!!!
+           cat("Achtung: geht erstmal nur fuer 1pl, dichotom.\n"); flush.console()
+           if ( is.null(item) & is.null(pdfFolder)) {stop("If ICCs for more than one item should be displayed, please specify an output folder for pdf.\n")}
+           if ( !is.null(pdfFolder)) { pdf(file = pdfFolder) }
+           if ( !is.null ( item ) )  {
+                if ( !item %in% it[,"item"]) { stop (paste("Item '",item,"' was not found in 'resusltsObj'.\n",sep=""))}
+                it <- it[which(it[,"item"] == item),]
+           }
+     ### Plotten findet fuer jedes Item separat statt
+           pl  <- by ( data = it, INDICES = it[,c("model", "item")], FUN = function ( i ) {
+                  xlm <- c(i[["est"]]+2, i[["est"]]-2)
+                  anf <- if ( min(xlm) < -4 ) { anf <- floor(min(xlm)) } else { anf  <- -4}
+                  ende<- if ( max(xlm) >  4 ) { ende<- ceiling(max(xlm)) } else { ende <- 4}
+                  x   <- seq ( anf, ende, l = 400)
+                  y   <- exp(x - i[["est"]]) / (1+exp(x - i[["est"]]))
+                  plot (x, y, type = "l", main = paste("Item '",as.character(i[["item"]]),"'\n\n",sep=""), xlim = c(+6,-6), ylim = c(0,1), xlab = "theta", ylab = "P(X=1)", col = "darkred", asp = 0.75, cex = 8, lwd = 2)
+                  mtext( paste("Model = ",i[["model"]],"  |  Dimension = ",i[["dimension"]], "  |  difficulty = ",round(i[["est"]], digits = 3),"  |  Infit = ",round(i[["infit"]], digits = 3),"\n",sep=""))
+                  eap <- eapA[intersect ( which (eapA[,"dimension"] == i[["dimension"]]) , which (eapA[,"model"] == i[["model"]])),]
+                  if ( "defineMultiple" %in% class (defineModelObj)) {          ### Problem: je nachdem ob modelle gesplittetvwurden oder nicht, muss der Itemdatensatz woanders gesucht werden ... Hotfix
+                       woIst<- which ( lapply ( defineModelObj, FUN = function ( g ) {   g[["analysis.name"]] == i[["model"]] }) == TRUE)
+                       stopifnot(length(woIst) == 1)
+                       dat  <-defineModelObj[[woIst]][["daten"]]
+                  }  else  {
+                       dat  <- defineModelObj[["daten"]]
+                  }
+                  prbs<- na.omit ( merge ( dat[,c( "ID", as.character(i[["item"]]))], eap[,c( attr(resultsObj, "all.Names")[["ID"]], "EAP")], by.x = "ID", by.y = attr(resultsObj, "all.Names")[["ID"]]))
+                  anz <- round ( nrow(prbs) / personsPerGroup ) + 1             ### mindestens 'personsPerGroup' Personen pro Gruppe
+                  if ( anz < 3 ) { anz <- 3 }
+                  if ( anz > 50) { anz <- 50}
+                  eapQ<- quantile ( prbs[,"EAP"], probs = seq(0,1,l = anz))
+                  prbs[,"gr"] <- num.to.cat ( x = prbs[,"EAP"], cut.points = eapQ[-c(1,length(eapQ))])
+                  prbs<- do.call("rbind", by ( data = prbs, INDICES = prbs[,"gr"], FUN = function ( g ) {
+                         g[,"mw"] <- mean(g[,"EAP"])
+                         g[,"anz"]<- length(g[,"EAP"])
+                         g[,"lh"] <- mean(g[, as.character(i[["item"]]) ])
+                         return(g)}))
+                  matr<- prbs[!duplicated(prbs[,c("mw", "lh")]),c("mw", "lh")]
+                  matr<- data.frame(matr[sort(matr[,"mw"],decreasing=FALSE,index.return=TRUE)$ix,])
+                  points ( x = matr[,"mw"], y = matr[,"lh"], cex = 1, pch = 21, bg = "darkblue")
+                  lines ( x = matr[,"mw"], y = matr[,"lh"], col = "blue", lty = 3, lwd = 2) } )
+           if ( !is.null(pdfFolder)) { dev.off() } }
