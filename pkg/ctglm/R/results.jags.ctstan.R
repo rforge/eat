@@ -393,7 +393,8 @@ get.par.list <- function( m, m.name, mode ){
 						# iterations/chains fuer parameter
 	
 						# determine if hmean or hsd
-						if( any( m.$name %in% c("sd.b") ) ) morsd <- "hsd" else morsd <- "hmean"
+						if( any( m.$name %in% c("sd.b") ) ) morsd <- "hsd_" else morsd <- "hmean_"
+						if( any( m.$name %in% c("lp__") ) ) morsd <- ""
 						# morsd <- "hmean"
 # browser()				
 # if( any( m.$name %in% c("var.b") ) ) browser()
@@ -418,8 +419,8 @@ get.par.list <- function( m, m.name, mode ){
 						# m.$call <- paste0( "extract( r$results, pars=paste0('output_",morsd,"_', '",m.$parameter.mod,"'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
 						## since ctsem version 2.1.0: r$results$stanfit
 						## since ctsem version 2.1.0: no output as prefix
-						m.$call <- paste0( "extract( r$results$stanfit, pars=paste0('",morsd,"_', '",m.$parameter.mod,"'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
-						
+						m.$call <- paste0( "extract( r$results$stanfit, pars=paste0('",morsd,"', '",m.$parameter.mod,"'), permuted=FALSE, inc_warmup=TRUE )[,,1]" )
+# if( any( m.$name %in% c("sd.b") ) ) browser()						
 						# call for ind varying b (bj) 
 						if ( any( m.$name %in% "bj" ) ){
 								# CINT matrix in ctstan is other way round, so switch

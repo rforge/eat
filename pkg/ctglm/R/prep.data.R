@@ -70,14 +70,40 @@ prep.data <- function ( env ) {
 				}
 		}
 		
+		### data check
+		
+		## keine time pro Person darf doppelt sein
+		dupl <- do.call( "c" , sapply( unique( d[,"id"] ), function( id. ) duplicated( d[ d[,id] %in% id., time ] ), simplify=FALSE ) )
+		if ( any ( dupl ) ) {
+				if ( verbose ) cat ( paste0( "duplicated times in data set in row(s): ", paste0( which( dupl ), collapse=", " ), "\n" ) )
+				d <- d[ -which( dupl ), ]
+				if( nrow( d ) %in% 0 ) stop( "no cases left in data set" )
+		}
+		
+		## zur Sicherheit aufsteigend sortieren falls noch nicht
+		ord <- order( d[,id], d[,time] )
+		if ( !identical ( ord, 1:nrow(d) ) ){
+				if ( verbose ) cat ( "data set is not ordered ascending with respect to id/time, will be done now\n" )
+				d <- d[ ord, ]
+		}
+		
 		### !!! d is now long !!!
 		# long d to wide dw (with lag variables)
 		dw <- ctLongToWide ( d=d, id=id, time=time, manifestNames=colnames(d)[!colnames(d) %in% c(id,time)], TDpredNames = NULL, TIpredNames = NULL)
 		
-		dw <- ctIntervalise( datawide=dw, Tpoints=length(unique(d[,"time"])), n.manifest=length(colnames(d)[!colnames(d) %in% c(id,time)]), n.TDpred = 0, n.TIpred = 0,
-							 imputedefs = F, manifestNames = "auto", TDpredNames = "auto",
+		# 20.03.2017
+		# das muss die Anzahl der Zeitpunkte die ctLongToWide baut sein
+		# das sind persoenliche Zeitpunkte, nicht absolute Zeitpunkte!
+		# d.h. nicht Tpoints=length(unique(d[,"time"]))
+		# sondern    Tpoints=
+		Tpoints <- length( unique( as.integer( sub( "^.*T(.*)$", "\\1", colnames( dw ) ) ) ) )
+		
+		dw <- ctIntervalise( datawide=dw, Tpoints=Tpoints, n.manifest=length(colnames(d)[!colnames(d) %in% c(id,time)]), n.TDpred = 0, n.TIpred = 0,
+							 imputedefs = FALSE, manifestNames = "auto", TDpredNames = "auto",
 							 TIpredNames = "auto", digits = 5, mininterval = 0.001,
 							 individualRelativeTime = TRUE, startoffset = 0)
+		
+		
 		
 		lag.names <- colnames( dw )[ grepl( "^dT", colnames( dw ) ) ]
 		timepoint.sep <- "_"
