@@ -377,8 +377,11 @@ Data frame with item discrimination values.
 The person identifiers of examinees which are excluded from the analysis due to solely missing values.
 }
   \item{per0}{
-The person identifiers of examinees which are excluded from the analysis due to solely false responses.
-(applies only if \code{remove.failues} was set to be TRUE)
+The person identifiers of examinees which have solely false responses. if \code{remove.failues} was set 
+to be TRUE, these persons are excluded from the data set. 
+}
+  \item{perA}{
+The person identifiers of examinees which have solely correct responses. 
 }
   \item{perExHG}{
 The person identifiers of examinees which are excluded from the analysis due to missing values on explicit variables.
@@ -1088,6 +1091,78 @@ m10   <- jk2.glm(datL = dat03, ID="id", imp="imp", wgt="wgt", PSU="jkzone",
 m11   <- jk2.glm(datL = datGlm, ID="id", imp="imp", wgt="wgt", PSU="jkzone",
          repInd = "jkrep", type = "jk2", groups = "model", trend = "trend",
          group.differences.by.wholePop = TRUE, formula = procedural~sex+knowledge)
+
+
+################################################################################
+###        Example 7: Linking and equating for multiple models (III)         ###
+################################################################################
+
+# For the purpose of illustration, this example repeats analyses of example 6,
+# using a 2pl estimation now. Example 7 demonstrates routines without trend
+# estimation.
+
+# Preparation: assume time of measurement 't1' corresponds to the year 2003.
+datT1<- reshape2::dcast(subset ( sciences, year == 2003),
+        formula = id+grade+sex+country~variable, value.var="value")
+
+# First step: item calibration in separate unidimensional models for each domain
+# split 2 models. Note: not all items of the Q matrix are present in the data.
+# Items which occur only in the Q matrix will be ignored.
+modsT1<- splitModels ( qMatrix = qMat, nCores = 1)
+
+# lets specify a 2pl model with constraints: a common discrimination for all
+# knowledge items, and a common discrimination for procedural items
+slopes<- data.frame ( variable = qMat[,"variable"],
+         slope = as.numeric(as.factor(substr(as.character(qMat[,"variable"]),4,6))))
+
+# prepare 2pl model
+defT1 <- defineModel(dat = datT1, id = "id", check.for.linking = TRUE,
+         splittedModels = modsT1, irtmodel = "2PL.groups", est.slopegroups = slopes,
+         software = "tam")
+
+# run 2 models
+runT1 <- runModel(defT1)
+
+# get the results
+resT1 <- getResults(runT1)
+
+# extract item parameters from the 'results' object
+itemT1<- itemFromRes(resT1)
+
+# Second step: drawing plausible values. Two-dimensional model is specified for
+# each person group with fixed item parameters. Moreover, a latent regression
+# model is used (in the actual 'Laendervergleich', regressors are principal
+# components).
+
+# create arbitrary principal components
+for ( i in c("PC1", "PC2", "PC3") ) {
+      datT1[,i] <- rnorm( n = nrow(datT1), mean = 0, sd = 1.2)
+}
+
+# number of extracted principal components vary: three components for Berlin,
+# two for Bavaria. Hence, Bavaria has no valid values on 'PC3'.
+datT1[which(datT1[,"country"] == "Bavaria"),"PC3"] <- NA
+
+# define person grouping
+pers  <- data.frame ( idstud = datT1[,"id"] , country = datT1[,"country"])
+
+# Running second step: split models according to person groups
+# ('all.persons' must be FALSE, otherwise the whole group would be treated as
+# a separate distinct group.)
+modT1P<- splitModels ( person.groups = pers , all.persons = FALSE, nCores = 1)
+
+# define the 2 country-specific 2-dimensional models, specifying latent regression
+# model and fixed item and fixed slope parameters.
+defT1P<- defineModel(dat = datT1, items = itemT1[,"item"], id = "id", irtmodel = "2PL",
+         check.for.linking = TRUE, splittedModels = modT1P, qMatrix = qMat,
+         anchor = itemT1[,c("item", "est")], fixSlopeMat = itemT1[,c("item", "estSlope")],
+         HG.var = c("PC1", "PC2", "PC3"), software = "tam")
+
+# run the 2 models
+runT1P<- runModel(defT1P)
+
+# get the results
+resT1P<- getResults(runT1P, Q3 = FALSE)
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

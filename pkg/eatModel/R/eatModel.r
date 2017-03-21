@@ -827,13 +827,13 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defau
 
 runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.console = TRUE, wait = TRUE) {
             if ("defineMultiple" %in% class( defineModelObj ) ) {               ### erstmal fuer den Multimodellfall: nur dafuer wird single core und multicore unterschieden
-                if(is.null ( attr(defineModelObj, "nCores") ) | attr(defineModelObj, "nCores") == 1 ) {         
-                   res <- lapply(defineModelObj, FUN = function ( r ) {         ### erstmal: single core 
+                if(is.null ( attr(defineModelObj, "nCores") ) | attr(defineModelObj, "nCores") == 1 ) {
+                   res <- lapply(defineModelObj, FUN = function ( r ) {         ### erstmal: single core
                           ret <- runModel ( defineModelObj = r, show.output.on.console = show.output.on.console, show.dos.console = show.dos.console, wait = wait)
                           return(ret)})
                 }  else  {                                                      ### multicore
-                   # if(!exists("detectCores"))   {library(parallel)}
-                   doIt<- function (laufnummer,  ... ) { 
+                 #  if(!exists("detectCores"))   {library(parallel)}
+                   doIt<- function (laufnummer,  ... ) {
                           if(!exists("runModel"))  { library(eatModel) }
                           ret <- runModel ( defineModelObj = defineModelObj[[laufnummer]], show.output.on.console = show.output.on.console, show.dos.console = show.dos.console, wait = TRUE)
                           return(ret) }
@@ -842,11 +842,11 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                    res <- clusterApply(cl = cl, x = 1:length(defineModelObj), fun = doIt , show.output.on.console = show.output.on.console, show.dos.console = show.dos.console, wait = wait)
                    stopCluster(cl)
                    cat(paste ( length(defineModelObj), " analyses finished: ", sep="")); print( Sys.time() - beg)
-                }   
+                }
                 class(res) <- c("runMultiple", "list")
                 attr(res, "nCores") <- attr(defineModelObj, "nCores")
                 return(res)
-            } else {                                                            ### ab hier fuer den single model Fall 
+            } else {                                                            ### ab hier fuer den single model Fall
                 if("defineConquest" %in% class(defineModelObj)) {               ### hier fuer conquest
                    oldPfad <- getwd()
                    setwd(defineModelObj$dir)
@@ -856,11 +856,11 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                    class(defineModelObj) <- c("runConquest", "list")
                    return ( defineModelObj )
                 }
-                if("defineTam" %in% class(defineModelObj)) {                    ### exportiere alle Objekte aus defineModelObj in environment 
-                   for ( i in names( defineModelObj )) { assign(i, defineModelObj[[i]]) } 
-                   if ( show.output.on.console == TRUE ) { control$progress <- TRUE } 
-                 #  if(!exists("tam.mml"))       {library(TAM, quietly = TRUE)}  ### March, 2, 2013: fuer's erste ohne DIF, ohne polytome Items, ohne mehrgruppenanalyse, ohne 2PL
-                   if(!is.null(anchor)) { 
+                if("defineTam" %in% class(defineModelObj)) {                    ### exportiere alle Objekte aus defineModelObj in environment
+                   for ( i in names( defineModelObj )) { assign(i, defineModelObj[[i]]) }
+                   if ( show.output.on.console == TRUE ) { control$progress <- TRUE }
+                   # if(!exists("tam.mml"))       {library(TAM, quietly = TRUE)}  ### March, 2, 2013: fuer's erste ohne DIF, ohne polytome Items, ohne mehrgruppenanalyse, ohne 2PL
+                   if(!is.null(anchor)) {
                        stopifnot(ncol(anchor) == 2 )                            ### Untere Zeile: Wichtig! Sicherstellen, dass Reihenfolge der Items in Anker-Statement
                        notInData   <- setdiff(anchor[,1], all.Names[["variablen"]])
                        if(length(notInData)>0)  {
@@ -900,19 +900,19 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                                  cat("   "); cat(paste(weg2, collapse=", ")); cat("\n")
                                  cat("Remove these item(s) from 'fixSlopeMat' matrix.\n")
                                  fixSlopeMat <- eatRep:::facToChar ( fixSlopeMat[-match(weg2,fixSlopeMat[,1]),] )
-                                 fixSlopeMat[,"reihenfolge"] <- 1:nrow(fixSlopeMat)
-                              }                                                 ### Achtung, grosser Scheiss: wenn man nicht (wie oben) eine Reihenfolgespalte angibt, aendert die untere 'by'-Schleife die Sortierung!
+                              }                                                 ### Achtung, grosser Scheiss: wenn man nicht (wie oben) eine Reihenfolgespalte angibt, 
+                              fixSlopeMat[,"reihenfolge"] <- 1:nrow(fixSlopeMat)### aendert die untere 'by'-Schleife die Sortierung!
                               dims  <- (1:ncol(qMatrix))[-1]                    ### Slopematrix muss itemweise zusammengebaut werden
-                              slopMa<- do.call("rbind", by ( data = fixSlopeMat, INDICES = fixSlopeMat[,"reihenfolge"], FUN = function (zeile ) { 
+                              slopMa<- do.call("rbind", by ( data = fixSlopeMat, INDICES = fixSlopeMat[,"reihenfolge"], FUN = function (zeile ) {
                                        zeile <- zeile[,-ncol(zeile)]
-                                       stopifnot ( nrow(zeile) == 1 )            
+                                       stopifnot ( nrow(zeile) == 1 )
                                        qSel  <- qMatrix[which( qMatrix[,1] == zeile[[1]]),]
                                        anzKat<- length(unique(na.omit(daten[,as.character(zeile[[1]])])))
-                                       zeilen<- anzKat * length(dims)           ### fuer jedes Items gibt es [Anzahl Kategorien] * [Anzahl Dimensionen] Zeilen in der TAM matrix 
+                                       zeilen<- anzKat * length(dims)           ### fuer jedes Items gibt es [Anzahl Kategorien] * [Anzahl Dimensionen] Zeilen in der TAM matrix
                                        block <- cbind ( rep ( match(zeile[[1]], all.Names[["variablen"]]), times = zeilen), rep ( 1:anzKat, each = length(dims) ), dimsI <- rep ( 1:length(dims), times = anzKat), rep(0, zeilen))
-                                       matchI<- match(dims, which ( suppressWarnings(as.numeric(zeile)) != 0 ))
-                                       stopifnot ( length( na.omit(matchI )) == 1)
-                                       match2<- intersect(which(block[,2] == max(block[,2])), which(block[,3] == (dims-1)))
+                                       matchD<- which ( qSel[,-1] != 0 )
+                                       stopifnot ( length( matchD ) == 1)
+                                       match2<- intersect(which(block[,2] == max(block[,2])), which(block[,3] == (matchD)))
                                        stopifnot ( length( na.omit(match2 )) == 1)
                                        block[match2,4] <- zeile[[2]]
                                        return(block) }))
@@ -931,7 +931,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                                  }
                                  gues <- guessMat[ match( all.Names[["variablen"]], guessMat[,1]) , "guessingGroup"]
                                  gues[which(is.na(gues))] <- 0
-                              }  else  { gues <- NULL }   
+                              }  else  { gues <- NULL }
                               mod  <- tam.mml.3pl(resp = daten[,all.Names[["variablen"]]], pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, pweights = wgt, est.guess =gues, B.fixed = slopMa, est.variance = estVar, control = control)
                           }  else { mod     <- tam.mml.2pl(resp = daten[,all.Names[["variablen"]]], pid = daten[,"ID"], Y = Y, Q = qMatrix[,-1,drop=FALSE], xsi.fixed = anchor, irtmodel = irtmodel, est.slopegroups=est.slopegroups,pweights = wgt, B.fixed = slopMa, est.variance = estVar, control = control) }
                       }
@@ -944,12 +944,12 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                    }
                    attr(mod, "qMatrix")      <- defineModelObj[["qMatrix"]]     ### hier werden fuer 'tam' zusaetzliche Objekte als Attribute an das Rueckgabeobjekt angehangen
                    attr(mod, "n.plausible")  <- defineModelObj[["n.plausible"]] ### Grund: Rueckgabeobjekt soll weitgehend beibehalten werden, damit alle 'tam'-Funktionen, die darauf aufsetzen, lauffaehig sind
-                   attr(mod, "dir")          <- defineModelObj[["dir"]] 
-                   attr(mod, "analysis.name")<- defineModelObj[["analysis.name"]] 
-                   attr(mod, "all.Names")    <- defineModelObj[["all.Names"]] 
-                   attr(mod, "deskRes")      <- defineModelObj[["deskRes"]] 
-                   attr(mod, "discrim")      <- defineModelObj[["discrim"]] 
-                   attr(mod, "irtmodel")     <- defineModelObj[["irtmodel"]] 
+                   attr(mod, "dir")          <- defineModelObj[["dir"]]
+                   attr(mod, "analysis.name")<- defineModelObj[["analysis.name"]]
+                   attr(mod, "all.Names")    <- defineModelObj[["all.Names"]]
+                   attr(mod, "deskRes")      <- defineModelObj[["deskRes"]]
+                   attr(mod, "discrim")      <- defineModelObj[["discrim"]]
+                   attr(mod, "irtmodel")     <- defineModelObj[["irtmodel"]]
                    return(mod)  }  }   }
 
 defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
