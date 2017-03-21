@@ -1070,7 +1070,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
      ### wenn multicore handling, dann wird das Objekt "model" an cores verteilt und dort weiter verarbeitet. Ausserdem werden Konsolenausgaben in stringobjekt "txt" weitergeleitet
                      }  else  { 
                         txt    <- capture.output ( models <- lapply( mods, FUN = doAufb))
-                       # if(!exists("detectCores"))   {library(parallel)}
+                      # if(!exists("detectCores"))   {library(parallel)}
                         doIt<- function (laufnummer,  ... ) { 
                                if(!exists("getResults"))  { library(eatModel) }
                                strI<- paste(unlist(lapply ( names ( models[[laufnummer]]) , FUN = function ( nameI ) { paste ( nameI, " = models[[laufnummer]][[\"",nameI,"\"]]", sep="")})), collapse = ", ")
@@ -1360,18 +1360,18 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                       datMax<- dcast(minMax, as.formula(paste(all.Names[["ID"]], "~variable",sep="")), value.var = "valueMax")
                       allFal<- datW[ which ( rowSums ( datW[,-1], na.rm = TRUE ) == rowSums ( datMin[,-1], na.rm = TRUE ) ), all.Names[["ID"]] ]
                       allTru<- datW[ which ( rowSums ( datW[,-1], na.rm = TRUE ) == rowSums ( datMax[,-1], na.rm = TRUE ) ), all.Names[["ID"]] ]
-                      per0  <- NULL
+                      per0  <- NULL; perA <- NULL
                       if(length(allFal)>0) { 
                          num <- rowSums(datMax[ which ( datMax[,1] %in% allFal), -1], na.rm = TRUE)
                          numF<- data.frame ( id = allFal, anzahl = num)
                          numF<- data.frame(numF[sort(numF[,"anzahl"],decreasing=FALSE,index.return=TRUE)$ix,])
                          if ( nrow( numF) > 5) { auswahl  <- numF[c(1, round(nrow(numF)/2), nrow(numF)),] }  else { auswahl <- na.omit(numF[c(1, 2, nrow(numF)),]) }
                          cat(paste( length(allFal), " subject(s) do not solve any item:\n   ", paste(auswahl[,"id"], " (",auswahl[,"anzahl"]," false)",sep="",collapse=", ")," ... \n",sep=""))
-                         if (remove.failures == TRUE)  { 
+                         weg0<- na.omit(match(allFal, dat[,all.Names[["ID"]]]))
+                         per0<- dat[weg0, all.Names[["ID"]] ]
+                         if (remove.failures == TRUE)  {
                              cat("   Remove subjects without any correct response.\n"); flush.console()
-                             weg <- na.omit(match(allFal, dat[,all.Names[["ID"]]]))
-                             per0<- dat[weg, all.Names[["ID"]] ] 
-                             dat <- dat[-weg,] 
+                             dat <- dat[-weg0,]
                          } 
                       }
                       if(length(allTru)>0) { 
@@ -1380,6 +1380,8 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                          numT<- data.frame(numT[sort(numT[,"anzahl"],decreasing=FALSE,index.return=TRUE)$ix,])
                          if ( nrow( numT) > 5) { auswahl  <- numT[c(1, round(nrow(numT)/2), nrow(numT)),] }  else { auswahl <- na.omit(numT[c(1, 2, nrow(numT)),]) }
                          cat(paste( length(allTru), " subject(s) solved each item: ", paste(auswahl[,"id"], " (",auswahl[,"anzahl"] ," correct)",sep="", collapse=", ")," ... \n",sep=""))
+                         alle<- na.omit(match(allTru, dat[,all.Names[["ID"]]]))
+                         perA<- dat[alle, all.Names[["ID"]] ]
                       }
      ### Sektion 'Verlinkung pruefen' ###
                       if(check.for.linking == TRUE) {                           ### Dies geschieht auf dem nutzerspezifisch reduzierten/selektierten Datensatz
@@ -1457,7 +1459,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                           }
      ### Sektion 'Rueckgabeobjekt bauen', hier fuer Conquest                    ### setze Optionen wieder in Ausgangszustand
                           options(scipen = original.options); flush.console()   ### Achtung: setze Konsolenpfade in Hochkommas, da andernfalls keine Leerzeichen in den Ordner- bzw. Dateinamen erlaubt sind!
-                          ret <- list ( software = software, input = paste("\"", file.path(dir, paste(analysis.name,"cqc",sep=".")), "\"", sep=""), conquest.folder = paste("\"", conquest.folder, "\"", sep=""), dir=dir, analysis.name=analysis.name, model.name = analysis.name, qMatrix=qMatrix, all.Names=all.Names, deskRes = deskRes, discrim = discrim, perNA=perNA, per0=per0, perExHG = perExHG, itemsExcluded = namen.items.weg, daten=daten)
+                          ret <- list ( software = software, input = paste("\"", file.path(dir, paste(analysis.name,"cqc",sep=".")), "\"", sep=""), conquest.folder = paste("\"", conquest.folder, "\"", sep=""), dir=dir, analysis.name=analysis.name, model.name = analysis.name, qMatrix=qMatrix, all.Names=all.Names, deskRes = deskRes, discrim = discrim, perNA=perNA, per0=per0, perA = perA, perExHG = perExHG, itemsExcluded = namen.items.weg, daten=daten)
                           class(ret) <-  c("defineConquest", "list")
                           return ( ret )  }
      ### Sektion 'Rueckgabeobjekt fuer tam'
@@ -1465,7 +1467,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                           cat(paste("Q matrix specifies ",ncol(qMatrix)-1," dimension(s).\n",sep=""))
                           control <- list ( nodes = nodes , snodes = snodes , QMC=QMC, convD = deviancechange ,conv = converge , convM = .0001 , Msteps = 4 , maxiter = n.iterations, max.increment = 1 , 
                                      min.variance = .001 , progress = progress , ridge=0 , seed = seed , xsi.start0=FALSE,  increment.factor=increment.factor , fac.oldxsi= fac.oldxsi) 
-                          ret     <- list ( software = software, constraint = match.arg(constraints) , qMatrix=qMatrix, anchor=ankFrame[["resTam"]],  all.Names=all.Names, daten=daten, irtmodel=irtmodel, est.slopegroups = est.slopegroups, guessMat=guessMat, control = control, n.plausible=n.plausible, dir = dir, analysis.name=analysis.name, deskRes = deskRes, discrim = discrim, perNA=perNA, per0=per0, perExHG = perExHG, itemsExcluded = namen.items.weg, fixSlopeMat = fixSlopeMat)
+                          ret     <- list ( software = software, constraint = match.arg(constraints) , qMatrix=qMatrix, anchor=ankFrame[["resTam"]],  all.Names=all.Names, daten=daten, irtmodel=irtmodel, est.slopegroups = est.slopegroups, guessMat=guessMat, control = control, n.plausible=n.plausible, dir = dir, analysis.name=analysis.name, deskRes = deskRes, discrim = discrim, perNA=perNA, per0=per0, perA = perA, perExHG = perExHG, itemsExcluded = namen.items.weg, fixSlopeMat = fixSlopeMat)
                           class(ret) <-  c("defineTam", "list")
                           return ( ret )    }   }  }
                           
@@ -2946,7 +2948,7 @@ plotICC <- function ( resultsObj, defineModelObj, item = NULL, personsPerGroup =
            eapA<- eapFromRes (resultsObj)                                       ### eap fuer alle; muss wideformat haben!!!
            cat("Achtung: geht erstmal nur fuer 1pl, dichotom.\n"); flush.console()
            if ( is.null(item) & is.null(pdfFolder)) {stop("If ICCs for more than one item should be displayed, please specify an output folder for pdf.\n")}
-           if ( !is.null(pdfFolder)) { pdf(file = pdfFolder) }
+           if ( !is.null(pdfFolder)) { pdf(file = pdfFolder, width = 10, height = 7.5) }
            if ( !is.null ( item ) )  {
                 if ( !item %in% it[,"item"]) { stop (paste("Item '",item,"' was not found in 'resusltsObj'.\n",sep=""))}
                 it <- it[which(it[,"item"] == item),]
@@ -2954,11 +2956,13 @@ plotICC <- function ( resultsObj, defineModelObj, item = NULL, personsPerGroup =
      ### Plotten findet fuer jedes Item separat statt
            pl  <- by ( data = it, INDICES = it[,c("model", "item")], FUN = function ( i ) {
                   xlm <- c(i[["est"]]+2, i[["est"]]-2)
-                  anf <- if ( min(xlm) < -4 ) { anf <- floor(min(xlm)) } else { anf  <- -4}
-                  ende<- if ( max(xlm) >  4 ) { ende<- ceiling(max(xlm)) } else { ende <- 4}
+                  #anf <- if ( min(xlm) < -4 ) { anf <- floor(min(xlm)) } else { anf  <- -4}
+                  #ende<- if ( max(xlm) >  4 ) { ende<- ceiling(max(xlm)) } else { ende <- 4}
+                  anf <- -6
+                  ende<- 6
                   x   <- seq ( anf, ende, l = 400)
                   y   <- exp(x - i[["est"]]) / (1+exp(x - i[["est"]]))
-                  plot (x, y, type = "l", main = paste("Item '",as.character(i[["item"]]),"'\n\n",sep=""), xlim = c(+6,-6), ylim = c(0,1), xlab = "theta", ylab = "P(X=1)", col = "darkred", asp = 0.75, cex = 8, lwd = 2)
+                  plot (x, y, type = "l", main = paste("Item '",as.character(i[["item"]]),"'\n\n",sep=""), xlim = c(-6,6), ylim = c(0,1), xlab = "theta", ylab = "P(X=1)", col = "darkred", cex = 8, lwd = 2)
                   mtext( paste("Model = ",i[["model"]],"  |  Dimension = ",i[["dimension"]], "  |  difficulty = ",round(i[["est"]], digits = 3),"  |  Infit = ",round(i[["infit"]], digits = 3),"\n",sep=""))
                   eap <- eapA[intersect ( which (eapA[,"dimension"] == i[["dimension"]]) , which (eapA[,"model"] == i[["model"]])),]
                   if ( "defineMultiple" %in% class (defineModelObj)) {          ### Problem: je nachdem ob modelle gesplittetvwurden oder nicht, muss der Itemdatensatz woanders gesucht werden ... Hotfix
@@ -2982,5 +2986,5 @@ plotICC <- function ( resultsObj, defineModelObj, item = NULL, personsPerGroup =
                   matr<- prbs[!duplicated(prbs[,c("mw", "lh")]),c("mw", "lh")]
                   matr<- data.frame(matr[sort(matr[,"mw"],decreasing=FALSE,index.return=TRUE)$ix,])
                   points ( x = matr[,"mw"], y = matr[,"lh"], cex = 1, pch = 21, bg = "darkblue")
-                  lines ( x = matr[,"mw"], y = matr[,"lh"], col = "blue", lty = 3, lwd = 2) } )
+                  lines ( x = matr[,"mw"], y = matr[,"lh"], col = "blue", lty = 3, lwd = 3) } )
            if ( !is.null(pdfFolder)) { dev.off() } }
