@@ -267,22 +267,28 @@ results.jags.ctstan <- function ( env, mode ) {
 				if ( engine %in% "ctstan" ) {
 		# browser()		
 						# cholQ in ctstan is cholesky matrix, transform to variance matrix
-						if (verbose) { cat( paste0( "            cholQ -> Q\n" ) ); flush.console() }
-						est <- transform.var.matrix( parameters$cholQ, "cholQ", "Q", "solve( chol2inv( t( M ) ) )", est, value )
+						if( "cholQ" %in% est$name ) {
+								if (verbose) { cat( paste0( "            cholQ -> Q\n" ) ); flush.console() }
+								est <- transform.var.matrix( parameters$cholQ, "cholQ", "Q", "solve( chol2inv( t( M ) ) )", est, value )
+						}
 						
 						# chol.var.t1 in ctstan is cholesky matrix, transform to variance matrix
-						if (verbose) { cat( paste0( "      chol.var.t1 -> var.t1\n" ) ); flush.console() }
-						est <- transform.var.matrix( parameters$chol.var.t1, "chol.var.t1", "var.t1", "solve( chol2inv( t( M ) ) )", est, value )
-
-						# sd.b to var.b
-						if (verbose) { cat( paste0( "             sd.b -> var.b\n" ) ); flush.console() }
-# browser()						
-						### Achtung, nur für sd->var, nicht für corr->cov, muss noch abgefangen werden
-						est <- transform.var.matrix( parameters$sd.b, "sd.b", "var.b", "M^2", est, value )
+						if( "chol.var.t1" %in% est$name ) {
+								if (verbose) { cat( paste0( "      chol.var.t1 -> var.t1\n" ) ); flush.console() }
+								est <- transform.var.matrix( parameters$chol.var.t1, "chol.var.t1", "var.t1", "solve( chol2inv( t( M ) ) )", est, value )
+						}
 						
-						# diagonal of chol.var.b in ctstan is sd, transform to variance
-						# if (verbose) { cat( paste0( "      chol.var.b -> var.b\n" ) ); flush.console() }
-						# est <- transform.var.matrix( parameters$chol.var.b, "chol.var.b", "var.b", "M^2", est )
+						# sd.b to var.b
+						if( "sd.b" %in% est$name ) {
+								if (verbose) { cat( paste0( "             sd.b -> var.b\n" ) ); flush.console() }
+# browser()						
+								### Achtung, nur für sd->var, nicht für corr->cov, muss noch abgefangen werden
+								est <- transform.var.matrix( parameters$sd.b, "sd.b", "var.b", "M^2", est, value )
+						
+								# diagonal of chol.var.b in ctstan is sd, transform to variance
+								# if (verbose) { cat( paste0( "      chol.var.b -> var.b\n" ) ); flush.console() }
+								# est <- transform.var.matrix( parameters$chol.var.b, "chol.var.b", "var.b", "M^2", est )
+						}
 						
 				}
 				
