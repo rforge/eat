@@ -1398,8 +1398,8 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                         if(is.null(nodes) )   {
                           cat(paste("'",method,"' has been chosen for estimation method. Number of nodes was not explicitly specified. Set nodes to 1000.\n",sep=""))
     				              if(software == "conquest") {nodes <- 1000}
-      		                if(software == "tam" )     {nodes <- 0; snodes <- 1000; QMC <- TRUE}
-    				            }  else  { if(software == "tam" )     {snodes <- nodes; nodes <- 0; QMC <- TRUE} } 
+      		                if(software == "tam" )     {nodes <- NULL; snodes <- 1000; QMC <- TRUE}
+    				            }  else  { if(software == "tam" )     {snodes <- nodes; nodes <- NULL; QMC <- TRUE} } 
     			           }
     			           if(method != "montecarlo") {
                         if ( is.null(nodes) )   {
@@ -1465,8 +1465,9 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
      ### Sektion 'Rueckgabeobjekt fuer tam'
                       if ( software == "tam" )   {
                           cat(paste("Q matrix specifies ",ncol(qMatrix)-1," dimension(s).\n",sep=""))
-                          control <- list ( nodes = nodes , snodes = snodes , QMC=QMC, convD = deviancechange ,conv = converge , convM = .0001 , Msteps = 4 , maxiter = n.iterations, max.increment = 1 , 
+                          control <- list ( snodes = snodes , QMC=QMC, convD = deviancechange ,conv = converge , convM = .0001 , Msteps = 4 , maxiter = n.iterations, max.increment = 1 , 
                                      min.variance = .001 , progress = progress , ridge=0 , seed = seed , xsi.start0=FALSE,  increment.factor=increment.factor , fac.oldxsi= fac.oldxsi) 
+                          if ( !is.null(nodes)) { control$nodes <- nodes }           
                           ret     <- list ( software = software, constraint = match.arg(constraints) , qMatrix=qMatrix, anchor=ankFrame[["resTam"]],  all.Names=all.Names, daten=daten, irtmodel=irtmodel, est.slopegroups = est.slopegroups, guessMat=guessMat, control = control, n.plausible=n.plausible, dir = dir, analysis.name=analysis.name, deskRes = deskRes, discrim = discrim, perNA=perNA, per0=per0, perA = perA, perExHG = perExHG, itemsExcluded = namen.items.weg, fixSlopeMat = fixSlopeMat)
                           class(ret) <-  c("defineTam", "list")
                           return ( ret )    }   }  }
