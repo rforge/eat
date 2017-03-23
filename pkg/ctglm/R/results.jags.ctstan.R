@@ -401,6 +401,8 @@ get.par.list <- function( m, m.name, mode ){
 						# determine if hmean or hsd
 						if( any( m.$name %in% c("sd.b") ) ) morsd <- "hsd_" else morsd <- "hmean_"
 						if( any( m.$name %in% c("lp__") ) ) morsd <- ""
+						if( any( grepl( "^tipred", m.$name ) ) ) morsd <- ""
+						if( any( grepl( "^tdpred", m.$name ) ) ) morsd <- ""
 						# morsd <- "hmean"
 # browser()				
 # if( any( m.$name %in% c("var.b") ) ) browser()
