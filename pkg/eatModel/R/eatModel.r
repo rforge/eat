@@ -2120,7 +2120,7 @@ itemFromRes<- function ( resultsObj ) {
                      cols <- c("Nvalid", "itemP", "itemDiscrim", "est", "estOffset", "se", "estSlope", "seSlope", "infit","outfit", "ptBis")
                      drin1<- which(cols %in% colnames(res))
                      drin2<- grep("ptBis_", colnames(res))
-                     res  <- data.frame ( res[,c("model", "item")], dimension = as.character(gr[1,"group"]), res[,c(cols[drin1], colnames(res)[drin2])], stringsAsFactors = FALSE)
+                     res  <- data.frame ( res[,c("model", "item")], dimension = as.character(gr[1,"group"]), res[,c(cols[drin1], colnames(res)[drin2]),drop=FALSE], stringsAsFactors = FALSE)
                      return(res)}))
              if ( length(attr(resultsObj, "all.Names")[["DIF.var"]])>0) { 
                  ciCo<- colnames(selDIF)[grep("^CI__", colnames(selDIF))]
