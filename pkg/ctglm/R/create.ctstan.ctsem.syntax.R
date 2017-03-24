@@ -75,12 +75,13 @@ create.ctstan.ctsem.syntax <- function ( env, mode ) {
 # browser()		
 		if( mode %in% "ctstan" ) {
 		y<-rbind(y, "# individually varying parameters" )
-		y<-rbind(y, "m$parameters$indvarying <- FALSE" )
+### !!!ab spaetestens ab 24.3.17 heissts nicht mehr parameters, sondern pars 		
+		y<-rbind(y, "m$pars$indvarying <- FALSE" )
 		if( person.var["b"] ) { 
-				y<-rbind(y, "m$parameters$indvarying[ m$parameters$matrix %in% c('CINT') ] <- TRUE" )
+				y<-rbind(y, "m$pars$indvarying[ m$pars$matrix %in% c('CINT') ] <- TRUE" )
 				}
 		if( person.var["mu.t1"] ) { 
-				y<-rbind(y, "m$parameters$indvarying[ m$parameters$matrix %in% c('T0MEANS') ] <- TRUE" )
+				y<-rbind(y, "m$pars$indvarying[ m$pars$matrix %in% c('T0MEANS') ] <- TRUE" )
 				}
 		y<-rbind(y, "" ) }
 		
