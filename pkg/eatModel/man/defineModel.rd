@@ -11,7 +11,7 @@ call \code{runModel} with the argument returned by \code{defineModel}.}
 defineModel (dat, items, id, splittedModels = NULL,
    irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
    qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL, anchor = NULL, 
-   domainCol=NULL, itemCol=NULL, valueCol=NULL, check.for.linking = TRUE, boundary = 6, 
+   domainCol=NULL, itemCol=NULL, valueCol=NULL, check.for.linking = TRUE, minNperItem = 50, boundary = 6, 
    remove.boundary = FALSE, remove.no.answers = TRUE, remove.no.answersHG = TRUE, 
    remove.missing.items = TRUE, remove.constant.items = TRUE, remove.failures = FALSE, 
    remove.vars.DIF.missing = TRUE, remove.vars.DIF.constant = TRUE, 
@@ -116,6 +116,11 @@ must specify which column contains the item parameter values.
 %%     ~~Describe \code{sig.dif.bound} here~~
 A logical value indicating whether the items in dataset are checked for being
 connected with each other via design.
+}
+  \item{minNperItem}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Numerical: A message is printed on console if an item has less valid values than the number 
+defined in \code{minNperItem}. This works only if \code{withDescriptives == TRUE}.
 }
   \item{boundary}{
 %%     ~~Describe \code{sig.dif.bound} here~~

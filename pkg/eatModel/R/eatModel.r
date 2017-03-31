@@ -954,7 +954,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
 
 defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
                qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL, anchor = NULL, domainCol=NULL, itemCol=NULL, valueCol=NULL,check.for.linking = TRUE, 
-               boundary = 6, remove.boundary = FALSE, remove.no.answers = TRUE, remove.no.answersHG = TRUE, remove.missing.items = TRUE, remove.constant.items = TRUE, 
+               minNperItem = 50, boundary = 6, remove.boundary = FALSE, remove.no.answers = TRUE, remove.no.answersHG = TRUE, remove.missing.items = TRUE, remove.constant.items = TRUE, 
                remove.failures = FALSE, remove.vars.DIF.missing = TRUE, remove.vars.DIF.constant = TRUE, verbose=TRUE, software = c("conquest","tam"), dir = NULL, 
                analysis.name, withDescriptives = TRUE, model.statement = "item",  compute.fit = TRUE, n.plausible=5, seed = NULL, conquest.folder=NULL,
                constraints=c("cases","none","items"),std.err=c("quick","full","none"), distribution=c("normal","discrete"), method=c("gauss", "quadrature", "montecarlo"), 
@@ -1118,10 +1118,12 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                      if(class(model.statement)!="character")   {stop("'model.statement' has to be of class 'character'.\n")}
                      if(missing(dat))   {stop("No dataset specified.\n") }      ### 11.04.2014: nutzt Hilfsfunktionen von jk2.mean etc.
                      if(is.null(items)) {stop("Argument 'items' must not be NULL.\n",sep="")}
+                     if(length(items) == 0 ) {stop("Argument 'items' has no elements.\n",sep="")}
                      if ( length(items) != length(unique(items)) ) { 
                           cat("Warning: Item identifier is not unique. Only unique item identifiers will be used.\n")
                           items <- unique(items)
                      }     
+                     if(length(id) != 1 ) {stop("Argument 'id' must be of length 1.\n",sep="")}
                      allVars     <- list(ID = id, variablen=items, DIF.var=DIF.var, HG.var=HG.var, group.var=group.var, weight.var=weight.var)
                      all.Names   <- lapply(allVars, FUN=function(ii) {eatRep:::.existsBackgroundVariables(dat = dat, variable=ii)})
                      dat[,all.Names[["ID"]] ] <- as.character(dat[,all.Names[["ID"]] ])
@@ -1429,6 +1431,11 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                       daten    <- data.frame(ID=as.character(dat[,all.Names[["ID"]]]), dat[,namen.all.hg, drop = FALSE], dat[,all.Names[["variablen"]], drop = FALSE], stringsAsFactors = FALSE)
                       if ( withDescriptives == TRUE ) { 
                           deskRes <- desk.irt(daten = daten, itemspalten = match(all.Names[["variablen"]], colnames(daten)), percent = TRUE)
+                          crit    <- which (deskRes[,"valid"] < minNperItem)
+                          if ( length(crit)>0) { 
+                               cat ( paste ( "Following ",length(crit), " items with less than ",minNperItem," item responses:\n",sep=""))
+                               print(deskRes[crit,])
+                          }     
                           discrim <- item.diskrim(daten,match(all.Names[["variablen"]], colnames(daten)))
                       }  else  {
                          deskRes <- NULL 
