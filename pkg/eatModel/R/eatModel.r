@@ -1070,7 +1070,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
      ### wenn multicore handling, dann wird das Objekt "model" an cores verteilt und dort weiter verarbeitet. Ausserdem werden Konsolenausgaben in stringobjekt "txt" weitergeleitet
                      }  else  { 
                         txt    <- capture.output ( models <- lapply( mods, FUN = doAufb))
-                      # if(!exists("detectCores"))   {library(parallel)}
+                        # if(!exists("detectCores"))   {library(parallel)}
                         doIt<- function (laufnummer,  ... ) { 
                                if(!exists("getResults"))  { library(eatModel) }
                                strI<- paste(unlist(lapply ( names ( models[[laufnummer]]) , FUN = function ( nameI ) { paste ( nameI, " = models[[laufnummer]][[\"",nameI,"\"]]", sep="")})), collapse = ", ")
@@ -1122,7 +1122,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                      if ( length(items) != length(unique(items)) ) { 
                           cat("Warning: Item identifier is not unique. Only unique item identifiers will be used.\n")
                           items <- unique(items)
-                     }     
+                     }   
                      if(length(id) != 1 ) {stop("Argument 'id' must be of length 1.\n",sep="")}
                      allVars     <- list(ID = id, variablen=items, DIF.var=DIF.var, HG.var=HG.var, group.var=group.var, weight.var=weight.var)
                      all.Names   <- lapply(allVars, FUN=function(ii) {eatRep:::.existsBackgroundVariables(dat = dat, variable=ii)})
@@ -1220,7 +1220,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                       constant <- which(n.werte == 1)
                       if(length(constant) >0) {                                 ### identifiziere konstante Items (Items ohne Varianz)
                          cat(paste("Warning: ",length(constant)," testitems(s) are constants.\n",sep=""))
-                         if(verbose == TRUE) {foo <- lapply(names(constant),FUN=function(ii) {cat(paste(ii,": ",names(table(dat[,ii])),sep="")); cat("\n")})}
+                         if(verbose == TRUE) {foo <- lapply(names(constant),FUN=function(ii) {cat(paste(ii,": ",names(table(dat[,ii])), " ... ",length(na.omit(dat[,ii]))," valid responses", sep="")); cat("\n")})}
                          if(remove.constant.items == TRUE) {
                          cat(paste("Remove ",length(constant)," variable(s) due to solely constant values.\n",sep=""))
                          namen.items.weg <- c(namen.items.weg, names(constant))}
@@ -2894,16 +2894,26 @@ wo.sind <- function(a,b,quiet=FALSE) {
               
               
 ### angelehnt an das Skript von Alexander Robitzsch, "R_Skalierung.odt", Seite 11
-item.diskrim <- function(daten, itemspalten, na = NA, streng = TRUE)
-                {if(!missing(itemspalten))  {daten <- daten[,itemspalten]}
-                 if(is.null(dim(daten))) {daten <- as.matrix(daten)
-                                          colnames(daten) <- "variable"}
+item.diskrim <- function(daten, itemspalten, na = NA, streng = TRUE) {
+                 if(!missing(itemspalten))  {daten <- daten[,itemspalten]}
+                 if(is.null(dim(daten)))    {
+                    daten <- as.matrix(daten)
+                    colnames(daten) <- "variable"
+                 }
                  namen <- colnames(daten)
-                 if (is.na(na[1])==FALSE) {for (i in na)
-                                               {daten[daten==i] <- NA  }}
+                 if (is.na(na[1])==FALSE) {
+                     for (i in na)  {
+                          daten[daten==i] <- NA  
+                     }
+                 }
                  daten <- data.frame(daten, stringsAsFactors = FALSE)           ### Trennschaerfe ist eigentlich Korrelation des Items mit dem Summenscore ohne dieses Item. Dieses macht die Option "streng = T"; die andere berechnet Korrelation mit Summenscore einschliesslich dieses Items
                  daten <- data.frame(sapply(daten, FUN = function (uu ) {as.numeric(uu)}))
-                 if(streng == TRUE)  {trennsch  <- sapply(colnames(daten), FUN = function(i) {cor(daten[,i],rowMeans(daten[,-match(i, colnames(daten)), drop = FALSE],na.rm = TRUE) ,use = "complete.obs")})}
+                 if(streng == TRUE)  {trennsch  <- sapply(colnames(daten), FUN = function(i) {
+                    if(inherits(try(res <- cor(daten[,i],rowMeans(daten[,-match(i, colnames(daten)), drop = FALSE],na.rm = TRUE) ,use = "complete.obs"), silent = TRUE  ),"try-error"))  {            
+                       res <- NA   
+                    }          
+                    return(res)})
+                 }   
                  if(streng == FALSE) {trennsch  <- sapply(daten, FUN = function(i) {cor(i,rowMeans(daten,na.rm = TRUE) ,use="complete.obs")})}
                  trennsch  <- data.frame(item.name=colnames(daten),item.diskrim = trennsch,stringsAsFactors = FALSE)
                  return(trennsch)}
