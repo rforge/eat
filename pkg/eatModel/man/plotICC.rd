@@ -2,7 +2,8 @@
 \alias{plotICC}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Plots item charactestic curves.}
-\description{Function provides item characteristic plots for each item.}
+\description{Function provides item characteristic plots for each item. To date, 
+only dichotomouls 1pl and 2pl models are supported.}
 \usage{plotICC  ( resultsObj, defineModelObj, item = NULL, personsPerGroup = 30, 
        pdfFolder = NULL )}
 %- maybe also 'usage' for other objects documented here.
@@ -40,16 +41,6 @@ tnah one item should be plotted.
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-A list of two data frames, including the complete table and the reduced table with
-the following 5 columns. 
-  \describe{
-    \item{Score}{Students raw score}
-    \item{Estimate}{Estimated individual WLE according to the raw score.}
-    \item{std.error}{Standard error of the individual WLE estimate. This column is 
-    not included in the reduced table.}
-    \item{estBista}{Transformed WLE}
-    \item{ks}{competence level}
- }
 }
 \references{
 %% ~put references to the literature/web site here ~

@@ -832,7 +832,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                           ret <- runModel ( defineModelObj = r, show.output.on.console = show.output.on.console, show.dos.console = show.dos.console, wait = wait)
                           return(ret)})
                 }  else  {                                                      ### multicore
-                 #  if(!exists("detectCores"))   {library(parallel)}
+                   if(!exists("detectCores"))   {library(parallel)}
                    doIt<- function (laufnummer,  ... ) {
                           if(!exists("runModel"))  { library(eatModel) }
                           ret <- runModel ( defineModelObj = defineModelObj[[laufnummer]], show.output.on.console = show.output.on.console, show.dos.console = show.dos.console, wait = TRUE)
@@ -859,7 +859,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                 if("defineTam" %in% class(defineModelObj)) {                    ### exportiere alle Objekte aus defineModelObj in environment
                    for ( i in names( defineModelObj )) { assign(i, defineModelObj[[i]]) }
                    if ( show.output.on.console == TRUE ) { control$progress <- TRUE }
-                   # if(!exists("tam.mml"))       {library(TAM, quietly = TRUE)}  ### March, 2, 2013: fuer's erste ohne DIF, ohne polytome Items, ohne mehrgruppenanalyse, ohne 2PL
+                   if(!exists("tam.mml"))       {library(TAM, quietly = TRUE)}  ### March, 2, 2013: fuer's erste ohne DIF, ohne polytome Items, ohne mehrgruppenanalyse, ohne 2PL
                    if(!is.null(anchor)) {
                        stopifnot(ncol(anchor) == 2 )                            ### Untere Zeile: Wichtig! Sicherstellen, dass Reihenfolge der Items in Anker-Statement
                        notInData   <- setdiff(anchor[,1], all.Names[["variablen"]])
@@ -891,16 +891,26 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                               }
                               est.slopegroups <- as.numeric(as.factor(est.slopegroups[match(all.Names[["variablen"]], est.slopegroups[,1]),2]))
                           }
-                          if(!is.null(fixSlopeMat))  {
-                              cat ( "W A R N I N G:  To date, fixing slopes only works for dichotomous between item-multidimensionality models.\n")
+                          if(!is.null(fixSlopeMat))  {                          ### Achtung: wenn Items identifiers NICHT unique sind (z.B., Item gibt es global und domaenenspezifisch,
+                              fixSlopeMat <- eatRep:::facToChar(fixSlopeMat)             ### dann wird jetzt 'fixSlopeMat' auf die Dimension in der Q Matrix angepasst ... das ist nur erlaubt, wenn es ein eindimensionales Modell ist!!
+                              if(!is.null( slopeMatDomainCol ) ) {              
+                                  allV <- list(slopeMatDomainCol=slopeMatDomainCol , slopeMatItemCol=slopeMatItemCol, slopeMatValueCol =slopeMatValueCol)
+                                  all.Names <- c(all.Names, lapply(allV, FUN=function(ii) {eatRep:::.existsBackgroundVariables(dat = fixSlopeMat, variable=ii)}))
+                                  if ( ncol(qMatrix) != 2) { stop ( "Duplicated item identifiers in 'fixSlopeMat' are only allowed for unidimensional models.\n") }
+                                  mtch <- wo.sind( colnames(qMatrix)[2], fixSlopeMat[, all.Names[["slopeMatDomainCol"]]], quiet = TRUE)
+                                  if ( length( mtch) < 2 ) { stop(cat(paste ( "Cannot found dimension '",colnames(qMatrix)[2],"' in 'fixSlopeMat'. Found following values in '",all.Names[["slopeMatDomainCol"]],"' column of 'fixSlopeMat': \n    '", paste( sort(unique(fixSlopeMat[, all.Names[["slopeMatDomainCol"]] ])), collapse="', '"),"'.\n",sep="")))}
+                                  fixSlopeMat <- fixSlopeMat[mtch, c(all.Names[["slopeMatItemCol"]],all.Names[["slopeMatValueCol"]])]
+                              }    
+                              cat ( "W A R N I N G:  To date, fixing slopes only works for dichotomous unidimensional or between-item multidimensional models.\n")
                               estVar          <- TRUE
                               weg2            <- setdiff(fixSlopeMat[,1], all.Names[["variablen"]])
                               if(length(weg2)>0) {
                                  cat(paste("Following ",length(weg2), " Items in matrix for items with fixed slopes ('fixSlopeMat') which are not in dataset:\n",sep=""))
                                  cat("   "); cat(paste(weg2, collapse=", ")); cat("\n")
                                  cat("Remove these item(s) from 'fixSlopeMat' matrix.\n")
-                                 fixSlopeMat <- eatRep:::facToChar ( fixSlopeMat[-match(weg2,fixSlopeMat[,1]),] )
+                                 fixSlopeMat <- fixSlopeMat[-match(weg2,fixSlopeMat[,1]),] 
                               }                                                 ### Achtung, grosser Scheiss: wenn man nicht (wie oben) eine Reihenfolgespalte angibt, 
+                              if ( nrow(fixSlopeMat) != length(unique(fixSlopeMat[,1])) ) { stop ( "Item identifiers in 'fixSlopeMat' are not unique.\n")}
                               fixSlopeMat[,"reihenfolge"] <- 1:nrow(fixSlopeMat)### aendert die untere 'by'-Schleife die Sortierung!
                               dims  <- (1:ncol(qMatrix))[-1]                    ### Slopematrix muss itemweise zusammengebaut werden
                               slopMa<- do.call("rbind", by ( data = fixSlopeMat, INDICES = fixSlopeMat[,"reihenfolge"], FUN = function (zeile ) {
@@ -959,8 +969,8 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                analysis.name, withDescriptives = TRUE, model.statement = "item",  compute.fit = TRUE, n.plausible=5, seed = NULL, conquest.folder=NULL,
                constraints=c("cases","none","items"),std.err=c("quick","full","none"), distribution=c("normal","discrete"), method=c("gauss", "quadrature", "montecarlo"), 
                n.iterations=2000,nodes=NULL, p.nodes=2000, f.nodes=2000,converge=0.001,deviancechange=0.0001, equivalence.table=c("wle","mle","NULL"), use.letters=FALSE, 
-               allowAllScoresEverywhere = TRUE, guessMat = NULL, est.slopegroups = NULL, fixSlopeMat = NULL, progress = FALSE, increment.factor=1 , fac.oldxsi=0,
-               export = list(logfile = TRUE, systemfile = FALSE, history = TRUE, covariance = TRUE, reg_coefficients = TRUE, designmatrix = FALSE) )   {
+               allowAllScoresEverywhere = TRUE, guessMat = NULL, est.slopegroups = NULL, fixSlopeMat = NULL, slopeMatDomainCol=NULL, slopeMatItemCol=NULL, slopeMatValueCol=NULL, 
+               progress = FALSE, increment.factor=1 , fac.oldxsi=0, export = list(logfile = TRUE, systemfile = FALSE, history = TRUE, covariance = TRUE, reg_coefficients = TRUE, designmatrix = FALSE) )   {
                   misItems <- missing(items)
                   eatRep:::checkForPackage (namePackage = "eatRest", targetPackage = "eatModel")
                   if(!"data.frame" %in% class(dat) ) { cat("Convert 'dat' to a data.frame.\n"); dat <- data.frame ( dat, stringsAsFactors = FALSE)}
@@ -1070,7 +1080,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
      ### wenn multicore handling, dann wird das Objekt "model" an cores verteilt und dort weiter verarbeitet. Ausserdem werden Konsolenausgaben in stringobjekt "txt" weitergeleitet
                      }  else  { 
                         txt    <- capture.output ( models <- lapply( mods, FUN = doAufb))
-                        # if(!exists("detectCores"))   {library(parallel)}
+                        if(!exists("detectCores"))   {library(parallel)}
                         doIt<- function (laufnummer,  ... ) { 
                                if(!exists("getResults"))  { library(eatModel) }
                                strI<- paste(unlist(lapply ( names ( models[[laufnummer]]) , FUN = function ( nameI ) { paste ( nameI, " = models[[laufnummer]][[\"",nameI,"\"]]", sep="")})), collapse = ", ")
@@ -1130,7 +1140,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                      doppelt     <- which(duplicated(dat[,all.Names[["ID"]]]))
                      if(length(doppelt)>0)  {stop(paste( length(doppelt) , " duplicate IDs found!",sep=""))}
                      if(!is.null(dir)) {                                        ### Sofern ein verzeichnis angegeben wurde (nicht NULL), 
-                        dir         <- eatRep:::crop(dir,"/")                   ### das Verzeichnis aber nicht existiert, wird es jetzt erzeugt
+                        dir         <- eatRep:::crop(dir,"/")                            ### das Verzeichnis aber nicht existiert, wird es jetzt erzeugt
                         if(dir.exists(dir) == FALSE) { 
                            cat(paste("Warning: Specified folder '",dir,"' does not exist. Create folder ... \n",sep="")); flush.console()
                            dir.create(dir, recursive = TRUE)
@@ -1475,7 +1485,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                           control <- list ( snodes = snodes , QMC=QMC, convD = deviancechange ,conv = converge , convM = .0001 , Msteps = 4 , maxiter = n.iterations, max.increment = 1 , 
                                      min.variance = .001 , progress = progress , ridge=0 , seed = seed , xsi.start0=FALSE,  increment.factor=increment.factor , fac.oldxsi= fac.oldxsi) 
                           if ( !is.null(nodes)) { control$nodes <- nodes }           
-                          ret     <- list ( software = software, constraint = match.arg(constraints) , qMatrix=qMatrix, anchor=ankFrame[["resTam"]],  all.Names=all.Names, daten=daten, irtmodel=irtmodel, est.slopegroups = est.slopegroups, guessMat=guessMat, control = control, n.plausible=n.plausible, dir = dir, analysis.name=analysis.name, deskRes = deskRes, discrim = discrim, perNA=perNA, per0=per0, perA = perA, perExHG = perExHG, itemsExcluded = namen.items.weg, fixSlopeMat = fixSlopeMat)
+                          ret     <- list ( software = software, constraint = match.arg(constraints) , qMatrix=qMatrix, anchor=ankFrame[["resTam"]],  all.Names=all.Names, daten=daten, irtmodel=irtmodel, est.slopegroups = est.slopegroups, guessMat=guessMat, control = control, n.plausible=n.plausible, dir = dir, analysis.name=analysis.name, deskRes = deskRes, discrim = discrim, perNA=perNA, per0=per0, perA = perA, perExHG = perExHG, itemsExcluded = namen.items.weg, fixSlopeMat = fixSlopeMat, slopeMatDomainCol=slopeMatDomainCol, slopeMatItemCol=slopeMatItemCol, slopeMatValueCol=slopeMatValueCol )
                           class(ret) <-  c("defineTam", "list")
                           return ( ret )    }   }  }
                           
@@ -2965,12 +2975,16 @@ prepRep <- function ( calibT2, bistaTransfT1, bistaTransfT2, makeIdsUnique = TRU
 
 plotICC <- function ( resultsObj, defineModelObj, item = NULL, personsPerGroup = 30, pdfFolder = NULL ) {
            it  <- itemFromRes ( resultsObj )
+           if ( !"est" %in% colnames(it) ) { it[,"est"] <- NA }
+           if ( !"estOffset" %in% colnames(it) ) { it[,"estOffset"] <- NA }
+           it[,"est"] <- rowSums(it[,c("est", "estOffset")], na.rm = TRUE)
+           if ( !"estSlope" %in% colnames(it) ) { it[,"estSlope"] <- 1 }
            eapA<- eapFromRes (resultsObj)                                       ### eap fuer alle; muss wideformat haben!!!
-           cat("Achtung: geht erstmal nur fuer 1pl, dichotom.\n"); flush.console()
+           cat("Achtung: geht erstmal nur fuer 1pl/2pl dichotom.\n"); flush.console()
            if ( is.null(item) & is.null(pdfFolder)) {stop("If ICCs for more than one item should be displayed, please specify an output folder for pdf.\n")}
            if ( !is.null(pdfFolder)) { pdf(file = pdfFolder, width = 10, height = 7.5) }
            if ( !is.null ( item ) )  {
-                if ( !item %in% it[,"item"]) { stop (paste("Item '",item,"' was not found in 'resusltsObj'.\n",sep=""))}
+                if ( !item %in% it[,"item"]) { stop (paste("Item '",item,"' was not found in 'resultsObj'.\n",sep=""))}
                 it <- it[which(it[,"item"] == item),]
            }
      ### Plotten findet fuer jedes Item separat statt
@@ -2981,7 +2995,7 @@ plotICC <- function ( resultsObj, defineModelObj, item = NULL, personsPerGroup =
                   anf <- -6
                   ende<- 6
                   x   <- seq ( anf, ende, l = 400)
-                  y   <- exp(x - i[["est"]]) / (1+exp(x - i[["est"]]))
+                  y   <- exp( i[["estSlope"]] * (x - i[["est"]]) ) / (1+exp( i[["estSlope"]] * (x - i[["est"]])))
                   plot (x, y, type = "l", main = paste("Item '",as.character(i[["item"]]),"'\n\n",sep=""), xlim = c(-6,6), ylim = c(0,1), xlab = "theta", ylab = "P(X=1)", col = "darkred", cex = 8, lwd = 2)
                   mtext( paste("Model = ",i[["model"]],"  |  Dimension = ",i[["dimension"]], "  |  difficulty = ",round(i[["est"]], digits = 3),"  |  Infit = ",round(i[["infit"]], digits = 3),"\n",sep=""))
                   eap <- eapA[intersect ( which (eapA[,"dimension"] == i[["dimension"]]) , which (eapA[,"model"] == i[["model"]])),]

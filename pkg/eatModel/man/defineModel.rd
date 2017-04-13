@@ -23,7 +23,8 @@ defineModel (dat, items, id, splittedModels = NULL,
    nodes=NULL, p.nodes=2000, f.nodes=2000,converge=0.001,deviancechange=0.0001,
    equivalence.table=c("wle","mle","NULL"), use.letters=FALSE,
    allowAllScoresEverywhere = TRUE, guessMat = NULL, est.slopegroups = NULL,
-   fixSlopeMat = NULL, progress = FALSE, increment.factor=1 , fac.oldxsi=0, 
+   fixSlopeMat = NULL, slopeMatDomainCol=NULL, slopeMatItemCol=NULL, slopeMatValueCol=NULL, 
+   progress = FALSE, increment.factor=1 , fac.oldxsi=0, 
    export = list(logfile = TRUE, systemfile = FALSE, history = TRUE,
    covariance = TRUE, reg_coefficients = TRUE, designmatrix = FALSE))}
 %- maybe also 'usage' for other objects documented here.
@@ -242,11 +243,14 @@ will proceed without improvement in the deviance.
   \item{nodes}{
 %%     ~~Describe \code{dif.term} here~~
 An integer value specifying the number of nodes to be used in the analysis. The
-default value is 15. When using \code{software = "tam"}, the value specified here
-leads to calling TAM with \code{nodes = 15} AND \code{snodes = 0} if "gauss" or 
+default value is 20. When using \code{software = "tam"}, the value specified here
+leads to calling TAM with \code{nodes = 20} AND \code{snodes = 0} if "gauss" or 
 "quadrature" was used in the \code{method} argument. If "montecarlo" was used in 
 the \code{method} argument, the value specified here leads to calling TAM with 
-\code{snodes = 15} AND \code{nodes = 0}.
+\code{snodes = 20} AND \code{nodes = 0}. For numerical integration, for example, 
+\code{method = "gauss"} and \code{nodes = 21} (TAM default) may be appropriate. 
+For quasi monte carlo integration, \code{method = "montecarlo"} and \code{nodes = 1000} 
+may be appropriate (TAM authors recommend to use at least 1000 nodes). 
 }
   \item{p.nodes}{
 %%     ~~Describe \code{dif.term} here~~
@@ -318,10 +322,32 @@ a discrimination parameter for each item is estimated.
 Applies only if \code{software = "tam"} for 2PL models. Optionally, a named data frame
 with two columns indicating for which items a fixed discrimation should be assumed. 
 The first column contains the names of the items which discrimination should be fixed. 
-The second column is numerical and contains the discrimination value. Note: To date, 
-this works only for between item dimensionality models. Within item dimensionality 
-models must be specified directly in TAM, using the \code{B.fixed} argument of \code{tam.mml}. 
-Items which discrimation should be estimated should not occur in this data frame. 
+Note that item indicators should be unique---if not, use further arguments \code{slopeMatDomainCol}, 
+\code{slopeMatItemCol} and \code{slopeMatValueCol}. The second column is numerical and contains 
+the discrimination value. Note: To date, this works only for between item dimensionality models. 
+Within item dimensionality models must be specified directly in TAM, using the \code{B.fixed} 
+argument of \code{tam.mml}. Items which discrimation should be estimated should not occur in this data frame. 
+}
+  \item{slopeMatDomainCol}{
+%%     ~~Describe \code{dif.term} here~~
+Optional: Only necessary if the \code{fixSlopeMat} argument was used to define fixed slope
+parameters. Moreover, specifying \code{slopeMatDomainCol} is only necessary, if the item 
+identifiers in \code{fixSlopeMat} are not unique---for example, if a specific item occurs 
+with two slope parameters, one domain-specific item slope parameter and one additional 
+``global'' item parameter. The domain column than must specify which parameter belongs to which domain. 
+}
+  \item{slopeMatItemCol}{
+%%     ~~Describe \code{dif.term} here~~
+Optional: Only necessary if the \code{fixSlopeMat} argument was used to define fixed slope 
+parameters. Moreover, specifying \code{itemCol} is only necessary, if the \code{fixSlopeMat} 
+data frame has more than two columns. The \code{itemCol} column than must specify which column 
+contains the item identifier. 
+}
+  \item{slopeMatValueCol}{
+%%     ~~Describe \code{dif.term} here~~
+Optional: Only necessary if the \code{fixSlopeMat} argument was used to define slope parameters. 
+Moreover, specifying \code{valueCol} is only necessary, if the \code{fixSlopeMat} data frame has 
+more than two columns. The \code{valueCol} column than must specify which column contains the item parameter values. 
 }
   \item{progress}{
 %%     ~~Describe \code{dif.term} here~~
