@@ -1,3 +1,182 @@
+finalizeItemtable <- function ( xlsx, xml, mainTest = 2017, anhangCsv = NULL ) {
+           cat("Note: If one task, say task number 2, has only one subtask, nomination should be '2' instead of '2.1'. This is not done automatically.\n")
+           xml  <- scan(xml,what="character",sep="\n",quiet=TRUE)               ### untere Zeilen: bereiche ausschliessen
+           xml  <- xml[ intersect ( grep("<NamedRange ss:Name", xml), grep("=\"=Daten!", xml) )]
+           split<- sapply ( colsplit ( xml, pattern = "\"", names = c("dummy1", "colname", "dummy2", "Zelle", "dummy3")) , eatRep:::crop)
+           weg  <- grep(":", split[,"Zelle"])
+           if ( length ( weg ) > 0 ) { split <- split[-weg,] } 
+           split[,"Zelle"] <- eatRep:::remove.pattern ( split[,"Zelle"], pattern = "=Daten!")
+           split<- data.frame ( split, colsplit ( split[,"Zelle"], pattern = "[[:alpha:]]", names = c("empty", "row", "col")), stringsAsFactors = FALSE)
+           stopifnot ( length(unique(split[,"row"])) == 1)                      ### Das ist die Zeilennummer, ab der die 'xlsx' eingelesen werden soll 
+           # if ( !exists("read.xlsx")) { library(xlsx)}
+           tab  <- read.xlsx2 ( xlsx, sheetName="Daten", as.data.frame=TRUE, header=TRUE, colClasses = "character", startRow = unique(split[,"row"]), stringsAsFactors=FALSE)
+           weg  <- c(unique(which ( tab[,1] == "" ), which(is.na(tab[,1]))))    ### ggf. leere Zeilen loesche ... Untere Zeile: warnung, wenn diese Zeilen nicht am Ende der Tabelle stehen 
+           if ( length ( weg ) > 0 ) {
+                 if ( max ( weg ) != nrow(tab) ) { cat("Warning: Found empty cells which are not at the end of the 'xlsx' file. File may be corrupted.\n")} 
+                 if ( min ( weg ) != nrow(tab)-length(weg)+1 ) { cat("Warning: Found empty cells which are not at the end of the 'xlsx' file. File may be corrupted.\n")} 
+                 tab <- tab[-weg,]
+           }
+           weg2 <- which(split[,"col"] > ncol(tab))
+           if ( length(weg2) > 0 ) { stop ( "Invalid column names.\n")}
+           colnames(tab)[split[,"col"]] <- split[,"colname"]                    ### cooler geiler scheiss!
+           nPos <- grep("^pos", colnames(tab))
+           for ( i in nPos ) {                                                  ### sind irgendwelche Aufgabennamen doppelt vergeben 
+                 if ( !all ( is.na ( tab[,i])) )  {
+                      if ( !all ( tab[,i] == ""))  {
+                           if ( length( tab[,i]) != length(unique(tab[,i])) ) { cat(paste ( "W A R N I N G:   task number in column '",colnames(tab)[i],"' is not unique!\n",sep="")) }
+                      }
+                 }
+           } 
+           if ( eatRep:::remove.non.numeric ( tab[1,"project"]) == "3") { prefix <- "I" } else { prefix <- "L"}
+    ### Hotfix fuer Mathe-Grundschule (Globalmodell kommt dazu)
+           cols<- colnames(tab)[grep("global$", colnames(tab))]
+           if(length(cols)>0) {                                                 ### untere Zeile: finde originalspalten
+              cat("Columns with 'global' suffix found. This should only occur in the primary school for subject 'math'.\n")
+              co  <- eatRep:::remove.pattern ( string = cols, pattern = "_global$")
+              stopifnot ( all ( co %in% colnames(tab)))
+              tabN<- tab[, -match(co, colnames(tab))]                           ### dupliziere 'tab' fuer Globalmodell
+              tabN[,"domain"] <- ""                                             ### Achtung: Global soll jetzt nicht mehr 'Gl' heissen, sondern leer sein (Mail Bettina, 31.01.2017, 16.42 Uhr)
+              colnames(tabN)  <- recode ( colnames(tabN), paste ( "'", paste ( cols, co, collapse="'; '", sep="' = '"), "'", sep=""))
+              tab <- rbind ( tab[,-match(cols, colnames(tab))], tabN)
+           }
+           if ( "afb" %in% colnames(tab)) { 
+                tab[,"AFB"] <- recode ( tab[,"afb"], "'I'=1; 'II'=2; 'III'=3")
+           }  else  {
+                cat("Cannot find expected column 'afb' in input data.")
+           }     
+    ### Hotfix zuende: jetzt die Verlaesslichkeit rekodieren ... Achtung: wenn da andere Werte als 'hoch', 'mittel', 'gering' drinstehen, bleiben die 1:1 erhalten
+           cat("'Verlaesslichkeit' was defined in IQB data base to take the values 'hoch', 'mittel', 'gering'. However, the 'AG Laenderaustausch' convention allows for more than 3 levels. IQB database table has to be modified manually.\n")
+           if ( "reliance_logit" %in% colnames(tab)) { 
+                tab[,"log_status"] <- recode(tab[,"reliance_logit"], "'hoch'=NA; 'mittel'='1'; 'gering'='2'")
+           }  else  { 
+                cat("Cannot find expected column 'reliance_logit' in input data.\n")
+           }     
+           if ( "reliance_lh" %in% colnames(tab)) { 
+                tab[,"lh_status"] <- recode(tab[,"reliance_lh"], "'hoch'=NA; else = '1'")
+           }  else  { 
+                cat("Cannot find expected column 'reliance_lh' in input data.\n")
+           }     
+           colnames(tab) <- recode ( colnames(tab), "'project'='vera'; 'subject'='fach'; 'year_main' = 'wjahr'; 'year_pilot'='pjahr'; 'item_id'='iqbitem_id'; 'title'='name'; 'pos1'='itemnr_a'; 'pos2' ='itemnr_b'; 'ip_logit'='logit'; 'ip_bista'='bista'; 'kompst'='kstufe'")
+           tab[,"tjahr"] <- mainTest                                            ### untere Zeile: entfernt das aktuelle Jahr aus 'wjahr' und belaesst nur die alten Einsaetze drin
+           tab[,"wjahr"] <- gsub(" +", ", ", eatRep:::crop(gsub ( ",", " " , eatRep:::remove.pattern ( string = as.character(tab[,"wjahr"]), pattern = as.character(mainTest)) )))
+           tab[,"vera"]  <- eatRep:::remove.non.numeric(tab[,"vera"])
+           tab[,"domain"]<- recode ( tab[,"domain"],"'Orthografie'= 'Rs'; 'Hörverstehen'='Ho'; 'Leseverstehen'='Le'; 'Zuhören'='Ho'; 'Lesen'='Le'; '1. Zahlen und Operationen'='ZO'; '2. Raum und Form'='RF'; '3. Muster und Strukturen'='MS'; '4. Größen und Messen'='GM'; '5. Daten, Häufigkeit und Wahrscheinlichkeit'='DW'")
+           tab[,"bista"] <- round(as.numeric(tab[,"bista"]), digits = 1)
+    ### Mathematikdomaenen (ohne Global)
+           dm  <- tab[,"domain"]
+           weg <- setdiff ( dm , c("ZO", "RF", "MS", "GM", "DW", "Zahl", "Messen", "Raum und Form", "Funktionaler Zusammenhang", "Daten und Zufall", "")) 
+           if ( length( weg) >0) {
+                cat("Found unexpected entries in the 'domain' colum. This must not occur for subject 'math'.\n")
+           }  else  {
+                dm  <- as.character(recode ( dm, "'ZO'=1; 'RF'=2; 'MS'=3; 'GM'=4; 'DW'=5; 'Zahl'=1; 'Messen'=2; 'Raum und Form'=3; 'Funktionaler Zusammenhang'=4; 'Daten und Zufall'=5"))
+                dm  <- model.matrix(~dm-1)
+                if ( "dm" %in% colnames(dm) ) { dm <- dm[,-match("dm", colnames(dm))]}
+                for ( i in 1:ncol(dm)) { dm[,i] <- recode ( dm[,i], "0=NA")}
+                colnames(dm) <- paste ( prefix, eatRep:::remove.pattern(string = colnames(dm), pattern = "dm"),sep="")
+                tab <- data.frame ( tab, dm)
+           } 
+    ### Substandards ("Nummer aus der Hierarchie") ... nur fuer Mathematik Grundschule (noch klaeren, wie es fuer Sek-1 ist) 
+           if ( "komp2" %in% colnames(tab) ) { 
+                # if ( !exists("rbind.fill")) { library(plyr)}
+                ss  <- do.call("rbind.fill", lapply ( strsplit ( tab[,"komp2"], "; +"), FUN = function ( y ) { 
+                       mat <- data.frame ( matrix(y, nrow=1))
+                       colnames(mat) <- paste ( "L_kstd", 1:ncol(mat), sep="")
+                       return(mat) } ))
+                tab <- data.frame ( tab, ss)
+    ### wenn fuer Mathematik Grundschule ZUSAETZLICH auch noch "Komp1" vorhanden ist ... dann diese "A"-matrix bauen
+                if ( "komp1" %in% colnames(tab) ) { 
+                       empty <- data.frame ( matrix ( data = NA, ncol = 6, nrow = nrow(tab) ) )
+                       colnames(empty) <- paste("A", 0:5,sep="")
+                       for ( j in 1: nrow ( tab ) ) { 
+                             ind <- match ( paste ( "A", unique(substr(unlist(strsplit ( tab[j,"komp1"], "; +")),1,1)),sep=""), colnames( empty))
+                             empty[j,ind] <- 1
+                       }
+                       tab   <- data.frame ( tab, empty)
+    ### wenn fuer Mathematik Grundschule ZUSAETZLICH auch noch "Komp1" vorhanden ist ... dann zusaetzlich das in die "K_kstd1"-Spalten eintragen
+                       kstd  <- do.call("rbind.fill", lapply ( strsplit ( tab[,"komp1"], "; +"), FUN = function ( y ) { 
+                                mat <- data.frame ( matrix(y, nrow=1))
+                                colnames(mat) <- paste ( "K_kstd", 1:ncol(mat), sep="")
+                                return(mat) } ))
+                       tab   <- data.frame ( tab, kstd)
+                }
+           }  else  { 
+                cat("Cannot found column 'Komp2' in the input data. This should not occur for the subject 'math'.\n")
+    ### selektion: 'Komp1' in daten, 'Komp2' aber nicht ... Problem: Doppelbelegungen moeglich
+                if ( "komp1" %in% colnames(tab) ) { 
+                     if ( tab[1,"fach"] %in% c("En", "Fr") ) {                  ### fuer Fremdsprachen
+                          all<- unique(eatRep:::crop(unlist(strsplit(x = tab[,"komp1"], split = ","))))
+                          dfr<- data.frame ( matrix ( data = NA, nrow = nrow(tab), ncol = length(all) ) )
+                          stopifnot ( all ( all %in% c("selektiv", "detailliert", "inferierend", "global")))
+                          colnames(dfr) <- intersect ( c("selektiv", "detailliert", "inferierend", "global"), all)
+                          for ( p in colnames(dfr)) { 
+                                ind     <- grep(p, tab[,"komp1"])
+                                dfr[ind,p] <- 1
+                          }      
+                     }  else  {                                                 ### fuer Deutsch
+                          all<- strsplit(x = tab[,"komp1"], split = ",|;")
+                          max<- max(unlist(lapply(all, length)))
+                          dfr<- data.frame ( matrix ( data = NA, nrow = nrow(tab), ncol = max ) )
+                          colnames(dfr) <- paste("kompstd", 1:ncol(dfr), sep="")
+                          for ( u in 1:ncol(dfr)) { dfr[,u] <- unlist(lapply(all, FUN = function ( z ) { z[u]})) }
+                     }     
+                     tab<- data.frame ( tab, dfr)
+                }
+           }          
+    ### welche Spalten muessen leer dazugetan werden? dazu Liste mit allen notwendigen Spalten und deren Format (character, numeric, integer) erstellen
+           vorl<- data.frame ( colName   = c("vera", "tjahr", "pjahr", "wjahr", "fach", "domain", "iqbitem_id", "name", "itemnr_a", "itemord_a", "itemnr_b", "itemord_b", "itemnr_c", "itemord_c", "logit", "bista", "log_status", "kstufe", "lh_gs", "lh_hs", "lh_rs", "lh_ng", "lh_gy", "lh_status", "kommentar", "K1", "K2", "K3", "K4", "K5", "K6", "A0", "A1", "A2", "A3", "A4", "A5", "K_kstd1", "K_kstd2", "K_kstd3", "L1", "L2", "L3", "L4", "L5", "I1", "I2", "I3", "I4", "I5", "L_kstd1", "L_kstd2", "L_kstd3", "AFB", "selektiv", "detailliert", "inferierend", "global", "kompstd1", "kompstd2", "kompstd3"),
+                               colFormat = c("integer", "integer", "integer", "character", "character", "character", "character", "character", "character", "numeric", "character", "numeric", "character", "numeric", "numeric", "numeric", "integer", "character", "numeric", "numeric", "numeric", "numeric", "numeric", "integer", "character", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "character", "character", "character", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "character", "character", "character", "integer", "integer", "integer", "integer", "integer", "character", "character", "character"), stringsAsFactors = FALSE)
+           miss<- setdiff ( vorl[,"colName"], colnames(tab))
+           if ( length(miss)>0) { 
+                leer <- data.frame ( matrix ( data = NA, nrow = nrow(tab), ncol = length(miss)))
+                colnames(leer) <- miss
+                tab  <- data.frame ( tab, leer)                                 ### alle Spalten als character faellt weg (Mail SW, 14.12.2016, 20.05 Uhr)             
+           }                                                                    ### untere Zeile: richtige Reihenfolge der Spalten setzen
+           tab <- tab[,vorl[,"colName"]]                                        ### untere Zeile: mittels Schleife fuer alle Spalten vorgegebenes Format definieren
+           loop<- paste ( "tab[,vorl[",1:nrow(vorl),",\"colName\"]] <- as.",vorl[1:nrow(vorl),"colFormat"],"(tab[,vorl[",1:nrow(vorl),",\"colName\"]])",sep="")
+           eval(parse(text=loop))
+    ### Hotfix: erzeuge werte fuer die Sortierspalten "itemord_a" bis "itemord_c"
+           cols<- grep("^itemord", colnames(tab))                               ### spalten sind bereits sortiert, deshalb kann immer eine abgezogen werden, um die "itemnr"-Spalte zu finden!
+           for ( a in cols ) {                                                  ### untere Zeile: doppelte Bedingung ... mache das nur, wenn in der Spalte nicht alles 'NA' ist UND nicht alles leer ist, also ''
+                 if ( length(which(is.na(tab[,a-1]))) != nrow(tab) &  length(which(tab[,a-1] == "" )) != nrow(tab) ) { 
+                      pre<- data.frame ( toMerge = 1:nrow(tab) , pre = unlist(lapply ( strsplit( tab[,a-1], "\\.") , FUN = function ( y ) { y[1] } )) , tab )
+                      suf<- do.call("rbind", by ( data = pre, INDICES = pre[,"pre"], FUN = function ( p ) { 
+                            p[,"suf"] <- gsub(" ", "0", formatC(1:nrow(p), width = nchar(nrow(p))))
+                            return(p)}))
+                      suf[,"suf"] <- as.numeric(paste(suf[,"pre"], suf[,"suf"], sep="."))
+                      ges<- merge(pre[,c("toMerge", "pre")], suf, by = "toMerge", all = TRUE, sort = TRUE)      
+                      tab[,a] <- ges[,"suf"]
+                 }  else  { tab[,a] <- as.numeric ( rep ( NA, nrow(tab))) }
+           }      
+    ### check 2: transformation pruefen 
+           if ( !is.null(anhangCsv)) { 
+                 anh <- read.csv2(anhangCsv, stringsAsFactors = FALSE)
+                 trns<- by ( data = tab, INDICES = tab[,c("fach", "domain")], FUN = function ( subdat ) { 
+                        atab<- anh[intersect(which(anh[,"fach"] == subdat[1,"fach"]), which(anh[,"domain"] == subdat[1,"domain"]) ),]
+                        if ( nrow(atab) < 2 ) { stop("Inconsistency between 'anhangtabelle' and 'item parameter table'.\n") }
+                        ind <- unlist ( lapply ( c("logit_mw", "logit_sd", "logit_mwd", "logit_sdd"), FUN = function ( l ) { 
+                               res <- match(l, atab[,"par_name"])               ### rekonstruiere Transformation und pruefe, ob 
+                               stopifnot(length(res) == 1)                      ### bei Rekonstruktion dieselben Werte rauskommen
+                               stopifnot ( !is.na(res))                         ### wie in ursprünglicher Tabelle
+                               return(res)  }))
+                        subdat[,"trafo"] <- (subdat[,"logit"] + qlogis(0.625) - atab[ind[3], "par_value"]) / atab[ind[4], "par_value"] * atab[ind[2], "par_value"] + atab[ind[1], "par_value"]
+                        subdat[,"diff"]  <- subdat[,"trafo"] - subdat[,"bista"]
+                        dif <- abs ( subdat[,"diff"])
+                        ind2<- which ( dif > 0.75 ) 
+                        if ( length(ind2) > 0 ) { 
+                             cat(paste("W A R N I N G !   Found ",length(ind2)," item parameter with deviating values.\n\n",sep=""))
+                             inf <- data.frame ( item = subdat[ind2,"iqbitem_id"], original = subdat[ind2,"bista"], control = subdat[ind2,"trafo"] )
+                             print(inf); cat("\n")
+                        } })
+           }  else  { 
+                 cat("Warning! 'anhangCsv' was not specified. Unable to check plausibility of transformation.\n")
+           } 
+    ### in vera-3 werden die Kompetenzstufen aus der Datenbank in roemischen Ziffern ausgegeben, muss geaendert werden  ... nein, muss nicht!
+           # if(tab[1,"vera"] == 3) { 
+           #       tab[,"kstufe"] <- as.character(car::recode ( tab[,"kstufe"], "'I'='1'; 'II'='2'; 'III'='3'; 'IV'='4'; 'V'='5'") )
+           # }      
+           return(tab) }     
+
+
 nObsItemPairs <- function ( responseMatrix, q3MinType) { 
                  spl <- data.frame ( combn(colnames(responseMatrix),2), stringsAsFactors = FALSE)
                  splM<- do.call("rbind", lapply ( spl, FUN = function ( y ) {
@@ -45,149 +224,30 @@ mergeAttr <- function ( x, y, by = intersect(names(x), names(y)), by.x = by, by.
              }
              return(datM)}                         
 
-Load <- function( file, exportIfOverlap = c("nothing","onlyNew","all") ){
-        ovl <- match.arg(exportIfOverlap)
-        env <- new.env()
-        obj <- eval( parse( text=paste0( "load( '",file,"' )" ) ), envir=env )
-        exi <- unlist ( lapply( obj, FUN = function ( ex ) { exists( ex, envir=parent.env(environment()) ) }) )
-        if ( sum(exi) > 0) {
-             cat(paste("Warning! '",file,"' exports ",length(exi)," object(s) '",paste(obj,collapse = "', '"),"' to the workspace. Object(s) '",paste(obj[exi],collapse = "', '"), "' already exist(s).\n",sep=""))
-         if ( ovl == "all" )     { cat("Objects are overwritten ('exportIfOverlap' was set to 'all'.)\n") }
-         if ( ovl == "nothing" ) {
-              cat("   Nothing is exported ('exportIfOverlap' was set to 'nothing'.)\n")
-              obj <- NULL
-         }
-         if ( ovl == "onlyNew" ) {
-              obj <- setdiff (obj, obj[exi])
-              if ( length ( obj ) > 0) {
-                   cat(paste("   Only '",paste(obj,collapse = "', '"),"' is exported.n",sep=""))
-              }  else  { cat("   Nothing is exported (all objects already exists).\n") }
-         }
-    }
-    if ( length ( obj ) > 0 ) {
-         do <- paste("assign( obj[",1:length(obj),"], get( obj[",1:length(obj),"], envir=env ))",sep="")
-         eval(parse(text=do))
-    }
-}
-
-#finalizeItemtable <- function ( tab, mainTest = 2017 ) {
-#           tab <- eatRep:::as.numeric.if.possible ( tab )
-#    ### Spalten heissen in jedem Fach anders ... weise dem Objekt den jeweiligen Namen der Tabelle zu
-#           lhSt<- recode ( tab[1,"Fach"], "'En'='Verl..LH'; 'De'='reliance_lh'; else='Verl..LH'")    
-#           if(tab[1,"Projekt"] == "VERA3") { lhSt <- "Verl..LH"}
-#           loSt<- recode ( tab[1,"Fach"], "'En'='Verl..Logit'; 'De'='reliance_logit'; else='Verl..Logit'") 
-#           if(tab[1,"Projekt"] == "VERA3") { loSt <- "Verl..Logit"}
-#           k1  <- recode ( tab[1,"Fach"], "'En'='L...H..stil'; 'Fr'='Lesestil...Hörstil'; 'De'='komp1'; else='Komp1'") 
-#           if(tab[1,"Projekt"] == "VERA3") { k1 <- "Komp1"}
-#           afb <- recode ( tab[1,"Fach"], "'De'='afb'; else='AFB'") 
-#           if(tab[1,"Projekt"] == "VERA3") { afb <- "AFB"}
-#           logt<- recode ( tab[1,"Fach"], "'De'='ip_logit'; else='Logit'") 
-#           if(tab[1,"Projekt"] == "VERA3") { logt <- "Logit"}
-#           bsta<- recode ( tab[1,"Fach"], "'De'='ip_bista'; else='Bista'") 
-#           if(tab[1,"Projekt"] == "VERA3") { bsta <- "Bista"}
-#           kstu<- recode ( tab[1,"Fach"], "'De'='kompst'; else='KompSt'") 
-#           if(tab[1,"Projekt"] == "VERA3") { kstu <- "KompSt"}
-#           lhng<- recode ( tab[1,"Fach"], "'De'='lh_ng'; else='LH.nicht.Gy'") 
-#           lhgy<- recode ( tab[1,"Fach"], "'De'='lh_gy'; else='LH.Gymn.'") 
-#    ### Hotfix fuer Mathe-Grundschule (Globalmodell kommt dazu)
-#           cols<- colnames(tab)[grep("global$", colnames(tab))]
-#           if(length(cols)>0) {                                                 ### untere Zeile: finde originalspalten
-#              cat("Duplicated 'logit' column(s) found. This should only occur in the primary school for subject 'math'.\n")
-#              co  <- unlist(lapply(strsplit(cols, split = "\\."), FUN = function ( y ) { y[[1]]}))
-#              stopifnot ( all ( co %in% colnames(tab)))
-#              tabN<- tab[, -match(co, colnames(tab))]                           ### dupliziere 'tab' fuer Globalmodell
-#              tabN[,"Domäne"] <- "Gl"
-#              colnames(tabN)  <- recode ( colnames(tabN), paste ( "'", paste ( cols, co, collapse="'; '", sep="' = '"), "'", sep=""))
-#              tab <- rbind ( tab[,-match(cols, colnames(tab))], tabN)
-#           }
-#           if ( afb %in% colnames(tab)) { 
-#                tab[,"AFB"] <- recode ( tab[,afb], "'I'=1; 'II'=2; 'III'=3")
-#           }  else  {
-#                cat(paste("Cannot find expected column '",afb,"' in input data.\n",sep=""))
-#           }     
-#    ### Hotfix zuende: jetzt die Verlaesslichkeit rekodieren
-#           if ( loSt %in% colnames(tab)) { 
-#                tab[,"log_status"] <- recode(tab[,loSt], "'hoch'=NA; 'mittel'='1'; 'gering'='2'")
-#           }  else  { 
-#                cat(paste("Cannot find expected column '",loSt,"' in input data.\n",sep=""))
-#           }     
-#           if ( lhSt %in% colnames(tab)) { 
-#                tab[,"lh_status"] <- recode(tab[,lhSt], "'hoch'=NA; else = '1'")
-#           }  else  { 
-#                cat(paste("Cannot find expected column '",lhSt,"' in input data.\n",sep=""))
-#           }     
-#           colnames(tab) <- recode ( colnames(tab), paste ( "'Projekt'='vera'; 'Fach'='fach'; 'Jahr.H' = 'wjahr'; 'Jahr.P'='pjahr'; 'Item.ID'='iqbitem_id'; 'Aufgabentitel'='name'; 'Pos.TH1'='itemnr_a'; 'Pos.TH2' ='itemnr_b'; '",logt,"'='logit'; '",bsta,"'='bista'; '",kstu,"'='kstufe'; '",lhng,"'='lh_ng'; '",lhgy,"'='lh_gy'; 'LH.Grunds.'='lh_gs'",sep=""))
-#           tab[,"tjahr"] <- mainTest                                            ### untere Zeile: entfernt das aktuelle Jahr aus 'wjahr' und belaesst nur die alten Einsaetze drin
-#           tab[,"wjahr"] <- gsub(" +", ", ", eatRep:::crop(gsub ( ",", " " , eatRep:::remove.pattern ( string = as.character(tab[,"wjahr"]), pattern = as.character(mainTest)) )))
-#           tab[,"vera"]  <- eatRep:::remove.non.numeric(tab[,"vera"])
-#           tab[,"domain"]<- recode ( tab[,"Domäne"],"'Hörverstehen'='Ho'; 'Leseverstehen'='Le'; 'Zuhören'='Ho'; 'Lesen'='Le'; '1. Zahlen und Operationen'='ZO'; '2. Raum und Form'='RF'; '3. Muster und Strukturen'='MS'; '4. Größen und Messen'='GM'; '5. Daten, Häufigkeit und Wahrscheinlichkeit'='DW'")
-#           tab[,"bista"] <- round(as.numeric(tab[,"bista"]), digits = 1)
-#    ### Mathematikdomaenen (ohne Global)
-#           dm  <- tab[,"domain"]
-#           weg <- setdiff ( dm , c("ZO", "RF", "MS", "GM", "DW", "Zahl", "Messen", "Raum und Form", "Funktionaler Zusammenhang", "Daten und Zufall", "Gl")) 
-#           if ( length( weg) >0) {
-#                cat("Found unexpected entries in the 'domain' colum. This must not occur for subject 'math'.\n")
-#           }  else  {
-#                dm  <- recode ( dm, "'ZO'=1; 'RF'=2; 'MS'=3; 'GM'=4; 'DW'=5; 'Zahl'=1; 'Messen'=2; 'Raum und Form'=3; 'Funktionaler Zusammenhang'=4; 'Daten und Zufall'=5")
-#                dm  <- model.matrix(~dm-1)
-#                if ( "dmGl" %in% colnames(dm) ) { dm <- dm[,-match("dmGl", colnames(dm))]}
-#                colnames(dm) <- paste ( "L", eatRep:::remove.pattern(string = colnames(dm), pattern = "dm"),sep="")
-#                tab <- data.frame ( tab, dm)
-#           } 
-#    ### Substandards ("Nummer aus der Hierarchie") ... nur fuer Mathematik
-#           if ( "Komp2" %in% colnames(tab) ) { 
-#                ss  <- do.call("rbind.fill", lapply ( strsplit ( paste(tab[,k1], tab[,"Komp2"], sep="; "), "; +"), FUN = function ( y ) { data.frame ( matrix(y, nrow=1))} ))
-#                colnames(ss) <- paste ( "L_kstd", 1:ncol(ss), sep="")
-#                tab <- data.frame ( tab, ss)
-#           }  else  { 
-#                cat("Cannot found column 'Komp2' in the input data. This should not occur for the subject 'math'.\n")
-#    ### selektion: 'Komp1' in daten, 'Komp2' aber nicht ... Problem: Doppelbelegungen moeglich
-#                if ( k1 %in% colnames(tab) ) { 
-#                     if ( tab[1,"fach"] %in% c("En", "Fr") ) {                  ### fuer Fremdsprachen
-#                          all<- unique(eatRep:::crop(unlist(strsplit(x = tab[,k1], split = ","))))
-#                          dfr<- data.frame ( matrix ( data = NA, nrow = nrow(tab), ncol = length(all) ) )
-#                          stopifnot ( all ( all %in% c("selektiv", "detailliert", "inferierend", "global")))
-#                          colnames(dfr) <- intersect ( c("selektiv", "detailliert", "inferierend", "global"), all)
-#                          for ( p in colnames(dfr)) { 
-#                                ind     <- grep(p, tab[,k1])
-#                                dfr[ind,p] <- 1
-#                          }      
-#                     }  else  {                                                 ### fuer Deutsch
-#                          all<- strsplit(x = tab[,k1], split = ",|;")
-#                          max<- max(unlist(lapply(all, length)))
-#                          dfr<- data.frame ( matrix ( data = NA, nrow = nrow(tab), ncol = max ) )
-#                          colnames(dfr) <- paste("kompstd", 1:ncol(dfr), sep="")
-#                          for ( u in 1:ncol(dfr)) { dfr[,u] <- unlist(lapply(all, FUN = function ( z ) { z[u]})) }
-#                     }     
-#                     tab<- data.frame ( tab, dfr)
-#                }
-#           }          
-#    ### welche Spalten muessen leer dazugetan werden? dazu Liste mit allen notwendigen Spalten und deren Format (character, numeric, integer) erstellen
-#           vorl<- data.frame ( colName   = c("vera", "tjahr", "pjahr", "wjahr", "fach", "domain", "iqbitem_id", "name", "itemnr_a", "itemord_a", "itemnr_b", "itemord_b", "itemnr_c", "itemord_c", "logit", "bista", "log_status", "kstufe", "lh_gs", "lh_hs", "lh_rs", "lh_ng", "lh_gy", "lh_status", "kommentar", "K1", "K2", "K3", "K4", "K5", "K6", "A0", "A1", "A2", "A3", "A4", "A5", "K_kstd1", "K_kstd2", "K_kstd3", "L1", "L2", "L3", "L4", "L5", "I1", "I2", "I3", "I4", "I5", "L_kstd1", "L_kstd2", "L_kstd3", "AFB", "selektiv", "detailliert", "inferierend", "global", "kompstd1", "kompstd2", "kompstd3"),
-#                               colFormat = c("integer", "integer", "integer", "character", "character", "character", "character", "character", "character", "numeric", "character", "numeric", "character", "numeric", "numeric", "numeric", "integer", "character", "numeric", "numeric", "numeric", "numeric", "numeric", "integer", "character", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "character", "character", "character", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "character", "character", "character", "integer", "integer", "integer", "integer", "integer", "character", "character", "character"), stringsAsFactors = FALSE)
-#           miss<- setdiff ( vorl[,"colName"], colnames(tab))
-#           if ( length(miss)>0) { 
-#                leer <- data.frame ( matrix ( data = NA, nrow = nrow(tab), ncol = length(miss)))
-#                colnames(leer) <- miss
-#                tab  <- data.frame ( tab, leer)                                 ### alle Spalten als character faellt weg (Mail SW, 14.12.2016, 20.05 Uhr)             
-#           }                                                                    ### untere Zeile: richtige Reihenfolge der Spalten setzen
-#           tab <- tab[,vorl[,"colName"]]                                        ### untere Zeile: mittels Schleife fuer alle Spalten vorgegebenes Format definieren
-#           loop<- paste ( "tab[,vorl[",1:nrow(vorl),",\"colName\"]] <- as.",vorl[1:nrow(vorl),"colFormat"],"(tab[,vorl[",1:nrow(vorl),",\"colName\"]])",sep="")
-#           eval(parse(text=loop))
-#    ### Hotfix: erzeuge werte fuer die Sortierspalten "itemord_a" bis "itemord_c"
-#           cols<- grep("^itemord", colnames(tab))                               ### spalten sind bereits sortiert, deshalb kann immer eine abgezogen werden, um die "itemnr"-Spalte zu finden!
-#           for ( a in cols ) { 
-#                 if ( length(which(is.na(tab[,a-1]))) != nrow(tab)) { 
-#                      pre<- data.frame ( toMerge = 1:nrow(tab) , pre = unlist(lapply ( strsplit( tab[,a-1], "\\.") , FUN = function ( y ) { y[1] } )) , tab )
-#                      suf<- do.call("rbind", by ( data = pre, INDICES = pre[,"pre"], FUN = function ( p ) { 
-#                            p[,"suf"] <- gsub(" ", "0", formatC(1:nrow(p), width = nchar(nrow(p))))
-#                            return(p)}))
-#                      suf[,"suf"] <- as.numeric(paste(suf[,"pre"], suf[,"suf"], sep="."))
-#                      ges<- merge(pre[,c("toMerge", "pre")], suf, by = "toMerge", all = TRUE, sort = TRUE)      
-#                      tab[,a] <- ges[,"suf"]
-#                 }  else  { tab[,a] <- as.numeric ( rep ( NA, nrow(tab))) }
-#           }      
-#           return(tab) }     
+# Load <- function( file, exportIfOverlap = c("nothing","onlyNew","all") ){
+#         ovl <- match.arg(exportIfOverlap)
+#         env <- new.env()
+#         obj <- eval( parse( text=paste0( "load( '",file,"' )" ) ), envir=env )
+#         exi <- unlist ( lapply( obj, FUN = function ( ex ) { exists( ex, envir=parent.env(environment()) ) }) )
+#         if ( sum(exi) > 0) {
+#              cat(paste("Warning! '",file,"' exports ",length(exi)," object(s) '",paste(obj,collapse = "', '"),"' to the workspace. Object(s) '",paste(obj[exi],collapse = "', '"), "' already exist(s).\n",sep=""))
+#          if ( ovl == "all" )     { cat("Objects are overwritten ('exportIfOverlap' was set to 'all'.)\n") }
+#          if ( ovl == "nothing" ) {
+#               cat("   Nothing is exported ('exportIfOverlap' was set to 'nothing'.)\n")
+#               obj <- NULL
+#          }
+#          if ( ovl == "onlyNew" ) {
+#               obj <- setdiff (obj, obj[exi])
+#               if ( length ( obj ) > 0) {
+#                    cat(paste("   Only '",paste(obj,collapse = "', '"),"' is exported.n",sep=""))
+#               }  else  { cat("   Nothing is exported (all objects already exists).\n") }
+#          }
+#     }
+#     if ( length ( obj ) > 0 ) {
+#          do <- paste("assign( obj[",1:length(obj),"], get( obj[",1:length(obj),"], envir=env ))",sep="")
+#          eval(parse(text=do))
+#     }
+# }
 
 
 ### Hilfsfunktion fuer make.pseudo (entnommen aus eatTools)
@@ -1080,7 +1140,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
      ### wenn multicore handling, dann wird das Objekt "model" an cores verteilt und dort weiter verarbeitet. Ausserdem werden Konsolenausgaben in stringobjekt "txt" weitergeleitet
                      }  else  { 
                         txt    <- capture.output ( models <- lapply( mods, FUN = doAufb))
-                        if(!exists("detectCores"))   {library(parallel)}
+                        # if(!exists("detectCores"))   {library(parallel)}
                         doIt<- function (laufnummer,  ... ) { 
                                if(!exists("getResults"))  { library(eatModel) }
                                strI<- paste(unlist(lapply ( names ( models[[laufnummer]]) , FUN = function ( nameI ) { paste ( nameI, " = models[[laufnummer]][[\"",nameI,"\"]]", sep="")})), collapse = ", ")
@@ -1444,7 +1504,8 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                           crit    <- which (deskRes[,"valid"] < minNperItem)
                           if ( length(crit)>0) { 
                                cat ( paste ( "Following ",length(crit), " items with less than ",minNperItem," item responses:\n",sep=""))
-                               print(deskRes[crit,])
+                               options(width=1000) 
+                               print(deskRes[crit,-match(c("item.nr", "Label", "KB", "Codes", "Abs.Freq", "Rel.Freq"), colnames(deskRes))], digits = 3)
                           }     
                           discrim <- item.diskrim(daten,match(all.Names[["variablen"]], colnames(daten)))
                       }  else  {
