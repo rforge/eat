@@ -60,7 +60,13 @@ finalizeItemtable <- function ( xlsx, xml, mainTest = 2017, anhangCsv = NULL ) {
            tab[,"tjahr"] <- mainTest                                            ### untere Zeile: entfernt das aktuelle Jahr aus 'wjahr' und belaesst nur die alten Einsaetze drin
            tab[,"wjahr"] <- gsub(" +", ", ", eatRep:::crop(gsub ( ",", " " , eatRep:::remove.pattern ( string = as.character(tab[,"wjahr"]), pattern = as.character(mainTest)) )))
            tab[,"vera"]  <- eatRep:::remove.non.numeric(tab[,"vera"])
-           tab[,"domain"]<- recode ( tab[,"domain"],"'Orthografie'= 'Rs'; 'Hörverstehen'='Ho'; 'Leseverstehen'='Le'; 'Zuhören'='Ho'; 'Lesen'='Le'; '1. Zahlen und Operationen'='ZO'; '2. Raum und Form'='RF'; '3. Muster und Strukturen'='MS'; '4. Größen und Messen'='GM'; '5. Daten, Häufigkeit und Wahrscheinlichkeit'='DW'")
+           toRename      <- list ( Ho1 = "rverstehen", Ho2 = c("^Zu", "ren$"), GM = "en und Messen", DW = "ufigkeit und Wahrscheinlichkeit")
+           for ( i in 1:length(toRename)) { 
+                 match1 <- lapply ( toRename[[i]], FUN = function ( j ) { grep(j, tab[,"domain"])})
+                 if ( length(match1) == 2) { match1 <- intersect ( match1[[1]], match1[[2]]) } else { match1 <- unlist(match1)}
+                 if ( length(match1)>0) { tab[match1,"domain"] <- names(toRename)[i]  }
+           }      
+           tab[,"domain"]<- recode ( tab[,"domain"],"'Orthografie'= 'Rs'; 'Ho1'='Ho'; 'Leseverstehen'='Le'; 'Ho2'='Ho'; 'Lesen'='Le'; '1. Zahlen und Operationen'='ZO'; '2. Raum und Form'='RF'; '3. Muster und Strukturen'='MS'")
            tab[,"bista"] <- round(as.numeric(tab[,"bista"]), digits = 1)
     ### Mathematikdomaenen (ohne Global)
            dm  <- tab[,"domain"]
