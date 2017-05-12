@@ -17,8 +17,8 @@ convertLabel <- function ( spssList , stringsAsFactors = TRUE, useZkdConvention 
                 if ( useZkdConvention == TRUE ) { zielnam <- c("varLabel", "valLabel") }  else  { zielnam <- c("variable.labels", "value.labels") }
                 datFr  <- data.frame ( spssList, stringsAsFactors = stringsAsFactors)
                 for ( u in 1:ncol(datFr)) {                  
-                      if ( !is.na(varLabs[colnames(datFr)[u]] )) { attr(datFr, zielnam[1]) <- varLabs[[u]]}
-                      if ( !is.null(valLabs[[colnames(datFr)[u]]] )) { attr(datFr, zielnam[2]) <- valLabs[[u]]}
+                      if ( !is.na(varLabs[colnames(datFr)[u]] )) { attr(datFr[,u], zielnam[1]) <- varLabs[[u]]}
+                      if ( !is.null(valLabs[[colnames(datFr)[u]]] )) { attr(datFr[,u], zielnam[2]) <- valLabs[[u]]}
                 }
                 return(datFr)}      
 
