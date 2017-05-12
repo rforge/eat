@@ -1,3 +1,28 @@
+### ersetzt Sonderzeichen in Strings 
+replSpecSign <- function ( string ) { gsub(gsub(gsub(gsub(string, pattern = "ä", replacement = "ae"), pattern = "ü", replacement = "ue"), pattern = "ö", replacement = "oe"), pattern = "ß", replacement = "ss")}
+
+### transformiert spss labels in zkd konvention ... achtung! das macht spss liste zu spss data.frame!
+convertLabel <- function ( spssList , stringsAsFactors = TRUE, useZkdConvention = TRUE, replaceSpecialSigns = TRUE) {
+                if ( "data.frame" %in% class(spssList )) { stop ( "'spssList' must not be of class 'data.frame'.\n")}
+                varLabs<- attr(spssList, "variable.labels")
+                valLabs<- lapply ( spssList, attr, "value.labels")
+                if ( replaceSpecialSigns == TRUE ) { 
+                     varLabs <- replSpecSign(varLabs)
+                     valLabs <- lapply ( valLabs, FUN = function ( w ) { 
+                                if ( !is.null(w)) { 
+                                     names(w) <- replSpecSign(names(w))
+                                }     
+                                return(w) } )
+                }
+                if ( useZkdConvention == TRUE ) { zielnam <- c("varLabel", "valLabel") }  else  { zielnam <- c("variable.labels", "value.labels") }
+                datFr  <- data.frame ( spssList, stringsAsFactors = stringsAsFactors)
+                for ( u in 1:ncol(datFr)) {                  
+                      if ( !is.na(varLabs[colnames(datFr)[u]] )) { attr(datFr, zielnam[1]) <- varLabs[[u]]}
+                      if ( !is.null(valLabs[[colnames(datFr)[u]]] )) { attr(datFr, zielnam[2]) <- valLabs[[u]]}
+                }
+                return(datFr)}      
+
+
 finalizeItemtable <- function ( xlsx, xml, mainTest = 2017, anhangCsv = NULL ) {
            cat("Note: If one task, say task number 2, has only one subtask, nomination should be '2' instead of '2.1'. This is not done automatically.\n")
            xml  <- scan(xml,what="character",sep="\n",quiet=TRUE)               ### untere Zeilen: bereiche ausschliessen
@@ -60,7 +85,7 @@ finalizeItemtable <- function ( xlsx, xml, mainTest = 2017, anhangCsv = NULL ) {
            tab[,"tjahr"] <- mainTest                                            ### untere Zeile: entfernt das aktuelle Jahr aus 'wjahr' und belaesst nur die alten Einsaetze drin
            tab[,"wjahr"] <- gsub(" +", ", ", eatRep:::crop(gsub ( ",", " " , eatRep:::remove.pattern ( string = as.character(tab[,"wjahr"]), pattern = as.character(mainTest)) )))
            tab[,"vera"]  <- eatRep:::remove.non.numeric(tab[,"vera"])
-           toRename      <- list ( Ho1 = "rverstehen", Ho2 = c("^Zu", "ren$"), GM = "en und Messen", DW = "ufigkeit und Wahrscheinlichkeit")
+           toRename      <- list ( Ho1 = "rverstehen", Ho2 = c("^Zuh", "ren$"), GM = "en und Messen", DW = "ufigkeit und Wahrscheinlichkeit")
            for ( i in 1:length(toRename)) { 
                  match1 <- lapply ( toRename[[i]], FUN = function ( j ) { grep(j, tab[,"domain"])})
                  if ( length(match1) == 2) { match1 <- intersect ( match1[[1]], match1[[2]]) } else { match1 <- unlist(match1)}
@@ -898,7 +923,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                           ret <- runModel ( defineModelObj = r, show.output.on.console = show.output.on.console, show.dos.console = show.dos.console, wait = wait)
                           return(ret)})
                 }  else  {                                                      ### multicore
-                   if(!exists("detectCores"))   {library(parallel)}
+                   # if(!exists("detectCores"))   {library(parallel)}
                    doIt<- function (laufnummer,  ... ) {
                           if(!exists("runModel"))  { library(eatModel) }
                           ret <- runModel ( defineModelObj = defineModelObj[[laufnummer]], show.output.on.console = show.output.on.console, show.dos.console = show.dos.console, wait = TRUE)
