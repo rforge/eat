@@ -255,8 +255,8 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                                 }
     ### ACHTUNG: wenn toCall == "glm", dann werden nur die Differenzen fuer Intercept und alle Regressoren ausgegeben (nicht die Differenzen Ncases, NcasesValid, R2 ...)
                                 if ( toCall == "glm") {
-                                     x4 <- reshape2::melt ( x3[-which(x3[,"parameter"] %in% c("Ncases", "Nvalid", "R2", "R2nagel") ), ], id.vars = c("group.x","parameter"), measure.vars = c("wholePopDiff_est", "wholePopDiff_se"))
-                                     foo<- reshape2::colsplit(string = as.character(x4[,"variable"]), pattern = "_", names = c("parameter", "coefficient"))
+                                     x4 <- melt ( x3[-which(x3[,"parameter"] %in% c("Ncases", "Nvalid", "R2", "R2nagel") ), ], id.vars = c("group.x","parameter"), measure.vars = c("wholePopDiff_est", "wholePopDiff_se"))
+                                     foo<- colsplit(string = as.character(x4[,"variable"]), pattern = "_", names = c("parameter", "coefficient"))
                                      foo[,"parameter"] <- paste("wholePopDiff", x4[,"parameter"], sep="__")
                                      x5 <- data.frame ( group = x4[,"group.x"], depVar = x[1,"depVar"], modus = x[1,"modus"], parameter = foo[,"parameter"], coefficient = foo[,"coefficient"], value = x4[,"value"])
                                      add<- setdiff ( colnames(x), colnames(x5))
@@ -628,7 +628,11 @@ conv.mean      <- function (dat.i , allNam, na.rm, group.delimiter) {
                                                     true.diff <- diff(vgl.iii[,"mean"])
                                                     scumm     <- sapply(vgl.iii[,res.group,drop = FALSE], as.character)
                                                     group     <- paste( paste( colnames(scumm), scumm[1,], sep="="), sep="", collapse = ", ")
-                                                    dif.iii   <- data.frame(group = paste(group, paste(k, collapse = ".vs."),sep="____"), parameter = "meanGroupDiff", coefficient = c("est","se"), value = c(true.diff, sqrt( sum(vgl.iii[,"sd"]^2 / vgl.iii[,"nValidUnweighted"]) )) , stringsAsFactors = FALSE )
+                                                    dummy     <- do.call("cbind", lapply ( allNam[["group"]], FUN = function ( gg ) { 
+                                                                 ret <- data.frame ( paste ( unique(vgl.iii[,gg]), collapse = ".vs."))
+                                                                 colnames(ret) <- gg
+                                                                 return(ret)}))
+                                                    dif.iii   <- data.frame(dummy, group = paste(group, paste(k, collapse = ".vs."),sep="____"), parameter = "meanGroupDiff", coefficient = c("est","se"), value = c(true.diff, sqrt( sum(vgl.iii[,"sd"]^2 / vgl.iii[,"nValidUnweighted"]) )) , stringsAsFactors = FALSE )
                                                     return(dif.iii)             ### siehe http://www.vassarstats.net/dist2.html
                                                  } }))                          ### http://onlinestatbook.com/2/tests_of_means/difference_means.html
                                           return(ret)})) 
@@ -660,7 +664,7 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA) 
           des  <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]], "N_weighted", "N_weightedValid")], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repl[,-1, drop = FALSE], combined.weights = TRUE, mse = TRUE)
           rets <- data.frame ( target = c("Ncases", "NcasesValid", "mean", "var"), FunctionToCall = c("svytotal","svytotal","svymean","svyvar"), formelToCall = c("paste(\"~ \", \"N_weighted\",sep=\"\")","paste(\"~ \", \"N_weightedValid\",sep=\"\")","paste(\"~ \",allNam[[\"dependent\"]], sep = \"\")","paste(\"~ \",allNam[[\"dependent\"]], sep = \"\")"), naAction = c("FALSE","TRUE","na.rm","na.rm"), stringsAsFactors = FALSE)
           ret  <- apply(rets, 1, FUN = function ( toCall ) {                    ### svyby wird dreimal aufgerufen ...
-                  do   <- paste(" res <- svyby(formula = as.formula(",toCall[["formelToCall"]],"), by = as.formula(paste(\"~\", paste(allNam[[\"group\"]], collapse = \" + \"))), design = des, FUN = ",toCall[["FunctionToCall"]],",na.rm=",toCall[["naAction"]],", deff = FALSE, return.replicates = TRUE)",sep="")
+                  do   <- paste(" res <- survey::svyby(formula = as.formula(",toCall[["formelToCall"]],"), by = as.formula(paste(\"~\", paste(allNam[[\"group\"]], collapse = \" + \"))), design = des, FUN = ",toCall[["FunctionToCall"]],",na.rm=",toCall[["naAction"]],", deff = FALSE, return.replicates = TRUE)",sep="")
                   eval(parse(text=do))
                   resL <- melt( data = res, id.vars = allNam[["group"]], variable.name = "coefficient" , na.rm=TRUE)
                   stopifnot(length(table(resL[,"coefficient"])) == 2)
@@ -701,23 +705,25 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA) 
                                   ret <- do.call("rbind", apply(kontraste, 1, FUN = function ( k ) { 
                                          if ( sum ( k %in% iii[,allNam[["group.differences.by"]]]) != length(k) ) { 
                                               cat(paste("Warning: cannot compute contrasts for 'group.differences.by = ",allNam[["group.differences.by"]],"'.\n",sep="")); flush.console()
-                                              return(NULL)
-                                         } else {      
+                                              return(NULL)                      ### Quelle fuer dieses Vorgehen: 
+                                         } else {                               ### Mail SW an ZKD, 07.11.2012, 17.54 Uhr, "in Absprache mit Dirk"
                                               vgl.iii   <- iii[iii[,allNam[["group.differences.by"]]] %in% k ,]
                                               true.diff <- diff(vgl.iii[,which(colnames(vgl.iii) %in% allNam[["dependent"]])])
                                               other.diffs <- apply(vgl.iii[,replCols], 2, diff)
                                               scumm     <- sapply(vgl.iii[,res.group,drop = FALSE], as.character)
                                               group     <- paste( paste( colnames(scumm), scumm[1,], sep="="), sep="", collapse = ", ")
-                                              dif.iii   <- data.frame(group = group, vgl = paste(k, collapse = ".vs."), dif = true.diff, se =  sqrt(sum((true.diff - other.diffs)^2)), stringsAsFactors = FALSE )
+                                              dummy     <- do.call("cbind", lapply ( allNam[["group"]], FUN = function ( gg ) { 
+                                                           ret <- data.frame ( paste ( unique(vgl.iii[,gg]), collapse = ".vs."))
+                                                           colnames(ret) <- gg
+                                                           return(ret)}))
+                                              dif.iii   <- data.frame(dummy, group = group, vgl = paste(k, collapse = ".vs."), dif = true.diff, se =  sqrt(sum((true.diff - other.diffs)^2)), stringsAsFactors = FALSE )
                                               return(dif.iii)
                                          } }))
                                   return(ret)}))
-                difsL<- data.frame ( melt(data = difs, measure.vars = c("dif", "se") , variable.name = "coefficient" , na.rm=TRUE), parameter = "meanGroupDiff", stringsAsFactors = FALSE)
+                difsL<- data.frame ( depVar = allNam[["dependent"]], melt(data = difs, measure.vars = c("dif", "se") , variable.name = "coefficient" , na.rm=TRUE), parameter = "meanGroupDiff", stringsAsFactors = FALSE)
                 difsL[,"coefficient"] <- recode(difsL[,"coefficient"], "'se'='se'; else = 'est'")
-                dummy<- dat.i[1,allNam[["group"]], drop=FALSE]
-                dummy<- data.frame ( lapply(dummy, FUN = function ( x ) {NA}))
-                difsL<- data.frame ( group = apply(difsL[,c("group","vgl")],1,FUN = function (z) {paste(z,collapse="____")}), depVar = allNam[["dependent"]], difsL[,c("parameter","coefficient", "value")], dummy, stringsAsFactors = FALSE)
-                resAl<- rbind(resAl,difsL)  
+                difsL[,"group"] <- apply(difsL[,c("group","vgl")],1,FUN = function (z) {paste(z,collapse="____")})
+                resAl<- rbind(resAl,difsL[,-match("vgl", colnames(difsL))])  
              }
           }      
           return(facToChar(resAl)) }
@@ -840,7 +846,7 @@ dG <- function ( object , analyses = NULL, digits = 3 ) {
                  spl    <- splitData[[i]]
                  weg1   <- which ( spl[,"parameter"] %in% c("Ncases","Nvalid","R2","R2nagel"))
                  weg2   <- grep("wholePopDiff",spl[,"parameter"])
-                 ret    <- reshape2::dcast(spl[-c(weg1, weg2),], parameter~coefficient)
+                 ret    <- dcast(spl[-c(weg1, weg2),], parameter~coefficient)
                  ret[,"t.value"] <- ret[,"est"] / ret[,"se"]
                  df     <- spl[ spl[,"parameter"] == "Nvalid" & spl[,"coefficient"] == "est"  ,"value"] - nrow(ret)
                  ret[,"p.value"] <- 2*(1-pt( q = abs(ret[,"t.value"]), df = df ))
