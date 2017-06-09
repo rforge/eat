@@ -189,7 +189,10 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                                             stopifnot(all(sort(unique(datL[,allNam[["dependent"]]])) == 0:1 ))
                                             stopifnot(length(unique(datL[,allNam[["linkErr"]]])) == 2)
                                             lef1<- datL[ which(datL[,allNam[["dependent"]]] == 1) ,allNam[["linkErr"]] ]
-                                            stopifnot ( length(unique(lef1)) == 1)
+                                            if ( length(unique(lef1)) != 1) {
+                                                 print ( unique(datL[,c(allNam[["trend"]], allNam[["dependent"]], allNam[["linkErr"]])]) , row.names = FALSE)
+                                                 stop("Linking error is not unique between trend groups.\n")
+                                            }
                                             lef1<- unique(lef1)
                                        }  else  { 
                                             lef1<- unique(z[,allNam[["linkErr"]]])
@@ -251,11 +254,13 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                                      x5[,"parameter"] <- x4[,"parameter"]; x5[,"coefficient"] <- x4[,"coefficient"]; x5[,"value"] <- x4[,"value"]
                                 }
     ### ACHTUNG: wenn toCall == "glm", dann werden nur die Differenzen fuer Intercept und alle Regressoren ausgegeben (nicht die Differenzen Ncases, NcasesValid, R2 ...)
-                                if ( toCall == "glm") { 
-                                     x4 <- melt ( x3[-which(x3[,"parameter"] %in% c("Ncases", "Nvalid", "R2", "R2nagel") ), ], id.vars = c("group.x","parameter"), measure.vars = c("wholePopDiff_est", "wholePopDiff_se"))
-                                     foo<- colsplit(string = as.character(x4[,"variable"]), pattern = "_", names = c("parameter", "coefficient"))
+                                if ( toCall == "glm") {
+                                     x4 <- reshape2::melt ( x3[-which(x3[,"parameter"] %in% c("Ncases", "Nvalid", "R2", "R2nagel") ), ], id.vars = c("group.x","parameter"), measure.vars = c("wholePopDiff_est", "wholePopDiff_se"))
+                                     foo<- reshape2::colsplit(string = as.character(x4[,"variable"]), pattern = "_", names = c("parameter", "coefficient"))
                                      foo[,"parameter"] <- paste("wholePopDiff", x4[,"parameter"], sep="__")
-                                     x5 <- data.frame ( group = x4[,"group.x"], depVar = x[1,"depVar"], modus = x[1,"modus"], parameter = foo[,"parameter"], coefficient = foo[,"coefficient"], value = x4[,"value"], model = x[1,"model"])
+                                     x5 <- data.frame ( group = x4[,"group.x"], depVar = x[1,"depVar"], modus = x[1,"modus"], parameter = foo[,"parameter"], coefficient = foo[,"coefficient"], value = x4[,"value"])
+                                     add<- setdiff ( colnames(x), colnames(x5))
+                                     if ( length(add)>0) { x5 <- data.frame ( x5, x[1,add, drop=FALSE] ) }
                                 }
                                 x  <- rbind ( x, x5)
                                 return(x)}))
@@ -833,8 +838,9 @@ dG <- function ( object , analyses = NULL, digits = 3 ) {
             retResults<- list()   
             for ( i in analyses) {
                  spl    <- splitData[[i]]
-                 split2 <- spl[,"parameter"] %in% c("Ncases","Nvalid","R2","R2nagel")
-                 ret    <- dcast(spl[!split2,], parameter~coefficient)
+                 weg1   <- which ( spl[,"parameter"] %in% c("Ncases","Nvalid","R2","R2nagel"))
+                 weg2   <- grep("wholePopDiff",spl[,"parameter"])
+                 ret    <- reshape2::dcast(spl[-c(weg1, weg2),], parameter~coefficient)
                  ret[,"t.value"] <- ret[,"est"] / ret[,"se"]
                  df     <- spl[ spl[,"parameter"] == "Nvalid" & spl[,"coefficient"] == "est"  ,"value"] - nrow(ret)
                  ret[,"p.value"] <- 2*(1-pt( q = abs(ret[,"t.value"]), df = df ))

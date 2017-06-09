@@ -144,12 +144,7 @@ make.indikator <- function(variable, name.var = "ind", force.indicators = NULL, 
                   colnames(ind.i)[-1] <- paste(name.var, names(t.var), sep=sep)
                   return(ind.i)}
 
-remove.non.numeric <- function(string)
-                      {if(!is.null(dim(string))) {dimension <- dim(string)}
-                       splitt <- strsplit(string,"")
-                       suppressWarnings(splitt <- unlist ( lapply(splitt, FUN=function(ii) {paste( na.omit(as.numeric(ii)),collapse="")})))
-                       if(!is.null(dim(string))) {splitt <- matrix(splitt,dimension[1],dimension[2],byrow = FALSE)}
-                       return(splitt)}
+remove.non.numeric <- function ( string ) {gsub("[^0-9]","",string)}
 
 ### entfernt bestimmtes Pattern aus einem String
 remove.pattern     <- function ( string, pattern ) {
@@ -157,16 +152,4 @@ remove.pattern     <- function ( string, pattern ) {
                       ret    <- unlist(lapply(splitt, FUN = function ( y ) { paste(y, collapse="")}))
                       return(ret)}
 
-remove.numeric <- function(string)
-                      {if(!is.null(dim(string))) {dimension <- dim(string)}
-                       splitt <- strsplit(string,"")
-                       suppressWarnings(splitt <- lapply(splitt, FUN=function(ii) {
-                                 a         <- as.numeric(ii)
-                                 change    <- which(!is.na(a))
-                                 if(length(change)>0) {ii[change] <- ""}
-                                 ii        <- paste(ii, collapse="")
-                                 return(ii)
-                       }))
-                       splitt <- unlist(splitt)
-                       if(!is.null(dim(string))) {splitt <- matrix(splitt,dimension[1],dimension[2],byrow = FALSE)}
-                       return(splitt)}
+remove.numeric <- function ( string ) {gsub("0|1|2|3|4|5|6|7|8|9","",string)}
