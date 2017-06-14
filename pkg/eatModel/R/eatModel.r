@@ -1,5 +1,5 @@
 ### ersetzt Sonderzeichen in Strings 
-replSpecSign <- function ( string ) { gsub(gsub(gsub(gsub(string, pattern = "ä", replacement = "ae"), pattern = "ü", replacement = "ue"), pattern = "ö", replacement = "oe"), pattern = "ß", replacement = "ss")}
+replSpecSign <- function ( string ) { gsub(gsub(gsub(gsub(gsub(string, pattern = "ä", replacement = "ae"), pattern = "ü", replacement = "ue"), pattern = "ö", replacement = "oe"), pattern = "ß", replacement = "ss"), pattern = "Ü", replacement = "Ue")}
 
 ### transformiert spss labels in zkd konvention ... achtung! das macht spss liste zu spss data.frame!
 convertLabel <- function ( spssList , stringsAsFactors = TRUE, useZkdConvention = TRUE, replaceSpecialSigns = TRUE) {
@@ -466,7 +466,8 @@ simEquiTable <- function ( anchor, mRef, sdRef, addConst = 500, multConst = 100,
 
 
 getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c("pv", "wle", "eap"), q3MinObs = 0, q3MinType = c("singleObs", "marginalSum"), omitFit = FALSE, omitRegr = FALSE, omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6, sig.dif.bound = 0.3, p.value = 0.9, 
-              nplausible = NULL, ntheta = 2000, normal.approx = FALSE, samp.regr = FALSE, theta.model=FALSE, np.adj=8 ) { 
+              pvMethod = c("regular", "bayesian"), nplausible = NULL, ntheta = 2000, normal.approx = FALSE, samp.regr = FALSE, theta.model=FALSE, np.adj=8, beta_groups = TRUE, level = .95, n.iter = 1000, n.burnin = 500, adj_MH = .5, adj_change_MH = .05, refresh_MH = 50, accrate_bound_MH = c(.45, .55),	print_iter = 20, verbose = TRUE) { 
+            pvMethod <- match.arg(pvMethod)
             q3MinType<- match.arg(q3MinType)
             q3theta  <- match.arg(q3theta )
             if("runMultiple" %in% class(runModelObj)) {                         ### Mehrmodellfall
@@ -478,7 +479,7 @@ getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c(
                           if(!is.null(ret)) { stopifnot ( length(unique(ret[1,"model"])) == 1 )}
                           return(list ( ret = ret, att = att))})                ### grosser scheiss: baue Hilfsobjekt fuer Attribute (intern notwendige Zusatzinformationen) separat zusammen
                    }  else  {                                                   ### schlimmer Code, darf nie jemand sehen!!
-                 # if(!exists("detectCores"))   {library(parallel)}             ### jetzt multicore: muss dasselbe Objekt zurueckgeben!
+                   # if(!exists("detectCores"))   {library(parallel)}             ### jetzt multicore: muss dasselbe Objekt zurueckgeben!
                    doIt<- function (laufnummer,  ... ) { 
                           if(!exists("getResults"))  { library(eatModel) }
                           if(!exists("tam.mml") &  length(grep("tam.", class(runModelObj[[1]])))>0 ) {library(TAM, quietly = TRUE)} 
@@ -950,7 +951,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                 if("defineTam" %in% class(defineModelObj)) {                    ### exportiere alle Objekte aus defineModelObj in environment
                    for ( i in names( defineModelObj )) { assign(i, defineModelObj[[i]]) }
                    if ( show.output.on.console == TRUE ) { control$progress <- TRUE }
-                   if(!exists("tam.mml"))       {library(TAM, quietly = TRUE)}  ### March, 2, 2013: fuer's erste ohne DIF, ohne polytome Items, ohne mehrgruppenanalyse, ohne 2PL
+                   # if(!exists("tam.mml"))       {library(TAM, quietly = TRUE)}  ### March, 2, 2013: fuer's erste ohne DIF, ohne polytome Items, ohne mehrgruppenanalyse, ohne 2PL
                    if(!is.null(anchor)) {
                        stopifnot(ncol(anchor) == 2 )                            ### Untere Zeile: Wichtig! Sicherstellen, dass Reihenfolge der Items in Anker-Statement
                        notInData   <- setdiff(anchor[,1], all.Names[["variablen"]])
@@ -1051,6 +1052,7 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                    attr(mod, "deskRes")      <- defineModelObj[["deskRes"]]
                    attr(mod, "discrim")      <- defineModelObj[["discrim"]]
                    attr(mod, "irtmodel")     <- defineModelObj[["irtmodel"]]
+                   attr(mod, "Y")            <- Y
                    return(mod)  }  }   }
 
 defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
@@ -1960,7 +1962,8 @@ getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Name
          }                                          
          return(ret)}
 
-getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV, nplausible , ntheta , normal.approx, samp.regr, theta.model, np.adj, Q3=Q3, q3MinObs =  q3MinObs, q3MinType = q3MinType) {
+getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV, nplausible , ntheta , normal.approx, samp.regr, theta.model, np.adj, Q3=Q3, q3MinObs =  q3MinObs, q3MinType = q3MinType, 
+                     pvMethod , beta_groups , level , n.iter , n.burnin, adj_MH , adj_change_MH , refresh_MH, accrate_bound_MH,	print_iter , verbose) {
          if( omitRegr == FALSE ) { txt <- capture.output ( regr     <- tam.se(runModelObj)) }
          qMatrix  <- attr(runModelObj, "qMatrix")
          qL       <- melt(qMatrix, id.vars = colnames(qMatrix)[1], variable.name = "dimensionName", na.rm=TRUE)
@@ -2072,7 +2075,17 @@ getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV, n
          }      
     ### Sektion 'Personenparameter auslesen' (PVs)
          if ( omitPV == FALSE ) { 
-              do   <- paste ( "pv <- tam.pv ( ", paste(names(formals(tam.pv)), recode ( names(formals(tam.pv)), "'tamobj'='runModelObj'"), sep =" = ", collapse = ", "), ")",sep="")
+              if ( pvMethod == "regular" ) {                                    ### konventionell
+                   do   <- paste ( "pv <- tam.pv ( ", paste(names(formals(tam.pv)), recode ( names(formals(tam.pv)), "'tamobj'='runModelObj'"), sep =" = ", collapse = ", "), ")",sep="")
+              } else {                                                          ### bayesianisch 
+                   if ( is.null ( attr(runModelObj, "Y") ) ) { 
+                        cat("Warning: Conditioning model was not defined ('Y' is NULL).\n")
+                        Y1 <- NULL 
+                   } else { 
+                        Y1 <- data.frame ( intercpt = 1, Y)
+                   }
+                   do   <- paste ( "pv <- tam.pv.mcmc ( ", paste(names(formals(tam.pv.mcmc)), recode ( names(formals(tam.pv.mcmc)), "'tamobj'='runModelObj'; 'Y'='Y1'"), sep =" = ", collapse = ", "), ")",sep="")
+              }
               eval(parse(text=do))
               pvL  <- melt(pv$pv, id.vars = "pid", na.rm=TRUE)
               pvL[,"PV.Nr"] <- as.numeric(eatRep:::remove.pattern(string = unlist(lapply(strsplit(as.character(pvL[,"variable"]),"\\."), FUN = function (l) {l[1]})), pattern = "PV"))
@@ -2945,7 +2958,17 @@ desk.irt <- function(daten, itemspalten, na=NA,percent=FALSE,reduce=TRUE,codeboo
                                res.i <- data.frame(item.nr = ii, item.name = colnames(daten)[ii], Label = Label, KB = KB, cases = length(daten[,ii]),Missing=sum(is.na(daten[,ii])),valid=sum(!is.na(daten[,ii])),Codes=namen.res.i,Abs.Freq=as.numeric(res.i),Rel.Freq=as.numeric(res.i)/sum(!is.na(daten[,ii])), item.p=mean(na.omit(daten[,ii])), stringsAsFactors=FALSE)
              })
              results        <- do.call("rbind",results)
-             if(reduce == TRUE)  {results <- results[which(results$Codes == 1),]}
+             if(reduce == TRUE)  {
+                weg   <- which ( results[,"Codes"] == min(results[,"Codes"]) )
+                drin  <- setdiff ( 1:nrow(results), weg )
+                zusatz<- setdiff ( results[weg,"item.name"], results[drin,"item.name"])
+                if ( length(zusatz)>0) {
+                     zusatz <- match ( zusatz, results[,"item.name"])
+                     drin   <- unique ( c ( zusatz, drin ))
+                     weg    <- setdiff ( 1:nrow(results), drin )
+                }
+                results <- results[drin,]
+             }
              if(percent == TRUE) {results$Rel.Freq <- 100 * results$Rel.Freq}
              return(results)}    
              

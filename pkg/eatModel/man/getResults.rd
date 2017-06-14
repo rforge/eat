@@ -6,11 +6,14 @@
 call \code{runModel} with the argument returned by \code{defineModel} to start the estimation.
 The last step then is to create a results frame using \code{getResults}. }
 \usage{
-getResults(runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c("pv", "wle", "eap"), 
-    q3MinObs = 0, q3MinType = c("singleObs", "marginalSum"), omitFit = FALSE, 
-    omitRegr = FALSE, omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6, 
-    sig.dif.bound = 0.3, p.value = 0.9, nplausible = NULL, ntheta = 2000, 
-    normal.approx = FALSE, samp.regr = FALSE, theta.model=FALSE, np.adj=8)}
+getResults( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c("pv", "wle", "eap"), 
+            q3MinObs = 0, q3MinType = c("singleObs", "marginalSum"), omitFit = FALSE, 
+            omitRegr = FALSE, omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6, 
+            sig.dif.bound = 0.3, p.value = 0.9, pvMethod = c("regular", "bayesian"), 
+            nplausible = NULL, ntheta = 2000, normal.approx = FALSE, samp.regr = FALSE, 
+            theta.model=FALSE, np.adj=8, beta_groups = TRUE, level = .95, n.iter = 1000, 
+            n.burnin = 500, adj_MH = .5, adj_change_MH = .05, refresh_MH = 50, 
+            accrate_bound_MH = c(.45, .55),	print_iter = 20, verbose = TRUE) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{runModelObj}{
@@ -77,6 +80,11 @@ this specifies the critical value for confidence interval DIF.
 Applies only if DIF analyses are performed before. When DIF-Parameter are evaluated, 
 this specifies the critical p-value for confidence interval DIF.
 }
+  \item{pvMethod}{
+%%     ~~Describe \code{file} here~~
+Applies only if \code{software = "tam"}: Specifies whether PVs should be drawn 
+regularly or using a Bayesian algorithm (Metropolis Hastings). 
+}
  \item{nplausible}{
 Applies only if \code{software = "tam"}: Number of plausible values to be drawn. Note: 
 number of plausible values were already defined in \code{defineModel}, because 
@@ -121,6 +129,47 @@ file of \code{tam.pv} from the \code{TAM} package: This parameter defines the
 of the posterior distribution of theta (in the one-dimensional case), then theta
 is simulated from a normal distribution with standard deviation \code{np.adj} 
 times \eqn{s_{EAP}}.
+}
+\item{beta_groups}{
+Applies only if \code{software = "tam"} and \code{pvMethod = "bayesian"}. See the help 
+page of \code{tam.pv.mcmc} for further details.
+}
+\item{level}{
+Applies only if \code{software = "tam"} and \code{pvMethod = "bayesian"}. Confidence level
+in bayesian approach. See the help page of \code{tam.pv.mcmc} for further details.
+}
+\item{n.iter}{
+Applies only if \code{software = "tam"} and \code{pvMethod = "bayesian"}. Number of 
+iterations in the bayesian approach. See the help page of \code{tam.pv.mcmc} for further details.
+}
+\item{n.burnin}{
+Applies only if \code{software = "tam"} and \code{pvMethod = "bayesian"}. Number of 
+burn-in iterations in the bayesian approach. See the help page of \code{tam.pv.mcmc} for 
+further details.
+}
+\item{adj_MH}{
+Applies only if \code{software = "tam"} and \code{pvMethod = "bayesian"}. See the help 
+page of \code{tam.pv.mcmc} for further details.
+}
+\item{adj_change_MH}{
+Applies only if \code{software = "tam"} and \code{pvMethod = "bayesian"}. See the help 
+page of \code{tam.pv.mcmc} for further details.
+}
+\item{refresh_MH}{
+Applies only if \code{software = "tam"} and \code{pvMethod = "bayesian"}. See the help 
+page of \code{tam.pv.mcmc} for further details.
+}
+\item{accrate_bound_MH}{
+Applies only if \code{software = "tam"} and \code{pvMethod = "bayesian"}. See the help 
+page of \code{tam.pv.mcmc} for further details.
+}
+\item{print_iter}{
+Applies only if \code{software = "tam"} and \code{pvMethod = "bayesian"}. See the help 
+page of \code{tam.pv.mcmc} for further details.
+}
+\item{verbose}{
+Applies only if \code{software = "tam"} and \code{pvMethod = "bayesian"}. See the help 
+page of \code{tam.pv.mcmc} for further details.
 }
 }
 \details{
