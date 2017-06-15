@@ -2082,7 +2082,7 @@ getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV, n
                         cat("Warning: Conditioning model was not defined ('Y' is NULL).\n")
                         Y1 <- NULL 
                    } else { 
-                        Y1 <- data.frame ( intercpt = 1, Y)
+                        Y1 <- data.frame ( intercpt = 1, attr(runModelObj, "Y") )
                    }
                    do   <- paste ( "pv <- tam.pv.mcmc ( ", paste(names(formals(tam.pv.mcmc)), recode ( names(formals(tam.pv.mcmc)), "'tamobj'='runModelObj'; 'Y'='Y1'"), sep =" = ", collapse = ", "), ")",sep="")
               }
