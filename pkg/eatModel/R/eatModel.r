@@ -187,7 +187,7 @@ finalizeItemtable <- function ( xlsx, xml, mainTest = 2017, anhangCsv = NULL ) {
                         ind <- unlist ( lapply ( c("logit_mw", "logit_sd", "logit_mwd", "logit_sdd"), FUN = function ( l ) { 
                                res <- match(l, atab[,"par_name"])               ### rekonstruiere Transformation und pruefe, ob 
                                stopifnot(length(res) == 1)                      ### bei Rekonstruktion dieselben Werte rauskommen
-                               stopifnot ( !is.na(res))                         ### wie in ursprünglicher Tabelle
+                               stopifnot ( !is.na(res))                         ### wie in urspruenglicher Tabelle
                                return(res)  }))
                         subdat[,"trafo"] <- (subdat[,"logit"] + qlogis(0.625) - atab[ind[3], "par_value"]) / atab[ind[4], "par_value"] * atab[ind[2], "par_value"] + atab[ind[1], "par_value"]
                         subdat[,"diff"]  <- subdat[,"trafo"] - subdat[,"bista"]
@@ -466,7 +466,7 @@ simEquiTable <- function ( anchor, mRef, sdRef, addConst = 500, multConst = 100,
 
 
 getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c("pv", "wle", "eap"), q3MinObs = 0, q3MinType = c("singleObs", "marginalSum"), omitFit = FALSE, omitRegr = FALSE, omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6, sig.dif.bound = 0.3, p.value = 0.9, 
-              pvMethod = c("regular", "bayesian"), nplausible = NULL, ntheta = 2000, normal.approx = FALSE, samp.regr = FALSE, theta.model=FALSE, np.adj=8, beta_groups = TRUE, level = .95, n.iter = 1000, n.burnin = 500, adj_MH = .5, adj_change_MH = .05, refresh_MH = 50, accrate_bound_MH = c(.45, .55),	print_iter = 20, verbose = TRUE) { 
+              pvMethod = c("regular", "bayesian"), nplausible = NULL, ntheta = 2000, normal.approx = FALSE, samp.regr = FALSE, theta.model=FALSE, np.adj=8, group = NULL, beta_groups = TRUE, level = .95, n.iter = 1000, n.burnin = 500, adj_MH = .5, adj_change_MH = .05, refresh_MH = 50, accrate_bound_MH = c(.45, .55),	print_iter = 20, verbose = TRUE) { 
             pvMethod <- match.arg(pvMethod)
             q3MinType<- match.arg(q3MinType)
             q3theta  <- match.arg(q3theta )
@@ -1963,7 +1963,7 @@ getConquestResults<- function(path, analysis.name, model.name, qMatrix, all.Name
          return(ret)}
 
 getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV, nplausible , ntheta , normal.approx, samp.regr, theta.model, np.adj, Q3=Q3, q3MinObs =  q3MinObs, q3MinType = q3MinType, 
-                     pvMethod , beta_groups , level , n.iter , n.burnin, adj_MH , adj_change_MH , refresh_MH, accrate_bound_MH,	print_iter , verbose) {
+                     pvMethod , group, beta_groups , level , n.iter , n.burnin, adj_MH , adj_change_MH , refresh_MH, accrate_bound_MH,	print_iter , verbose) {
          if( omitRegr == FALSE ) { txt <- capture.output ( regr     <- tam.se(runModelObj)) }
          qMatrix  <- attr(runModelObj, "qMatrix")
          qL       <- melt(qMatrix, id.vars = colnames(qMatrix)[1], variable.name = "dimensionName", na.rm=TRUE)

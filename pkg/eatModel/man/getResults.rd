@@ -11,7 +11,7 @@ getResults( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c("pv", "wle", 
             omitRegr = FALSE, omitWle = FALSE, omitPV = FALSE, abs.dif.bound = 0.6, 
             sig.dif.bound = 0.3, p.value = 0.9, pvMethod = c("regular", "bayesian"), 
             nplausible = NULL, ntheta = 2000, normal.approx = FALSE, samp.regr = FALSE, 
-            theta.model=FALSE, np.adj=8, beta_groups = TRUE, level = .95, n.iter = 1000, 
+            theta.model=FALSE, np.adj=8, group = NULL, beta_groups = TRUE, level = .95, n.iter = 1000, 
             n.burnin = 500, adj_MH = .5, adj_change_MH = .05, refresh_MH = 50, 
             accrate_bound_MH = c(.45, .55),	print_iter = 20, verbose = TRUE) }
 %- maybe also 'usage' for other objects documented here.
@@ -129,6 +129,10 @@ file of \code{tam.pv} from the \code{TAM} package: This parameter defines the
 of the posterior distribution of theta (in the one-dimensional case), then theta
 is simulated from a normal distribution with standard deviation \code{np.adj} 
 times \eqn{s_{EAP}}.
+}
+\item{group}{
+Applies only if \code{software = "tam"} and \code{pvMethod = "bayesian"}. Optional 
+vector of group identifiers. See the help page of \code{tam.pv.mcmc} for further details.
 }
 \item{beta_groups}{
 Applies only if \code{software = "tam"} and \code{pvMethod = "bayesian"}. See the help 
