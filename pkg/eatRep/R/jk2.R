@@ -234,8 +234,13 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
     ### erster Schritt: nur Subgruppen. Modellaufruf generieren
                        do    <- paste ( "resG <- eatRep ( ", paste(names(formals(eatRep)), names(formals(eatRep)), sep =" = ", collapse = ", "), ")",sep="")
                        eval(parse(text=do))
-    ### zweiter Schritt: nur Gesamtpopulation, groups = intersect(groups, group.differences.by)
-                       newGrp<- intersect(groups, group.differences.by)
+    ### zweiter Schritt: nur Gesamtpopulation, groups = intersect(groups, group.differences.by) ... bloeder Hotfix
+                       if ( length( groups  == 1 ) & wp == TRUE & length(group.differences.by) > 0 ) {
+                            newGrp <- setdiff ( groups, group.differences.by)
+                            if ( length( newGrp ) == 0 ) { newGrp <- NULL }
+                       }  else  {      
+                            newGrp<- intersect(groups, group.differences.by)
+                       }     
                        do    <- paste ( "resA <- eatRep ( ", paste(names(formals(eatRep)), recode(names(formals(eatRep)), "'groups'='newGrp'; 'group.differences.by'='newGrp'"), sep =" = ", collapse = ", "), ")",sep="")
                        eval(parse(text=do))
                        resKom<- do.call("rbind", by(data = resG, INDICES = resG[, allNam[["group"]] ], FUN = function ( x ) {
@@ -243,26 +248,28 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                                 x2 <- dcast(resA, ... ~ coefficient, value.var = "value")
                                 com<- setdiff (intersect(colnames(x1), colnames(x2)), c("est", "se", "modus", "depVar", "group"))
                                 x3 <- merge(x1, x2, by = com, all = FALSE)
-                                stopifnot ( nrow(x3) == nrow(x1))
-                                x3[,"wholePopDiff_est"] <- x3[,"est.x"] - x3[,"est.y"]
-                                x3[,"wholePopDiff_se"]  <- sqrt(x3[,"se.x"]^2 + x3[,"se.y"]^2)
+                                if ( nrow ( x3 ) > 0 ) { 
+                                      stopifnot ( nrow(x3) == nrow(x1))
+                                      x3[,"wholePopDiff_est"] <- x3[,"est.x"] - x3[,"est.y"]
+                                      x3[,"wholePopDiff_se"]  <- sqrt(x3[,"se.x"]^2 + x3[,"se.y"]^2)
     ### ACHTUNG: wenn toCall == "mean", dann werden hier nur die Mittelwertsdifferenzen ausgegeben (nicht die Differenzen in Varianzen, Standardabweichungen, etc.)
-                                if ( toCall == "mean") { 
-                                     x4 <- melt ( x3[which(x3[,"parameter"] %in% c("mean", "meanGroupDiff") ), ], id.vars = "group.x", measure.vars = c("wholePopDiff_est", "wholePopDiff_se"))
-                                     x4 <- data.frame ( x4, colsplit(string = as.character(x4[,"variable"]), pattern = "_", names = c("parameter", "coefficient")))
-                                     x5 <- x[1:nrow(x4),]
-                                     x5[,"parameter"] <- x4[,"parameter"]; x5[,"coefficient"] <- x4[,"coefficient"]; x5[,"value"] <- x4[,"value"]
-                                }
+                                      if ( toCall == "mean") { 
+                                           x4 <- melt ( x3[which(x3[,"parameter"] %in% c("mean", "meanGroupDiff") ), ], id.vars = "group.x", measure.vars = c("wholePopDiff_est", "wholePopDiff_se"))
+                                           x4 <- data.frame ( x4, colsplit(string = as.character(x4[,"variable"]), pattern = "_", names = c("parameter", "coefficient")))
+                                           x5 <- x[1:nrow(x4),]
+                                           x5[,"parameter"] <- x4[,"parameter"]; x5[,"coefficient"] <- x4[,"coefficient"]; x5[,"value"] <- x4[,"value"]
+                                      }
     ### ACHTUNG: wenn toCall == "glm", dann werden nur die Differenzen fuer Intercept und alle Regressoren ausgegeben (nicht die Differenzen Ncases, NcasesValid, R2 ...)
-                                if ( toCall == "glm") {
-                                     x4 <- melt ( x3[-which(x3[,"parameter"] %in% c("Ncases", "Nvalid", "R2", "R2nagel") ), ], id.vars = c("group.x","parameter"), measure.vars = c("wholePopDiff_est", "wholePopDiff_se"))
-                                     foo<- colsplit(string = as.character(x4[,"variable"]), pattern = "_", names = c("parameter", "coefficient"))
-                                     foo[,"parameter"] <- paste("wholePopDiff", x4[,"parameter"], sep="__")
-                                     x5 <- data.frame ( group = x4[,"group.x"], depVar = x[1,"depVar"], modus = x[1,"modus"], parameter = foo[,"parameter"], coefficient = foo[,"coefficient"], value = x4[,"value"])
-                                     add<- setdiff ( colnames(x), colnames(x5))
-                                     if ( length(add)>0) { x5 <- data.frame ( x5, x[1,add, drop=FALSE] ) }
-                                }
-                                x  <- rbind ( x, x5)
+                                      if ( toCall == "glm") {
+                                           x4 <- melt ( x3[-which(x3[,"parameter"] %in% c("Ncases", "Nvalid", "R2", "R2nagel") ), ], id.vars = c("group.x","parameter"), measure.vars = c("wholePopDiff_est", "wholePopDiff_se"))
+                                           foo<- colsplit(string = as.character(x4[,"variable"]), pattern = "_", names = c("parameter", "coefficient"))
+                                           foo[,"parameter"] <- paste("wholePopDiff", x4[,"parameter"], sep="__")
+                                           x5 <- data.frame ( group = x4[,"group.x"], depVar = x[1,"depVar"], modus = x[1,"modus"], parameter = foo[,"parameter"], coefficient = foo[,"coefficient"], value = x4[,"value"])
+                                           add<- setdiff ( colnames(x), colnames(x5))
+                                           if ( length(add)>0) { x5 <- data.frame ( x5, x[1,add, drop=FALSE] ) }
+                                      }
+                                      x  <- rbind ( x, x5)
+                                }      
                                 return(x)}))
                        add   <- setdiff ( colnames(resG), colnames(resA))
                        if(length(add)>0) {
