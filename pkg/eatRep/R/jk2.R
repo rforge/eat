@@ -235,7 +235,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                        do    <- paste ( "resG <- eatRep ( ", paste(names(formals(eatRep)), names(formals(eatRep)), sep =" = ", collapse = ", "), ")",sep="")
                        eval(parse(text=do))
     ### zweiter Schritt: nur Gesamtpopulation, groups = intersect(groups, group.differences.by) ... bloeder Hotfix
-                       if ( length( groups  == 1 ) & wp == TRUE & length(group.differences.by) > 0 ) {
+                       if ( length( groups ) == 1 & wp == TRUE & length(group.differences.by) > 0 ) {
                             newGrp <- setdiff ( groups, group.differences.by)
                             if ( length( newGrp ) == 0 ) { newGrp <- NULL }
                        }  else  {      
