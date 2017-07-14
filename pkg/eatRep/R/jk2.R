@@ -48,6 +48,7 @@ jk2.table<- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"),
                       trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, separate.missing.indicator=separate.missing.indicator, 
                       expected.values=expected.values, na.rm=na.rm, doCheck=doCheck, onlyCheck= TRUE)
                frml<- as.formula ( paste("~ ",chk[["dependent"]]," - 1",sep="") )
+               datL[, chk[["dependent"]] ] <- as.character( datL[, chk[["dependent"]] ] )
                matr<- data.frame ( model.matrix ( frml, data = datL) )
                datL<- data.frame ( datL,  matr)
                ret <- do.call("rbind", lapply ( colnames(matr), FUN = function ( dpd ) { 

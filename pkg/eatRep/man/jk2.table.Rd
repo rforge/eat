@@ -73,7 +73,7 @@ distribution of the dependent variable is compared between the groups. See examp
 further details.
 }
   \item{chiSquare}{
-Logical. Applies only if 'group.differences.by' contains the 'wholePop' value. Defines whether 
+Logical. Applies only if 'group.differences.by' was specified and does not contain 'wholePop'. Defines whether 
 group differences should be represented in a chi square test or in (mean) differences of each 
 group's relative frequency. 
 }
@@ -168,8 +168,8 @@ Sebastian Weirich
 \examples{
 data(hisei)
 ### First example: Computes frequencies of the hisei group conditionally on country
-### The distribution of the hisei categories is compared between countries using
-### the chi square test. 
+### The distribution of the hisei categories is compared for eachcategory separately, 
+### i.e. no chi square test is used. 
 freq.tab  <- jk2.table(datL = hisei, ID = "idstud", wgt = "wgtSTUD",
              imp="imputation", type = "JK2", PSU = "JKZone", repInd = "JKrep",
              groups = "country", group.differences.by = "country", dependent = "hisei")
