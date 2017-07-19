@@ -310,8 +310,8 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
     ### check: abhaengige Var. numerisch?
                        if(toCall %in% c("mean", "quantile", "glm")) {
                           if(!class(datL[,allNam[["dependent"]]]) %in% c("integer", "numeric")) { 
-                              cat(paste("Warning: Dependent variable has to be of class 'integer' or 'numeric'.\n         '",allNam[["dependent"]],"' of class '",class(datL[,allNam[["dependent"]]]),"' will be transformed to numeric.\n"))
-                              datL[,allNam[["dependent"]]] <- as.character(as.numeric(datL[,allNam[["dependent"]]]))
+                              cat(paste0("Warning: Dependent variable has to be of class 'integer' or 'numeric'.\n         '",allNam[["dependent"]],"' of class '",class(datL[,allNam[["dependent"]]]),"' will be transformed to numeric.\n"))
+                              datL[,allNam[["dependent"]]] <- as.numeric(as.character(datL[,allNam[["dependent"]]]))
                           }                                                                                                
                        }
     ### wenn Replicates bereits uebergeben, muss PSU und repInd NULL sein

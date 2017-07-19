@@ -173,11 +173,11 @@ examinees. \code{"idstud"} is a person identifier for 4,619 distinct examinees, 
 and \code{"JKrep"} denote jackknifing variables which contains information about which unit has to be replaced by 
 which other unit in which replicate of the original data. \code{"income"} is each person's financial income. The next
 two variables, \code{"nest"} and \code{"imputation"} describe the multiple imputed structure of the data. The data 
-stem from a nested multiple imputation model with 2 nests and 3 imputations in each nest. The princiles of nested
+stem from a nested multiple imputation model with 2 nests and 3 imputations in each nest. The principles of nested
 imputations will be elucidated later; for the moment, we may content ourself with data from the first nest only, 
-i.e. we split the data and only cosider cases for which $nest=1$. We may think of \code{"score"} as the the 
+i.e. we split the data and only consider cases for which $nest=1$. We may think of \code{"score"} as the the
 plausible value estimate for the reading competence. Hence, if $nest=1$ and $imputation=3$, the value in the 
-\code{"score"} columns refers to the third plausible value in the first nest for the reading competence. 
+\code{"score"} column refers to the third plausible value in the first nest for the reading competence. 
 Please note that the three imputations of the reading competence occur as one variable in the data set. 
 Hence, each individual is represented in several rows. This is quite usual if multiple imputed data is 
 presented in a long format dataset. \code{eatRep} strictly requires the long format. To transform wide-format
@@ -202,24 +202,25 @@ means <- jk2.mean(datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2",
 
 When applying the jackknife method, the primary sampling unit (PSU) often is the jackknife zone (JKZone),
 and the replication indicator often is the jackknife replicate indicator (JKrep). While the function is operating, 
-some additional information is displayed on console. First we see that one analysis is run according to 
+some additional information is displayed on console. First we see that only one analysis is run according to
 \code{'group.splits = 1'}. We will subsequently exemplify this enigmatic message. Further, we see that \code{jk2.mean}
 assumes an ``unnested'', i.e. a structure with three imputations. This refers to what we've called 
 ``imputation replicates''. The output then speaks about 81 replicate weights which are created due to 81 distinct 
 jackknifing zones in the JKZone variable. This information refers to the ``cluster replicates'' and implies that 
-the subsequent analysis has to be repeated 81 times \emph{for each imputation}. Overall, $3\times 81=243$ analyses are 
+the subsequent analysis has to be repeated 81 times \emph{for each imputation}. Hence, $3\times 81=243$ analyses are
 run overall.\\ 
 
 In each of the 81 replication samples, one unit (e.g. school) of a certain jackknifing zone is missing and the weights 
-of the other unit of the same zone are doubled. The data in all other zones remain unchanged. The analyses are repeated 
-81 times, \emph{using the same plausible value} as the dependent variable. Only the weights vary between the 
+of the other school within the same zone are doubled. The data in all other zones remain unchanged. The analyses are
+repeated 81 times, \emph{using the same plausible value} as the dependent variable. Only the weights vary between the
 ``cluster replicates'': each of the 81 replicates once a time is used as the weighting variable. Each of the 81 
-analysis revealed slighty different results. This variation is used to estimate the sampling variance which then is used 
-to compute the standard error, which is pooled across 81 ``cluster replicates''. When finished, the analysis 
-approaches the second ``imputation replicate'' and switches to the second plausible value which now is used as the 
-dependent variable in 81 analyses due to the 81 ``cluster replicates''. After all, three pooled estimates and three 
-pooled standard errors resulted which differ slightly in each ``imputation replicate''. The three estimates and 
-standard errors are pooled according to \citet{Rubin1987}. To sum up, the pooled results are pooled again to account for 
+analysis revealed slighty different results. This variation is used to estimate the sampling variance 
+\emph{due to the clustered structure} which then is used to compute the standard error, which is pooled across 
+81 ``cluster replicates''. When finished, the analysis approaches the second ``imputation replicate'' and switches 
+to the second plausible value which now is used as the dependent variable in 81 analyses due to the 
+81 ``cluster replicates''. After all, three pooled estimates and three pooled standard errors resulted 
+which differ slightly in each ``imputation replicate''. The three estimates and standard errors are pooled 
+once again, this time according to \citet{Rubin1987}. To sum up, the pooled results are pooled again to account for 
 both: multiple imputed data in a clustered sample.\\
 
 The little dots continuously appearing on the console therefore refer to ``imputation replicates'' and are intended 
@@ -236,7 +237,7 @@ overview, only a few selected rows are displayed here. For each subpopulation de
 variable (here: only the reading competence), each parameter (we requested mean, variance, 
 standard deviation and sample size or population size) and each coefficient (i.e., the 
 estimate and the corresponding standard error) the corresponding value is given. However, 
-the output more suited for further processing than for clear arragement, as the 
+the output is more suited for further processing than for clear arragement, as the
 values are displayed in the long format as well as in exponential notation, for example. 
 To display the results in the more common wide format, use the \code{reshape2} package. 
 Alternatively, an abbreviated display of the results is provided by the \code{dM} 
@@ -244,7 +245,7 @@ function (whereas dM stands for ``display means''). You may think of \code{dM} a
 a simple summary function which is not intended for saving results or further processing
 as the results are displayed in an abbreviated (i.e., rounded) manner to offer clear 
 arrangement on console. The \code{dM} function has an additional argument to omit 
-displaying parameters or coefficients you are not interested at the moment. \\
+displaying parameters or coefficients you are not interested in at the moment. \\
 
 <<readingMeansByCountryResultsdefSummary>>=
 dM(means, omitTerms = c("var", "Ncases","NcasesValid", "meanGroupDiff") )
@@ -261,10 +262,10 @@ means <- jk2.mean(datL = readN1, ID = "idstud", wgt = "wgtSTUD",
 dM(means, omitTerms = c("var", "Ncases","NcasesValid", "meanGroupDiff") )
 @
 
-We see that the means are completely unaffected, but the standard deviation now is lower. Consequently, also 
-the standard errors for the mean estimates are considerably lower. (Standard errors for standard deviations and for 
-variances are not implemented yet.) If we decide to leave out the weights as well, we would additionally expect to receive 
-different means now:\\
+We see that the means are completely unaffected, but the standard errors for the mean
+estimates are considerably lower. (Standard errors for standard deviations and for
+variances are not implemented yet.) If we decide to leave out the weights as well,
+we would additionally expect to receive different means now:\\
 
 <<readingMeansByCountry3def>>=
 means <- jk2.mean(datL = readN1, ID = "idstud", 
@@ -328,6 +329,29 @@ The last line labelled \code{wholeGroup} provides results concerning the whole p
 \code{male\_LandC} contains values for the males in LandC. Moreover, three mean differences were computed. In each
 federal state, the difference between males and females is given. \\
 
+At last for this chapter, let's consider a further comparison: We see group differences
+according to \code{sex} in each country. It is plausible to assume that there are group
+differences also in the whole population. But: Is there any country for which the group
+differences differ substantially from the group differences in the whole population? To
+investigate this, we make an exception from the rule that \code{group.differences.by}
+must contain values which are included in \code{groups}: We add the term \code{wholePop}
+into the argument \group.differences.by}:\\
+
+<<read5def>>=
+means <- jk2.mean(datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2",
+         PSU = "JKZone", repInd = "JKrep", imp = "imputation", groups = c("sex","country"),
+         group.differences.by = c("sex", "wholePop"), dependent = "score")
+dM(means, omitTerms = c("var","Ncases", "NcasesValid"))
+@
+
+We see that the group differences in the whole population are -27.4 points. The output
+column \code{wholePopDiff_est} yields the difference for each country from the
+``global'' difference. In \code{LandA}, the difference is more substantial than in
+the whole population, in \code{LandB} and \code{LandC}, the difference is less
+substantial. However, no country-specific difference varies significantly from
+the difference in the whole population, as the amount of deviation is less than
+twice the standard error of the amount.\\
+
 \subsection{Frequency tables}
 \label{subsec:freqs}
 
@@ -350,12 +374,13 @@ and within each country for different groups of gender. As before, we want to ta
 structure and multiple imputations into account. Moreover, we are interested whether the distribution 
 of pass/fail is different for males vs. females within specific countries. This is done via a chi 
 square test. The test statistic is pooled according to the clustered structure and the imputations. 
-To call for the chi square test, we can use the \code{group.differences.by} argument:\\
+To call for the chi square test, we can use the \code{group.differences.by} argument and additionally
+specify \code{chiSquare = TRUE}:\\
 
 <<hiseiFreqsByCountryGenderdef>>=
 freqs <- jk2.table( datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
          PSU = "JKZone", repInd = "JKrep", imp = "imputation", groups = c("country", "sex"), 
-	       group.differences.by = "sex", dependent = "passed")
+	       group.differences.by = "sex", chiSquare = TRUE, dependent = "passed")
 dT(freqs, percent = TRUE)
 @
 
@@ -369,20 +394,32 @@ females and 47.8 percent of the males \emph{do not pass}. As in the examples men
 before, these analyses may be conducted without considering clustered structure. See whether 
 the standard errors will change.\\ 
 
-The output of the summary function \code{dT} does not contain results of the chi square test.
-So far, we have to extract the results by ourself:\\
+Unfortunately, the results of the chi square test are not yet captured by the \code{dT} function, 
+so we have to extract them from the \code{freqs} object by ourself:\\
 
 <<hiseiFreqsExtraction>>=
 options(scipen=4)
-freqs[which(freqs[,"parameter"] == "chiSquareTest"),]
+print ( freqs[which(freqs[,"parameter"] == "chiSquareTest"),], digits = 1)
 @
 
 In each of the three countries a chi square test was conducted separately. For \code{LandA}, 
 the \emph{p} is <.001, hence the distribution of passed/failed significantly differs between 
 males and females in \code{LandA}. However, \code{LandB} and \code{LandC} reveals another 
 picture---there are no sex differences in the rate of pass/fail. As we have imputed data, 
-we additionallz have an chi square approximation. See the help page of \code{micombine.chisquare}
+we additionally have an chi square approximation. See the help page of \code{micombine.chisquare}
 of the \code{miceadds} package for further details. \\
+
+There is a second alternative to analyze whether the distribution of pass/fail is different for 
+males vs. females within specific countries. With \code{chiSquare = FALSE} we get the 
+differences \emph{separately for each category} of the dependent variable within each country.
+The conclusion we draw from this analysis, however, is quite equivalent to the preceding analysis: \\
+
+<<hiseiFreqsByCountryGenderdef2>>=
+freqs <- jk2.table( datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
+         PSU = "JKZone", repInd = "JKrep", imp = "imputation", groups = c("country", "sex"), 
+	       group.differences.by = "sex", chiSquare = FALSE, dependent = "passed")
+dT(freqs, percent = TRUE)
+@
 
 Let's devote little attention to the problem of missing values. In the example mentioned above, 
 it does not seem plausible to assume missing values on the \code{"passed"} variable. Without
@@ -394,8 +431,9 @@ sense to define a separate category during the data preparation, for example ``l
 ``medium HISEI'', ``highest HISEI'', ``unknown HISEI''. Families without valid
 HISEI information then will be considered as a separate group in the analyses. Applying 
 \code{jk2.table} then will give frequencies for four groups. However, if the ``Dont't know'' 
-cases appear as ``NA'' values, it is possible to define them as a distinct category for which 
-relative frequencies can be computed. Only for illustration, let us generate some missing values 
+cases appear as ``NA'' values, \code{eatRep} has to know whether it should handle these values
+as missing or as a new distinct category named ``Dont't know'' (or whatever), for which 
+relative frequencies also can be computed. Only for illustration, let us generate some missing values 
 in some of the imputations and repeat the analysis subsequently. You will see that a new category 
 has joined to the output, which is labelled \code{"<NA>"}. \\
 
@@ -441,9 +479,9 @@ analyses are conducted and how many results we expect to find. The message on th
 speaks of about ``1 analysis overall'' according to two \code{group.splits = 1}. 
 But strictly speaking, we have estimated three regression analyses, as the model is 
 fitted in each group separately. As we specified one group variable dividing the data into 
-three distinct groups, for which we instruct \code{jk2.glm()} to fit the regression model 
-separately, we find results of the three models in the results. More specifically, for each 
-country, an intercept and two regression coefficients according to \code{gender} and 
+three distinct groups (according to \code{country}) for which we have instructed \code{jk2.glm()} 
+to fit the regression model separately, we find results of the three models in the results. 
+More specifically, for each country, an intercept and two regression coefficients according to \code{gender} and 
 \code{INCOME} are estimated. The \code{dG} function allows us to have a look only at a specific 
 result out of the 3 analyses. \code{analyses = 1:2} advises the function to display the results 
 of the first and second analysis. First we should consider that each single analyses is characterized 
@@ -484,6 +522,7 @@ who stem from \code{"LandC"} do not significanty differ in their probability of 
 from examinees who stem from the reference country, \code{"LandA"}. Moreover, the disadvantage of 
 boys is not consistent across countries: In \code{"LandB"}, this difference
 is significantly less substantial.\\
+
 Please note that---although we have only defined one independent variable---we obtain two 
 regression coefficients for the two categories of the country variable. Again, R choosed its 
 favorite reference group by itself. The effects are expressed in relation to \code{LandA}. 
@@ -523,48 +562,58 @@ res   <- dG(mod1)
 \subsection{Which of both determination coefficients should I pay attention?}
 \label{subsec:faq2}
 
-The output of each \code{jk2.glm()} analysis also contains the pooled determination coefficient, $R^2$, most frequently 
-the conventional $R^2$ and Nagelkerke's $R^2$. However, in linear regression models, i.e. if the identity link is used, 
-assuming normally distributed errors, the conventional $R^2$ should be used to interpret explained variance. In log-linear
-regression models, i.e. if the binomial link function is used, Nagelkerke's $R^2$ should be used. The reason for reporting 
-both coefficients is the programming disability of the package developer. 
+The output of each \code{jk2.glm()} analysis also contains the pooled determination 
+coefficient, $R^2$ and Nagelkerke's $R^2$, which may be considered as a pseudo-$R^2$
+for log-linear regression models. In linear regression models, i.e. if the identity link 
+is used and normally distributed errors are assumed, the conventional $R^2$ should be used 
+to interpret explained variance. In log-linear regression models, i.e. if the binomial link 
+function is used, Nagelkerke's $R^2$ may be used instead. 
 
 \section{Nested imputations}
 \label{sec:nested}
 
-The next to last chapter of this little tutorial is reserved to the problem of nested imputation. The general concept is described in
-\citet{Rubin2003}. At this point, only some specific aspects which are relevant in large scale assessments, are mentioned briefly. 
-Weirich et al. (2014) described the same procedure more elaboratively. Suppose you want to estimate IRT proficiencies 
-(often denoted $\theta$) in a specific domain. Applying an extensive marginal model which comprehends of item responses and 
-background information as well, the posterior distribution of each examinees' $\theta$ is specified. Without any certain 
-proficiency value of a specific examinee, plausible values are drawn from the posterior of each examinee. Conceptually, 
-plausible values are multiple imputations of the inherently missing variable $\theta$ and may analyzed in standard statistic 
+The next to last chapter of this little tutorial is reserved to the problem of nested 
+imputation. The general concept is described in \citet{Rubin2003}. At this point, only 
+some specific aspects which are relevant in large scale assessments, are mentioned 
+briefly. Suppose you want to estimate IRT proficiencies (often denoted $\theta$) in a 
+specific domain. Applying an extensive marginal model which comprehends of item responses 
+and background information as well, the posterior distribution of each examinees' $\theta$ 
+is specified. Without any certain proficiency value of a specific examinee---remember that 
+$\theta$ is considered to be latent, i.e. an inherently missing variable---, plausible 
+values are drawn from the posterior of each examinee. Conceptually, plausible values are 
+multiple imputations of the missing variable $\theta$ and may analyzed in standard statistic 
 procedures. To obtain valid estimates and standard errors, the results have to be 
 pooled according to \citet{Rubin1987}.\\
 
-Suppose you have missing data in the background variables as well, which have to be imputed in the first step, which may result in 
-$M=5$ data sets. For each data set a marginal IRT model is specified and $N=20$ plausible values are drawn. Overall 
-$5\times 20=100$ plausible values in a dependency structure will result from the analysis. Formally, we now have nested 
-imputed data. To pool the results, the formulas in \citet{Rubin1987} cannot be applied, as the plausible values do not 
-stem from a common `nest'. The interdependence has to be taken into account. Whereas the conventional pooling formulas 
-split the overall variance in the variance within imputation and the variance between imputation, where the latter one is used 
-to estimate the uncertainty due to imputation, the formulas for nested imputation extend the old ones by splitting the variance 
-between imputation in the within-nest variance and the variance between nests. See \citet{Rubin2003} for further details. These 
-varied formulas are also implemented in \code{eatRep}.\\
+Suppose you have missing data in the background variables as well, which have to be imputed 
+in the first step, which may result in $M=5$ data sets. For each data set a marginal IRT 
+model is specified and $N=20$ plausible values are drawn. Overall $5\times 20=100$ plausible 
+values in a dependency structure will result from the analysis. Formally, we now have nested 
+imputed data. To pool the results, the formulas in \citet{Rubin1987} cannot be applied, as the 
+plausible values do not stem from a common `nest'. The interdependence has to be taken into 
+account. Whereas the conventional pooling formulas split the overall variance in the variance 
+within imputation and the variance between imputation (where the latter one is used to estimate 
+the uncertainty due to imputation), the formulas for nested imputation extend the old ones by 
+splitting the variance between imputation in the within-nest variance and the variance between 
+nests. See \citet{Rubin2003} for further details. These varied formulas are also implemented 
+in \code{eatRep}.\\
 
-If the data analysed with \code{eatRep} stem from a nested multiple imputation structure, this structure has to be specified. 
-More specifically, the structure has to be represented in the long-format data frame. \code{eatRep} has to know the number of 
-nests and the number of imputations in each nest. The above procedure sounds more complicated than it hopefully is.\\
+If the data analysed with \code{eatRep} stem from a nested multiple imputation structure, this 
+structure has to be specified. More specifically, the structure has to be represented in the 
+long-format data frame. \code{eatRep} has to know the number of nests and the number of 
+imputations in each nest. The above procedure sounds more complicated than it hopefully is.\\
 
 \subsection{Example: Compute descriptives from a nested imputation structure}
 \label{subsec:nest1}
 
-At the beginning of this little tutorial, we have created a subset of our data set which was used for all analyses so far. 
-Now it's time to consider the whole data set. The variable \code{"nest"} denotes the nest or first-stage imputation variable. 
-As we only have two nests, only two imputations were created in the first step. Within each of this two imputations, three 
-plausible values were drawn from the marginal (or conditioning) model. Hence, we would expect that the plausible values 
-(captured in column \code{"score"}) vary between nests \emph{and} between imputations, whereas the conditioning variables 
-(e.g. income) only vary between nests, but not between imputations within each nest! To date, the \code{eatRep} does not provide
+At the beginning of this little tutorial, we have created a subset of our data set which was 
+used for all analyses so far. Now it's time to consider the whole data set. The variable 
+\code{"nest"} denotes the nest or first-stage imputation variable. As we only have two nests, 
+only two imputations were created in the first step. Within each of this two imputations, three 
+plausible values were drawn from the marginal (or conditioning) model. Hence, we would expect 
+that the plausible values (captured in column \code{"score"}) vary between nests \emph{and} 
+between imputations, whereas the conditioning variables (e.g. income) only vary between nests, 
+but not between imputations within each nest! To date, the \code{eatRep} does not provide
 any consistency checks whether this requirements are fulfilled.\\
 
 All analyses specified so far treated 3 imputations. Considering the nested structure now comprises  $3\times 2=6$ imputations. 
@@ -593,6 +642,9 @@ mod1  <- jk2.glm(datL = reading, ID = "idstud", wgt = "wgtSTUD", type = "JK2",
          groups = "country", formula = score~sex+income, family=gaussian(link="identity") )
 res   <- dG(mod1)
 @
+
+
+%% Trend analyses
 
 %%\section{last chapter}
 %%\label{sec:last}
