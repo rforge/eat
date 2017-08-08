@@ -2246,7 +2246,7 @@ itemFromRes<- function ( resultsObj ) {
                      return(res)}))
              if ( length(attr(resultsObj, "all.Names")[["DIF.var"]])>0) { 
                  ciCo<- colnames(selDIF)[grep("^CI__", colnames(selDIF))]
-                 sel <- merge(sel, selDIF[,c("item", "estDif", "seDif", "infitDif", "absDif", ciCo, "difIndex", "ETS")], by=c("item","model"), all=TRUE)
+                 sel <- merge(sel, selDIF[,c("item", "model", "estDif", "seDif", "infitDif", "absDif", ciCo, "difIndex", "ETS")], by=c("item","model"), all=TRUE)
              }    
              return(sel)
           }
