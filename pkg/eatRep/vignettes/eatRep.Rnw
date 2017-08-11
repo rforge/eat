@@ -335,7 +335,7 @@ differences also in the whole population. But: Is there any country for which th
 differences differ substantially from the group differences in the whole population? To
 investigate this, we make an exception from the rule that \code{group.differences.by}
 must contain values which are included in \code{groups}: We add the term \code{wholePop}
-into the argument \group.differences.by}:\\
+into the argument \code{group.differences.by}:\\
 
 <<read5def>>=
 means <- jk2.mean(datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2",
@@ -345,7 +345,7 @@ dM(means, omitTerms = c("var","Ncases", "NcasesValid"))
 @
 
 We see that the group differences in the whole population are -27.4 points. The output
-column \code{wholePopDiff_est} yields the difference for each country from the
+column \code{wholePopDiff\_est} yields the difference for each country from the
 ``global'' difference. In \code{LandA}, the difference is more substantial than in
 the whole population, in \code{LandB} and \code{LandC}, the difference is less
 substantial. However, no country-specific difference varies significantly from

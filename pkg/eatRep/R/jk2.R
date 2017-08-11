@@ -47,6 +47,18 @@ jk2.table<- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"),
                       nest = nest, imp = imp, groups = groups, group.splits = group.splits, group.differences.by = group.differences.by, correct = correct, 
                       trend = trend, linkErr = linkErr, dependent = dependent, group.delimiter=group.delimiter, separate.missing.indicator=separate.missing.indicator, 
                       expected.values=expected.values, na.rm=na.rm, doCheck=doCheck, onlyCheck= TRUE)
+    ### missing handling muss vorneweg geschehen
+               isNa<- which ( is.na ( datL[, chk[["dependent"]] ] ))
+               if ( length ( isNa ) > 0 ) { 
+                    cat(paste0("Warning: Found ",length(isNa)," missing values in dependent variable '",chk[["dependent"]],"'.\n"))
+                    if ( separate.missing.indicator == TRUE ) { 
+                         stopifnot ( length( intersect ( "missing" , names(table(datL[, chk[["dependent"]] ])) )) == 0 )
+                         datL[isNa, chk[["dependent"]] ] <- "missing"
+                    }  else  { 
+                         if ( na.rm == FALSE ) { stop("If no separate missing indicator is used ('separate.missing.indicator == FALSE'), 'na.rm' must be TRUE if missing values occur.\n")}
+                         datL <- datL[-isNa,]
+                    }     
+               }                                                                ### Ende des missing handlings
                frml<- as.formula ( paste("~ ",chk[["dependent"]]," - 1",sep="") )
                datL[, chk[["dependent"]] ] <- as.character( datL[, chk[["dependent"]] ] )
                matr<- data.frame ( model.matrix ( frml, data = datL) )
