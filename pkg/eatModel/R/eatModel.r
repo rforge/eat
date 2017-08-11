@@ -425,11 +425,13 @@ num.to.cat <- function(x, cut.points, cat.values = NULL)    {
               stopifnot(is.numeric(x))
               if(is.null(cat.values)) {cat.values <- 1:(length(cut.points)+1)}
               stopifnot(length(cut.points)+1 == length(cat.values))
+              isNa<- which ( is.na ( x ) ) 
               ret <- rep ( cat.values[1], times = length(x))
               for ( a in 1:length(cut.points) ) { 
                    crit <- which(x > cut.points[a])
                    if ( length(crit) > 0 ) { ret[crit] <- cat.values[a+1] }
-              }     
+              }    
+              if ( length ( isNa ) > 0 ) { ret[isNa] <- NA } 
               attr(ret, "cat.values") <- cat.values
               return(ret)}
 
@@ -564,7 +566,7 @@ getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c(
                         if ( length( notN ) >= 1 ) { allP <- alls[[notN[1]]] }
                         if ( length( notN ) > 1 )  {
                              for ( u in notN[-1] )   {
-                                   allP <- merge ( allP, alls[[notN[u]]], by = c ( attr(res, "all.Names")[["ID"]], "dimension"), all = TRUE)
+                                   allP <- merge ( allP, alls[[u]], by = c ( attr(res, "all.Names")[["ID"]], "dimension"), all = TRUE)
                              }
                         }
                         if ( !is.null(allP)) {
