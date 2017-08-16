@@ -317,11 +317,17 @@ applies for the second analysis, as the gender group is not considered relating 
 To estimate sex differences \emph{across all countries}, only sex has to be part of the \code{group} statement, 
 and only sex has to be used in the \code{group.differences.by} argument. The output of the analysis is nearly the 
 same as we would have omitted the \code{group.differences.by} argument, but now, some additional lines have joined. 
-Again, we may use the \code{dM} function to display the part of the results we are interested in---note that now we 
-do \emph{not} exclude \code{meanGroupDiff} from the results to summarize:\\
+Again, we might use the \code{dM} function to display the part of the results we are interested in, but for the 
+representation within this pdf document, an alternative way is more clearly arranged. Note that now we do \emph{not} exclude 
+\code{meanGroupDiff} from the results to summarize:\\
 
 <<readingMeansByCountry5def>>=
-dM(means, omitTerms = c("var","Ncases", "NcasesValid"))
+### 'conventional' representation using 'dM'
+results1 <- dM(means, omitTerms = c("var","Ncases", "NcasesValid"))
+### alternative representation
+results2 <- means[grep("^mean", means[,"parameter"]) ,]
+results2 <- reshape2::dcast ( results2, group + parameter ~ coefficient, value.var = "value")
+print ( results2, digits = 4 ) 
 @
 
 The output now changed slightly: additionally to several group columns, one column for group membership is provided. 
@@ -341,16 +347,18 @@ into the argument \code{group.differences.by}:\\
 means <- jk2.mean(datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2",
          PSU = "JKZone", repInd = "JKrep", imp = "imputation", groups = c("sex","country"),
          group.differences.by = c("sex", "wholePop"), dependent = "score")
-dM(means, omitTerms = c("var","Ncases", "NcasesValid"))
+### alternative representation
+results <- means[grep("^mean|^wholePop", means[,"parameter"]) ,]
+results <- reshape2::dcast ( results, group + parameter ~ coefficient, value.var = "value")
+print ( results, digits = 3)
 @
 
-We see that the group differences in the whole population are -27.4 points. The output
-column \code{wholePopDiff\_est} yields the difference for each country from the
-``global'' difference. In \code{LandA}, the difference is more substantial than in
-the whole population, in \code{LandB} and \code{LandC}, the difference is less
-substantial. However, no country-specific difference varies significantly from
-the difference in the whole population, as the amount of deviation is less than
-twice the standard error of the amount.\\
+We see in the first line of the \code{results} object that the group differences in 
+the whole population are -27.39 points. Line number 2 includes the group differences 
+in \code{LandA}, which amounts -34.53. The difference between both, 
+i.e. $-34.53-(-27.39)=-7.14$ is contained in line 3. Considering the 
+corresponding standard error of 8.7 yields that the difference is not significant:
+The amount of the deviation (7.13) is less than twice the standard error of the amount.\\
 
 \subsection{Frequency tables}
 \label{subsec:freqs}
@@ -399,7 +407,8 @@ so we have to extract them from the \code{freqs} object by ourself:\\
 
 <<hiseiFreqsExtraction>>=
 options(scipen=4)
-print ( freqs[which(freqs[,"parameter"] == "chiSquareTest"),], digits = 1)
+cols <- c("group", "depVar", "parameter", "coefficient", "value")
+print ( freqs[which(freqs[,"parameter"] == "chiSquareTest"), cols ], digits = 1)
 @
 
 In each of the three countries a chi square test was conducted separately. For \code{LandA}, 
@@ -418,7 +427,8 @@ The conclusion we draw from this analysis, however, is quite equivalent to the p
 freqs <- jk2.table( datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
          PSU = "JKZone", repInd = "JKrep", imp = "imputation", groups = c("country", "sex"), 
 	       group.differences.by = "sex", chiSquare = FALSE, dependent = "passed")
-dT(freqs, percent = TRUE)
+result<- dT(freqs, percent = TRUE)
+result[,-match ( "depVar", colnames(result))]
 @
 
 Let's devote little attention to the problem of missing values. In the example mentioned above, 
