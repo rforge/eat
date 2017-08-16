@@ -222,9 +222,9 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                             if ( toCall != "mean") {                            
                                  if ( toCall == "table" ) {                     ### untere Zeile: es muss genau einen gemeinsamen Spaltennamen in 'leF' und 'resT1' geben
                                      stopifnot ( length ( intersect ( colnames ( leF ), colnames(resT1))) == 1 ) 
-                                     stopifnot ( nrow ( leF) == nrow ( resT1))
                                      stopifnot ( ncol ( leF) == 2 ) 
                                      byCol <- intersect ( colnames ( leF ), colnames( resT1))
+                                     stopifnot ( all ( unique ( sort ( leF[,byCol])) == unique ( sort ( resT1[,byCol]))))
                                      resT1 <- merge ( resT1, leF, by = byCol, all = TRUE)
                                  }  else  { 
                                      stop("weiter machen...")
@@ -239,7 +239,11 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                        leCol <- setdiff ( colnames(leF), byCol ) 
                        resT1[,"se_trend"] <- sqrt(resT1[,paste("se_",lev[2],sep="")]^2 + resT1[,paste("se_",lev[1],sep="")]^2 + resT1[, leCol ]^2)
                   }
-                  if ( !toCall %in% c("mean", "table") ) {stop(paste0("Keine Methode fuer Einbindung von Linkingfehler fuer ",toCall," definiert.\n"))}
+                  if ( !toCall %in% c("mean", "table") ) {
+                        cat ( paste0("No method for incorporating linking error into '",toCall,"' analyses defined yet. Linking error will be ignored so far. \n"))
+                        le <- 0
+                        resT1[,"se_trend"] <- sqrt(resT1[,paste("se_",lev[2],sep="")]^2 + resT1[,paste("se_",lev[1],sep="")]^2 + le^2)
+                  }      
                   resT2<- melt ( resT1, measure.vars = c(paste("est_",lev[1], sep=""), paste("est_",lev[2], sep=""), paste("se_",lev[1], sep=""), paste("se_",lev[2], sep=""), "est_trend", "se_trend"), na.rm = FALSE)
                   resT2<- data.frame ( resT2[,-match("variable", colnames(resT2))], as.numeric.if.possible (colsplit ( string = as.character(resT2[,"variable"]), pattern = "_", names = c("coefficient", allNam[["trend"]])), verbose = FALSE))
                   return(resT2)

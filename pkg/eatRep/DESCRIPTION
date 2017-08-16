@@ -1,7 +1,7 @@
 Package: eatRep
 Type: Package
 Title: eatRep
-Version: 0.8.12
+Version: 0.8.13
 Depends: R (>= 3.0.0), survey, stringr 
 Imports: Hmisc, fmsb, mice, boot, car, reshape2, plyr, combinat, miceadds
 Date: 2017-08-16
