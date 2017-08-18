@@ -55,7 +55,7 @@ jk2.pool <- function ( datLong, allNam, forceSingularityTreatment ) {
                   degFr<- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "df"),"value"]})
                   stopifnot(length(table(degFr)) == 1)
                   degFr<- unique(unlist(degFr))
-                  pool <- miceadds::micombine.chisquare ( dk = unlist(chi), df=degFr, display = FALSE)
+                  pool <- micombine.chisquare ( dk = unlist(chi), df=degFr, display = FALSE)
                   ret  <- data.frame ( group = names(table(u[,"group"])), depVar = allNam[["dependent"]], modus="noch_leer", parameter = names(table(u[,"parameter"])), coefficient = c("D2statistic","chi2Approx", "df1", "df2", "p", "pApprox"), value = pool[c("D", "chisq.approx", "df", "df2", "p", "p.approx")], u[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
                }  else  { 
                   uM   <- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "est"),"value"]})
@@ -85,3 +85,27 @@ jk2.pool <- function ( datLong, allNam, forceSingularityTreatment ) {
                }   
                return(ret)}))
            return(retList)}
+           
+### subroutine for combining correlations for multiply imputed data - basiert auf Funktion von Alexander Robitzsch
+pool.corr <- function( corrs , N , conf.level = .05){
+        fisher.corrs <- 1/2*log( ( 1 + corrs) / ( 1 - corrs ) )                 ### convert correlations to Fisher transformed values
+        var.fisher <- rep( 1/(N-3) , length(corrs) )                            ### combination of point estimators according Rubin's formula
+        fisher.cor.combine <- pool.scalar( fisher.corrs , var.fisher)
+        zr <- fisher.cor.combine$qbar
+        zr.se <- sqrt( fisher.cor.combine$t )
+        t.zr <- zr / zr.se
+        fisher2cor <- function(z){ ( exp(2*z) - 1 )/ ( exp(2*z) + 1 ) }
+        res <- c( "r" = fisher2cor(zr)  ,
+            "fisher_r" = zr ,
+            "fisher_rse" = zr.se ,
+            "t" = t.zr  ,
+            "p" = 2 * pnorm( abs(t.zr) , lower.tail = FALSE ) ,
+             fisher2cor( zr + qnorm( ( 1 - conf.level ) / 2 ) * zr.se ) ,
+             fisher2cor( zr - qnorm( ( 1 - conf.level ) / 2 ) * zr.se ) )
+            names(res)[6] <- paste( "lower" , round(100*conf.level,2),sep="")
+            names(res)[7] <- paste( "upper" , round(100*conf.level,2),sep="")
+        res <- c( res , ( res[6] - res[7] ) / ( 2* qnorm( ( 1 - conf.level )/2 ) ) )
+        names(res)[8] <- "rse"
+        res <- res[ c(1,8,2:7) ]
+        res <- round(res, 6)
+        return(res) }           

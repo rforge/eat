@@ -238,6 +238,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                   if ( toCall == "table") { 
                        leCol <- setdiff ( colnames(leF), byCol ) 
                        resT1[,"se_trend"] <- sqrt(resT1[,paste("se_",lev[2],sep="")]^2 + resT1[,paste("se_",lev[1],sep="")]^2 + resT1[, leCol ]^2)
+                       resT1 <- resT1[,-match(leCol, colnames(resT1))]
                   }
                   if ( !toCall %in% c("mean", "table") ) {
                         cat ( paste0("No method for incorporating linking error into '",toCall,"' analyses defined yet. Linking error will be ignored so far. \n"))
