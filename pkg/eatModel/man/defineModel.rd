@@ -16,7 +16,7 @@ defineModel (dat, items, id, splittedModels = NULL,
    remove.missing.items = TRUE, remove.constant.items = TRUE, remove.failures = FALSE, 
    remove.vars.DIF.missing = TRUE, remove.vars.DIF.constant = TRUE, 
    verbose=TRUE, software = c("conquest","tam"), dir = NULL, analysis.name, 
-   withDescriptives = TRUE, model.statement = "item",  compute.fit = TRUE, 
+   withDescriptives = TRUE, schooltype.var = NULL, model.statement = "item",  compute.fit = TRUE, 
    n.plausible=5, seed = NULL, conquest.folder=NULL,constraints=c("cases","none","items"),
    std.err=c("quick","full","none"), distribution=c("normal","discrete"),
    method=c("gauss", "quadrature", "montecarlo"), n.iterations=2000,
@@ -69,7 +69,7 @@ Name or column number of one grouping variable for which differential item
 functioning analysis is to be done.
 }
   \item{HG.var}{
-  Optional: Names or column numbers of one or more context variables (e.g., sex, school).
+Optional: Names or column numbers of one or more context variables (e.g., sex, school).
 These variables will be used for latent regression model in ConQuest or TAM.
 }
   \item{group.var}{
@@ -184,6 +184,12 @@ named \code{analysis.name} with their corresponding extensions. If \code{softwar
   \item{withDescriptives}{
 %%     ~~Describe \code{dif.term} here~~
 Logical: Compute descriptives (e.g., p values, number of valid items, empirical discrimination)?
+}
+  \item{schooltype.var}{
+%%     ~~Describe \code{dif.term} here~~
+Optional: Name or column number of the variable indicating the school type (e.g.
+academic track, non-academic track). Only necessary if \emph{p} values should be 
+computed for each school type separately. 
 }
   \item{model.statement}{
 %%     ~~Describe \code{dif.term} here~~

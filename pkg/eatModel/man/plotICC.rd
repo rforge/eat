@@ -5,7 +5,7 @@
 \description{Function provides item characteristic plots for each item. To date, 
 only dichotomouls 1pl and 2pl models are supported.}
 \usage{plotICC  ( resultsObj, defineModelObj, item = NULL, personsPerGroup = 30, 
-       pdfFolder = NULL )}
+       pdfFolder = NULL, smooth = 20 )}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{resultsObj}{
@@ -29,7 +29,13 @@ persons in various groups according to mean EAP score.
   \item{pdfFolder}{
 %%     ~~Describe \code{file} here~~
 Optional: A folder with writing access for the pdf file. Necessary only if ICCs for more
-tnah one item should be plotted.
+than one item should be plotted.
+}
+  \item{smooth}{
+%%     ~~Describe \code{file} here~~
+Optional: A parameter (integer vaklue) for smoothing the plot. If the number of examinees is high, the
+icc plot may become scratchy. \code{smooth} defines the maximum number of discret nodes
+across the theta scale for evaluating the icc. Higher values result in a less smooth icc.
 }
 }
 \details{
