@@ -1149,11 +1149,9 @@ doAufb <- function ( m, matchCall, anf, verbose ) {
           if(is.null ( splittedModels[["nCores"]] ) | splittedModels[["nCores"]] == 1 ) {
              ret    <- do.call("defineModel", args = overwr1)                   ### single core handling: die verschiedenen Modelle werden
           }  else  {                                                            ### bereits jetzt an "defineModel" zurueckgegeben und seriell verarbeitet
-             retMul <- paste( overwr1[,"arg"], overwr1[,"val"], sep=" = ", collapse=", ")
-             retMul <- paste("list ( ", retMul, ")", sep="")                    ### multicore: die verschiedenen Modelle werden noch nicht weiter verarbeitet,
-             ret    <- eval(parse(text=retMul))                                 ### es wird lediglich der Modellaufruf generiert, der dann spaeter an die einzelnen
-          }                                                                     ### cores weitergegeben wird
-          return(ret) }                                  
+             ret    <- overwr1                                                  ### multicore: die verschiedenen Modelle werden noch nicht weiter verarbeitet,
+          }                                                                     ### es wird lediglich der Modellaufruf generiert, der dann spaeter an die einzelnen
+          return(ret) }                                                         ### cores weitergegeben wird
 
 
 ### dat               ... Datensatz als R-Dataframe
@@ -1243,9 +1241,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                         # if(!exists("detectCores"))   {library(parallel)}
                         doIt<- function (laufnummer,  ... ) {
                                if(!exists("getResults"))  { library(eatModel) }
-                               strI<- paste(unlist(lapply ( names ( models[[laufnummer]]) , FUN = function ( nameI ) { paste ( nameI, " = models[[laufnummer]][[\"",nameI,"\"]]", sep="")})), collapse = ", ")
-                               strI<- paste("capture.output( res <- defineModel(",strI,"))",sep="")
-                               txt <- eval(parse(text=strI))
+                               txt <- capture.output ( res <- do.call("defineModel", args = models[[laufnummer]] ) )
                                return(list ( res=res, txt=txt)) }
                         beg <- Sys.time()
                         cl  <- makeCluster(splittedModels[["nCores"]], type = "SOCK")
