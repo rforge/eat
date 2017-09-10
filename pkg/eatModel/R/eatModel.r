@@ -918,7 +918,7 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defau
     ### jetzt noch die Itemparameterliste fuer die Vergleichsarbeiten reduzieren und aufbereiten
        pCols      <- colnames(itempars)[grep("^itemP", colnames(itempars))]
        itemVera   <- itempars[,c("dimension","item", pCols, "estTransf", "estTransfBista", "traitLevel")]
-       colnames(itemVera) <- recode ( colnames(itemVera), "'dimension'='domain'; 'item'='iqbitem_id'; 'estTransf'='logit'; 'estTransfBista'='bista'; 'traitLevel'='kstife'")
+       colnames(itemVera) <- recode ( colnames(itemVera), "'dimension'='domain'; 'item'='iqbitem_id'; 'estTransf'='logit'; 'estTransfBista'='bista'; 'traitLevel'='kstufe'")
        colnames(itemVera)[match(pCols, colnames(itemVera))] <- paste0("lh", eatRep:::remove.pattern ( string = pCols, pattern = "^itemP"))
        ret        <- list ( itempars = itempars, personpars = personpars, refPop = refPop, means = rp, all.Names = attr(equatingList[["results"]], "all.Names"), itemparsVera = itemVera)
        class(ret) <- c("list", "transfBista")
