@@ -917,7 +917,8 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defau
        rp         <- do.call("rbind", lapply ( modN, FUN = function ( x ) { x[["rp"]]}))
     ### jetzt noch die Itemparameterliste fuer die Vergleichsarbeiten reduzieren und aufbereiten
        pCols      <- colnames(itempars)[grep("^itemP", colnames(itempars))]
-       itemVera   <- itempars[,c("dimension","item", pCols, "estTransf", "infit", "estTransfBista", "traitLevel")]
+       allCols    <- na.omit(match ( c("dimension","item", pCols, "estTransf", "infit", "estTransfBista", "traitLevel"), colnames(itempars)))
+       itemVera   <- itempars[,allCols]
        colnames(itemVera) <- recode ( colnames(itemVera), "'dimension'='domain'; 'item'='iqbitem_id'; 'estTransf'='logit'; 'estTransfBista'='bista'; 'traitLevel'='kstufe'")
        colnames(itemVera)[match(pCols, colnames(itemVera))] <- paste0("lh", eatRep:::remove.pattern ( string = pCols, pattern = "^itemP"))
        ret        <- list ( itempars = itempars, personpars = personpars, refPop = refPop, means = rp, all.Names = attr(equatingList[["results"]], "all.Names"), itemparsVera = itemVera)
@@ -1609,7 +1610,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                                print(deskRes[crit,-match(c("item.nr", "Label", "KB", "Codes", "Abs.Freq", "Rel.Freq"), colnames(deskRes))], digits = 3)
                           }     
                           discrim <- item.diskrim(daten,match(all.Names[["variablen"]], colnames(daten)))
-                          if ( !is.null ( all.Names[["schooltype.var"]] )) {    ### jetzt ggf. noch schulformspezifische p-Werte, falls gewuenscht
+                          if ( length ( all.Names[["schooltype.var"]] ) > 0 ) { ### jetzt ggf. noch schulformspezifische p-Werte, falls gewuenscht
                                deskS <- by ( data = dat, INDICES = dat[, all.Names[["schooltype.var"]] ], FUN = function ( st ) {
                                         drst <- desk.irt(daten = st, itemspalten = match(all.Names[["variablen"]], colnames(st)), percent = TRUE)
                                         colnames(drst) <- recode (colnames(drst) , paste0("'item.p'='item.p.",st[1,all.Names[["schooltype.var"]]],"'") )
@@ -2290,16 +2291,13 @@ itemFromRes<- function ( resultsObj ) {
              sel  <- resultsObj[intersect( which(resultsObj[,"par"] %in% c("est", "estSlope", "Nvalid", "itemP", "ptBis", "itemDiscrim", "offset")),which(resultsObj[,"indicator.group"] == "items")),]
         ### separate selektion wenn es DIF gibt
              if ( length(attr(resultsObj, "all.Names")[["DIF.var"]])>0) { 
-                 itemList <- do.call("rbind", lapply ( attr(resultsObj, "all.Names")[["variablen"]], FUN = function ( v ) { 
-                             ind <- grep( v, sel[,"var1"])
-                             it  <- unique ( sel[ind,"var1"])
-                             if(length(it)>3) {
+                 itemList <- do.call("rbind", lapply ( attr(resultsObj, "all.Names")[["variablen"]], FUN = function ( v ) {
+                             ind <- grep( paste0("_",v,"_"), sel[,"var1"])
+                             it  <- sort ( unique ( sel[ind,"var1"]) ) 
+                             if(length(it)>2) {
                                 cat(paste("Warning! DIF variable '",attr(resultsObj, "all.Names")[["DIF.var"]],"' seems to have more than two categories. To date, this is not supported by 'eatModel'.\n",sep=""))
                              }
-                             item<- it [ which(it %in% v) ]
-                             dif <- sort ( setdiff( it, item ))[1]
-                             weg <- setdiff ( setdiff ( it, item) , dif ) 
-                             return ( data.frame ( item = item, dif = dif, weg = weg , stringsAsFactors = FALSE) ) })) 
+                             return ( data.frame ( item = v, dif = it[1], weg = it[length(it)] , stringsAsFactors = FALSE) ) }))
                  weg      <- wo.sind ( itemList[,"weg"], sel[,"var1"], quiet = TRUE)
                  forDif   <- wo.sind ( itemList[,"dif"], sel[,"var1"], quiet = TRUE)
                  stopifnot(length( intersect(weg, forDif)) == 0 ) 
@@ -2308,7 +2306,7 @@ itemFromRes<- function ( resultsObj ) {
                  sel      <- sel[which ( sel[,"par"] != "ptBis" ) , ]           ### Hotfix: wenn DIF ausgegeben, wird keine ptBis berechnet 
                  selDIF   <- do.call("rbind", by(selForDif, INDICES = selForDif[,"group"], FUN = function ( gr ) { 
                              res  <- dcast ( gr , model+var1~par+derived.par, value.var = "value")
-                             mat  <- lapply( attr(resultsObj, "all.Names")[["variablen"]], FUN = function ( v ) { grep(v, res[,"var1"])})
+                             mat  <- lapply( attr(resultsObj, "all.Names")[["variablen"]], FUN = function ( v ) { grep(paste0("_",v,"_"), res[,"var1"])})
                              stopifnot (  all ( sapply(mat, length) == 1) ) 
                              res[unlist(mat),"item"]  <- attr(resultsObj, "all.Names")[["variablen"]]
                              colnames(res) <- recode ( colnames(res) , "'est_infit'='infitDif'; 'est_se'='seDif'; 'est_NA'='estDif'")
@@ -2455,7 +2453,6 @@ get.wle <- function(file)      {
             return(valid)}
 
 get.shw <- function(file, dif.term, split.dif = TRUE, abs.dif.bound = 0.6, sig.dif.bound = 0.3, p.value = 0.9) {
-            options(warn = -1)                                                  ### warnungen aus
             all.output <- list();   all.terms <- NULL                           ### "dif.term" muss nur angegeben werden, wenn DIF-Analysen geschehen sollen.
             input.all <- scan(file,what="character",sep="\n",quiet=TRUE)        ### ginge auch mit:   input <- readLines(file)
             rowToFind <- c("Final Deviance","Total number of estimated parameters")
@@ -2487,7 +2484,7 @@ get.shw <- function(file, dif.term, split.dif = TRUE, abs.dif.bound = 0.6, sig.d
                  maxColumns <- max(sapply(foo, FUN=function(ii){ length(ii)}))  ### Gefahr 2: '*' bezeichnet fixierte Parameter, die keinen Standardfehloeer haben. Manchmal steht aber trotzdem einer da (z.B. in DIF). Ersetzung soll nur stattfinden, wenn mehr als vier Leerzeichen hinterher
                  nDifferentColumns <- length( table(sapply(foo, FUN=function(ii){ length(ii)  })))
                  maxColumns <- which( sapply(foo, FUN=function(ii){ length(ii) == maxColumns  }) ) [1]
-                 ### untere Zeile: WICHTIG! wo stehen in der Zeile mit den meisten nicht fehlenden Werten Leerzeichen?
+    ### untere Zeile: WICHTIG! wo stehen in der Zeile mit den meisten nicht fehlenden Werten Leerzeichen?
                  foo.2      <- which( sapply(1:nchar(input.sel[maxColumns]),FUN=function(ii){u <- substr(input.sel[maxColumns],ii,ii); b <- u==" "  }) )
                  foo.3      <- diff(foo.2)                                      ### zeige die Position des letzten Leerzeichens vor einem Nicht-Leerzeichen
                  foo.3      <- foo.2[foo.3 !=1]                                 ### suche nun in jeder Zeile von input.sel: ist das Zeichen zwei Stellen nach foo.3 ein Leerzeichen? Wenn ja: NA!
@@ -2504,8 +2501,20 @@ get.shw <- function(file, dif.term, split.dif = TRUE, abs.dif.bound = 0.6, sig.d
                                                    all.terms <- all.terms[-i]}
                  if(length(input.sel[[1]]) > 0 ) {
                     referenzlaenge <- max (sapply( input.sel, FUN=function(ii ){  length(ii)    }) )
-                    if(referenzlaenge < length(namen) ) {cat(paste("Several columns seem to be empty for term '",all.terms[length(all.terms)],"' in file: '",file,"'. \nOutputfile may be corrupted. Please check!\n",sep=""))
-                                                         referenzlaenge <- length(namen)}
+                    if(referenzlaenge < length(namen) ) {
+                       cat(paste("Several columns seem to be empty for term '",all.terms[length(all.terms)],"' in file: '",file,"'.\n",sep=""))
+    ### bloeder spezialfall: wenn dif-Analyse mit 'compute.fit=FALSE' gemacht wurde, fehlen die infit-Spalten ... die eigentlich notwendige zusaetzliche spalte 'add.column' wird dann nicht eingefuegt. Finde raus, ob das der Fall ist
+                       head <- eatRep:::crop(input.all[bereich[1]-2])           ### Ueberschrift
+                       leerz<- gregexpr(" ", head)[[1]]                         ### suche: wo beginnt der zweite Block aufeinanderfolgender leerzeichen?
+                       leerd<- which ( diff ( leerz) > 1 )[2]
+                       vgl  <- length(strsplit ( eatRep:::crop(substr(input.all[bereich[1]], 1, leerd)), split = " +")[[1]])
+                       if ( vgl == 4 ) {
+                            namen <- c(namen[1:2], "add.column1", namen[3:(referenzlaenge-1)])
+                       }  else  {
+                            referenzlaenge <- length(namen)
+                       }
+                    }
+    ### Ende spezialfall
                     if(referenzlaenge > length(namen) ) {
                        if(referenzlaenge == length(namen) + 1) {
                           cat(paste("There seem to be one more column than columns names. Expect missing column name before 'ESTIMATE'. \nCheck outputfile for term '",all.terms[length(all.terms)],"' in file: '",file,"'. \n",sep=""))
@@ -2533,7 +2542,7 @@ get.shw <- function(file, dif.term, split.dif = TRUE, abs.dif.bound = 0.6, sig.d
                  all.output[[i]] <- results.sel}}
               if(!missing(dif.term)) {if(sum(all.terms==dif.term)==0) {cat(paste("Term declarated as DIF: '",dif.term,"' was not found in file: '",file,"'. \n",sep=""))  }}
               names(all.output) <- all.terms
-              ### ggf. Regressionsparameter einlesen!
+    ### ggf. Regressionsparameter einlesen!
             	regrStart <- grep("REGRESSION COEFFICIENTS", input.all) + 2
               isRegression <- length(regrStart) > 0
             	if ( isRegression)   {
@@ -2552,15 +2561,15 @@ get.shw <- function(file, dif.term, split.dif = TRUE, abs.dif.bound = 0.6, sig.d
               		regrInputSel <- gsub("\\*","  NA",regrInputSel)
               		regrInputSel <- unlist( strsplit(regrInputSel," +") )
               		nDimensions  <- (length(  regrInputSel ) / length(regrNamen) - 1 )/2
-                  cat(paste("Finde ",nDimensions," Dimension(en): ",paste(nameDimensions,collapse=", "),"\n",sep=""))
-                  cat(paste("Finde ",length(regrNamen)-1," Regressor(en).\n",sep=""))
+                  cat(paste("Found ",nDimensions," dimension(s): ",paste(nameDimensions,collapse=", "),"\n",sep=""))
+                  cat(paste("Found ",length(regrNamen)-1," regressor(s).\n",sep=""))
                   regrInputSel <- data.frame(matrix(regrInputSel, ncol=2*nDimensions+1, byrow=T),stringsAsFactors=F)
                   for (ii in 2:ncol(regrInputSel))  {regrInputSel[,ii] <- as.numeric(regrInputSel[,ii])}
                   colnames(regrInputSel) <- c("reg.var", paste(rep(c("coef","error"),nDimensions), rep(nameDimensions,each=2),sep="_") )
                   regrInputSel$filename <- file
               		all.output$regression <- regrInputSel
               }
-              ### Kovarianz-/ Korrelationsmatrix einlesen: schwierig, also Trennen nach ein- vs. mehrdimensional. Eindimensional: zweimal "-----" zwischen Beginn und Ende des COVARIANCE-Statements
+    ### Kovarianz-/ Korrelationsmatrix einlesen: schwierig, also Trennen nach ein- vs. mehrdimensional. Eindimensional: zweimal "-----" zwischen Beginn und Ende des COVARIANCE-Statements
               korStart <- grep("COVARIANCE/CORRELATION MATRIX", input.all)
               korEnd   <- grep("An asterisk next", input.all)
               korEnd   <- min(korEnd[korEnd > korStart])
@@ -2589,7 +2598,6 @@ get.shw <- function(file, dif.term, split.dif = TRUE, abs.dif.bound = 0.6, sig.d
                  all.output$cov.structure <- bereich.data.frame
               }
             all.output$final.deviance <- rowToFind
-            options(warn = 0)                                                   ### warnungen wieder an
             return(all.output)}
                  
                  
