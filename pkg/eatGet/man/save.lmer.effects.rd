@@ -8,11 +8,11 @@ save.lmer.effects ( lmerObj, lmerObjRestrict = NULL, fileName, scipen=6) }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{lmerObj}{
-An lme4 object to be saved.
-}
+   An lme4 object to be saved.
+   }
   \item{lmerObjRestrict}{
-Optional: a second (restricted) lme4 analysis output. Needs to be nested to the 
-first one. Intended if model copariison should be saved likewise.
+   Optional: a second (restricted) lme4 analysis output. Needs to be nested to the 
+   first one. Intended if model copariison should be saved likewise. 
 }
   \item{fileName}{
 Name of the file for the output (without file extension). 
@@ -37,15 +37,7 @@ No output is returned to console. Two files are created in the desired directory
 \author{
 Sebastian Weirich
 }
-\note{
-%%  ~~further notes~~
-}
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
 \dontrun{
 ### Example from the help page of lmer().

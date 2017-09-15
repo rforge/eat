@@ -2,7 +2,7 @@
 \alias{get.lmer.effects.forBootMer}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-\sQuote{get.lmer.effects} for bootstrap
+   \sQuote{get.lmer.effects} for bootstrap
 }
 \description{
 This is a wrapper for the \sQuote{get.lmer.effects} only intended to prepare bootstrap analyses.

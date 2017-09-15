@@ -3,7 +3,8 @@ get.lmer.effects.forBootMer <- function ( lmerObj) {get.lmer.effects ( lmerObj=l
 ### needs lme4 version >1
 get.lmer.effects <- function ( lmerObj , bootMerObj = NULL, conf = .95, saveData = FALSE) {
              model    <- as.character(substitute(lmerObj))                      ### implementieren wie in p:\ZKD\07_Code\dev\get.lmer.effects\get.lmer.effects_Konzept.xlsx
-             checkForReshape()                                                  ### Beispiel in c:\diskdrv\Winword\Psycho\IQB\Dropbox\Literatur\R_help\Bates_2010_lme4_book.rsy
+             eatRep:::checkForPackage (namePackage = "reshape", targetPackage = "eatGet")### Beispiel in c:\diskdrv\Winword\Psycho\IQB\Dropbox\Literatur\R_help\Bates_2010_lme4_book.rsy
+             # if(!exists("fixef"))        {library(lme4)}
              random   <- VarCorr( lmerObj ) 
              fixed    <- fixef(lmerObj)                                   
      ### Sektion 'random effects einlesen'
@@ -43,8 +44,8 @@ get.lmer.effects <- function ( lmerObj , bootMerObj = NULL, conf = .95, saveData
                  namenFixed <- gsub(":", "________XX________",names(fixed))     ### That's the problem: a <- 1:3; car::recode(a, "1 = 'test'; 2 = 'mist'; 3 = 'test:mist'")
                  recodeString <- paste("'", 1:length(fixed),"' = '", namenFixed,"'", sep = "", collapse = "; ")
                  for ( u in 1:2) {
-                       korTab[,u] <- recode(korTab[,u], recodeString)
-                       korTab[,u] <- gsub("________XX________",":",korTab[,u])
+                       if(inherits(try( korTab[,u] <- recode(korTab[,u], recodeString) ),"try-error"))  { cat("Umbenennung der Spalten der Korrelationsmatrix misslungen.\n")}
+                       if(inherits(try( korTab[,u] <- gsub("________XX________",":",korTab[,u]) ),"try-error"))  { cat("Umbenennung der Spalten der Korrelationsmatrix misslungen.\n")}
                  }
                  wahl1    <- which(!duplicated(apply(korTab, 1, FUN = function ( xx ) { paste( sort(c(xx[1], xx[2])), collapse="_") })))
                  fixedF   <- rbind.fill( fixedF, data.frame ( model=model, korTab[intersect(wahl1, wahl2),], type = "fixed", group = NA, par = "correlation", derived.par=NA, stringsAsFactors = FALSE ) )
@@ -60,7 +61,7 @@ get.lmer.effects <- function ( lmerObj , bootMerObj = NULL, conf = .95, saveData
                 ### Achtung, kompliziert: poisson-models brauchen das Nullmodell (alle random effects, keine fixed effects)
                 if ( lmerObj@resp$family$family == "poisson" & lmerObj@resp$family$link == "log") {
                      cat("Calculation of r^2 needs estimation of the null model. Will be implemented at a later date.\n")}
-             }                                                                  ### prblem: was, wenn LMMs ueber "glmer" mit family=gaussian aufgerufen werden? --> ok, gibt eine lme4-Warnung
+             }                                                                  ### problem: was, wenn LMMs ueber "glmer" mit family=gaussian aufgerufen werden? --> ok, gibt eine lme4-Warnung
              if(class(lmerObj) %in% "lmerMod") { err <- attr(VarCorr(lmerObj), "sc")^2 }
              if(!is.na(err)) {                                                  ### r^2 wird nur berechnet, wenn es irgendwie gelungen ist, die Fehlerkomponente zu identifizieren
                  VarFixed <- var(as.vector(fixef(lmerObj) %*% t(getME(lmerObj, name="X"))))
@@ -127,10 +128,17 @@ save.lmer.effects <- function ( lmerObj, lmerObjRestrict = NULL, fileName, scipe
            if( length(zeileC) == 1 ) {
                cat(paste("\nR^2 according to Nakagawa & Schielzeth (2013), p. 137:\n     marginal R2: ",formatC(round(100*ret[zeileM,"value"], digits = 2),width=5)," %\n  conditional R2: ",formatC(round(100*ret[zeileC,"value"],digits = 2),width=5)," %\n",sep=""))
            }
-     ### Sektion 'Modellvergleich' (optional)     
+     ### Sektion 'Modellvergleich' (optional) ... auch hier das R^2 abspeichern!    
            if(!is.null(lmerObjRestrict)) { 
+               retR  <- get.lmer.effects(lmerObjRestrict, saveData = FALSE)
                cat("\n\nH0 model:\n\n")
-               print(summary(lmerObjRestrict)); cat("\n\nModel comparison:\n\n")
+               print(summary(lmerObjRestrict)) 
+               zeileC<- match("R2_c", retR[,"par"])
+               zeileM<- match("R2_m", retR[,"par"])
+               if( length(zeileC) == 1 ) {
+                   cat(paste("\nR^2 according to Nakagawa & Schielzeth (2013), p. 137:\n     marginal R2: ",formatC(round(100*retR[zeileM,"value"], digits = 2),width=5)," %\n  conditional R2: ",formatC(round(100*retR[zeileC,"value"],digits = 2),width=5)," %\n",sep=""))
+               }
+               cat("\n\nModel comparison:\n\n")
                print(anova(lmerObj, lmerObjRestrict))
            }    
            sink()                                                               ### file to sink wird geschlossen
@@ -138,13 +146,7 @@ save.lmer.effects <- function ( lmerObj, lmerObjRestrict = NULL, fileName, scipe
                retR    <- get.lmer.effects(lmerObjRestrict, saveData = FALSE)
                save(retR, file = paste0(fileName,"_Restrict.rda")) }  
            if(scipen != unlist(orSci) ) {options(scipen=orSci)}   }             ### scipen-Option wieder zuruecksetzen
-
-
-checkForReshape <- function () {
-        if("package:reshape" %in% search() ) {
-           cat("Warning: Package 'reshape' is attached. Functions in package 'eatRep' depend on 'reshape2'. 'reshape' and 'reshape2' conflict in some way.\n  'reshape' therefore will be detached now. \n")
-           detach(package:reshape) } }
-
+     
 
 ### Class definition of "eatGot" ###
 #setClass(
