@@ -3,7 +3,7 @@ get.lmer.effects.forBootMer <- function ( lmerObj) {get.lmer.effects ( lmerObj=l
 ### needs lme4 version >1
 get.lmer.effects <- function ( lmerObj , bootMerObj = NULL, conf = .95, saveData = FALSE) {
              model    <- as.character(substitute(lmerObj))                      ### implementieren wie in p:\ZKD\07_Code\dev\get.lmer.effects\get.lmer.effects_Konzept.xlsx
-             eatRep:::checkForPackage (namePackage = "reshape", targetPackage = "eatGet")### Beispiel in c:\diskdrv\Winword\Psycho\IQB\Dropbox\Literatur\R_help\Bates_2010_lme4_book.rsy
+             # eatRep:::checkForPackage (namePackage = "reshape", targetPackage = "eatGet")### Beispiel in c:\diskdrv\Winword\Psycho\IQB\Dropbox\Literatur\R_help\Bates_2010_lme4_book.rsy
              # if(!exists("fixef"))        {library(lme4)}
              random   <- VarCorr( lmerObj ) 
              fixed    <- fixef(lmerObj)                                   

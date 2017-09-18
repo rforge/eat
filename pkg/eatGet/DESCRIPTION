@@ -1,10 +1,10 @@
 Package: eatGet
 Type: Package
 Title: eatGet
-Version: 0.0.7
+Version: 0.0.8
 Depends: R (>= 3.0.1), methods, lme4, Matrix 
 Imports: reshape2, car, plyr, boot, stats
-Date: 2017-09-15
+Date: 2017-09-18
 Author: Sebastian Weirich, Karoline Sachse and Martin Hecht
 Maintainer: Sebastian Weirich <sebastian.weirich@iqb.hu-berlin.de>
 Description: extractor functions for model results
