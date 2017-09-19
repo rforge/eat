@@ -5,17 +5,18 @@
 \description{Function transforms the Excel output of the IQB database into desired 
 format for the ``Evaluating institutions''.}
 \usage{
-finalizeItemtable( xlsx, xml, mainTest = 2017, anhangCsv = NULL)}
+finalizeItemtable( xlsm, xml, mainTest = 2017, anhangCsv = NULL)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{xlsx}{
+  \item{xlsm}{
 %%     ~~Describe \code{file} here~~
-character string: the name of the xlsx file generated from IQB database to read.
+character string: the name of the xlsm file generated from IQB database to read.
 }
   \item{xml}{
 %%     ~~Describe \code{file} here~~
 character string: the name of the xml file. Note: To date, the xml-file has to be 
-generated manually. Open the xlsx file with Excel and save it as a xml calculation table.
+generated manually. Open the xlsm file with Excel (version 2007 or newer), choose 
+the ``Daten'' sheet and save it as a xml calculation table (2003 format).
 }
   \item{mainTest}{
 %%     ~~Describe \code{file} here~~

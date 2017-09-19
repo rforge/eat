@@ -23,7 +23,7 @@ convertLabel <- function ( spssList , stringsAsFactors = TRUE, useZkdConvention 
                 return(datFr)}      
 
 
-finalizeItemtable <- function ( xlsx, xml, mainTest = 2017, anhangCsv = NULL ) {
+finalizeItemtable <- function ( xlsm, xml, mainTest = 2017, anhangCsv = NULL ) {
            cat("Note: If one task, say task number 2, has only one subtask, nomination should be '2' instead of '2.1'. This is not done automatically.\n")
            xml  <- scan(xml,what="character",sep="\n",quiet=TRUE)               ### untere Zeilen: bereiche ausschliessen
            xml  <- xml[ intersect ( grep("<NamedRange ss:Name", xml), grep("=\"=Daten!", xml) )]
@@ -34,8 +34,8 @@ finalizeItemtable <- function ( xlsx, xml, mainTest = 2017, anhangCsv = NULL ) {
            split<- data.frame ( split, colsplit ( split[,"Zelle"], pattern = "[[:alpha:]]", names = c("empty", "row", "col")), stringsAsFactors = FALSE)
            stopifnot ( length(unique(split[,"row"])) == 1)                      ### Das ist die Zeilennummer, ab der die 'xlsx' eingelesen werden soll 
            # if ( !exists("read.xlsx")) { library(xlsx)}
-           tab  <- read.xlsx2 ( xlsx, sheetName="Daten", as.data.frame=TRUE, header=TRUE, colClasses = "character", startRow = unique(split[,"row"]), stringsAsFactors=FALSE)
-           weg  <- c(unique(which ( tab[,1] == "" ), which(is.na(tab[,1]))))    ### ggf. leere Zeilen loesche ... Untere Zeile: warnung, wenn diese Zeilen nicht am Ende der Tabelle stehen 
+           tab  <- read.xlsx2 ( xlsm, sheetName="Daten", as.data.frame=TRUE, header=TRUE, colClasses = "character", startRow = unique(split[,"row"]), stringsAsFactors=FALSE)
+           weg  <- c(unique(which ( tab[,1] == "" ), which(is.na(tab[,1]))))    ### ggf. leere Zeilen loeschen ... Untere Zeile: warnung, wenn diese Zeilen nicht am Ende der Tabelle stehen
            if ( length ( weg ) > 0 ) {
                  if ( max ( weg ) != nrow(tab) ) { cat("Warning: Found empty cells which are not at the end of the 'xlsx' file. File may be corrupted.\n")} 
                  if ( min ( weg ) != nrow(tab)-length(weg)+1 ) { cat("Warning: Found empty cells which are not at the end of the 'xlsx' file. File may be corrupted.\n")} 
@@ -46,19 +46,19 @@ finalizeItemtable <- function ( xlsx, xml, mainTest = 2017, anhangCsv = NULL ) {
            colnames(tab)[split[,"col"]] <- split[,"colname"]                    ### cooler geiler scheiss!
            nPos <- grep("^pos", colnames(tab))
            for ( i in nPos ) {                                                  ### sind irgendwelche Aufgabennamen doppelt vergeben 
-                 if ( !all ( is.na ( tab[,i])) )  {
-                      if ( !all ( tab[,i] == ""))  {
-                           if ( length( tab[,i]) != length(unique(tab[,i])) ) { cat(paste ( "W A R N I N G:   task number in column '",colnames(tab)[i],"' is not unique!\n",sep="")) }
-                      }
-                 }
-           } 
+                 weg <- c ( which(is.na(tab[,i])), which(tab[,i] == "") )
+                 if ( length ( weg ) > 0 ) { a <- tab[-weg,i] } else { a <- tab[,i] }
+                 if ( length ( a ) != length ( unique ( a ) ) ) { cat(paste ( "W A R N I N G:   task number in column '",colnames(tab)[i],"' is not unique!\n",sep="")) }
+           }
            if ( eatRep:::remove.non.numeric ( tab[1,"project"]) == "3") { prefix <- "I" } else { prefix <- "L"}
     ### Hotfix fuer Mathe-Grundschule (Globalmodell kommt dazu)
            cols<- colnames(tab)[grep("global$", colnames(tab))]
            if(length(cols)>0) {                                                 ### untere Zeile: finde originalspalten
               cat("Columns with 'global' suffix found. This should only occur in the primary school for subject 'math'.\n")
               co  <- eatRep:::remove.pattern ( string = cols, pattern = "_global$")
-              stopifnot ( all ( co %in% colnames(tab)))
+              if ( !all ( co %in% colnames(tab)) ) {
+                   stop ( paste0 ( "Column(s) ", paste0("'", paste(setdiff ( co, colnames(tab)), collapse = "', '"), "'"), " only occur(s) for 'global' domain. Input file seems to be damaged.\n"))
+              }
               tabN<- tab[, -match(co, colnames(tab))]                           ### dupliziere 'tab' fuer Globalmodell
               tabN[,"domain"] <- ""                                             ### Achtung: Global soll jetzt nicht mehr 'Gl' heissen, sondern leer sein (Mail Bettina, 31.01.2017, 16.42 Uhr)
               colnames(tabN)  <- recode ( colnames(tabN), paste ( "'", paste ( cols, co, collapse="'; '", sep="' = '"), "'", sep=""))
@@ -67,29 +67,29 @@ finalizeItemtable <- function ( xlsx, xml, mainTest = 2017, anhangCsv = NULL ) {
            if ( "afb" %in% colnames(tab)) { 
                 tab[,"AFB"] <- recode ( tab[,"afb"], "'I'=1; 'II'=2; 'III'=3")
            }  else  {
-                cat("Cannot find expected column 'afb' in input data.")
+                cat("Cannot find expected column 'afb' in input data.\n")
            }     
     ### Hotfix zuende: jetzt die Verlaesslichkeit rekodieren ... Achtung: wenn da andere Werte als 'hoch', 'mittel', 'gering' drinstehen, bleiben die 1:1 erhalten
            cat("'Verlaesslichkeit' was defined in IQB data base to take the values 'hoch', 'mittel', 'gering'. However, the 'AG Laenderaustausch' convention allows for more than 3 levels. IQB database table has to be modified manually.\n")
            if ( "reliance_logit" %in% colnames(tab)) { 
-                tab[,"log_status"] <- recode(tab[,"reliance_logit"], "'hoch'=NA; 'mittel'='1'; 'gering'='2'")
+                tab[,"log_status"] <- recode(tab[,"reliance_logit"], "'hoch'=NA; ''=NA; 'mittel'='1'; 'gering'='2'")
            }  else  { 
                 cat("Cannot find expected column 'reliance_logit' in input data.\n")
            }     
            if ( "reliance_lh" %in% colnames(tab)) { 
-                tab[,"lh_status"] <- recode(tab[,"reliance_lh"], "'hoch'=NA; else = '1'")
+                tab[,"lh_status"] <- recode(tab[,"reliance_lh"], "'hoch'=NA; ''=NA; else = '1'")
            }  else  { 
                 cat("Cannot find expected column 'reliance_lh' in input data.\n")
            }     
            colnames(tab) <- recode ( colnames(tab), "'project'='vera'; 'subject'='fach'; 'year_main' = 'wjahr'; 'year_pilot'='pjahr'; 'item_id'='iqbitem_id'; 'title'='name'; 'pos1'='itemnr_a'; 'pos2' ='itemnr_b'; 'ip_logit'='logit'; 'ip_bista'='bista'; 'kompst'='kstufe'")
            tab[,"tjahr"] <- mainTest                                            ### untere Zeile: entfernt das aktuelle Jahr aus 'wjahr' und belaesst nur die alten Einsaetze drin
            tab[,"wjahr"] <- gsub(" +", ", ", eatRep:::crop(gsub ( ",", " " , eatRep:::remove.pattern ( string = as.character(tab[,"wjahr"]), pattern = as.character(mainTest)) )))
-           tab[,"vera"]  <- eatRep:::remove.non.numeric(tab[,"vera"])
+           tab[,"vera"]  <- eatRep:::remove.non.numeric(tab[,"vera"])           ### bekloppter Scheiss: Umlaute erzeugen fehlermeldung bei Linux Kompilierung
            toRename      <- list ( Ho1 = "rverstehen", Ho2 = c("^Zuh", "ren$"), GM = "en und Messen", DW = "ufigkeit und Wahrscheinlichkeit")
            for ( i in 1:length(toRename)) { 
                  match1 <- lapply ( toRename[[i]], FUN = function ( j ) { grep(j, tab[,"domain"])})
                  if ( length(match1) == 2) { match1 <- intersect ( match1[[1]], match1[[2]]) } else { match1 <- unlist(match1)}
-                 if ( length(match1)>0) { tab[match1,"domain"] <- names(toRename)[i]  }
+                 if ( length(match1)>0) { tab[match1,"domain"] <- names(toRename)[i]}
            }      
            tab[,"domain"]<- recode ( tab[,"domain"],"'Orthografie'= 'Rs'; 'Ho1'='Ho'; 'Leseverstehen'='Le'; 'Ho2'='Ho'; 'Lesen'='Le'; '1. Zahlen und Operationen'='ZO'; '2. Raum und Form'='RF'; '3. Muster und Strukturen'='MS'")
            tab[,"bista"] <- round(as.numeric(tab[,"bista"]), digits = 1)
