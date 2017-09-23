@@ -67,7 +67,7 @@ jk2.table<- function(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"),
                       res <- jk2.mean ( datL = datL, ID=chk[["ID"]], wgt=chk[["wgt"]], type = type, PSU = chk[["PSU"]], repInd = chk[["repInd"]], repWgt = repWgt, 
                                         nest = chk[["nest"]], imp = chk[["imp"]], groups = chk[["group"]], group.splits = group.splits, group.differences.by=group.differences.by, 
                                         group.delimiter =group.delimiter, trend = chk[["trend"]], linkErr = chk[["linkErr"]], dependent = dpd, na.rm=na.rm,doCheck = doCheck) 
-                      res <- res[which(res[,"parameter"] %in% c("mean", "meanGroupDiff")),]           
+                      res <- res[which(res[,"parameter"] %in% c("mean", "meanGroupDiff", "wholePopDiff")),]           
                       res[,"parameter"] <- remove.pattern(string = as.character(res[,"depVar"]), pattern = chk[["dependent"]])
                       res[,"depVar"] <- chk[["dependent"]]
                       return(res) } ) )
