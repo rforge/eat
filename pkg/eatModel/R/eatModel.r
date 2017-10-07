@@ -2317,12 +2317,14 @@ pvFromRes  <- function ( resultsObj, toWideFormat = TRUE ) {
          }  }        
           
 itemFromRes<- function ( resultsObj ) { 
-          if( "multipleResults" %in% class(resultsObj)) {                       ### Mehrmodellfall
-              selM  <- do.call("rbind", by(data = resultsObj, INDICES = resultsObj[,"model"], FUN = function ( mr ) { 
-                       toMatch <- which ( unlist ( lapply ( attr(resultsObj, "att"), FUN = function ( aa ) { aa[[1]][["model.name"]] == mr[1,"model"] } ) )  == TRUE )
+          if( "multipleResults" %in% class(resultsObj)) {
+        ### Mehrmodellfall: Achtung, in untere Zeile muss 'rbind.fill' statt 'rbind' stehen, weil wenn man mehrere modelle splittet, die sich bzgl. 1pl/2pl unterscheiden, hat das Egebnis manchmal eine 'slope'-Spalte, manchmal nicht
+              # if(!exists("rbind.fill")) {library(plyr)}
+              selM  <- do.call("rbind.fill", by(data = resultsObj, INDICES = resultsObj[,"model"], FUN = function ( mr ) {
+                       toMatch <- which ( unlist ( lapply ( attr(resultsObj, "att"), FUN = function ( aa ) { aa[["model.name"]] == mr[1,"model"] } ) )  == TRUE )
                        stopifnot(length(toMatch) == 1 )
-                       attr(mr, "all.Names")    <- attr(resultsObj, "att")[[toMatch]][[1]][["all.Names"]]
-                       attr(mr, "dif.settings") <- attr(resultsObj, "att")[[toMatch]][[1]][["dif.settings"]]
+                       attr(mr, "all.Names")    <- attr(resultsObj, "att")[[toMatch]][["all.Names"]]
+                       attr(mr, "dif.settings") <- attr(resultsObj, "att")[[toMatch]][["dif.settings"]]
                        class(mr) <- "data.frame"
                        res     <- itemFromRes ( mr ) 
                        return(res) }))
@@ -2332,18 +2334,18 @@ itemFromRes<- function ( resultsObj ) {
              if ( length(attr(resultsObj, "all.Names")[["DIF.var"]])>0) { 
                  itemList <- do.call("rbind", lapply ( attr(resultsObj, "all.Names")[["variablen"]], FUN = function ( v ) {
                              ind <- grep( paste0("_",v,"_"), sel[,"var1"])
-                             it  <- sort ( unique ( sel[ind,"var1"]) ) 
+                             it  <- sort ( unique ( sel[ind,"var1"]))
                              if(length(it)>2) {
                                 cat(paste("Warning! DIF variable '",attr(resultsObj, "all.Names")[["DIF.var"]],"' seems to have more than two categories. To date, this is not supported by 'eatModel'.\n",sep=""))
                              }
                              return ( data.frame ( item = v, dif = it[1], weg = it[length(it)] , stringsAsFactors = FALSE) ) }))
                  weg      <- wo.sind ( itemList[,"weg"], sel[,"var1"], quiet = TRUE)
                  forDif   <- wo.sind ( itemList[,"dif"], sel[,"var1"], quiet = TRUE)
-                 stopifnot(length( intersect(weg, forDif)) == 0 ) 
+                 stopifnot(length( intersect(weg, forDif)) == 0 )
                  selForDif<- sel[forDif, ]     
                  sel      <- sel[-c(weg, forDif) , ] 
                  sel      <- sel[which ( sel[,"par"] != "ptBis" ) , ]           ### Hotfix: wenn DIF ausgegeben, wird keine ptBis berechnet 
-                 selDIF   <- do.call("rbind", by(selForDif, INDICES = selForDif[,"group"], FUN = function ( gr ) { 
+                 selDIF   <- do.call("rbind", by(selForDif, INDICES = selForDif[,"group"], FUN = function ( gr ) {
                              res  <- dcast ( gr , model+var1~par+derived.par, value.var = "value")
                              mat  <- lapply( attr(resultsObj, "all.Names")[["variablen"]], FUN = function ( v ) { grep(paste0("_",v,"_"), res[,"var1"])})
                              stopifnot (  all ( sapply(mat, length) == 1) ) 
