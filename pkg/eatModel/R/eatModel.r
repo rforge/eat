@@ -63,8 +63,8 @@ finalizeItemtable <- function ( xlsm, xml, mainTest = 2017, anhangCsv = NULL ) {
               tabN[,"domain"] <- ""                                             ### Achtung: Global soll jetzt nicht mehr 'Gl' heissen, sondern leer sein (Mail Bettina, 31.01.2017, 16.42 Uhr)
               colnames(tabN)  <- recode ( colnames(tabN), paste ( "'", paste ( cols, co, collapse="'; '", sep="' = '"), "'", sep=""))
               tab <- rbind ( tab[,-match(cols, colnames(tab))], tabN)
-           }
-           if ( "afb" %in% colnames(tab)) { 
+           }                                                                    ### Achtung: die Fremdsprachen tragen hier andere Sachen ein; 
+           if ( "afb" %in% colnames(tab)) {                                     ### umcodierung dann nicht statt, wenn es die Werte 'I', 'II' etc. nicht gibt 
                 tab[,"AFB"] <- recode ( tab[,"afb"], "'I'=1; 'II'=2; 'III'=3")
            }  else  {
                 cat("Cannot find expected column 'afb' in input data.\n")
@@ -84,7 +84,7 @@ finalizeItemtable <- function ( xlsm, xml, mainTest = 2017, anhangCsv = NULL ) {
            colnames(tab) <- recode ( colnames(tab), "'project'='vera'; 'subject'='fach'; 'year_main' = 'wjahr'; 'year_pilot'='pjahr'; 'item_id'='iqbitem_id'; 'title'='name'; 'pos1'='itemnr_a'; 'pos2' ='itemnr_b'; 'ip_logit'='logit'; 'ip_bista'='bista'; 'kompst'='kstufe'")
            tab[,"tjahr"] <- mainTest                                            ### untere Zeile: entfernt das aktuelle Jahr aus 'wjahr' und belaesst nur die alten Einsaetze drin
            tab[,"wjahr"] <- gsub(" +", ", ", eatRep:::crop(gsub ( ",", " " , eatRep:::remove.pattern ( string = as.character(tab[,"wjahr"]), pattern = as.character(mainTest)) )))
-           tab[,"vera"]  <- eatRep:::remove.non.numeric(tab[,"vera"])           ### bekloppter Scheiss: Umlaute erzeugen fehlermeldung bei Linux Kompilierung
+           tab[,"vera"]  <- eatRep:::remove.non.numeric(tab[,"vera"])                    ### bekloppter Scheiss: Umlaute erzeugen fehlermeldung bei Linux Kompilierung
            toRename      <- list ( Ho1 = "rverstehen", Ho2 = c("^Zuh", "ren$"), GM = "en und Messen", DW = "ufigkeit und Wahrscheinlichkeit")
            for ( i in 1:length(toRename)) { 
                  match1 <- lapply ( toRename[[i]], FUN = function ( j ) { grep(j, tab[,"domain"])})
@@ -130,29 +130,36 @@ finalizeItemtable <- function ( xlsm, xml, mainTest = 2017, anhangCsv = NULL ) {
                                 return(mat) } ))
                        tab   <- data.frame ( tab, kstd)
                 }
-           }  else  { 
-                cat("Cannot found column 'Komp2' in the input data. This should not occur for the subject 'math'.\n")
-    ### selektion: 'Komp1' in daten, 'Komp2' aber nicht ... Problem: Doppelbelegungen moeglich
-                if ( "komp1" %in% colnames(tab) ) { 
-                     if ( tab[1,"fach"] %in% c("En", "Fr") ) {                  ### fuer Fremdsprachen
-                          all<- unique(eatRep:::crop(unlist(strsplit(x = tab[,"komp1"], split = ","))))
-                          dfr<- data.frame ( matrix ( data = NA, nrow = nrow(tab), ncol = length(all) ) )
-                          stopifnot ( all ( all %in% c("selektiv", "detailliert", "inferierend", "global")))
-                          colnames(dfr) <- intersect ( c("selektiv", "detailliert", "inferierend", "global"), all)
-                          for ( p in colnames(dfr)) { 
-                                ind     <- grep(p, tab[,"komp1"])
-                                dfr[ind,p] <- 1
-                          }      
-                     }  else  {                                                 ### fuer Deutsch
-                          all<- strsplit(x = tab[,"komp1"], split = ",|;")
-                          max<- max(unlist(lapply(all, length)))
-                          dfr<- data.frame ( matrix ( data = NA, nrow = nrow(tab), ncol = max ) )
-                          colnames(dfr) <- paste("kompstd", 1:ncol(dfr), sep="")
-                          for ( u in 1:ncol(dfr)) { dfr[,u] <- unlist(lapply(all, FUN = function ( z ) { z[u]})) }
-                     }     
-                     tab<- data.frame ( tab, dfr)
+           }  else  { cat("Cannot found column 'komp2' in the input data. This should not occur for the subject 'math'.\n")   }
+    ### jetzt das "inferierend, selektiv, global" rauslesen. Problem: Englisch schreibt den scheiss in die "AFB"-Spalte, Franzoesisch in die "komp1"-Spalte (Konsistenz wird ueberbewertet)
+           if ( tab[1,"fach"] %in% c("En", "Fr") ) {                            ### fuer Fremdsprachen
+                vorl <- c("selektiv", "detailliert", "inferierend", "global")   ### erstmal die spalte rausfinden
+                col  <- which ( sapply ( tab, FUN = function ( x ) { length ( which( vorl %in% x )) } ) > 0 ) 
+                if ( length ( col ) == 0 ) { cat ( paste ( "Cannot found column with ", paste0("'", paste(vorl, collapse=", "), "'"), ".\n", sep="")) } 
+                if ( length ( col ) > 1 ) {                                     ### wenn es meherere Spalten gibt, muessten die identisch sein
+                     test <- all ( apply ( tab[,col], MARGIN = 1, FUN = function (zeile ) { length(unique(zeile)) }) == 1 )
+                     if ( test == FALSE ) { stop(paste ( "Cannot identify column with ", paste0("'", paste(vorl, collapse=", "), "'"), ".\n", sep="")) }
+                     col  <- col[1]
+                }     
+                cat(paste("Subject '", tab[1,"fach"], "': Found ", paste0("'", paste(vorl, collapse=", "), "'"), " in the '", names(col), "' column.\n", sep=""))
+                alle <- unique(eatRep:::crop(unlist(strsplit(x = tab[,col], split = ","))))
+                dfr  <- data.frame ( matrix ( data = NA, nrow = nrow(tab), ncol = length(alle) ) )
+                stopifnot ( all ( alle %in% c("selektiv", "detailliert", "inferierend", "global")))
+                colnames(dfr) <- intersect ( c("selektiv", "detailliert", "inferierend", "global"), alle)
+                for ( p in colnames(dfr)) { 
+                      ind <- grep(p, tab[,col])
+                      dfr[ind,p] <- 1
+                }      
+           }  else  {                                                           ### fuer Deutsch
+                if ( "komp1" %in% colnames(tab) )  { 
+                     all<- strsplit(x = tab[,"komp1"], split = ",|;")
+                     max<- max(unlist(lapply(all, length)))
+                     dfr<- data.frame ( matrix ( data = NA, nrow = nrow(tab), ncol = max ) )
+                     colnames(dfr) <- paste("kompstd", 1:ncol(dfr), sep="")
+                     for ( u in 1:ncol(dfr)) { dfr[,u] <- unlist(lapply(all, FUN = function ( z ) { z[u]})) }
                 }
            }          
+           if ( exists("dfr") ) { tab<- data.frame ( tab, dfr) }
     ### welche Spalten muessen leer dazugetan werden? dazu Liste mit allen notwendigen Spalten und deren Format (character, numeric, integer) erstellen
            vorl<- data.frame ( colName   = c("vera", "tjahr", "pjahr", "wjahr", "fach", "domain", "iqbitem_id", "name", "itemnr_a", "itemord_a", "itemnr_b", "itemord_b", "itemnr_c", "itemord_c", "logit", "bista", "log_status", "kstufe", "lh_gs", "lh_hs", "lh_rs", "lh_ng", "lh_gy", "lh_status", "kommentar", "K1", "K2", "K3", "K4", "K5", "K6", "A0", "A1", "A2", "A3", "A4", "A5", "K_kstd1", "K_kstd2", "K_kstd3", "L1", "L2", "L3", "L4", "L5", "I1", "I2", "I3", "I4", "I5", "L_kstd1", "L_kstd2", "L_kstd3", "AFB", "selektiv", "detailliert", "inferierend", "global", "kompstd1", "kompstd2", "kompstd3"),
                                colFormat = c("integer", "integer", "integer", "character", "character", "character", "character", "character", "character", "numeric", "character", "numeric", "character", "numeric", "numeric", "numeric", "integer", "character", "numeric", "numeric", "numeric", "numeric", "numeric", "integer", "character", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "character", "character", "character", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "integer", "character", "character", "character", "integer", "integer", "integer", "integer", "integer", "character", "character", "character"), stringsAsFactors = FALSE)
@@ -477,17 +484,17 @@ getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c(
                    res <- lapply( runModelObj, FUN = function ( r ) {           ### erstmal single core auswertung
                           do    <- paste ( "ret <- getResults ( ", paste(names(formals(getResults)), recode(names(formals(getResults)), "'runModelObj'='r'"), sep =" = ", collapse = ", "), ")",sep="")
                           eval(parse(text=do))
-                          att <- list ( list ( model.name = ret[1,"model"], all.Names = attr(ret, "all.Names"), dif.settings = attr(ret, "dif.settings") ))
+                          att <- list ( model.name = ret[1,"model"], all.Names = attr(ret, "all.Names"), dif.settings = attr(ret, "dif.settings"), summary = attr(ret, "tamS") )
                           if(!is.null(ret)) { stopifnot ( length(unique(ret[1,"model"])) == 1 )}
                           return(list ( ret = ret, att = att))})                ### grosser scheiss: baue Hilfsobjekt fuer Attribute (intern notwendige Zusatzinformationen) separat zusammen
                    }  else  {                                                   ### schlimmer Code, darf nie jemand sehen!!
-                   # if(!exists("detectCores"))   {library(parallel)}             ### jetzt multicore: muss dasselbe Objekt zurueckgeben!
+                   # if(!exists("detectCores"))   {library(parallel)}           ### jetzt multicore: muss dasselbe Objekt zurueckgeben!
                    doIt<- function (laufnummer,  ... ) { 
                           if(!exists("getResults"))  { library(eatModel) }
                           if(!exists("tam.mml") &  length(grep("tam.", class(runModelObj[[1]])))>0 ) {library(TAM, quietly = TRUE)} 
                           do    <- paste ( "ret <- getResults ( ", paste(names(formals(getResults)), recode(names(formals(getResults)), "'runModelObj'='runModelObj[[laufnummer]]'"), sep =" = ", collapse = ", "), ")",sep="")
                           eval(parse(text=do))
-                          att <- list ( list ( model.name = ret[1,"model"], all.Names = attr(ret, "all.Names"), dif.settings = attr(ret, "dif.settings") ))
+                          att <- list (  model.name = ret[1,"model"], all.Names = attr(ret, "all.Names"), dif.settings = attr(ret, "dif.settings"), summary = attr(ret, "tamS") )
                           if(!is.null(ret)) { stopifnot ( length(unique(ret[1,"model"])) == 1 )}
                           return(list ( ret = ret, att = att))}
                    beg <- Sys.time()
@@ -497,11 +504,15 @@ getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c(
                    cat(paste ( "Results of ",length(runModelObj), " analyses processed: ", sep="")); print( Sys.time() - beg)
                    }
                att <- lapply(res, FUN = function ( yy ) { return ( yy[["att"]] ) } )
+               nams<- unlist(lapply (res, FUN = function ( l ) { l[["ret"]][1,"model"]}))
                res <- do.call("rbind", lapply ( res, FUN = function ( yy ) { return ( yy[["ret"]] ) } ) ) 
-               attr(res, "att") <- att
+               names(att)       <- nams                                         ### 'att' ist eine Liste mit verschiedenen Attributes (fuer jedes Modell). Wenn es z.B. zwei Modelle gibt, hat die Liste eine Laenge von 2. Die Liste soll nun so benannt werden, wie die Modelle heissen
+               attr(res, "att") <- att                                          ### untere Zeile: Achtung: im Mehrmodellfall werden die Attribute fuer jedes Modell separat als Liste gespeichert (in 'att'). Die Einzelattribute werden geloescht
+               attr(res, "tamS")<- attr(res, "all.Names") <- attr(res, "dif.settings") <- NULL
                class(res) <- c("data.frame", "multipleResults")
                rownames(res) <- NULL
                return(res)
+     ### hier ist der rekursive Aufruf beendet: das folgende geschieht fuer jedes Modell einzeln, technisch auf zweierlei Weisen, je nachdem ob Conquest oder TAM gerechnet wurde
             }  else {                                                           ### Einmodellfall 
                isTa  <- FALSE                                                   
                if( "runConquest" %in% class(runModelObj) ) {                    ### wurde mit Conquest gerechnet?
@@ -529,9 +540,10 @@ getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c(
                     if(!is.null(nplausible)) { attr(runModelObj, "n.plausible") <- nplausible }  else  { nplausible <- attr(runModelObj, "n.plausible") }
                     do    <- paste ( "res <- getTamResults ( ", paste(names(formals(getTamResults)), names(formals(getTamResults)), sep =" = ", collapse = ", "), ")",sep="")
                     eval(parse(text=do))
-                    dir <- attr(runModelObj, "dir")
-                    name<- attr(runModelObj, "analysis.name")
-                    attr(res, "all.Names") <- attr(runModelObj, "all.Names")
+                    dir <- attr(runModelObj, "dir")                             ### untere zeilen(n): tam summary ergaenzen, wenn mit tam gerechnet wurde
+                    name<- attr(runModelObj, "analysis.name")                   ### wird als Attribut in Ergebnisstruktur angehangen (nicht so superclever;
+                    attr(res, "all.Names") <- attr(runModelObj, "all.Names")    ### schoener waers, man wuerde das direkt in die Ergebnisstruktur einbauen)
+                    attr(res, "tamS")      <- capture.output ( summary ( runModelObj ) )
                }
                if(!is.null(res)) {
                    attr(res, "dif.settings")   <- list (abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value)
@@ -561,7 +573,7 @@ getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c(
                              eapW<- dcast ( eapL, form, value.var = "value" )
                         }                                                       ### Hier wird geprueft, welche Personenparameter vorliegen
                         alls<- list ( wle, pv, eap )                            ### wenn es Personenparameter gibt, werden sie eingelesen
-                        allP<- NULL                                             ### alle vorhandenen Personenparamater werden zum Speichern in einen gemeinsamen Dataframe gemergt
+                        allP<- NULL                                             ### alle vorhandenen Personenparameter werden zum Speichern in einen gemeinsamen Dataframe gemergt
                         notN<- which ( unlist(lapply ( alls, FUN = function ( x ) { !is.null(x)})) )
                         if ( length( notN ) >= 1 ) { allP <- alls[[notN[1]]] }
                         if ( length( notN ) > 1 )  {
@@ -585,8 +597,8 @@ getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c(
                               }
                         }
                    }
-                   rownames(res) <- NULL
                }
+               rownames(res) <- NULL
                return(res)
                }}
                
@@ -737,7 +749,7 @@ equAux  <- function ( x, y ) {
            }
            return(eq)}     
 
-transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defaultM = 500, defaultSD = 100 ) {  
+transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defaultM = 500, defaultSD = 100, roman = FALSE ) {
     ### wenn equatet wurde, sollte auch 'refPop' definiert sein (es sei denn, es wurde verankert skaliert)
     ### wenn 'refPop' fehlt, wird es fuer alle gegebenen Dimensionen anhand der Gesamtstichprobe berechnet
        mr  <- FALSE                                                             ### default: 'refPop' fehlt nicht. Wenn doch, wird es aus Daten generiert und spaeter
@@ -917,10 +929,37 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defau
        rp         <- do.call("rbind", lapply ( modN, FUN = function ( x ) { x[["rp"]]}))
     ### jetzt noch die Itemparameterliste fuer die Vergleichsarbeiten reduzieren und aufbereiten
        pCols      <- colnames(itempars)[grep("^itemP", colnames(itempars))]
-       allCols    <- na.omit(match ( c("dimension","item", pCols, "estTransf", "infit", "estTransfBista", "traitLevel"), colnames(itempars)))
+       allCols    <- na.omit(match ( c("dimension","item", pCols, "itemDiscrim", "estTransf", "infit", "estTransfBista", "traitLevel"), colnames(itempars)))
        itemVera   <- itempars[,allCols]
-       colnames(itemVera) <- recode ( colnames(itemVera), "'dimension'='domain'; 'item'='iqbitem_id'; 'estTransf'='logit'; 'estTransfBista'='bista'; 'traitLevel'='kstufe'")
+       colnames(itemVera) <- recode ( colnames(itemVera), "'dimension'='domain'; 'item'='iqbitem_id'; 'itemDiscrim'='trennschaerfe'; 'estTransf'='logit'; 'estTransfBista'='bista'; 'traitLevel'='kstufe'")
        colnames(itemVera)[match(pCols, colnames(itemVera))] <- paste0("lh", eatRep:::remove.pattern ( string = pCols, pattern = "^itemP"))
+       if ( roman == TRUE ) {                                                   ### sollen roemische Zahlen fuer Kompetenzstufen verwendet werden?
+            if (!all(itemVera[,"kstufe"] %in% c("1a", "1b", 1:5))) {stop(paste("Competence levels do not match allowed values. '1a', '1b', '1', '2', '3', '4', '5' is allowed. '",paste(names(table(itemVera[,"kstufe"])), collapse = "', '"),"' was found.\n",sep=""))}
+            itemVera[,"kstufe"] <- recode (itemVera[,"kstufe"], "'1a'='Ia'; '1b'='Ib'; '1'='I'; '2'='II'; '3'='III'; '4'='IV'; '5'='V'")
+       }
+    ### jetzt den scheiss reshapen fuer vera-3 mathe, wenn es separate werte fuer global- und domaenenspezifische modelle gibt
+       if ( length ( unique ( itemVera[,"iqbitem_id"])) != length ( itemVera[,"iqbitem_id"]) ) {
+            cat("Found duplicated entries in 'item-ID' column. This should only occur for subject 'math' in grade 3.\n")
+    ### vorher rauskriegen, ob jedes item nur zu einer domaene und einem globalmodell gehoert, dann 'domain' umbenennen, um NAs im Ergebnis zu vermeiden
+            tab  <- table(itemVera[,c("domain", "iqbitem_id")])
+            if ( !"GL" %in% rownames(tab)) {
+                 cat("Cannot find 'global' entry in the 'domain' column. Cancel reshaping.\n")
+            }  else  {
+                 if ( !sum(tab[which(rownames(tab) == "GL"),]) == ncol(tab)) {  ### hat jedes Item einen Wert auf 'global'?
+                     cat("Found items without values on the 'glbal' domain. Cancel reshaping.\n")
+                 }  else  {
+                     if ( !all(colSums(tab) == 2) ) {
+                         cat("Found items which do not have one 'global' and one domain-specific parameter. Cancel reshaping.\n")
+                     }  else  {
+                         itemVera[,"dummy"] <- recode ( itemVera[,"domain"], "'GL'='GL'; else = 'domain'")
+                         colsValid <- c("lh", "trennschaerfe", "logit", "infit", "bista", "kstufe")
+                         colsValid <- colsValid[which(colsValid %in% colnames(itemVera))]
+                         long      <- melt ( itemVera, id.vars = c("iqbitem_id", "dummy"), measure.vars = colsValid, na.rm=TRUE)
+                         itemVera  <- eatRep:::as.numeric.if.possible(dcast ( long , iqbitem_id ~ dummy + variable, value.var = "value"), verbose = FALSE)
+                     }
+                 }
+            }
+       }
        ret        <- list ( itempars = itempars, personpars = personpars, refPop = refPop, means = rp, all.Names = attr(equatingList[["results"]], "all.Names"), itemparsVera = itemVera)
        class(ret) <- c("list", "transfBista")
        return( ret ) }

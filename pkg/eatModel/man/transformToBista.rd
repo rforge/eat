@@ -7,7 +7,7 @@ one for the item parameters on the bista metric and one for the person parameter
 (PVs) on the bista metric.}
 \usage{
 transformToBista ( equatingList, refPop, cuts, weights = NULL, defaultM = 500, 
-                   defaultSD = 100)}
+                   defaultSD = 100, roman = FALSE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{equatingList}{
@@ -47,6 +47,11 @@ Mean of the reference population on the ``bista'' metric.
   \item{defaultSD}{
 %%     ~~Describe \code{file} here~~
 Standard deviation of the reference population in the ``bista'' metric. 
+}
+  \item{roman}{
+%%     ~~Describe \code{file} here~~
+Logical: Use roman numbers for competence level column in the shortened item parameter
+table dedicated for the ``Vergleichsarbeiten''? 
 }
 }
 \details{
