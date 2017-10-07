@@ -158,14 +158,24 @@ results.jags.ctstan <- function ( env, mode ) {
 								
 						}
 
-								
+# browser()								
 						# mcmc-Objekt bauen
-						do <- paste0( "as.mcmc.list( list( ", paste( paste0( " as.mcmc( x2[,",1:chains,"] ) " ), collapse="," ) , " ) )" )
-						mcmclist <- eval( parse( text=do ) )
+						if( chains > 1 ){
+								do1 <- paste0( "as.mcmc.list( list( ", paste( paste0( " as.mcmc( x2[,",1:chains,"] ) " ), collapse="," ) , " ) )" )
+						} else {
+								### 7.10.17 bug für 1 chain für Stan (nicht für Jags getestet)
+								do1 <- paste0( "as.mcmc.list( list( ", paste( paste0( " as.mcmc( x2[,",(2:(1+chains)),"] ) " ), collapse="," ) , " ) )" )
+						}
+						mcmclist <- eval( parse( text=do1 ) )
 
 						# shinystan-Objekt bauen
-						do <- paste0( "as.shinystan( list( ", paste( paste0( "  as.matrix( data.frame( '",z["parameter"],"' = x2[,",1:chains,"] ) ) " ), collapse="," ) , " ) )" )
-						sso <- eval( parse( text=do ) )
+						if( chains > 1 ){						
+								do2 <- paste0( "as.shinystan( list( ", paste( paste0( "  as.matrix( data.frame( '",z["parameter"],"' = x2[,",1:chains,"] ) ) " ), collapse="," ) , " ) )" )
+						} else {
+								### 7.10.17 geändert
+								do2 <- paste0( "as.shinystan( list( ", paste( paste0( "  as.matrix( data.frame( '",z["parameter"],"' = x2[,",(2:(1+chains)),"] ) ) " ), collapse="," ) , " ) )" )
+						}
+						sso <- eval( parse( text=do2 ) )
 		# browser()				
 						if( chains > 1 ){
 								psrf.coda.obj <- gelman.diag( mcmclist )

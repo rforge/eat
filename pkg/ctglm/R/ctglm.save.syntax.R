@@ -117,7 +117,10 @@ ctglm.save.syntax <- function( s, dir, ... ) {
 				}		
 # browser()				
 				path.stan.syntax <- file.path( dir, paste0( get( "model.name", envir=env ), ".stan" ) )		
-				write.table( r, file=path.stan.syntax, row.names=FALSE, col.names=FALSE, quote=FALSE )
+				
+				## ab spätesten ctStan 2.5.0 ist r ne list, deshalb r$stanmodeltext schreiben
+				# write.table( r, file=path.stan.syntax, row.names=FALSE, col.names=FALSE, quote=FALSE )
+				write( r$stanmodeltext, file=path.stan.syntax )
 				
 		}
 
