@@ -11,8 +11,8 @@ call \code{runModel} with the argument returned by \code{defineModel}.}
 defineModel (dat, items, id, splittedModels = NULL,
    irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
    qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL, anchor = NULL, 
-   domainCol=NULL, itemCol=NULL, valueCol=NULL, check.for.linking = TRUE, minNperItem = 50, boundary = 6, 
-   remove.boundary = FALSE, remove.no.answers = TRUE, remove.no.answersHG = TRUE, 
+   domainCol=NULL, itemCol=NULL, valueCol=NULL, check.for.linking = TRUE, minNperItem = 50, removeMinNperItem = FALSE, 
+   boundary = 6, remove.boundary = FALSE, remove.no.answers = TRUE, remove.no.answersHG = TRUE, 
    remove.missing.items = TRUE, remove.constant.items = TRUE, remove.failures = FALSE, 
    remove.vars.DIF.missing = TRUE, remove.vars.DIF.constant = TRUE, 
    verbose=TRUE, software = c("conquest","tam"), dir = NULL, analysis.name, 
@@ -122,6 +122,10 @@ connected with each other via design.
 %%     ~~Describe \code{sig.dif.bound} here~~
 Numerical: A message is printed on console if an item has less valid values than the number 
 defined in \code{minNperItem}. This works only if \code{withDescriptives == TRUE}.
+}
+  \item{removeMinNperItem}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Logical: Remove items with less valid responses than defined in \code{minNperItem}?
 }
   \item{boundary}{
 %%     ~~Describe \code{sig.dif.bound} here~~

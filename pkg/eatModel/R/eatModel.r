@@ -22,7 +22,6 @@ convertLabel <- function ( spssList , stringsAsFactors = TRUE, useZkdConvention 
                 }
                 return(datFr)}      
 
-
 finalizeItemtable <- function ( xlsm, xml, mainTest = 2017, anhangCsv = NULL ) {
            cat("Note: If one task, say task number 2, has only one subtask, nomination should be '2' instead of '2.1'. This is not done automatically.\n")
            xml  <- scan(xml,what="character",sep="\n",quiet=TRUE)               ### untere Zeilen: bereiche ausschliessen
@@ -91,15 +90,15 @@ finalizeItemtable <- function ( xlsm, xml, mainTest = 2017, anhangCsv = NULL ) {
                  if ( length(match1) == 2) { match1 <- intersect ( match1[[1]], match1[[2]]) } else { match1 <- unlist(match1)}
                  if ( length(match1)>0) { tab[match1,"domain"] <- names(toRename)[i]}
            }      
-           tab[,"domain"]<- recode ( tab[,"domain"],"'Orthografie'= 'Rs'; 'Ho1'='Ho'; 'Leseverstehen'='Le'; 'Ho2'='Ho'; 'Lesen'='Le'; '1. Zahlen und Operationen'='ZO'; '2. Raum und Form'='RF'; '3. Muster und Strukturen'='MS'")
+           tab[,"domain"]<- recode ( tab[,"domain"],"'Orthografie'= 'rs'; 'Ho1'='ho'; 'Leseverstehen'='le'; 'Ho2'='ho'; 'Lesen'='le'; '1. Zahlen und Operationen'='zo'; '2. Raum und Form'='rf'; '3. Muster und Strukturen'='ms'")
            tab[,"bista"] <- round(as.numeric(tab[,"bista"]), digits = 1)
     ### Mathematikdomaenen (ohne Global)
            dm  <- tab[,"domain"]
-           weg <- setdiff ( dm , c("ZO", "RF", "MS", "GM", "DW", "Zahl", "Messen", "Raum und Form", "Funktionaler Zusammenhang", "Daten und Zufall", "")) 
+           weg <- setdiff ( dm , c("zo", "rf", "ms", "gm", "dw", "Zahl", "Messen", "Raum und Form", "Funktionaler Zusammenhang", "Daten und Zufall", ""))
            if ( length( weg) >0) {
-                cat("Found unexpected entries in the 'domain' colum. This must not occur for subject 'math'.\n")
+                cat("Found unexpected entries in the 'domain' column. This must not occur for subject 'math'.\n")
            }  else  {
-                dm  <- as.character(recode ( dm, "'ZO'=1; 'RF'=2; 'MS'=3; 'GM'=4; 'DW'=5; 'Zahl'=1; 'Messen'=2; 'Raum und Form'=3; 'Funktionaler Zusammenhang'=4; 'Daten und Zufall'=5"))
+                dm  <- as.character(recode ( dm, "'zo'=1; 'rf'=2; 'ms'=3; 'gm'=4; 'dw'=5; 'Zahl'=1; 'Messen'=2; 'Raum und Form'=3; 'Funktionaler Zusammenhang'=4; 'Daten und Zufall'=5"))
                 dm  <- model.matrix(~dm-1)
                 if ( "dm" %in% colnames(dm) ) { dm <- dm[,-match("dm", colnames(dm))]}
                 for ( i in 1:ncol(dm)) { dm[,i] <- recode ( dm[,i], "0=NA")}
@@ -186,7 +185,7 @@ finalizeItemtable <- function ( xlsm, xml, mainTest = 2017, anhangCsv = NULL ) {
                  }  else  { tab[,a] <- as.numeric ( rep ( NA, nrow(tab))) }
            }      
     ### check 2: transformation pruefen 
-           if ( !is.null(anhangCsv)) { 
+           if ( !is.null(anhangCsv)) {
                  anh <- read.csv2(anhangCsv, stringsAsFactors = FALSE)
                  trns<- by ( data = tab, INDICES = tab[,c("fach", "domain")], FUN = function ( subdat ) { 
                         atab<- anh[intersect(which(anh[,"fach"] == subdat[1,"fach"]), which(anh[,"domain"] == subdat[1,"domain"]) ),]
@@ -213,7 +212,6 @@ finalizeItemtable <- function ( xlsm, xml, mainTest = 2017, anhangCsv = NULL ) {
            #       tab[,"kstufe"] <- as.character(car::recode ( tab[,"kstufe"], "'I'='1'; 'II'='2'; 'III'='3'; 'IV'='4'; 'V'='5'") )
            # }      
            return(tab) }     
-
 
 nObsItemPairs <- function ( responseMatrix, q3MinType) { 
                  spl <- data.frame ( combn(colnames(responseMatrix),2), stringsAsFactors = FALSE)
@@ -1230,7 +1228,7 @@ doAufb <- function ( m, matchCall, anf, verbose ) {
 ###                       Rateparameter geschaetzt wird. 0 oder fehlender Eintrag: kein Rateparameter wird geschaetzt
 defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL", "2PL", "PCM", "PCM2", "RSM", "GPCM", "2PL.groups", "GPCM.design", "3PL"),
                qMatrix=NULL, DIF.var=NULL, HG.var=NULL, group.var=NULL, weight.var=NULL, anchor = NULL, domainCol=NULL, itemCol=NULL, valueCol=NULL,check.for.linking = TRUE,
-               minNperItem = 50, boundary = 6, remove.boundary = FALSE, remove.no.answers = TRUE, remove.no.answersHG = TRUE, remove.missing.items = TRUE, remove.constant.items = TRUE,
+               minNperItem = 50, removeMinNperItem = FALSE, boundary = 6, remove.boundary = FALSE, remove.no.answers = TRUE, remove.no.answersHG = TRUE, remove.missing.items = TRUE, remove.constant.items = TRUE,
                remove.failures = FALSE, remove.vars.DIF.missing = TRUE, remove.vars.DIF.constant = TRUE, verbose=TRUE, software = c("conquest","tam"), dir = NULL,
                analysis.name, withDescriptives = TRUE, schooltype.var = NULL, model.statement = "item",  compute.fit = TRUE, n.plausible=5, seed = NULL, conquest.folder=NULL,
                constraints=c("cases","none","items"),std.err=c("quick","full","none"), distribution=c("normal","discrete"), method=c("gauss", "quadrature", "montecarlo"),
@@ -1425,6 +1423,14 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                          cat(paste("Remove ",length(n.mis)," variable(s) due to solely missing values.\n",sep=""))
                          namen.items.weg <- c(namen.items.weg, names(n.mis))}
                       }   
+                      if ( removeMinNperItem == TRUE ) {                        ### identifiziere Items mit weniger gueltigen Werte als in 'minNperItem' angegeben (nur wenn 'removeMinNperItem' = TRUE)
+                           nValid <- unlist(lapply(dat[,all.Names[["variablen"]], drop = FALSE], FUN = function ( ii ) { length(na.omit ( ii )) }))
+                           below  <- which ( nValid < minNperItem )
+                           if ( length ( below ) > 0 ) {
+                                cat (paste ( "Found ", length(below), " items with less than ", minNperItem, " valid responses. These items will be removed.\n", sep=""))
+                                namen.items.weg <- unique ( c(namen.items.weg, names(below)))
+                           }
+                      }
                       constant <- which(n.werte == 1)
                       if(length(constant) >0) {                                 ### identifiziere konstante Items (Items ohne Varianz)
                          cat(paste("Warning: ",length(constant)," testitems(s) are constants.\n",sep=""))
@@ -2285,11 +2291,18 @@ eapFromRes <- function ( resultsObj ) {
                return ( NULL ) 
           }  else  { 
              sel  <- resultsObj[eapRo,]
-             sel  <- do.call("rbind", by(sel, INDICES = sel[,"group"], FUN = function ( gr ) { 
-                     res  <- dcast ( gr , model+var1~derived.par, value.var = "value")
-                     colnames(res)[-1] <- c(attr(resultsObj, "all.Names")[["ID"]], "EAP", "SE.EAP")  
-                     weg  <- match(c("model", attr(resultsObj, "all.Names")[["ID"]]), colnames(res))
-                     res  <- data.frame ( res[,c("model", attr(resultsObj, "all.Names")[["ID"]])], dimension = as.character(gr[1,"group"]), res[,-weg,drop=FALSE], stringsAsFactors = FALSE)
+             sel  <- do.call("rbind", by(sel, INDICES = sel[,c("model", "group")], FUN = function ( gr ) {
+                     res  <- dcast ( gr , model+group+var1~derived.par, value.var = "value")
+    ### Hotfix: ID namen identifizieren: geht fuer single model anders als fuer multiple models
+                     singl<- !is.null ( attr(resultsObj, "all.Names")[["ID"]])
+                     if ( singl == TRUE) {
+                          id <- attr(resultsObj, "all.Names")[["ID"]]
+                     }  else  {
+                          id <- attr(resultsObj, "att")[[gr[1,"model"]]][["all.Names"]][["ID"]]
+                     }
+                     colnames(res)[-c(1:2)] <- c(id, "EAP", "SE.EAP")
+                     weg  <- match(c("model", id), colnames(res))
+                     res  <- data.frame ( res[,c("model", id)], dimension = as.character(gr[1,"group"]), res[,-weg,drop=FALSE], stringsAsFactors = FALSE)
                      return(res)}))
              return(sel)
           }  }   
@@ -3246,13 +3259,14 @@ prepRep <- function ( calibT2, bistaTransfT1, bistaTransfT2, makeIdsUnique = TRU
            }     
            return(rbind ( dat1, dat2))}
 
-plotICC <- function ( resultsObj, defineModelObj, item = NULL, personsPerGroup = 30, pdfFolder = NULL , smooth = 20) {
+plotICC <- function ( resultsObj, defineModelObj, item = NULL, personsPerGroup = 30, pdfFolder = NULL, smooth = 20 ) {
            if (smooth<5) {smooth <- 5}
            it  <- itemFromRes ( resultsObj )
            if ( !"est" %in% colnames(it) ) { it[,"est"] <- NA }
            if ( !"estOffset" %in% colnames(it) ) { it[,"estOffset"] <- NA }
-           it[,"est"] <- rowSums(it[,c("est", "estOffset")], na.rm = TRUE)
-           if ( !"estSlope" %in% colnames(it) ) { it[,"estSlope"] <- 1 }
+           it[,"est"] <- rowSums(it[,c("est", "estOffset")], na.rm = TRUE)      ### untere Zeilen: wenn 1pl und 2pl gemeinsam im resultsobjekt auftauchen, gibt es fuer 1pl keinen
+           if ( !"estSlope" %in% colnames(it) ) { it[,"estSlope"] <- 1 }        ### slope parameter; die werte sind NA. Zum Plotten muessen sie daher fuer das Raschmodell auf 1 gesetzt werden
+           if ( length(which(is.na(it[,"estSlope"]))) > 0) { it[which(is.na(it[,"estSlope"])), "estSlope"] <- 1 }
            eapA<- eapFromRes (resultsObj)                                       ### eap fuer alle; muss wideformat haben!!!
            cat("Achtung: geht erstmal nur fuer 1pl/2pl dichotom.\n"); flush.console()
            if ( is.null(item) & is.null(pdfFolder)) {stop("If ICCs for more than one item should be displayed, please specify an output folder for pdf.\n")}
@@ -3269,18 +3283,25 @@ plotICC <- function ( resultsObj, defineModelObj, item = NULL, personsPerGroup =
                   anf <- -6
                   ende<- 6
                   x   <- seq ( anf, ende, l = 400)
-                  y   <- exp( i[["estSlope"]] * (x - i[["est"]]) ) / (1+exp( i[["estSlope"]] * (x - i[["est"]])))
+                  y   <- exp( i[["estSlope"]]*x - i[["est"]] ) / (1+exp( i[["estSlope"]]*x - i[["est"]] ))
                   plot (x, y, type = "l", main = paste("Item '",as.character(i[["item"]]),"'\n\n",sep=""), xlim = c(-6,6), ylim = c(0,1), xlab = "theta", ylab = "P(X=1)", col = "darkred", cex = 8, lwd = 2)
                   mtext( paste("Model = ",i[["model"]],"  |  Dimension = ",i[["dimension"]], "  |  difficulty = ",round(i[["est"]], digits = 3),"  |  Infit = ",round(i[["infit"]], digits = 3),"\n",sep=""))
                   eap <- eapA[intersect ( which (eapA[,"dimension"] == i[["dimension"]]) , which (eapA[,"model"] == i[["model"]])),]
-                  if ( "defineMultiple" %in% class (defineModelObj)) {          ### Problem: je nachdem ob modelle gesplittetvwurden oder nicht, muss der Itemdatensatz woanders gesucht werden ... Hotfix
+                  if ( "defineMultiple" %in% class (defineModelObj)) {          ### Problem: je nachdem ob modelle gesplittet wurden oder nicht, muss der Itemdatensatz woanders gesucht werden ... Hotfix
                        woIst<- which ( lapply ( defineModelObj, FUN = function ( g ) {   g[["analysis.name"]] == i[["model"]] }) == TRUE)
                        stopifnot(length(woIst) == 1)
                        dat  <-defineModelObj[[woIst]][["daten"]]
                   }  else  {
                        dat  <- defineModelObj[["daten"]]
                   }
-                  prbs<- na.omit ( merge ( dat[,c( "ID", as.character(i[["item"]]))], eap[,c( attr(resultsObj, "all.Names")[["ID"]], "EAP")], by.x = "ID", by.y = attr(resultsObj, "all.Names")[["ID"]]))
+     ### Hotfix: ID namen identifizieren: geht fuer single model anders als fuer multiple models
+                  singl<- !is.null ( attr(resultsObj, "all.Names")[["ID"]])
+                  if ( singl == TRUE) {
+                       id <- attr(resultsObj, "all.Names")[["ID"]]
+                  }  else  {
+                       id <- attr(resultsObj, "att")[[i[1,"model"]]][["all.Names"]][["ID"]]
+                  }
+                  prbs<- na.omit ( merge ( dat[,c( "ID", as.character(i[["item"]]))], eap[,c( id, "EAP")], by.x = "ID", by.y = id))
                   anz <- round ( nrow(prbs) / personsPerGroup ) + 1             ### mindestens 'personsPerGroup' Personen pro Gruppe
                   if ( anz < 3 ) { anz <- 3 }
                   if ( anz > smooth) { anz <- round(smooth)}
@@ -3296,3 +3317,4 @@ plotICC <- function ( resultsObj, defineModelObj, item = NULL, personsPerGroup =
                   points ( x = matr[,"mw"], y = matr[,"lh"], cex = 1, pch = 21, bg = "darkblue")
                   lines ( x = matr[,"mw"], y = matr[,"lh"], col = "blue", lty = 3, lwd = 3) } )
            if ( !is.null(pdfFolder)) { dev.off() } }
+
