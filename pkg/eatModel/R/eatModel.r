@@ -2314,16 +2314,23 @@ pvFromRes  <- function ( resultsObj, toWideFormat = TRUE ) {
                return ( NULL ) 
           }  else  {      
              sel  <- resultsObj[pvRow, ]
+    ### Hotfix: ID namen identifizieren: geht fuer single model anders als fuer multiple models
+             singl<- !is.null ( attr(resultsObj, "all.Names")[["ID"]])
+             if ( singl == TRUE) {
+                  id <- attr(resultsObj, "all.Names")[["ID"]]
+             }  else  {
+                  id <- attr(resultsObj, "att")[[1]][["all.Names"]][["ID"]]
+             }
              if (toWideFormat == TRUE ) { 
-                 sel  <- do.call("rbind", by(sel, INDICES = sel[,"group"], FUN = function ( gr ) { 
+                 sel  <- do.call("rbind", by(sel, INDICES = sel[,c("model","group")], FUN = function ( gr ) { 
                          res  <- dcast ( gr , model+var1~derived.par, value.var = "value")
-                         colnames(res)[2] <- attr(resultsObj, "all.Names")[["ID"]]
-                         weg  <- match(c("model", attr(resultsObj, "all.Names")[["ID"]]), colnames(res))
-                         res  <- data.frame ( res[,c("model", attr(resultsObj, "all.Names")[["ID"]])], dimension = as.character(gr[1,"group"]), res[,-weg,drop=FALSE], stringsAsFactors = FALSE)
+                         colnames(res)[2] <- id
+                         weg  <- match(c("model", id), colnames(res))
+                         res  <- data.frame ( res[,c("model", id)], dimension = as.character(gr[1,"group"]), res[,-weg,drop=FALSE], stringsAsFactors = FALSE)
                          return(res)}))
              }  else  { 
                  sel  <- sel[,c("model", "var1", "group", "derived.par", "value")] 
-                 recSt<- paste ( "'var1'='",attr(resultsObj, "all.Names")[["ID"]],"'; 'derived.par'='imp'",sep="")
+                 recSt<- paste ( "'var1'='",id,"'; 'derived.par'='imp'",sep="")
                  colnames(sel) <- recode ( colnames(sel), recSt)
              }    
              return(sel)
@@ -2416,8 +2423,6 @@ itemFromRes<- function ( resultsObj ) {
 q3FromRes<- function ( resultsObj ) {
           if( "multipleResults" %in% class(resultsObj)) {                       ### Mehrmodellfall
               selM  <- by(data = resultsObj, INDICES = resultsObj[,"model"], FUN = function ( mr ) {
-                       toMatch <- which ( unlist ( lapply ( attr(resultsObj, "att"), FUN = function ( aa ) { aa[[1]][["model.name"]] == mr[1,"model"] } ) )  == TRUE )
-                       stopifnot(length(toMatch) == 1 )
                        class(mr) <- "data.frame"
                        res     <- q3FromRes ( mr )
                        return(res) }, simplify = FALSE)
@@ -2430,19 +2435,26 @@ q3FromRes<- function ( resultsObj ) {
              return(sel)
           }}
 
-wleFromRes <- function ( resultsObj ) { 
+wleFromRes <- function ( resultsObj ) {
           wleRo<- intersect( which(resultsObj[,"par"] %in% c("wle","NitemsSolved", "NitemsTotal")),which(resultsObj[,"indicator.group"] == "persons"))
           if(length(wleRo) == 0 ) { 
              cat("Error: 'resultsObj' does not contain any WLE values.\n")
              return(NULL)
           }  else  {    
              sel  <- resultsObj[wleRo,]
-             sel  <- do.call("rbind", by(sel, INDICES = sel[,"group"], FUN = function ( gr ) { 
+             sel  <- do.call("rbind", by(sel, INDICES = sel[,c("model", "group")], FUN = function ( gr ) { 
                      res  <- dcast ( gr , model+var1~par+derived.par, value.var = "value")
-                     recSt<- paste("'var1'='",attr(resultsObj, "all.Names")[["ID"]],"'; 'NitemsSolved_NA'='NitemsSolved'; 'NitemsTotal_NA'='NitemsTotal'",sep="")
+    ### Hotfix: 'id' finden
+                     singl<- !is.null ( attr(resultsObj, "all.Names")[["ID"]])
+                     if ( singl == TRUE) {
+                          id <- attr(resultsObj, "all.Names")[["ID"]]
+                     }  else  {
+                          id <- attr(resultsObj, "att")[[gr[1,"model"]]][["all.Names"]][["ID"]]
+                     }
+                     recSt<- paste("'var1'='",id,"'; 'NitemsSolved_NA'='NitemsSolved'; 'NitemsTotal_NA'='NitemsTotal'",sep="")
                      colnames(res) <- recode ( colnames(res) , recSt)
-                     weg  <- match(c("model", attr(resultsObj, "all.Names")[["ID"]]), colnames(res))
-                     res  <- data.frame ( res[,c("model", attr(resultsObj, "all.Names")[["ID"]]),], dimension = as.character(gr[1,"group"]), res[,-weg,drop=FALSE], stringsAsFactors = FALSE)
+                     weg  <- match(c("model", id), colnames(res))
+                     res  <- data.frame ( res[,c("model", id),], dimension = as.character(gr[1,"group"]), res[,-weg,drop=FALSE], stringsAsFactors = FALSE)
                      return(res)}))
              return(sel)
           }  }   
