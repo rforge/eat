@@ -1134,7 +1134,7 @@ doAufb <- function ( m, matchCall, anf, verbose ) {
      ### Unterverzeichnisse definieren
           if(is.null(matchCall[["dir"]])) { dirI <- NULL }  else  { dirI   <- file.path(dir, substring(splittedModels[["models.splitted"]][[matchL]][["model.subpath"]],3)) }
           nameI  <- splittedModels[["models.splitted"]][[matchL]][["model.name"]]
-          if(!exists("qMatrix") ) { nDim <- 1 } else { nDim <- ncol(qMatrix)-1 }
+          if(!exists("qMatrix") ) { nDim <- 1; qMatrix <- NULL } else { nDim <- ncol(qMatrix)-1 }
      ### Aufruf von 'defineModel' generieren, Teil 1. Achtung: wenn der Nutzer eigenhaendig neue Argumente in <models>[["models"]] einfuegt, muessen die hier in <models>[["models.splitted"]] uebernommen werden!
           overwr1<- list( dat=datSel, items = itemSel, qMatrix = qMatrix, analysis.name = nameI, dir = dirI)
           overwrF<- setdiff ( colnames(splittedModels[["models"]]), c("model.no", "model.name", "model.subpath", "dim", "Ndim", "group", "Ngroup"))
