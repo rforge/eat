@@ -407,8 +407,11 @@ so we have to extract them from the \code{freqs} object by ourself:\\
 
 <<hiseiFreqsExtraction>>=
 options(scipen=4)
-cols <- c("group", "depVar", "parameter", "coefficient", "value")
-print ( freqs[which(freqs[,"parameter"] == "chiSquareTest"), cols ], digits = 1)
+cols <- c("group", "coefficient", "value")
+res  <- freqs[which(freqs[,"parameter"] == "chiSquareTest"), cols ]
+wide <- reshape2::dcast(res, group~coefficient, value.var = "value")
+wide <- wide[,-grep("Approx", colnames(wide))]
+print(wide, digits = 1)
 @
 
 In each of the three countries a chi square test was conducted separately. For \code{LandA}, 
@@ -427,8 +430,11 @@ The conclusion we draw from this analysis, however, is quite equivalent to the p
 freqs <- jk2.table( datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
          PSU = "JKZone", repInd = "JKrep", imp = "imputation", groups = c("country", "sex"), 
 	       group.differences.by = "sex", chiSquare = FALSE, dependent = "passed")
-result<- dT(freqs, percent = TRUE)
-result[,-match ( "depVar", colnames(result))]
+### with a little reshaping endeavor
+result<- freqs[grep("meanGroupDiff", freqs[,"parameter"]),]
+result<- reshape2::dcast(result, country+sex+parameter~coefficient, value.var="value")
+result[,"p.value"] <- 2*(1-pnorm ( abs ( result[,"est"] / result[,"se"] ) ))
+print(result, digits = 1)
 @
 
 Let's devote little attention to the problem of missing values. In the example mentioned above, 
@@ -486,17 +492,18 @@ As we might have expected, the outcome is a single data frame in the long format
 And long really means long! For our purpose, it may be sufficient to content ourself 
 with the summary provided by \code{dG}. But beforehand let us consider how many regression 
 analyses are conducted and how many results we expect to find. The message on the console 
-speaks of about ``1 analysis overall'' according to two \code{group.splits = 1}. 
-But strictly speaking, we have estimated three regression analyses, as the model is 
-fitted in each group separately. As we specified one group variable dividing the data into 
+speaks of about ``1 analysis overall'' according to \code{group.splits = 1}. But strictly
+speaking, we have estimated three regression analyses, as the model is fitted in each group
+(i.e., in each country) separately. As we have specified one grouping variable dividing the data into
 three distinct groups (according to \code{country}) for which we have instructed \code{jk2.glm()} 
 to fit the regression model separately, we find results of the three models in the results. 
-More specifically, for each country, an intercept and two regression coefficients according to \code{gender} and 
-\code{INCOME} are estimated. The \code{dG} function allows us to have a look only at a specific 
-result out of the 3 analyses. \code{analyses = 1:2} advises the function to display the results 
-of the first and second analysis. First we should consider that each single analyses is characterized 
-by two variables, the group for which the model is fitted, and the dependent variable. In the heading 
-we find information about both. The actual regression results are displayed underneath. \\
+More specifically, for each country, an intercept and three regression coefficients according to
+\code{gender}, \code{INCOME} and their interaction are estimated. The \code{dG()} function allows
+us to have a look only at a specific result out of the 3 analyses. \code{analyses = 1:2} advises
+the function to display the results of the first and second analysis. First we should consider
+that each single analyses is characterized by two variables, the group for which the model is
+fitted, and the dependent variable. In the heading we find information about both. The actual
+regression results are displayed underneath. \\
 
 <<regression1defResults1>>=
 res   <- dG(mod1, analyses = 1:2)
@@ -553,7 +560,7 @@ by itself. Persuading R to meet our needs is easier said than done. The essentia
 easiest way is to redefine the factor variable and choose its levels manually. We will 
 demonstrate this procedure about the gender variable in our fictitious data set. Remember 
 the first example in section 3---R choosed the females to be the reference. Why? Simply 
-because female comes before male in the alphabet. Let's redefine the gender variable:\\
+because ``female'' comes before ``male'' in the alphabet. Let's redefine the gender variable:\\
 
 <<recodeSexdef>>=
 readN1[,"sexRecoded"] <- factor(readN1[,"sex"], levels = c("male", "female") )

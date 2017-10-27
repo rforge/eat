@@ -10,12 +10,16 @@ generate.replicates <- function ( dat, ID, wgt = NULL, PSU, repInd, type )   {
                        if(type %in% c("JK2", "BRR")) { if( !all( names(table(dat.i[,all.Names[["repInd"]]])) == c(0,1)) ) {stop("Only 0 and 1 are allowed for repInd variable.\n")} }
                        zonen       <- names(table(as.character(dat.i[,all.Names[["PSU"]]]) ) )   
                        cat(paste("Create ",length(zonen)," replicate weights according to ",type," procedure.\n",sep=""))
+                       if ( nrow(dat)>2500 & length(zonen) > 50 ) {             ### progress bar wird nur angezeigt, wenn es auch nennenswerte Zeit dauert
+                            pb     <- progress_bar$new( format = "  replicates [:bar] :percent in :elapsed", incomplete = " ", total = length(zonen), clear = FALSE, width= 60, show_after = 0.01)
+                       }
                        missings    <- sapply(dat.i, FUN = function (ii) {length(which(is.na(ii)))})
                        if(!all(missings == 0)) {
                            mis.vars <- paste(names(missings)[which(missings != 0)], collapse = ", ")
                            stop(paste("Found missing value(s) in variable(s) ", mis.vars,".\n",sep=""))
                        }                                                        ### untere Zeile: in JK-2 werden die gewichte nur in der entsprechenden PSU _fuer ein Replicate_ geaendert 
                        reps <- data.frame ( lapply(zonen , FUN = function(ii) { ### in BRR werden die Gewichte in allen Zonen _fuer ein Replicate_ geaendert!
+                               if ( nrow(dat)>2500 & length(zonen) > 50 ) { pb$tick() }
                                rep.ii <- dat.i[,all.Names[["wgt"]]]             ### in JK-1 werden die Gewichte nur in der entsprechenden PSU _fuer alle Replicates_ geaendert 
                                if(type == "JK2")  { rep.ii[dat.i[,all.Names[["PSU"]]] == ii ] <- ifelse(dat.i[ dat.i[,all.Names[["PSU"]]] == ii ,all.Names[["repInd"]]] == 1, 0, 2 * rep.ii[dat.i[,all.Names[["PSU"]]] == ii ] ) }
                                if(type == "BRR")  { rep.ii <- ifelse(dat.i[ ,all.Names[["repInd"]]] == 1, 0, 2 * rep.ii ) }
@@ -224,8 +228,7 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
     ### das wird jetzt nach und nach dazu programmiert ... erstmal fuer 'table'; 'quantile' und 'glm' folgen spaeter
                             if ( toCall != "mean") {                            
                                  if ( toCall == "table" ) {                     ### untere Zeile: es muss genau einen gemeinsamen Spaltennamen in 'leF' und 'resT1' geben
-                                     stopifnot ( length ( intersect ( colnames ( leF ), colnames(resT1))) == 1 ) 
-                                     stopifnot ( ncol ( leF) == 2 ) 
+                                     stopifnot ( length ( intersect ( colnames ( leF ), colnames(resT1))) == 1 , ncol ( leF) == 2) 
                                      byCol <- intersect ( colnames ( leF ), colnames( resT1))
                                      stopifnot ( all ( unique ( sort ( leF[,byCol])) == unique ( sort ( resT1[,byCol]))))
                                      resT1 <- merge ( resT1, leF, by = byCol, all = TRUE)
@@ -439,9 +442,24 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
     ### nun wird der Datensatz zuerst nach Nests und je Nest nach Imputationen geteilt 
                            anaA<- do.call("rbind", by(data = datL, INDICES = datL[,"isClear"], FUN = function ( datL1 ) {
                                   if(datL1[1,"isClear"] == TRUE) {              ### nur fuer isClear==TRUE werden Analysen gemacht
+                                     nrep<- table(datL1[, c(allNam[["nest"]], allNam[["imp"]])])
+                                     nrep<- prod(dim(nrep))
+    ### progress bar fuer analysen anzeigen                               
+                                     cri1<- nrep > 4 & length(unique(datL1[,allNam[["ID"]]]))>2000 & doJK
+                                     cri2<- FALSE
+                                     if ( doJK == FALSE ) {
+                                          cri2<- nrep > 9 & length(unique(datL1[,allNam[["ID"]]]))>5000
+                                     }     
+                                     if ( cri1 == TRUE | cri2 == TRUE ) {
+                                          pb  <- progress_bar$new( format = "    analyses [:bar] :percent in :elapsed", incomplete = " ", total = nrep, clear = FALSE, width= 60, show_after = 0.01)
+                                     }  else  {
+                                          pb <- list()
+                                          pb$tick <- function (){return(NULL)}
+                                     }
                                      ana <- do.call("rbind", by(data = datL1, INDICES = datL1[,allNam[["nest"]]], FUN = function ( datN ) {
                                             anaI <- do.call("rbind", by(data = datN, INDICES = datN[,allNam[["imp"]]], FUN = function ( datI ) {
     ### nun muss die Funktion (mean, table, glm ... ) und die Methode (JK2, BRR, oder konventionell) definiert werden
+                                                    pb$tick(); flush.console()
                                                     if( toCall == "mean" ) {    ### hier wird an die meanfunktion uebergeben
                                                         if ( doJK == TRUE ) {
                                                             ana.i <- jackknife.mean (dat.i = datI , allNam=allNam, na.rm=na.rm, group.delimiter=group.delimiter, type=type, repA=repA)
@@ -523,7 +541,7 @@ checkRegression <- function ( dat, allNam ) {
                               }
                          } })   }                                               ### keine Rueckgabe
 
-conv.quantile      <- function ( dat.i , allNam, na.rm, group.delimiter, repA, probs, nBoot,bootMethod  ) {
+conv.quantile      <- function ( dat.i , allNam, na.rm, group.delimiter, repA, probs, nBoot,bootMethod) {
                       ret  <- do.call("rbind", by(data = dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( sub.dat) {
                               if( all(sub.dat[,allNam[["wgt"]]] == 1) )  {      ### alle Gewichte sind 1 bzw. gleich
                                  ret   <- hdquantile(x = sub.dat[,allNam[["dependent"]]], se = TRUE, probs = probs,na.rm=na.rm )
@@ -552,7 +570,6 @@ conv.quantile      <- function ( dat.i , allNam, na.rm, group.delimiter, repA, p
 
 
 jackknife.quantile <- function ( dat.i , allNam, na.rm, type, repA, probs, group.delimiter) {
-                      cat("."); flush.console()
                 #      if(!exists("svrepdesign"))      {library(survey)}
                       typeS          <- recode(type, "'JK2'='JKn'")             ### typeS steht fuer type_Survey
                       design         <- svrepdesign(data = dat.i[,c(allNam[["group"]], allNam[["dependent"]]) ], weights = dat.i[,allNam[["wgt"]]], type=typeS, scale = 1, rscales = 1, repweights = repA[match(dat.i[,allNam[["ID"]]], repA[,allNam[["ID"]]] ),-1,drop = FALSE], combined.weights = TRUE, mse = TRUE)
@@ -566,7 +583,7 @@ jackknife.quantile <- function ( dat.i , allNam, na.rm, type, repA, probs, group
                       return(facToChar(data.frame ( group = apply(molt[,allNam[["group"]],drop=FALSE],1,FUN = function (z) {paste(z,collapse=group.delimiter)}), depVar = allNam[["group"]], modus = "noch_leer", molt[,c("parameter", "coefficient", "value", allNam[["group"]])], stringsAsFactors = FALSE))) }
 
 
-conv.table      <- function ( dat.i , allNam, na.rm, group.delimiter, separate.missing.indicator , correct, expected.values  ) {
+conv.table      <- function ( dat.i , allNam, na.rm, group.delimiter, separate.missing.indicator , correct, expected.values) {
                    table.cast <- do.call("rbind", by(data = dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function ( sub.dat) {
                                  prefix <- data.frame(sub.dat[1,allNam[["group"]], drop=FALSE], row.names = NULL, stringsAsFactors = FALSE )
                                  foo    <- make.indikator(variable = sub.dat[,allNam[["dependent"]]], name.var = "ind", force.indicators =expected.values, separate.missing.indikator = ifelse(separate.missing.indicator==TRUE, "always","no"))
@@ -599,7 +616,6 @@ conv.table      <- function ( dat.i , allNam, na.rm, group.delimiter, separate.m
 
 
 jackknife.table <- function ( dat.i , allNam, na.rm, group.delimiter, type, repA, separate.missing.indicator, expected.values) { 
-                   cat("."); flush.console()
                    dat.i[,allNam[["dependent"]]] <- factor(dat.i[,allNam[["dependent"]]], levels = expected.values)
                    # if(!exists("svrepdesign"))      {library(survey)}
                    typeS     <- recode(type, "'JK2'='JKn'")
@@ -696,7 +712,6 @@ conv.mean      <- function (dat.i , allNam, na.rm, group.delimiter) {
 
 
 jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA) {
-          cat("."); flush.console()
           dat.i[,"N_weighted"]      <- 1
           dat.i[,"N_weightedValid"] <- 1
           if( length(which(is.na(dat.i[,allNam[["dependent"]]]))) > 0 ) { dat.i[which(is.na(dat.i[,allNam[["dependent"]]])), "N_weightedValid" ] <- 0 }
@@ -772,8 +787,7 @@ jackknife.mean <- function (dat.i , allNam, na.rm, group.delimiter, type, repA) 
           
 
 ### Hilfsfunktion fuer jk2.glm()
-jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, glmTransformation, na.rm, group.delimiter, type, repA ) {
-                 cat("."); flush.console()
+jackknife.glm <- function (dat.i , allNam, formula, forceSingularityTreatment, glmTransformation, na.rm, group.delimiter, type, repA , pb) {
                  sub.ana <- do.call("rbind", by(data = dat.i, INDICES = dat.i[,allNam[["group"]]], FUN = function (sub.dat) {
                             glm.ii <- test <- glm(formula = formula, data = sub.dat, family = glm.family)
                             singular       <- names(glm.ii$coefficients)[which(is.na(glm.ii$coefficients))]
