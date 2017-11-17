@@ -378,8 +378,20 @@ eatRep <- function (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = N
                            if(length(miss)>0) { cat(paste("Warning! Unexpected missings in variable(s) ",paste(names(miss), collapse=", "),".\n",sep=""))}
     ### check: gleichviele Imputationen je Nest und Gruppe?
                            if(doCheck == TRUE) {
-                              impNes<- table ( by(data = datL, INDICES = datL[, c(allNam[["nest"]], toAppl[[gr]]) ], FUN = function ( x ) { length(table(as.character(x[,allNam[["imp"]]])))}, simplify = FALSE) )
-                              if(length(impNes) != 1 ) {cat("Warning: Number of imputations differ across nests and/or groups!"); print(impNes)}
+                              if ( length( toAppl[[gr]] ) > 1) {
+                                   crsTab <- table(datL[,toAppl[[gr]]])
+                                   if ( length(which(crsTab < 10 )) > 0 ) {
+                                        cat("Warning: small number of observations in some combinations of grouping variables:\n   Recommend to remove these group(s).\n")
+                                        print(crsTab); flush.console()
+                                   }
+                              }
+                              impNes<- by(data = datL, INDICES = datL[, c(allNam[["nest"]], toAppl[[gr]]) ], FUN = function ( x ) { length(table(as.character(x[,allNam[["imp"]]])))}, simplify = FALSE)
+                              laenge<- which(sapply(impNes, length) == 0)
+                              if ( length(laenge ) > 0 ) {
+                                   cat(paste("Warning: ", length(laenge), " combination(s) of groups without any observations. Analysis most probably will crash.\n")); flush.console()
+                              }
+                              impNes<- table(impNes[setdiff (1:length(impNes), laenge)])
+                              if(length(impNes) != 1 ) {cat("Warning: Number of imputations differ across nests and/or groups!"); print(impNes); flush.console()}
     ### check: gleichviele PSUs je nest?
                               if(!is.null(allNam[["PSU"]]))  { 
                                   psuNes<- table ( by(data = datL, INDICES = datL[,allNam[["nest"]]], FUN = function ( x ) { length(table(as.character(x[,allNam[["PSU"]]])))}, simplify = FALSE) )
