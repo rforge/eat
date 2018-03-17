@@ -16,7 +16,7 @@ defineModel (dat, items, id, splittedModels = NULL,
    remove.missing.items = TRUE, remove.constant.items = TRUE, remove.failures = FALSE, 
    remove.vars.DIF.missing = TRUE, remove.vars.DIF.constant = TRUE, 
    verbose=TRUE, software = c("conquest","tam"), dir = NULL, analysis.name, 
-   withDescriptives = TRUE, schooltype.var = NULL, model.statement = "item",  compute.fit = TRUE, 
+   schooltype.var = NULL, model.statement = "item",  compute.fit = TRUE,
    n.plausible=5, seed = NULL, conquest.folder=NULL,constraints=c("cases","none","items"),
    std.err=c("quick","full","none"), distribution=c("normal","discrete"),
    method=c("gauss", "quadrature", "montecarlo"), n.iterations=2000,
@@ -121,7 +121,7 @@ connected with each other via design.
   \item{minNperItem}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Numerical: A message is printed on console if an item has less valid values than the number 
-defined in \code{minNperItem}. This works only if \code{withDescriptives == TRUE}.
+defined in \code{minNperItem}.
 }
   \item{removeMinNperItem}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -184,10 +184,6 @@ A character string specifying the analysis name. If \code{software = "conquest"}
 named \code{analysis.name} with their corresponding extensions. If \code{software = "tam"}, 
 \code{analysis.name} is not mandatory. In the case of multiple models estimation, 
 \code{split.models} automatically defines \code{analysis.name} for each model.
-}
-  \item{withDescriptives}{
-%%     ~~Describe \code{dif.term} here~~
-Logical: Compute descriptives (e.g., p values, number of valid items, empirical discrimination)?
 }
   \item{schooltype.var}{
 %%     ~~Describe \code{dif.term} here~~
