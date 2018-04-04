@@ -762,7 +762,7 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defau
                          colsValid <- c("lh", "trennschaerfe", "logit", "infit", "bista", "kstufe")
                          colsValid <- colsValid[which(colsValid %in% colnames(itemVera))]
                          long      <- melt ( itemVera, id.vars = c("iqbitem_id", "dummy"), measure.vars = colsValid, na.rm=TRUE)
-                         itemVera  <- eatRep:::as.numeric.if.possible(dcast ( long , iqbitem_id ~ dummy + variable, value.var = "value"), verbose = FALSE)
+                         itemVera  <- eatRep:::as.numeric.if.possible(dcast ( long , iqbitem_id ~ dummy + variable, value.var = "value"), verbose = FALSE, ignoreAttributes = TRUE)
                      }
                  }
             }
@@ -1535,7 +1535,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                      if(class(x) != "numeric")  {                               ### ist Variable numerisch?
                         if (type == "weight") {stop(paste(type, " variable has to be 'numeric' necessarily. Automatic transformation is not recommended. Please transform by yourself.\n",sep=""))}
                         cat(paste(type, " variable has to be 'numeric'. Variable '",varname,"' of class '",class(x),"' will be transformed to 'numeric'.\n",sep=""))
-                        x <- unlist(eatRep:::as.numeric.if.possible(dataFrame = data.frame(x, stringsAsFactors = FALSE), transform.factors = TRUE, maintain.factor.scores = FALSE, verbose=FALSE))
+                        x <- unlist(eatRep:::as.numeric.if.possible(dataFrame = data.frame(x, stringsAsFactors = FALSE), transform.factors = TRUE, maintain.factor.scores = FALSE, verbose=FALSE, ignoreAttributes = TRUE))
                         if(class(x) != "numeric")  {                            ### erst wenn eatRep:::as.numeric.if.possible fehlschlaegt, wird mit Gewalt numerisch gemacht, denn fuer Conquest MUSS es numerisch sein
                            x <- as.numeric(as.factor(x))
                         }
@@ -2320,7 +2320,7 @@ get.wle <- function(file)      {
             input <- strsplit(input," +")
             n.spalten <- max ( sapply(input,FUN=function(ii){ length(ii) }) )   ### Untere Zeile gibt die maximale Spaltenanzahl:
             n.wle <- floor((n.spalten-1) / 4)                                   ### Dies minus eins und dann geteilt durch 4 ergibt Anzahl an WLEs (mehr oder weniger)
-            input <- eatRep:::as.numeric.if.possible(data.frame( matrix( t( sapply(input,FUN=function(ii){ ii[1:n.spalten] }) ),length(input),byrow = FALSE), stringsAsFactors = FALSE), set.numeric = TRUE, verbose = FALSE)
+            input <- eatRep:::as.numeric.if.possible(data.frame( matrix( t( sapply(input,FUN=function(ii){ ii[1:n.spalten] }) ),length(input),byrow = FALSE), stringsAsFactors = FALSE), set.numeric = TRUE, verbose = FALSE, ignoreAttributes = TRUE)
             valid <- na.omit(input)
             cat(paste("Found valid WLEs of ", nrow(valid)," person(s) for ", n.wle, " dimension(s).\n",sep=""))
             if (nrow(valid) != nrow(input)) { cat(paste("    ",nrow(input)-nrow(valid)," persons with missings on at least one latent dimension.\n",sep="")) }
@@ -2406,7 +2406,7 @@ get.shw <- function(file, dif.term, split.dif = TRUE, abs.dif.bound = 0.6, sig.d
                           namen <- c(namen, rep("add.column",referenzlaenge-length(namen) )) }}
                     input.sel <- t(sapply(input.sel, FUN=function(ii){ c(ii, rep(NA,referenzlaenge-length(ii))) }))
                     colnames(input.sel) <- namen                                ### untere Zeile: entferne eventuelle Sternchen und wandle in Dataframe um!
-                    input.sel <- eatRep:::as.numeric.if.possible(data.frame( gsub("\\*","",input.sel), stringsAsFactors = FALSE), set.numeric = TRUE, verbose = FALSE)
+                    input.sel <- eatRep:::as.numeric.if.possible(data.frame( gsub("\\*","",input.sel), stringsAsFactors = FALSE), set.numeric = TRUE, verbose = FALSE, ignoreAttributes = TRUE)
                     results.sel <- data.frame(input.sel,filename=file,stringsAsFactors = FALSE)
                     if(is.na(as.numeric(results.sel$ESTIMATE[1]))) {cat(paste("'ESTIMATE' column in Outputfile for term '",all.terms[length(all.terms)],"' in file: '",file,"' does not seem to be a numeric value. Please check!\n",sep=""))}
                     if(!missing(dif.term)) {                                    ### Der absolute DIF-Wert ist 2 * "Betrag des Gruppenunterschieds". Fuer DIF muessen ZWEI Kriterien erfuellt sein:
@@ -2474,7 +2474,7 @@ get.shw <- function(file, dif.term, split.dif = TRUE, abs.dif.bound = 0.6, sig.d
                         bereich[[ii]] <- c(bereich[[ii]][1:(ii-1)], NA)
                      }
                  }
-                 bereich.data.frame <- eatRep:::as.numeric.if.possible(data.frame(do.call("rbind", bereich[-1]),stringsAsFactors=FALSE), verbose = FALSE)
+                 bereich.data.frame <- eatRep:::as.numeric.if.possible(data.frame(do.call("rbind", bereich[-1]),stringsAsFactors=FALSE), verbose = FALSE, ignoreAttributes = TRUE)
                  colnames(bereich.data.frame) <- bereich[[1]]
                  all.output$cov.structure <- bereich.data.frame
               }

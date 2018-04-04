@@ -62,7 +62,7 @@
   \code{defineModel} includes a variety of examples which are derived from the context of the
   IQB ``Laendervergleich''.
   
-  Basically, \code{eatModel} is useful for Conquest analyses which are called from R. Recently, the R package
+  Basically, \code{eatModel} is useful for Conquest analyses which are called from R. Alternatively, the R package
   \code{TAM} allows to estimate parameters of the mixed-Coefficients Multinomial Logit Model solely in an
   R environment. Hence, \code{eatModel} allows all models to be estimated in \code{TAM} likewise.
   Please note that some model specifications (for example, 2pl/3pl) lead to models only TAM is able to 
@@ -73,21 +73,21 @@
   \code{eat}. The development of the \code{eat} package started in autumn 2010 at the Institute of
   Educational Progress (IQB). In 2012, the functionality of the package was partitioned into several 
   small ``sub packages''---by name \code{eatPrep} for data preparation, \code{eatTools} for several
-  additional functions, \code{eatRest} for Rasch modeling, \code{eatRep} for replications method, 
+  auxiliary functions, \code{eatRest} for Rasch modeling, \code{eatRep} for replication methods,
   \code{eatDesign} for definition and modification of design properties. The further development 
   of \code{eatRest} was expired because the package turned out to be enigmaticly written which 
   leads to undebugable problems. Thus, \code{eatModel} is the second attempt. Its functionality 
   is closely related to \code{eatRest} but adds some new features---for example, the support of 
   2pl models using the \code{TAM} package. Important note: For consistency reasons, some functions 
   in \code{eatModel} have identical names as the corresponding function in \code{eatRest}, for example 
-  `get.shw'. It is strongly  recommended to \emph{not} have both packages attached simultaneously in one R session. 
+  `get.shw'. It is strongly recommended to \emph{not} have both packages attached simultaneously in one R session.
 }
 \details{
 \tabular{ll}{
 Package: \tab eatModel\cr
 Type: \tab Package\cr
-Version: \tab 0.6.11\cr
-Date: \tab 2018-03-17\cr
+Version: \tab 0.6.12\cr
+Date: \tab 2018-04-05\cr
 License: \tab GPL(>=2)
 }
 }
@@ -102,8 +102,8 @@ Adams, R. J., & Wu, M. L. (2007). The Mixed-Coefficients Multinomial Logit Model
 A Generalized Form of the Rasch Model. In M. Von Davier & C. H. Carstensen (Eds.),
 \emph{Multivariate and Mixture Distribution Rasch Models} (pp. 57-75). New York: Springer.
 
-Kiefer, T., Robitzsch, A., & Wu, M. (2016). TAM: Test Analysis Modules. R package version 
-1.995-0. http://CRAN.R-project.org/package=TAM
+Robitzsch, A., Kiefer, T., & Wu, M. (2018). TAM: Test analysis modules. R package version
+2.10-24. https://CRAN.R-project.org/package=TAM
 
 Wu, M.L., Adams, R.J., Wilson, M.R., & Haldane, S.A. (2007). \emph{ACER ConQuest
 Version 2.0. Generalised Item Response Modeling Software.} Camberwell, Victoria: ACER Press.

@@ -623,7 +623,7 @@ wle  <- tam.wle(run2T)
 
 # Finally, the model result are collected in a single data frame
 res2T<- getResults(run2T)
-
+}
 
 ################################################################################
 ###    Example 4: define und run multiple models defined by 'splitModels'    ###
@@ -674,7 +674,7 @@ runs  <- runModel(mods)
 ress  <- getResults(runs)
 
 # only for illustration, we create arbitrary 'normed' parameters for anchoring
-prmNrm<- itemFromRes(ress)[ sample ( 1:56, 31,F) ,c("item", "est")]
+prmNrm<- itemFromRes(ress)[ sample ( 1:56, 31,FALSE) ,c("item", "est")]
 prmNrm[,"est"] <- prmNrm[,"est"] - 0.6 + rnorm ( 31, 0, 0.75)
 
 # anchoring without exclusion of linking DIF items (DIF items will only be identified)
@@ -708,8 +708,8 @@ cuts  <- list ( procedural = list ( values = c(380, 420, 500, 560)) ,
 
 # transformation
 dfr   <- transformToBista ( equatingList = anch3, refPop = refPop, cuts=cuts ) 
-View(dfr$itempars)
-View(dfr$personpars)
+head(dfr$itempars)
+head(dfr$personpars)
 
 
 ################################################################################
@@ -740,7 +740,7 @@ res3  <- getResults(runs3)
 # only for illustration, we create arbitrary 'normed' parameters for anchoring.
 # Each item now has to item parameter: one is domain-specific, one is the global
 # item parameter. Hence, each item occurs two times in 'prmNrm'
-prmNrm<- itemFromRes(ress)[ sample ( 1:56, 31,F) ,c("dimension", "item", "est")]
+prmNrm<- itemFromRes(ress)[ sample ( 1:56, 31,FALSE) ,c("dimension", "item", "est")]
 prmNrm[,"est"] <- prmNrm[,"est"] - 0.6 + rnorm ( 31, 0, 0.75)
 prmGlo<- prmNrm
 prmGlo[,"dimension"] <- "global"
@@ -775,8 +775,8 @@ cuts  <- list ( procedural = list ( values = c(380, 420, 500, 560)) ,
 
 # transformation
 dfr   <- transformToBista ( equatingList = anch3, refPop = refPop, cuts=cuts ) 
-View(dfr$itempars)
-View(dfr$personpars)
+head(dfr$itempars)
+head(dfr$personpars)
 
 
 ################################################################################
@@ -907,7 +907,7 @@ T.t1t2<- transformToBista ( equatingList = L.t1t2, refPop=,ref, cuts = cuts)
 
 # The object 'T.t1t2' now contains transformed person and item parameters with
 # original and transformed linking errors. See for example:
-View(T.t1t2$personpars)
+head(T.t1t2$personpars)
 
 # Fourth step: drawing plausible values for 't2'. We use the transformed item
 # parameters (captured in 'T.t1t2') for anchoring
@@ -1200,7 +1200,6 @@ runT1P<- runModel(defT1P)
 
 # get the results
 resT1P<- getResults(runT1P, Q3 = FALSE)
-}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
