@@ -1,3 +1,31 @@
+### keep = unbenutze wertelabels behalten?
+### also wenn Variable x den Wert 6 = 'keine Angabe' gar nicht enthaelt, soll dann trotzdem ein Label
+### dafuer geschrieben werden?
+createSpssSyntaxSnippet <- function ( dat , file, keep = TRUE ) {
+      sink(file=file)
+    ### Schritt 1: Variablenlabels
+      cat("  VARIABLE LABELS\n")
+      for ( i in 1:ncol(dat)) {
+            varLab <- attr(dat[,i],"varLabel")
+            if ( length(varLab)>0) { cat(paste0("    ",colnames(dat)[i], " \"",varLab,"\" \n"))}
+      }
+      cat(".\n \n")
+    ### Schritt 2: Wertelabels
+      for ( i in 1:ncol(dat)) {
+            valLab <- attr(dat[,i],"valLabel")
+            if ( length(valLab)>0) {
+                 if ( keep == FALSE ) {
+                      weg <- setdiff ( valLab, dat[,i])
+                      if ( length(weg)>0) { valLab <- valLab[-match(weg, valLab)] }
+                 }
+                 cat(paste(paste0("add value labels ", colnames(dat)[i]), valLab, paste0("'",names(valLab),"'"), sep=" ", collapse = ".\n"))
+                 cat(".\n")
+            }
+      }
+    ### Schritt 3: nach dem letzten Wertelabel muss Schraegstrich durch Punkt ersetzt werden
+      cat("EXECUTE.\n")
+      sink() }
+
 ### gsub for more than one pattern
 gsubAll <- function(string, old, new) {
   stopifnot ( is.character(string), is.character(old), is.character(new), length(old) == length(new))
@@ -283,7 +311,7 @@ getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c(
                           eval(parse(text=do))
                           return(ret)})
                    }  else  {
-                          if(!exists("detectCores"))   {library(parallel)}      ### jetzt multicore: muss dasselbe Objekt zurueckgeben!
+                          # if(!exists("detectCores"))   {library(parallel)}    ### jetzt multicore: muss dasselbe Objekt zurueckgeben!
                           doIt<- function (laufnummer,  ... ) {
                                  if(!exists("getResults"))  { library(eatModel) }
                                  if(!exists("tam.mml") &  length(grep("tam.", class(runModelObj[[1]])))>0 ) {library(TAM, quietly = TRUE)}
@@ -1084,7 +1112,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
      ### wenn multicore handling, dann wird das Objekt "model" an cores verteilt und dort weiter verarbeitet. Ausserdem werden Konsolenausgaben in stringobjekt "txt" weitergeleitet
                      }  else  {
                         txt <- capture.output ( models <- lapply ( mods, FUN = doAufb, matchCall = cll, anf=anf, verbose=verbose) )
-                        if(!exists("detectCores"))   {library(parallel)}
+                        # if(!exists("detectCores"))   {library(parallel)}
                         doIt<- function (laufnummer,  ... ) {
                                if(!exists("getResults"))  { library(eatModel) }
                                txt <- capture.output ( res <- do.call("defineModel", args = models[[laufnummer]] ) )
@@ -2157,7 +2185,8 @@ pvFromRes  <- function ( resultsObj, toWideFormat = TRUE) {
          }  }
 
 itemFromRes<- function ( resultsObj ) {                                         ### Funktion wird so oft ausgefuehrt, wie es Modelle gibt
-          res <- do.call("rbind", by ( data = resultsObj, INDICES = resultsObj[,"model"], FUN = function ( mod ) {
+     ### hier muss "rbind.fill" genommen werden, denn 1pl und 2pl Modelle unterscheiden sich in den Spalten (bei 2pl gibt es zusaetzliche Diskriminationsspalten)
+          res <- do.call("rbind.fill", by ( data = resultsObj, INDICES = resultsObj[,"model"], FUN = function ( mod ) {
                  sel  <- mod[intersect( which(mod[,"par"] %in% c("est", "estSlope", "Nvalid", "itemP", "ptBis", "itemDiscrim", "offset")),which(mod[,"indicator.group"] == "items")),]
                  if (nrow(sel)==0) {
                      return(NULL)

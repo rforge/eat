@@ -86,8 +86,8 @@
 \tabular{ll}{
 Package: \tab eatModel\cr
 Type: \tab Package\cr
-Version: \tab 0.6.12\cr
-Date: \tab 2018-04-05\cr
+Version: \tab 0.6.13\cr
+Date: \tab 2018-05-11\cr
 License: \tab GPL(>=2)
 }
 }
