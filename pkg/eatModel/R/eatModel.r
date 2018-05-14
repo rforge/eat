@@ -1007,7 +1007,10 @@ doAufb <- function ( m, matchCall, anf, verbose ) {
           zusatz <- setdiff ( setdiff ( names(matchCall), "splittedModels"), names( overwr1))
           if ( length ( zusatz ) > 0 ) { overwr1 <- c(overwr1, matchCall[zusatz]) }
      ### sprechende Ausgaben, wenn verbose == TRUE
-           overwr3<- data.frame ( arg = c("Model name", "Number of items", "Number of persons", "Number of dimensions"), eval = as.character(c(splittedModels[["models.splitted"]][[matchL]][["model.name"]],length(itemSel), nrow(datSel) , nDim)), stringsAsFactors = FALSE)
+          if(exists("items"))   {allVars<- list(variablen=items)}
+          if(exists("itemSel")) {allVars<- list(variablen=itemSel)}             ### Hotfix: anzahl der Items bestimmen
+          allNams<- lapply(allVars, FUN=function(ii) {eatRep:::.existsBackgroundVariables(dat = dat, variable=ii)})
+          overwr3<- data.frame ( arg = c("Model name", "Number of items", "Number of persons", "Number of dimensions"), eval = as.character(c(splittedModels[["models.splitted"]][[matchL]][["model.name"]],length(allNams[["variablen"]]), nrow(datSel) , nDim)), stringsAsFactors = FALSE)
            if ( length ( overwrF) > 0 )  {
                 zusatz <- lapply ( overwrF, FUN = function ( y ) { splittedModels[["models"]][m,y] })
                 zusatz <- data.frame ( arg = overwrF, eval = as.character ( zusatz ) )
@@ -2000,8 +2003,12 @@ getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV, n
          }                                                                      ### untere Zeile: Diskriminationsparameter im 2pl-Fall auslesen
          if(attr(runModelObj, "irtmodel") %in% c("2PL", "2PL.groups", "GPCM", "3PL") & omitRegr == FALSE) {
             shw6 <- do.call("rbind", lapply (  1 : length ( colnames( qMatrix ) [-1] ) , FUN = function ( dims ) {
-                    shw6D <- data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = regr[["B"]][,"item"], var2 = NA , type = "fixed", indicator.group = "items", group = colnames(qMatrix)[dims+1], par = "estSlope",  derived.par = NA, value = regr[["B"]][,paste("B.Cat1.Dim",dims,sep="")], stringsAsFactors = FALSE)
-                    shw6se<- data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = regr[["B"]][,"item"], var2 = NA , type = "fixed", indicator.group = "items", group = colnames(qMatrix)[dims+1], par = "estSlope",  derived.par = "se", value = regr[["B"]][,paste("se.B.Cat1.Dim",dims,sep="")], stringsAsFactors = FALSE)
+                    cols  <- grep(paste0(".Dim",dims,"$" ), colnames(regr[["B"]]))
+                    tamMat<- regr[["B"]][,c(1,cols)]
+                    weg   <- which(tamMat[,2] == 0)
+                    if(length(weg)>0) {tamMat <- tamMat[-weg,]}
+                    shw6D <- data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = tamMat[,"item"], var2 = NA , type = "fixed", indicator.group = "items", group = colnames(qMatrix)[dims+1], par = "estSlope",  derived.par = NA, value = tamMat[,2], stringsAsFactors = FALSE)
+                    shw6se<- data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = tamMat[,"item"], var2 = NA , type = "fixed", indicator.group = "items", group = colnames(qMatrix)[dims+1], par = "estSlope",  derived.par = "se", value = tamMat[,3], stringsAsFactors = FALSE)
                     return(rbind(shw6D, shw6se)) }))
          }  else  {
             shw6 <- NULL
