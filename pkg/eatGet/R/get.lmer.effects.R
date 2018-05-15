@@ -120,6 +120,9 @@ save.lmer.effects <- function ( lmerObj, lmerObjRestrict = NULL, fileName, scipe
            orSci <- options()$scipen                                            ### lmerObj und lmerObjRestrict muessen zueinander genestet sein!
            if(scipen != unlist(orSci) ) { options(scipen=scipen) }
            sink(file = paste0(fileName,".txt"))                                 ### file to sink wird geoeffnet
+           cat("Output captured by 'eatGet', Version 0.0.9, build 2018-05-15.\n")
+           inf   <- Sys.getenv()
+           cat(paste("User: ",inf["USERNAME"],", computer: ",inf["COMPUTERNAME"],", ", R.version$version.string , ", Time: ",date(),"\n", sep=""))
            if(!is.null(lmerObjRestrict)) { cat("H1 model:\n\n")}
            print(summary(lmerObj), correlation=TRUE)
      ### Sektion R^2 abspeichern (falls vorhanden)
