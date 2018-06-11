@@ -305,7 +305,7 @@ getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c(
             q3MinType<- match.arg(q3MinType)
             q3theta  <- match.arg(q3theta )
             if("runMultiple" %in% class(runModelObj)) {                         ### Mehrmodellfall
-                if(is.null ( attr(runModelObj, "nCores") ) | attr(runModelObj, "nCores") == 1 ) {
+                if(is.null ( attr(runModelObj, "split")[["nCores"]] ) || attr(runModelObj, "split")[["nCores"]] == 1 ) {
                    res <- lapply( runModelObj, FUN = function ( r ) {           ### erstmal single core auswertung
                           do  <- paste ( "ret <- getResults ( ", paste(names(formals(getResults)), recode(names(formals(getResults)), "'runModelObj'='r'"), sep =" = ", collapse = ", "), ")",sep="")
                           eval(parse(text=do))
@@ -319,7 +319,11 @@ getResults <- function ( runModelObj, overwrite = FALSE, Q3 = TRUE, q3theta = c(
                                  eval(parse(text=do))
                                  return(ret)}
                           beg <- Sys.time()
-                          cl  <- makeCluster(attr(runModelObj, "nCores"), type = "SOCK")
+                          if ( attr(runModelObj, "split")[["mcPackage"]] == "parallel") {
+                               cl  <- makeCluster(attr(runModelObj, "split")[["nCores"]], type = "SOCK")
+                          }  else  {
+                               cl  <- makeClusterPSOCK(attr(runModelObj, "split")[["nCores"]], verbose=FALSE)
+                          }
                           res <- clusterApply(cl = cl, x = 1:length(runModelObj), fun = doIt , overwrite = overwrite, omitFit = omitFit, omitRegr = omitRegr, omitWle = omitWle, omitPV = omitPV, abs.dif.bound = abs.dif.bound, sig.dif.bound = sig.dif.bound, p.value = p.value)
                           stopCluster(cl)
                           cat(paste ( "Results of ",length(runModelObj), " analyses processed: ", sep="")); print( Sys.time() - beg)
@@ -802,7 +806,7 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defau
 
 runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.console = TRUE, wait = TRUE) {
             if ("defineMultiple" %in% class( defineModelObj ) ) {               ### erstmal fuer den Multimodellfall: nur dafuer wird single core und multicore unterschieden
-                if(is.null ( attr(defineModelObj, "nCores") ) | attr(defineModelObj, "nCores") == 1 ) {
+                if(is.null ( attr(defineModelObj, "split")[["nCores"]] ) || attr(defineModelObj, "split")[["nCores"]] == 1 ) {
                    res <- lapply(defineModelObj, FUN = function ( r ) {         ### erstmal: single core
                           ret <- runModel ( defineModelObj = r, show.output.on.console = show.output.on.console, show.dos.console = show.dos.console, wait = wait)
                           return(ret)})
@@ -813,13 +817,17 @@ runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.co
                           ret <- runModel ( defineModelObj = defineModelObj[[laufnummer]], show.output.on.console = show.output.on.console, show.dos.console = show.dos.console, wait = TRUE)
                           return(ret) }
                    beg <- Sys.time()
-                   cl  <- makeCluster(attr(defineModelObj, "nCores"), type = "SOCK")
+                   if ( attr(defineModelObj, "split")[["mcPackage"]] == "parallel") {
+                        cl  <- makeCluster(attr(defineModelObj, "split")[["nCores"]], type = "SOCK")
+                   }  else  {
+                        cl  <- makeClusterPSOCK(attr(defineModelObj, "split")[["nCores"]], verbose=FALSE)
+                   }
                    res <- clusterApply(cl = cl, x = 1:length(defineModelObj), fun = doIt , show.output.on.console = show.output.on.console, show.dos.console = show.dos.console, wait = wait)
                    stopCluster(cl)
                    cat(paste ( length(defineModelObj), " analyses finished: ", sep="")); print( Sys.time() - beg)
                 }
                 class(res) <- c("runMultiple", "list")
-                attr(res, "nCores") <- attr(defineModelObj, "nCores")
+                attr(res, "split") <- attr(defineModelObj, "split")
                 return(res)
             } else {                                                            ### ab hier fuer den single model Fall
                 if("defineConquest" %in% class(defineModelObj)) {               ### hier fuer conquest
@@ -1121,7 +1129,11 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                                txt <- capture.output ( res <- do.call("defineModel", args = models[[laufnummer]] ) )
                                return(list ( res=res, txt=txt)) }
                         beg <- Sys.time()
-                        cl  <- makeCluster(splittedModels[["nCores"]], type = "SOCK")
+                        if(splittedModels[["mcPackage"]] == "parallel") {
+                           cl  <- makeCluster(splittedModels[["nCores"]], type = "SOCK")
+                        }  else  {
+                           cl  <- makeClusterPSOCK(splittedModels[["nCores"]], verbose=FALSE)
+                        }
                         mods<- clusterApply(cl = cl, x = 1:length(models), fun = doIt)
                         stopCluster(cl)
                         cat(paste ( length(models), " models were prepared for estimation: ", sep="")); print( Sys.time() - beg)
@@ -1142,7 +1154,7 @@ defineModel <- function(dat, items, id, splittedModels = NULL, irtmodel = c("1PL
                         }
                         cat(txtG, sep="\n")
                      }
-                  attr(models, "nCores") <- splittedModels[["nCores"]]
+                  attr(models, "split") <- splittedModels
                   class(models)    <- c("defineMultiple", "list")
                   return(models)                                                ### Das ist die Rueckgabe fuer den Mehrmodellfall
                   }  else  {

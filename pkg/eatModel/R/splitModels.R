@@ -1,5 +1,6 @@
-splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "qMatrix" , "person.groups" ) , add = NULL , cross = NULL , all.persons = TRUE , all.persons.lab = "all" , person.split.depth = 0:length(person.groups[,-1,drop=FALSE]), full.model.names = TRUE , model.name.elements = c ( "dim" , "group" , "cross" ) , include.var.name = FALSE , env = FALSE , nCores=NULL , GBcore=NULL , verbose = TRUE ) {
-		# Funktion: person.groups nach person.grouping
+splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "qMatrix" , "person.groups" ) , add = NULL , cross = NULL , all.persons = TRUE , all.persons.lab = "all" , person.split.depth = 0:length(person.groups[,-1,drop=FALSE]), full.model.names = TRUE , model.name.elements = c ( "dim" , "group" , "cross" ) , include.var.name = FALSE , env = FALSE , nCores=NULL , mcPackage = c("future", "parallel"), GBcore=NULL , verbose = TRUE ) {
+    mcPackage <- match.arg(mcPackage)
+    # Funktion: person.groups nach person.grouping
 		pg2pgr <- function ( x , nam ) {
 				d <- x[,1,drop=FALSE]
 				eval ( parse ( text = paste0 ( "d$'" , nam , "' <- 1 " ) ) )
@@ -465,7 +466,7 @@ splitModels <- function ( qMatrix = NULL , person.groups = NULL , split = c ( "q
 		do.leer <- paste0 ( "m$" , colnames(m) , "[m$", colnames(m) , " %in% ''] <- NA" )
 		eval ( parse ( text = do.leer ) )
 		# anhaengen
-		r <- list ( "models" = m , "models.splitted" = r , "nCores" = chooseCores( cores = nCores, GBcore = GBcore, max.cores = nrow(m) ) )
+		r <- list ( "models" = m , "models.splitted" = r , "nCores" = chooseCores( cores = nCores, GBcore = GBcore, max.cores = nrow(m) ), "mcPackage" =  mcPackage)
 		# Ausgabe auf console
 		if ( verbose ) {
 				out.str <- paste0 ( "\nsee <returned>$models\nnumber of cores: ",r$nCores,"\n-------------------------------",paste(rep("-",nchar ( as.character ( nrow ( m ) ) )),collapse=""),zus,"\n" )

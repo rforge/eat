@@ -1,3 +1,4 @@
+importFrom("future", makeClusterPSOCK)
 importFrom("car", recode)
 importFrom("gdata", write.fwf)
 importFrom("plyr", rbind.fill, rbind.fill.matrix, alply)

@@ -16,7 +16,8 @@ splitModels ( qMatrix = NULL , person.groups = NULL ,
     all.persons = TRUE , all.persons.lab = "all" , 
     person.split.depth = 0:length(person.groups[,-1,drop=FALSE]) , 
     full.model.names = TRUE , model.name.elements = c ( "dim" , "group" , "cross" ) , 
-    include.var.name = FALSE , env = FALSE , nCores=NULL , GBcore=NULL , verbose = TRUE )
+    include.var.name = FALSE , env = FALSE , nCores=NULL , mcPackage = c("future", "parallel"),
+    GBcore=NULL , verbose = TRUE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -78,6 +79,10 @@ for intended subsequent use with \code{\link{defineModel}} use \code{env=FALSE}
 }
   \item{nCores}{
 integer (default: NULL), number of cores to use for subsequent data preparation, model estimation and results compilation
+}
+  \item{mcPackage}{
+Which package should be used for local host definition in multicore processing? If R version < 3.4, \code{"parallel"}
+is recommended. If R version >= 3.4, \code{"future"} is recommended.
 }
   \item{GBcore}{
 numeric (default: NULL), maximum RAM usage per core
