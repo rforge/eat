@@ -52,7 +52,7 @@ collapseMissings <- function( dat , missing.rule = NULL , items = NULL){
 	if(!is.null(item.names.chr)) {
 		dat <- data.frame ( mapply ( function ( dat , name , item.names.chr ) {
 				if ( name %in% item.names.chr ) 
-					car::recode ( dat , rec.str , as.numeric.result = FALSE )
+					car::recode ( dat , rec.str , as.numeric = FALSE )
 				else dat
 			} , dat , colnames ( dat ) , MoreArgs = list ( item.names.chr ) , SIMPLIFY = FALSE ) , stringsAsFactors=FALSE )	
 		} else {

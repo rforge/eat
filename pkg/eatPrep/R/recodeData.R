@@ -43,7 +43,7 @@ recodeData <- function (dat, values, subunits, verbose = FALSE) {
     recodeString <- paste(paste("'", names(unlist(recodeinfo[[variableName]]$values)), 
     "'", "=", "'", unlist(recodeinfo[[variableName]]$values), "'", 
     sep = ""), collapse = "; ")
-    variableRecoded <- car:::recode(variable, recodeString, as.factor = FALSE,
+    variableRecoded <- car::recode(variable, recodeString, as.factor = FALSE,
     as.numeric = FALSE)
 	if (verbose) cat(paste(funVersion, variableName, " has been recoded.\n", sep =""))
   }

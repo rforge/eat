@@ -49,7 +49,7 @@ scoreData <- function (dat, unitrecodings, units, verbose = FALSE) {
     scoreString <- paste(paste("'", names(unlist(scoreinfo[[variableName]]$values)), 
     "'", "=", "'", unlist(scoreinfo[[variableName]]$values), "'", 
     sep = ""), collapse = "; ")
-    variableScored <- car:::recode(variable, scoreString, as.factor = FALSE,
+    variableScored <- car::recode(variable, scoreString, as.factor = FALSE,
     as.numeric = FALSE)
 	if(verbose) cat(paste(funVersion, variableName, " has been scored.\n", sep =""))
   }
