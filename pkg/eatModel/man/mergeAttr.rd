@@ -8,7 +8,8 @@ be useful if variable attributes should be maintained.}
 \usage{
 mergeAttr(x, y, by = intersect(names(x), names(y)),
       by.x = by, by.y = by, all = FALSE, all.x = all, all.y = all,
-      sort = TRUE, suffixes = c(".x",".y"))}  
+      sort = TRUE, suffixes = c(".x",".y"), setAttr = TRUE, onlyVarValLabs = TRUE,
+      homoClass = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{x}{
@@ -57,6 +58,22 @@ logical. Should the result be sorted on the \code{by} columns?
 a character vector of length 2 specifying the suffixes to be used for making unique 
 the names of columns in the result which not used for merging (appearing in \code{by} etc).
 }
+  \item{setAttr}{
+%%     ~~Describe \code{file} here~~
+Logical: restore the variable attributes? If FALSE, the behavior of \code{mergeAttr} equals
+the behavior of \code{merge}.
+}
+  \item{onlyVarValLabs}{
+%%     ~~Describe \code{file} here~~
+Logical: If TRUE, only the variable and value labels will be restored. If FALSE, all
+variable attributes will be restored.
+}
+  \item{homoClass}{
+%%     ~~Describe \code{file} here~~
+Logical: Beginning with R version 3.5, \code{merge} may give an error if the class of the
+by-variables differs in both data.frames. If TRUE, class of by-variable(s) will be homogenized
+before merging.
+}
 }
 \value{
 data frame. See the help page of \code{merge} for further details. 
@@ -77,7 +94,7 @@ df3 <- merge(df1, df2, all = TRUE)
 attr(df3[,"y"], "variable.label")
 
 ### maintain label
-df4 <- mergeAttr(df1, df2, all = TRUE)
+df4 <- mergeAttr(df1, df2, all = TRUE, onlyVarValLabs = FALSE)
 attr(df4[,"y"], "variable.label")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

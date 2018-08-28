@@ -71,37 +71,42 @@ nObsItemPairs <- function ( responseMatrix, q3MinType) {
 
 ### mergen mit Attributen, das kann 'merge()' nicht:
 ### http://stackoverflow.com/questions/20306853/maintain-attributes-of-data-frame-columns-after-merge
-mergeAttr <- function ( x, y, by = intersect(names(x), names(y)), by.x = by, by.y = by, all = FALSE, all.x = all, all.y = all, sort = TRUE, suffixes = c(".x",".y")) {
-             doppel<- intersect ( colnames(x) , setdiff ( colnames(y), by.y))   ### uebereinstimmende dateinamen in beiden datensaetzen? (ausser die variablen, die germergt werden sollen
-             if ( length ( doppel ) > 0) {                                      ### wenn je, muessen sie umbenannt werden
-                  altNeuX <- data.frame ( alt = colnames(x)[match(doppel, colnames(x))], neu = paste ( colnames(x)[match(doppel, colnames(x))], suffixes[1], sep=""), stringsAsFactors = FALSE)
-                  recStatX<- paste("'",altNeuX[,"alt"] , "' = '" , altNeuX[,"neu"],"'",sep="", collapse="; ")
-                  colnames(x) <- recode (colnames(x) , recStatX)           ### nun noch dasselbe fuer die y-Variablen
-                  altNeuY <- data.frame ( alt = colnames(y)[match(doppel, colnames(y))], neu = paste ( colnames(y)[match(doppel, colnames(y))], suffixes[2], sep=""), stringsAsFactors = FALSE)
-                  recStatY<- paste("'",altNeuY[,"alt"] , "' = '" , altNeuY[,"neu"],"'",sep="", collapse="; ")
-                  colnames(y) <- recode (colnames(y) , recStatY)
+mergeAttr <- function ( x, y, by = intersect(names(x), names(y)), by.x = by, by.y = by, all = FALSE, all.x = all, all.y = all, sort = TRUE, suffixes = c(".x",".y"), setAttr = TRUE, onlyVarValLabs = TRUE, homoClass = TRUE) {
+     ### erstmal von allen by-variablen die Klassen homogenisieren, falls gewuenscht
+             byvars<- data.frame ( x=by.x, y=by.x, clx = sapply(x[,by.x,drop=FALSE], class), cly = sapply(y[,by.y,drop=FALSE], class), stringsAsFactors = FALSE)
+             for ( i in 1:nrow(byvars) ) {
+                   if ( length(unique(unlist(byvars[i,c("clx", "cly")]))) > 1 ) {
+                        cat(paste0("   Merging variable pair '", paste(unlist(byvars[i,c("x", "y")]), collapse = "'<==>'"), "' has different classes: '", paste(unlist(byvars[i,c("clx", "cly")]), collapse = "'<==>'"),"'. Classes will be homogenized to 'character'.\n   Use 'homoClass = FALSE' to depreciate this behavior.\n"))
+                        if ( byvars[i,"clx"] != "character" ) { x[, byvars[i,"x"]] <- as.character(x[, byvars[i,"x"]]) }
+                        if ( byvars[i,"cly"] != "character" ) { y[, byvars[i,"y"]] <- as.character(y[, byvars[i,"y"]]) }
+                   }
              }
-             dats  <- list ( x=x, y=y)                                          ### welche Attribute gibt es ueberhaupt?
-             attrNa<- unique(unlist(lapply ( dats , FUN = function ( d ) {      ### hier die Labels (= Attribute) fuer beide Datensaetze sammeln,
-                      at <- lapply ( d, attributes)                             ### ggf. umbenennen, wenn sich Variablen ueberschneiden
-                      atn<- unique(unlist(lapply ( at, names)))
-                      return(atn)})))
-             attrXY<- lapply ( attrNa, FUN = function ( a ) {
-                      atr <- lapply ( dats, FUN = function ( dat ) { sapply ( dat, attr, a)})
-                      atr <- c ( atr[[1]], atr[[2]])                            ### Hotfix: doppelte weg (duerfte max. nur die ID sein, nicht schlimm
-                      weg <- which(duplicated(names(atr)))
-                      if(length(weg)>0) { atr <- atr[-weg]}
-                      return(atr) })
-             names(attrXY) <- attrNa
-             datM  <- merge ( x=x, y=y, by=by, by.x=by.x, by.y=by.y, all=all, all.x=all.x, all.y=all.y, sort=sort, suffixes =suffixes)
-             for ( i in names(attrXY) ) {                                       ### nach dem Mergen Attribute variablenweise neu vergeben, separat fuer variablen- und wertelabels
-                      mat <- data.frame ( attrNummer = 1:length(attrXY[[i]]), matchInData = match ( names ( attrXY[[i]] ), colnames( datM) ) )
-                      stopifnot ( !length( which(is.na(mat[,"matchInData"]))) > length(unique(c(by, by.x, by.y))) )
-                      mat <- mat[which(!is.na(mat[,"matchInData"])),]
-                      for ( j in 1:nrow(mat) ) {                                ### obere Zeile, check: darf nichts geben, was nicht gematcht werden kann
-                            stopifnot ( colnames(datM)[mat[j,"matchInData" ] ] == names(attrXY[[i]])[mat[j,"attrNummer"]])
-                            attr(datM[, mat[j,"matchInData" ]], i) <- attrXY[[i]][[mat[j,"attrNummer"]]]
-                      }
+     ### jetzt mergen und DANACH die Attribute rekonstruieren
+             datM  <- merge ( x=x, y=y, by.x=by.x, by.y=by.y, all=all, all.x=all.x, all.y=all.y, sort=sort, suffixes =suffixes)
+             if ( setAttr == TRUE ) {
+                   dats<- list(x=x, y=y)
+                   for ( d in names(dats)) {
+                         for ( v in colnames(dats[[d]])) {
+                               vsuf <- paste0(v, suffixes[2])
+                               if ( vsuf %in% colnames(datM) ) {
+                                    if ( onlyVarValLabs == FALSE ) {
+                                         attributes(datM[,vsuf]) <- attributes(dats[[d]][,v])
+                                    }  else  {
+                                         attr(datM[,vsuf], "varLabel") <- attr(dats[[d]][,v], "varLabel")
+                                         attr(datM[,vsuf], "valLabel") <- attr(dats[[d]][,v], "valLabel")
+                                    }
+                               }  else  {
+                                    if ( v %in% colnames(datM) ) {
+                                         if ( onlyVarValLabs == FALSE ) {
+                                              attributes(datM[,v]) <- attributes(dats[[d]][,v])
+                                         }  else  {
+                                              attr(datM[,v], "varLabel") <- attr(dats[[d]][,v], "varLabel")
+                                              attr(datM[,v], "valLabel") <- attr(dats[[d]][,v], "valLabel")
+                                         }
+                                    }
+                               }
+                         }
+                   }
              }
              return(datM)}
 
@@ -585,6 +590,16 @@ equAux  <- function ( x, y ) {
            }
            return(eq)}
 
+### Hilfsfuntion fuer "transformToBista", solange eatrep im Uebergangsstadium ist
+adaptEatRepVersion <- function ( x ) {
+     if ( "data.frame" %in% class(x) ) {
+           return ( x )
+     }  else  {
+           x <- x[[1]][[1]]
+           stopifnot ( "data.frame" %in% class(x) )
+           return(x)
+     } }
+     
 transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defaultM = 500, defaultSD = 100, roman = FALSE ) {
     ### wenn equatet wurde, sollte auch 'refPop' definiert sein (es sei denn, es wurde verankert skaliert)
     ### wenn 'refPop' fehlt, wird es fuer alle gegebenen Dimensionen anhand der Gesamtstichprobe berechnet
@@ -608,6 +623,8 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defau
                  rex  <- pvFromRes(equatingList[["results"]][unique(c(which(equatingList[["results"]][,"group"] == dimname),which(equatingList[["results"]][,"type"] == "tech"))), ], toWideFormat = FALSE)
                  if ( is.null(weights) ) {
                       txt <- capture.output ( msd <- jk2.mean ( datL = rex, ID = id, imp = "imp", dependent = "value", na.rm = TRUE))
+    ### Achtung!! ggf. anpassen fuer neue eatRep-Version
+                      msd <- adaptEatRepVersion(msd)
                  }  else  {
                     if ( !class ( weights ) %in% "data.frame") {
                          cat("'weights' has to be of class 'data.frame'. 'weights' object will be converted.\n")
@@ -624,6 +641,7 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defau
                          rex <- rex[-mis,]
                     }
                     txt <- capture.output ( msd <- jk2.mean ( datL = rex, ID = id, imp = "imp", wgt = colnames(weights)[2], dependent = "value", na.rm = TRUE) )
+                    msd <- adaptEatRepVersion(msd)
                  }
                  rp <- data.frame ( domain = dimname , m = msd[intersect(which(msd[,"parameter"] == "mean"), which(msd[,"coefficient"] == "est")),"value"], sd = msd[intersect(which(msd[,"parameter"] == "sd"), which(msd[,"coefficient"] == "est")),"value"])
                  return(list (msd = msd , rp=rp))})
@@ -701,6 +719,7 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defau
     ### Dazu muss zuerst Mittelwert und SD der Fokuspopulation bestimmt werden.
                             if ( is.null(weights) ) {
                                  txt <- capture.output ( msdF <- jk2.mean ( datL = pv, ID = id, imp = "imp", dependent = "valueTransfBista", na.rm = TRUE))
+                                 msdF<- adaptEatRepVersion(msdF)
                             }  else  {
                                  if ( !class ( weights ) %in% "data.frame") {
                                       cat("'weights' has to be of class 'data.frame'. 'weights' object will be converted.\n")
@@ -717,6 +736,7 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defau
                                       pvF <- pvF[-mis,]
                                  }
                                  txt <- capture.output ( msdF <- jk2.mean ( datL = pvF, ID = id, imp = "imp", wgt = colnames(weights)[2], dependent = "valueTransfBista", na.rm = TRUE) )
+                                 msdF<- adaptEatRepVersion(msdF)
                             }
                             msdFok <- c(msdF[intersect(which(msdF[,"parameter"] == "mean"), which(msdF[,"coefficient"] == "est")),"value"], msdF[intersect(which(msdF[,"parameter"] == "sd"), which(msdF[,"coefficient"] == "est")),"value"])
                             if ( cutsMis == FALSE & !is.null ( equatingList[["items"]] )) {
@@ -731,7 +751,11 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defau
                			                    return(del)}))
     ### ggf. weg! 'linkingErrorTraitLevel' ergibt ja fuer Items keinen Sinn, nur fuer Personenparameter
                                  ori <- colnames(itFrame)
-                                 itFrame <- data.frame ( merge ( itFrame, le, by = "traitLevel", sort = FALSE, all = TRUE) )
+                                 chk <- unique(le[,"traitLevel"]) %in% unique(itFrame[,"traitLevel"])
+                                 if ( length( which(chk == FALSE)) > 0) {
+                                     cat(paste("Warning: No items on trait level(s) '",paste( unique(le[,"traitLevel"])[which(chk == FALSE)], collapse = "', '"), "'. \n", sep=""))
+                                 }
+                                 itFrame <- data.frame ( merge ( itFrame, le, by = "traitLevel", sort = FALSE, all.x = TRUE, all.y = FALSE) )
                                  itFrame <- itFrame[,c(ori, "linkingErrorTraitLevel")]
                             }
                             itFrame[,"refMean"]        <- refPop[mat,2]
@@ -741,12 +765,16 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defau
     ### 2. Transformation der Personenparameter
                             if ( cutsMis == FALSE ) { pv[,"traitLevel"]   <- num.to.cat(x = pv[,"valueTransfBista"], cut.points = cuts[[mat1]][["values"]], cat.values = cuts[[mat1]][["labels"]])}
                             pv[,"dimension"]  <- pv[,"group"]
-                            stopifnot ( length( unique ( itFrame[,"linkingErrorTransfBista"])) == 1)
+                            chk <- unique(le[,"traitLevel"]) %in% unique(pv[,"traitLevel"])
+                            if ( length( which(chk == FALSE)) > 0) {
+                                 cat(paste("Warning: No plausible values on trait level(s) '",paste( unique(le[,"traitLevel"])[which(chk == FALSE)], collapse = "', '"), "'. \n", sep=""))
+                            }
+                            stopifnot ( length( unique ( na.omit(itFrame[,"linkingErrorTransfBista"]))) %in% 0:1)
                             pv[,"linkingError"] <- equatingList[["items"]][[mod]][[dims]][["eq"]][["descriptives"]][["linkerror"]]
                             pv[,"linkingErrorTransfBista"] <- unique ( itFrame[,"linkingErrorTransfBista"])
                             ori <- colnames(pv)                                 ### nur wenn untere Bedingung == TRUE, gibt es das Objekt 'le', das gemergt werden soll
                             if ( cutsMis == FALSE & !is.null ( equatingList[["items"]] )) {
-                                 pv  <- data.frame ( merge ( pv, le, by = "traitLevel", sort = FALSE, all = TRUE) )
+                                 pv  <- data.frame ( merge ( pv, le, by = "traitLevel", sort = FALSE, all.x = TRUE, all.y = FALSE) )
                                  pv  <- pv[,c(ori, "linkingErrorTraitLevel")]
                             }
     ### ggf. Gewichte an Personenframe mit dranhaengen
@@ -803,6 +831,7 @@ transformToBista <- function ( equatingList, refPop, cuts, weights = NULL, defau
        ret        <- list ( itempars = itempars, personpars = personpars, refPop = refPop, means = rp, all.Names = context, itemparsVera = itemVera)
        class(ret) <- c("list", "transfBista")
        return( ret ) }
+
 
 runModel <- function(defineModelObj, show.output.on.console = FALSE, show.dos.console = TRUE, wait = TRUE) {
             if ("defineMultiple" %in% class( defineModelObj ) ) {               ### erstmal fuer den Multimodellfall: nur dafuer wird single core und multicore unterschieden
