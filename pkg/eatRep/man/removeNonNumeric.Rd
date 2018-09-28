@@ -1,17 +1,15 @@
-\name{compareTrends}
-\alias{compareTrends}
+\name{removeNonNumeric}
+\alias{removeNonNumeric}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{Compares trend estimates between groups.}
-\description{Function compares trend estimates from \code{jk2.mean}, \code{jk2.table}, 
- \code{jk2.quantile}, and \code{jk2.glm} analyses.}
+\title{Removes all non-numeric characters from a string.}
+\description{Function removes all non-numeric characters from a string.}
 \usage{
-compareTrends ( resultFrame)}
+removeNonNumeric ( string)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{resultFrame}{
+  \item{string}{
 %%     ~~Describe \code{file} here~~
-A results object created by \code{jk2.mean}, \code{jk2.table}, 
- \code{jk2.quantile}, or \code{jk2.glm} 
+a character vector
 }
 }
 \details{
@@ -23,7 +21,7 @@ A results object created by \code{jk2.mean}, \code{jk2.table},
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-a data frame.
+a character string
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -41,7 +39,8 @@ Sebastian Weirich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-### see examples in the vignette and in the help page of jk2.glm()
+str <- c(".d1.nh.120", "empty", "110", ".nh.dgd", "only.nh")
+removeNonNumeric(str)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

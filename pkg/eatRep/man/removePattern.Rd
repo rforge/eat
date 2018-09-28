@@ -1,19 +1,19 @@
-\name{dQ}
-\alias{dQ}
+\name{removePattern}
+\alias{removePattern}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{Display results of jk2.quantile analyses.}
-\description{This is an easy function only addressed to display results of jk2.quantile analyses in an abbreviated manner.}
+\title{Removes a specified pattern from a string.}
+\description{Function remove a specified string from a character vector.}
 \usage{
-dQ ( object, seOmit = FALSE) }
+removePattern ( string, pattern)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{object}{
+  \item{string}{
 %%     ~~Describe \code{file} here~~
-A results object created by jk2.quantile().
+a character vector
 }
-  \item{seOmit}{
-%%     ~~Describe \code{dif.term} here~~
-Optionally: omit displaying standard errors?
+  \item{pattern}{
+%%     ~~Describe \code{file} here~~
+a character pattern
 }
 }
 \details{
@@ -25,7 +25,7 @@ Optionally: omit displaying standard errors?
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-A simply data frame, not intended for further processing.
+a character string
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -43,7 +43,8 @@ Sebastian Weirich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-### see examples in the vignette.
+str <- c(".d1.nh.120", "empty", "110", ".nh.dgd", "only.nh")
+removePattern(str, ".nh.")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

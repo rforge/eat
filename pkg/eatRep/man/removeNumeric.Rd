@@ -1,23 +1,15 @@
-\name{dG}
-\alias{dG}
+\name{removeNumeric}
+\alias{removeNumeric}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{Display results of jk2.glm analyses.}
-\description{This is an easy function only addressed to display results of jk2.glm analyses in an abbreviated manner.}
+\title{Removes alphanumeric characters from a string.}
+\description{Function removes alphanumeric characters from a string.}
 \usage{
-dG ( object , analyses = NULL, digits = 3 ) }
+removeNumeric ( string)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{object}{
+  \item{string}{
 %%     ~~Describe \code{file} here~~
-A results object created by jk2.glm().
-}
-  \item{analyses}{
-%%     ~~Describe \code{dif.term} here~~
-Optionally: a numeric vector auf analyses which should be displayed.
-}
-  \item{digits}{
-%%     ~~Describe \code{dif.term} here~~
-Number of digits for rounding results (applies only for printing on console). 
+a character vector
 }
 }
 \details{
@@ -29,7 +21,7 @@ Number of digits for rounding results (applies only for printing on console).
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-A simply data frame, not intended for further processing.
+a character string
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -47,7 +39,8 @@ Sebastian Weirich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-### see examples in the vignette and in the help page of jk2.glm()
+str <- c(".d1.nh.120", "empty", "110", ".nh.dgd", "only.nh")
+removeNumeric(str)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

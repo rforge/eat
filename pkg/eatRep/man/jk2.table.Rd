@@ -1,7 +1,7 @@
 \name{jk2.table}
 \alias{jk2.table}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{JK1, JK2 and BRR for frequency tables.}
+\title{JK1, JK2 and BRR for frequency tables and trend estimation.}
 \description{Compute frequency tables for categorical variables (e.g. factors: dichotomous or polytomous) in complex
 cluster designs. Estimation of standard errors optionally takes the clustered structure and multiple imputed
 variables into account. To date, Jackknife-1 (JK1), Jackknife-2 (JK2) and Balanced repeated replicate (BRR) methods are 
@@ -12,9 +12,9 @@ methods. Technically, this is a wrapper for the svymean() function of the survey
 \usage{
 jk2.table(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, 
           repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups), 
-          group.differences.by = NULL, chiSquare = FALSE, correct = TRUE, group.delimiter = "_", 
+          group.differences.by = NULL, cross.differences = FALSE, chiSquare = FALSE, correct = TRUE, group.delimiter = "_",
           trend = NULL, linkErr = NULL, dependent, separate.missing.indicator = FALSE, na.rm=FALSE, 
-          expected.values = NULL, doCheck = TRUE)}
+          expected.values = NULL, doCheck = TRUE, forceTable = FALSE )}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -72,6 +72,12 @@ The corresponding variable must be included in the \code{groups} statement. If s
 distribution of the dependent variable is compared between the groups. See examples for 
 further details.
 }
+  \item{cross.differences}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Either a list of vectors, specifying the pairs of levels for which cross-level differences should be computed.
+Alternatively, if TRUE, cross-level differences for all pairs of levels are computed. If FALSE, no cross-level
+differences are computed. (see examples 2a, 3, and 4 in the help file of jk2.mean)
+}
   \item{chiSquare}{
 Logical. Applies only if 'group.differences.by' was specified and does not contain 'wholePop'. Defines whether 
 group differences should be represented in a chi square test or in (mean) differences of each 
@@ -115,6 +121,13 @@ Optional. A vector auf values expected in dependent variable. Recommend to left 
 Logical: Check the data for consistency before analysis? If \code{TRUE} groups with insufficient data are excluded from
 analysis to prevent subsequent functions from crashing.
 }
+  \item{forceTable}{
+Logical: Function decides internally whether the table or the mean function of \code{survey} is called.
+If the mean function is called, the polytomous dependent variable is converted to dichotomous indicator
+variables. If mean is called, group differences for each category of the polytomous dependent variable
+can be computed. If table is called, a chi square statistic may be computed. The argument allows to
+force the function either to call mean or table.
+}
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
@@ -131,7 +144,9 @@ which is adapted for nested imputations if the \code{dependent} argument implies
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-A data frame in the long format. For each subpopulation denoted by the \code{groups} statement, each
+A list of data frames in the long format. The output can be summarized using the \code{report} function.
+The first element of the list is a list with either one (no trend analyses) or two (trend analyses)
+data frames with at least six columns each. For each subpopulation denoted by the \code{groups} statement, each
 dependent variable, each parameter (i.e., the values of the corresponding categories of the dependent variable)
 and each coefficient (i.e., the estimate and the corresponding standard error) the corresponding value is given.
 \item{group}{Denotes the group an analysis belongs to. If no groups were specified and/or analysis for the 
@@ -156,28 +171,44 @@ If groups were specified, further columns which are denoted by the group names a
 \author{
 Sebastian Weirich
 }
-\note{
-%%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
-data(hisei)
-### First example: Computes frequencies of the hisei group conditionally on country
-### The distribution of the hisei categories is compared for eachcategory separately, 
-### i.e. no chi square test is used. 
-freq.tab  <- jk2.table(datL = hisei, ID = "idstud", wgt = "wgtSTUD",
-             imp="imputation", type = "JK2", PSU = "JKZone", repInd = "JKrep",
-             groups = "country", group.differences.by = "country", dependent = "hisei")
+data(lsa)
 
-### Second example: Computes frequencies of passed and failed conditionally on the
-### groups of sex and country. Assuming no cluster but a nested imputation structure. 
-freq.tab  <- jk2.table(datL = reading, ID = "idstud", wgt = "wgtSTUD",
-             nest="nest", imp="imputation", groups = c("country","sex"), dependent = "passed")
+### Example 1: only means, SD and variances for each country
+### We only consider domain 'reading'
+rd     <- lsa[which(lsa[,"domain"] == "reading"),]
+
+### We only consider the first "nest".
+rdN1   <- rd[which(rd[,"nest"] == 1),]
+
+### First, we only consider year 2010
+rdN1y10<- rdN1[which(rdN1[,"year"] == 2010),]
+
+### First example: Computes frequencies of polytomous competence levels (1, 2, 3, 4, 5)
+### conditionally on country, using a chi-square test to decide whether the distribution
+### varies between countries (it's an overall test, i.e. with three groups, df1=8).
+freq.tab1 <- jk2.table(datL = rdN1y10, ID = "idstud", wgt = "wgt", imp="imp",
+             type = "JK2", PSU = "jkzone", repInd = "jkrep", groups = "country",
+             group.differences.by = "country", dependent = "comp", chiSquare = TRUE)
+res1      <- report(freq.tab1, add = list ( domain = "reading" ))
+
+### Second example: Computes frequencies of polytomous competence levels (1, 2, 3, 4, 5)
+### conditionally on country. Now we test whether the frequency of each single category
+### differs between pairs of countries (it's not an overall test ... jk2.table now
+### calls jk2.mean internally, using dummy variables
+freq.tab2 <- jk2.table(datL = rdN1y10, ID = "idstud", wgt = "wgt", imp="imp",
+             type = "JK2", PSU = "jkzone", repInd = "jkrep", groups = "country",
+             group.differences.by = "country", dependent = "comp", chiSquare = FALSE)
+res2      <- report(freq.tab2, add = list ( domain = "reading" ))
+
+### Third example: trend estimation and nested imputation and 'by' loop
+freq.tab3 <- by ( data = lsa, INDICES = lsa[,"domain"], FUN = function (subdat) {
+             jk2.table(datL = subdat, ID = "idstud", wgt = "wgt", imp="imp", nest = "nest",
+                 type = "JK2", PSU = "jkzone", repInd = "jkrep", groups = "country",
+                 group.differences.by = "country", group.splits = 0:1, cross.differences = TRUE,
+                 dependent = "comp", chiSquare = FALSE, trend = "year", linkErr = "leComp") })
+res3      <- do.call("rbind", lapply(names(freq.tab3), FUN = function (domain) {
+             report(freq.tab3[[domain]], trendDiffs = TRUE, add = list ( domain = domain ))}))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

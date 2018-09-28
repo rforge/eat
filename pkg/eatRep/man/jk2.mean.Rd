@@ -10,8 +10,8 @@ Technically, this is a wrapper for the \code{svymean()} and \code{svyvar()} func
 \usage{
 jk2.mean (datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, 
           repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
-            group.differences.by = NULL, group.delimiter = "_", trend = NULL, linkErr = NULL, 
-            dependent, na.rm = FALSE, doCheck = TRUE)}
+            group.differences.by = NULL, cross.differences = FALSE, group.delimiter = "_",
+            trend = NULL, linkErr = NULL, dependent, na.rm = FALSE, doCheck = TRUE)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{datL}{
@@ -68,6 +68,12 @@ Optional: Specifies variable group differences should be computed for. The corre
 the \code{groups} statement. Exception: choose 'wholePop' if you want to estimate each's group difference from the 
 overall sample mean. See examples for further details.
 }
+  \item{cross.differences}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Either a list of vectors, specifying the pairs of levels for which cross-level differences should be computed.
+Alternatively, if TRUE, cross-level differences for all pairs of levels are computed. If FALSE, no cross-level
+differences are computed. (see example 2a, 3, and 4)
+}
   \item{group.delimiter}{
 %%     ~~Describe \code{sig.dif.bound} here~~
 Character string which separates the group names in the output frame.
@@ -106,7 +112,9 @@ the \sQuote{survey} package. The results of the several analyses are then pooled
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-A data frame in the long format with at least six columns. For each subpopulation denoted by the \code{groups} 
+A list of data frames in the long format. The output can be summarized using the \code{report} function.
+The first element of the list is a list with either one (no trend analyses) or two (trend analyses)
+data frames with at least six columns each. For each subpopulation denoted by the \code{groups}
 statement, each parameter (i.e., mean, variance, or group differences) and each coefficient (i.e., the estimate 
 and the corresponding standard error) the corresponding value is given.
 \item{group}{Denotes the group an analysis belongs to. If no groups were specified and/or analysis for the 
@@ -129,78 +137,71 @@ If groups were specified, further columns which are denoted by the group names a
 \author{
 Sebastian Weirich
 }
-\note{
-%%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
-data(reading)
+data(lsa)
+
 ### Example 1: only means, SD and variances for each country
-### We only consider the first "nest". 
-readingNest1 <- reading[which(reading[,"nest"] == 1),]
-means1       <- jk2.mean(datL = readingNest1, ID="idstud", wgt="wgtSTUD", type = "JK2", 
-                PSU = "JKZone", repInd = "JKrep", imp="imputation", groups = "country", 
-                dependent = "score", na.rm=FALSE, doCheck=TRUE)
-dM(means1)      
+### We only consider domain 'reading'
+rd     <- lsa[which(lsa[,"domain"] == "reading"),]
+
+### We only consider the first "nest".
+rdN1   <- rd[which(rd[,"nest"] == 1),]
+
+### First, we only consider year 2010
+rdN1y10<- rdN1[which(rdN1[,"year"] == 2010),]
+
+### mean estimation
+means1 <- jk2.mean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+          imp="imp", groups = "country", dependent = "score", na.rm=FALSE, doCheck=TRUE)
+### reporting function: the function does not know which content domain is being considered,
+### so it is possible to add new columns in the output using the 'add' argument
+res1   <- report(means1, add = list(domain = "reading"))
 
 ### Example 1a: Additionally to example 1, we decide to estimate whether 
-### each country's mean differ significantly from the overall mean. 
-means1a      <- jk2.mean(datL = readingNest1, ID="idstud", wgt="wgtSTUD", type = "JK2", 
-                PSU = "JKZone", repInd = "JKrep", imp="imputation", groups = "country", 
-                group.differences.by = "wholePop", dependent = "score", na.rm=FALSE, doCheck=TRUE)
+### each country's mean differ significantly from the overall mean as well
+### as from the individual means of the other contries
+means1a<- jk2.mean(datL = rdN1y10, ID="idstud", wgt="wgt", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+          imp="imp", groups = "country", group.splits = 0:1, group.differences.by = "country",
+          cross.differences = TRUE, dependent = "score", na.rm=FALSE, doCheck=TRUE)
+res1a  <- report(means1a, add = list(domain = "reading"))
 
 ### See that only the mean of 'LandB' significantly differs from the overall mean.
-means1a[which(means1a[,"parameter"] == "wholePopDiff"),]
+print(res1a[intersect(grep("wholeGroup.vs.", res1a[,"group"]), which(res1a[,"parameter"] == "mean")), ], digits = 3)
 
 ### Example 2: Sex differences by country. Assume equally weighted cases by omitting
 ### 'wgt' argument.
-means2       <- jk2.mean(datL = readingNest1, ID="idstud", type = "JK2", 
-                PSU = "JKZone", repInd = "JKrep", imp="imputation", groups = c("country", "sex"),
-                group.differences.by="sex", dependent = "score", na.rm=FALSE, doCheck=TRUE)
+means2 <- jk2.mean(datL = rdN1y10, ID="idstud", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+          imp="imp", groups = c("country", "sex"), group.splits = 0:2, group.differences.by="sex",
+          dependent = "score", na.rm=FALSE, doCheck=TRUE)
+res2   <- report(means2,add = list(domain = "reading"))
 
-### Example 2a: Additionally to example 2, we decide to estimate whether 
+### Example 2a: Additionally to example 2, we decide to estimate whether
 ### each country's mean differ significantly from the overall mean. Moreover, we estimate
 ### whether each country's sex difference differ significantly from the sex difference in
 ### the whole population. 
-means2a      <- jk2.mean(datL = readingNest1, ID="idstud", type = "JK2", 
-                PSU = "JKZone", repInd = "JKrep", imp="imputation", groups = c("country", "sex"),
-                group.differences.by=c("wholePop", "sex"), dependent = "score", na.rm=FALSE, doCheck=TRUE)
+means2a<- jk2.mean(datL = rdN1y10, ID="idstud", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+          imp="imp", groups = c("country", "sex"), group.splits = 0:2, group.differences.by="sex",
+          cross.differences = list(c(0,1), c(0,2)), dependent = "score", na.rm=FALSE, doCheck=TRUE)
+res2a  <- report(means2a,add = list(domain = "reading"))
 
-### Third example: Nested imputations of dependent variable
-### First split the income in above and below 2000
-reading[,"incomeHL"] <- ifelse(reading[,"income"]>2000,1,0)
-### Assuming 2 nests, i.e. variable "income" with 2 imputations, and three plausible 
-### values for each imputation
-means3 <- jk2.mean(datL = reading, ID="idstud", wgt="wgtSTUD", type = "JK2", PSU = "JKZone", 
-          repInd = "JKrep", nest="nest",imp="imputation", groups = c("country", "incomeHL"), 
-          dependent = "score", na.rm=FALSE, doCheck=TRUE)
-
-### Fourth example: Assume a completely random sample (e.g. no cluster structure and no weights),
-### and give descriptives for subpopulations and the overlying populations
-means4 <- jk2.mean(datL = readingNest1, ID=1, imp="imputation", groups = c("country", "sex"),
-          group.splits = c(0:2), dependent = "score", na.rm=FALSE, doCheck=TRUE)
+### Third example: like example 2a, but using nested imputations of dependent variable,
+### and additionally estimating trend: use 'rd' indtead of 'rdN1y10'
+means3T<- jk2.mean(datL = rd, ID="idstud", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+          imp="imp", nest="nest", groups = c("country", "sex"), group.splits = 0:2, group.differences.by="sex",
+          cross.differences = list(c(0,1), c(0,2)), dependent = "score", na.rm=FALSE, doCheck=TRUE,
+          trend = "year", linkErr = "leScore")
+res3T  <- report(means3T, add = list(domain = "reading"))
           
-### Sixth example: Trend estimation. More specifically, we want to compute group
-### specific means, group differences, differences against the whole population, 
-### and for all of these differences also a trend estimation. First, we define 
-### an arbitrary trend variable and an arbitrary linking error
-readingTrend <- subset ( reading, nest != 3)
-readingTrend[,"trend"] <- car::recode ( readingTrend[,"nest"], "1=2005; 2=2015")
-readingTrend[,"linkE"] <- 1.554
-
-### trend estimation, using arbitrary linking error 
-means6 <- jk2.mean(datL = readingTrend, ID="idstud", type = "JK2", PSU = "JKZone", 
-          repInd = "JKrep", imp="imputation", groups = c("country", "sex"),
-          group.differences.by = c("wholePop", "sex"), trend = "trend", 
-          linkErr = "linkE", dependent = "score", na.rm=FALSE, doCheck=TRUE)
-          
-### compare trends between groups
-means6a<- compareTrends( means6 )
+### Fourth example: using a loop do analyse 'reading' and 'listening' comprehension
+### in one function call. Again with group and cross differences and trends, and
+### trend differences
+means4T<- by ( data = lsa, INDICES = lsa[,"domain"], FUN = function (sub.dat) {
+          jk2.mean(datL = sub.dat, ID="idstud", type = "JK2", PSU = "jkzone", repInd = "jkrep",
+                 imp="imp", nest="nest", groups = c("country", "sex"), group.splits = 0:2, group.differences.by="sex",
+                 cross.differences = list(c(0,1), c(0,2)), dependent = "score", na.rm=FALSE, doCheck=TRUE,
+                 trend = "year", linkErr = "leScore") })
+ret4T  <- do.call("rbind", lapply(names(means4T), FUN = function ( domain ) {
+          report(means4T[[domain]], trendDiffs = TRUE, add = list(domain = domain))}))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

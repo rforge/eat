@@ -1,24 +1,24 @@
-\name{dM}
-\alias{dM}
+\name{facToChar}
+\alias{facToChar}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{Display results of jk2.mean analyses.}
-\description{This is an easy function only addressed to display results of jk2.mean analyses in an abbreviated manner.}
+\title{Transform columns in a data frame}
+\description{Function transforms all data frame columns of a specific class
+into another class.}
 \usage{
-dM ( object, omitTerms = c("mean","sd","var", "Ncases","NcasesValid",
-     "meanGroupDiff", "se","est"), digits = 3 )}
+facToChar ( dataFrame, from = "factor", to = "character")}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{object}{
+  \item{dataFrame}{
 %%     ~~Describe \code{file} here~~
-A results object created by jk2.mean().
+a data frame
 }
-  \item{omitTerms}{
-%%     ~~Describe \code{dif.term} here~~
-Optionally: character vector of terms you do not want to see on console.
+  \item{from}{
+%%     ~~Describe \code{file} here~~
+which column class shuld be transformed?
 }
-  \item{digits}{
-%%     ~~Describe \code{dif.term} here~~
-Number of digits for rounding values.
+  \item{to}{
+%%     ~~Describe \code{file} here~~
+target column class
 }
 }
 \details{
@@ -30,7 +30,7 @@ Number of digits for rounding values.
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-A simply data frame, not intended for further processing.
+a data frame
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -48,7 +48,11 @@ Sebastian Weirich
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-### see examples in the vignette and in the help page of jk2.glm()
+data(lsa)
+### original classes
+sapply(lsa, class)
+lsa1 <- facToChar(lsa)
+sapply(lsa1, class)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

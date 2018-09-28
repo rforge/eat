@@ -48,44 +48,60 @@ pool.R2 <- function ( r2, N, quiet = FALSE ) {
            if(mis.N) {return(transformed[1])} else {return(transformed)} }
 
 
-jk2.pool <- function ( datLong, allNam, forceSingularityTreatment ) {                                    
+jk2.pool <- function ( datLong, allNam, forceSingularityTreatment, modus ) {    ### untere Zeile, Hotfix: damit es als Gruppierung fuer 'by' geht, muessen missings ersetzt werden
             retList <- do.call("rbind", by(data = datLong, INDICES = datLong[, c("group","parameter")], FUN = function ( u ) {
+               comp <- table(u[,"comparison"], useNA="ifany")
+               stopifnot(length(comp)==1)
                if(u[1,"parameter"] == "chiSquareTest") {                        ### jetzt wird chi quadrat gepoolt, Achtung, erstmal kein Unterschied zwischen genestet und nicht genestet
                   chi  <- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "chi2"),"value"]})
                   degFr<- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "df"),"value"]})
-                  stopifnot(length(table(degFr)) == 1)
-                  degFr<- unique(unlist(degFr))
+                  if ( length(table(degFr)) != 1 ) {
+                       cat(paste0("Warning for '",u[1,"group"],"': degrees of freedom vary between imputations. Min: ",min(unlist(degFr)),"; Max: ", max(unlist(degFr)),". Chi-square test will be skipped.\n"))
+                  }                                                             ### wenn chi-Werte fuer irgendwelche Imputationen missings haben oder die Zahl der Freiheitsgrade variiert,
+                  degFr<- unique(unlist(degFr))[1]                              ### gibt 'micombine.chisquare' automatisch ein 'NA' aus, muss hier nicht von hand gemacht werden; es genuegt erstmal nur die Warnung
                   pool <- micombine.chisquare ( dk = unlist(chi), df=degFr, display = FALSE)
-                  ret  <- data.frame ( group = names(table(u[,"group"])), depVar = allNam[["dependent"]], modus="noch_leer", parameter = names(table(u[,"parameter"])), coefficient = c("D2statistic","chi2Approx", "df1", "df2", "p", "pApprox"), value = pool[c("D", "chisq.approx", "df", "df2", "p", "p.approx")], u[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
-               }  else  { 
+                  ret  <- data.frame ( group = names(table(u[,"group"])), depVar = allNam[["dependent"]], modus=modus, comparison = names(comp), parameter = names(table(u[,"parameter"])), coefficient = c("D2statistic","chi2Approx", "df1", "df2", "p", "pApprox"), value = pool[c("D", "chisq.approx", "df", "df2", "p", "p.approx")], u[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE, row.names=NULL)
+               }  else  {
                   uM   <- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "est"),"value"]})
                   uSE  <- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "se"),"value"]})
+    ### Effektstaerke poolen
+                  if ( "es" %in% u[,"coefficient"] ) {
+                        uES  <- by(u, INDICES = u[,c(allNam[["nest"]] )], FUN = function ( uN ) { uN[which(uN[,"coefficient"] == "es"),"value"]})
+                        esP  <- mean(unlist(lapply(uES, mean)))
+                  }
                   if(u[1,"parameter"] %in% c("R2", "R2nagel")) {                   ### vorerst werden keine Standardfehler des R^2 berechnet
                      getNvalid <- datLong[ intersect( intersect(  which(datLong[,"group"] == u[1,"group"]), which( datLong[,"parameter"] == "Nvalid")), which( datLong[,"coefficient"] == "est") ) ,]
-                     if(nrow(getNvalid)==0) { 
+                     if(nrow(getNvalid)==0) {
                         pooled    <- t(pool.R2(r2 = u[,"value"]))
-                     }  else  { 
-                        if (forceSingularityTreatment == TRUE) { 
-                            if(nrow(getNvalid) != nrow(u) )  { 
+                     }  else  {
+                        if (forceSingularityTreatment == TRUE) {
+                            if(nrow(getNvalid) != nrow(u) )  {
                                paste("Inconsistent number of sample size replications and/or R^2 estimates. Try workaround.\n")
                                u <- u[which(u[,"coefficient"] == "est"),]
                                stopifnot(nrow(getNvalid) == nrow(u))
                                pooled    <- t(pool.R2(r2 = u[,"value"], N = getNvalid[,"value"]))
-                            }   else  { 
+                            }   else  {
                                pooled    <- t(pool.R2(r2 = u[,"value"], N = getNvalid[,"value"]))
-                            }   
-                        }  else  {     
+                            }
+                        }  else  {
                            pooled    <- t(pool.R2(r2 = u[,"value"], N = getNvalid[,"value"]))
-                        }   
-                     }   
+                        }
+                     }
                   } else {
                      pooled <- pool.means(m = uM, se = uSE)$summary[c("m.pooled","se.pooled")]
                   }
-                  ret    <- data.frame ( group = names(table(u[,"group"])), depVar = allNam[["dependent"]], modus="noch_leer", parameter = names(table(u[,"parameter"])), coefficient = c("est","se"), value = unlist(pooled), u[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE)
-               }   
+                  ret    <- data.frame ( group = names(table(u[,"group"])), depVar = allNam[["dependent"]], modus=modus, comparison = names(comp), parameter = names(table(u[,"parameter"])), coefficient = c("est","se"), value = unlist(pooled), u[1,allNam[["group"]],drop=FALSE], stringsAsFactors = FALSE, row.names=NULL)
+    ### wenn es eine Effektstaerke gibt, soll sie mit in die Ergebnisstruktur eingetragen werden
+                  if ( "es" %in% u[,"coefficient"] ) {
+                        retI <- ret[1,]
+                        retI[,"coefficient"] <- "es"
+                        retI[,"value"]       <- esP
+                        ret  <- rbind(ret, retI)
+                  }
+               }
                return(ret)}))
            return(retList)}
-           
+
 ### subroutine for combining correlations for multiply imputed data - basiert auf Funktion von Alexander Robitzsch
 pool.corr <- function( corrs , N , conf.level = .05){
         fisher.corrs <- 1/2*log( ( 1 + corrs) / ( 1 - corrs ) )                 ### convert correlations to Fisher transformed values

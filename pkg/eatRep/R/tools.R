@@ -1,16 +1,15 @@
-.existsBackgroundVariables <- function(dat, variable )  {
+existsBackgroundVariables <- function(dat, variable )  {
            if(!is.null(variable[1]))  {
-               if ( !is.na(variable[1])) { 
-      							 if(is.factor(variable))    { 
+               if ( !is.na(variable[1])) {
+      							 if(is.factor(variable))    {
       							    v  <- as.character(variable)
-      							    rN <- remove.numeric(v)
+      							    rN <- removeNumeric(v)
       							    if(all (nchar(rN) == 0 ) ) { variable <- as.numeric(v) } else { variable <- as.character(variable)}
-             			   }   
+             			   }
                      if(is.character(variable))  {
                   	 	  misVariable <- setdiff(variable, colnames(dat))
                   			if(length(misVariable)>0) {
-                           cat(paste("Can't find ",length(misVariable)," variable(s) in dataset.\n",sep=""))
-                  				 cat(paste(misVariable,collapse=", ")); cat("\n"); stop()
+                           stop(paste0("Can't find ",length(misVariable)," variable(s) in dataset: '", paste( misVariable,collapse="', '"), "'\n"))
                         }
                   			varColumn <- match(variable, colnames(dat))
                  	   }
@@ -19,13 +18,12 @@
                         varColumn <- variable
                      }
                      return(colnames(dat)[varColumn])
-              }  else { 
-                     return(NULL) 
-              }       
-            }  else { 
+              }  else {
+                     return(NULL)
+              }
+            }  else {
                return(NULL)
-            } }  
-
+            } }
 
 facToChar <- function ( dataFrame, from = "factor", to = "character" ) {
              if(!"data.frame" %in% class(dataFrame)) {stop("'dataFrame' must be of class 'data.frame'.\n")}
@@ -41,11 +39,11 @@ crop <- function ( x , char = " " ) {
 
 							 
 ### Hilfsfunktion, ersetzt table(unlist( ... ))
-table.unlist <- function(dataFrame, verbose = TRUE, useNA = c("no","ifany", "always"))   {
+tableUnlist <- function(dataFrame, verbose = TRUE, useNA = c("no","ifany", "always"))   {
                 useNA<- match.arg(useNA)
-                # if(class(dataFrame) != "data.frame" ) {stop("Argument of 'table.unlist' has to be of class 'data.frame'.\n")}
+                # if(class(dataFrame) != "data.frame" ) {stop("Argument of 'tableUnlist' has to be of class 'data.frame'.\n")}
                 if(class(dataFrame) != "data.frame" ) {
-                   if(verbose == TRUE ) {cat(paste("Warning! Argument of 'table.unlist' has to be of class 'data.frame'. Object will be converted to data.frame.\n",sep=""))}
+                   if(verbose == TRUE ) {cat(paste("Warning! Argument of 'tableUnlist' has to be of class 'data.frame'. Object will be converted to data.frame.\n",sep=""))}
                    dataFrame <- data.frame(dataFrame, stringsAsFactors=FALSE)
                 }
                 dLong<- melt(dataFrame, measure.vars = colnames(dataFrame), na.rm=FALSE)
@@ -53,11 +51,10 @@ table.unlist <- function(dataFrame, verbose = TRUE, useNA = c("no","ifany", "alw
                 names(freqT) <- recode(names(freqT), "NA='NA'")
                 return(freqT)}
 
-
-as.numeric.if.possible <- function(dataFrame, set.numeric=TRUE, transform.factors=FALSE, maintain.factor.scores = TRUE, verbose=TRUE, ignoreAttributes = FALSE)   {
+asNumericIfPossible <- function(dataFrame, set.numeric=TRUE, transform.factors=FALSE, maintain.factor.scores = TRUE, verbose=TRUE, ignoreAttributes = FALSE)   {
             wasInputVector  <- FALSE
             if( !"data.frame" %in% class(dataFrame) ) {
-              if(verbose == TRUE )  {cat(paste("Warning! Argument of 'as.numeric.if.possible' has to be of class 'data.frame'. Object will be converted to data.frame. Labels might be lost.\n",sep="")) }
+              if(verbose == TRUE )  {cat(paste("Warning! Argument of 'asNumericIfPossible' has to be of class 'data.frame'. Object will be converted to data.frame. Labels might be lost.\n",sep="")) }
               dataFrame <- data.frame(dataFrame, stringsAsFactors=FALSE)
               wasInputVector <- ifelse(ncol(dataFrame) == 1, TRUE, FALSE)
             }
@@ -81,7 +78,7 @@ as.numeric.if.possible <- function(dataFrame, set.numeric=TRUE, transform.factor
                      }
                   }
                   return(ret)}))
-            changeVariables <- colnames(dataFrame)[numericable[1,]]             ### welche Variablen sollen transformiert werden? 
+            changeVariables <- colnames(dataFrame)[numericable[1,]]             ### welche Variablen sollen transformiert werden?
             alreadyNum      <- currentClasses[which(currentClasses %in% c("numeric", "integer"))]
             if(length(alreadyNum)>0) { changeVariables <- setdiff(changeVariables, alreadyNum)}
             changeFactorWithIndices   <- NULL                                   ### obere zeile: diejenigen ausschliessen, die bereits numerisch sind!
@@ -112,11 +109,11 @@ as.numeric.if.possible <- function(dataFrame, set.numeric=TRUE, transform.factor
                  for ( u in names(currentAttr)) {
                     stopifnot( u %in% colnames(dataFrame))
                     if ( length ( currentAttr[[u]] ) >0 )  {
-                         for ( j in names(currentAttr[[u]]) ) { attr(dataFrame [,u], j) <- currentAttr[[u]][[j]] }
+                         for ( j in names(currentAttr[[u]]) ) { try(attr(dataFrame [,u], j) <- currentAttr[[u]][[j]], silent = TRUE) }
                     }
                  }
             }
-            return(dataFrame)        
+            return(dataFrame)
           }
 
 make.indikator <- function(variable, name.var = "ind", force.indicators = NULL, separate.missing.indikator = c("no","ifany", "always"), sep = "_" )  {
@@ -144,12 +141,17 @@ make.indikator <- function(variable, name.var = "ind", force.indicators = NULL, 
                   colnames(ind.i)[-1] <- paste(name.var, names(t.var), sep=sep)
                   return(ind.i)}
 
-remove.non.numeric <- function ( string ) {gsub("[^0-9]","",string)}
+removeNonNumeric <- function ( string ) {gsub("[^0-9]","",string)}
 
 ### entfernt bestimmtes Pattern aus einem String
-remove.pattern     <- function ( string, pattern ) {
+removePattern     <- function ( string, pattern ) {
                       splitt <- strsplit(string, pattern)
                       ret    <- unlist(lapply(splitt, FUN = function ( y ) { paste(y, collapse="")}))
                       return(ret)}
 
-remove.numeric <- function ( string ) {gsub("0|1|2|3|4|5|6|7|8|9","",string)}
+removeNumeric <- function ( string ) {gsub("0|1|2|3|4|5|6|7|8|9","",string)}
+
+identifyMode <- function ( name, type, PSU) {
+            if ( is.null (PSU) ) { m1 <- "CONV"} else { m1 <- type}
+            res <- paste0( m1, ".", name)
+            return(res)}

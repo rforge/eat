@@ -1,7 +1,7 @@
 \name{jk2.quantile}
 \alias{jk2.quantile}
 %- Also NEED an '\alias' for EACH other topic documented here.
-\title{JK1, JK2 and BRR method for quantiles.}
+\title{JK1, JK2 and BRR method for quantiles and trend estimation.}
 \description{Compute quantiles with standard errors for complex cluster designs with multiple imputed variables
 (e.g. plausible values) based on Jackknife (JK1, JK2) or balanced repeated replicates (BRR) procedure. Conceptually, 
 the function combines replication methods and methods for multiple imputed data. Technically, this is a wrapper for
@@ -10,7 +10,7 @@ the \code{svyquantile()} function of the survey package.
 \usage{
 jk2.quantile(datL, ID, wgt = NULL, type = c("JK1", "JK2", "BRR"), PSU = NULL, repInd = NULL, 
             repWgt = NULL, nest=NULL, imp=NULL, groups = NULL, group.splits = length(groups),
-            group.delimiter = "_", trend = NULL, linkErr = NULL, dependent, 
+            cross.differences = FALSE, group.delimiter = "_", trend = NULL, linkErr = NULL, dependent,
             probs = seq(0, 1, 0.25),  na.rm = FALSE, nBoot = NULL, 
             bootMethod = c("wSampling","wQuantiles") , doCheck = TRUE)}
 %- maybe also 'usage' for other objects documented here.
@@ -62,6 +62,12 @@ Optional: vector of names or column numbers of one or more grouping variables.
 %%     ~~Describe \code{sig.dif.bound} here~~
 Optional: If groups are defined, \code{group.splits} optionally specifies whether analysis should be done also
 in the whole group or overlying groups. See examples for more details.
+}
+  \item{cross.differences}{
+%%     ~~Describe \code{sig.dif.bound} here~~
+Either a list of vectors, specifying the pairs of levels for which cross-level differences should be computed.
+Alternatively, if TRUE, cross-level differences for all pairs of levels are computed. If FALSE, no cross-level
+differences are computed. (see examples 2a, 3, and 4 in the help file of jk2.mean)
 }
   \item{group.delimiter}{
 %%     ~~Describe \code{sig.dif.bound} here~~
@@ -121,7 +127,9 @@ The results of the several analyses are then pooled according to Rubins rule, wh
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
-A data frame in the long format. For each subpopulation denoted by the \code{groups} statement, each
+A list of data frames in the long format. The output can be summarized using the \code{report} function.
+The first element of the list is a list with either one (no trend analyses) or two (trend analyses)
+data frames with at least six columns each. For each subpopulation denoted by the \code{groups} statement, each
 dependent variable, each parameter (i.e., the values of the corresponding categories of the dependent variable)
 and each coefficient (i.e., the estimate and the corresponding standard error) the corresponding value is given.
 \item{group}{Denotes the group an analysis belongs to. If no groups were specified and/or analysis for the 
@@ -144,28 +152,31 @@ If groups were specified, further columns which are denoted by the group names a
 \author{
 Sebastian Weirich
 }
-\note{
-%%  ~~further notes~~
-}
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
-data(reading)
+### Example 1: only means, SD and variances for each country
+### We only consider domain 'reading'
+rd     <- lsa[which(lsa[,"domain"] == "reading"),]
+
+### We only consider the first "nest".
+rdN1   <- rd[which(rd[,"nest"] == 1),]
+
+### First, we only consider year 2010
+rdN1y10<- rdN1[which(rdN1[,"year"] == 2010),]
+
 ### First example: Computes percentile in a nested data structure for reading 
 ### scores conditionally on country and for the whole group 
-perzent   <- jk2.quantile(datL = reading, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
-             PSU = "JKZone", repInd = "JKrep", imp = "imputation", nest="nest", 
+perzent   <- jk2.quantile(datL = rd, ID = "idstud", wgt = "wgt", type = "JK2",
+             PSU = "jkzone", repInd = "jkrep", imp = "imp", nest="nest",
              groups = "country", group.splits = c(0:1), dependent = "score", 
              probs = seq(0.1,0.9,0.2) )
+res       <- report(perzent, add = list(domain = "reading"))
 
 ### Second example: Computes percentile for reading scores conditionally on country,
 ### use 100 bootstrap samples, assume no nested structure 
-readingNest1 <- reading[which(reading[,"nest"] == 1),]
-perzent   <- jk2.quantile(datL = readingNest1, ID = "idstud", wgt = "wgtSTUD",
-             imp = "imputation", groups = "country", dependent = "score", 
+perzent   <- jk2.quantile(datL = rdN1y10, ID = "idstud", wgt = "wgt",
+             imp = "imp", groups = "country", dependent = "score",
              probs = seq(0.1,0.9,0.2), nBoot = 100 )
+res       <- report(perzent, add = list(domain = "reading"))
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

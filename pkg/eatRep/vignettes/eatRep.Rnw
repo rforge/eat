@@ -157,32 +157,42 @@ and ``imputation replicates'' to differentiate between both.
 \section{Estimate some population descriptives}
 \label{sec:ex1}
 In this example, we use some artificial data from the context of educational research. We may think of a stratified clustered 
-sample of German fourth-grade primary school students whose reading competencies are measured. Proficiency estimates 
+sample of German fourth-grade primary school students whose reading and listening competencies are measured. Proficiency estimates
 obtained from a Item response Theory (IRT) marginal model are included as plausible values. Each plausible value may be 
 recognized as an imputation of the latent competence construct. The data are represented in the long format.\\ 
 
 <<reading_writingdef>>=
 library(eatRep)
-data(reading)
-str(reading)
+data(lsa)
+str(lsa, give.attr = FALSE)
 @
 
 Requesting the data structure provides us with information about the number and type of variables and the number of
-examinees. \code{"idstud"} is a person identifier for 4,619 distinct examinees, \code{"wgtSTUD"} a person weight, 
-\code{"sex"} denotes each person's sex, \code{"country"} denotes the country the person comes from. \code{"JKZone"} 
-and \code{"JKrep"} denote jackknifing variables which contains information about which unit has to be replaced by 
-which other unit in which replicate of the original data. \code{"income"} is each person's financial income. The next
-two variables, \code{"nest"} and \code{"imputation"} describe the multiple imputed structure of the data. The data 
+examinees. \code{"idstud"} denotes the year of the assessment, \code{"idstud"} is a person identifier for 7,518 distinct
+examinees, and \code{"wgt"} a person weight. \code{"JKZone"} and \code{"JKrep"} denote jackknifing variables which contains
+information about which unit has to be replaced by which other unit in which replicate of the original data. The next
+two variables, \code{"imp"} and \code{"nest"} describe the multiple imputed structure of the data. The data
 stem from a nested multiple imputation model with 2 nests and 3 imputations in each nest. The principles of nested
-imputations will be elucidated later; for the moment, we may content ourself with data from the first nest only, 
-i.e. we split the data and only consider cases for which $nest=1$. We may think of \code{"score"} as the the
-plausible value estimate for the reading competence. Hence, if $nest=1$ and $imputation=3$, the value in the 
+imputations will be elucidated later; for the moment, we may content ourself with data from the first nest only,
+i.e. we split the data and only consider cases for which $nest=1$. \code{"country"} denotes the country the person stems
+from, \code{"sex"} denotes each person's sex, \code{"ses"} is each person's socio-economical status, \code{"mig"} is an
+indicator for migration background. \code{"domain"} denotes whether the corresponding score value is related to
+reading or listening. We may think of \code{"score"} as the the plausible value estimate for the reading or listening
+competence. Hence, if $nest=1$ and $imputation=3$ and \code{"domain"} equals "reading", the value in the
 \code{"score"} column refers to the third plausible value in the first nest for the reading competence. 
-Please note that the three imputations of the reading competence occur as one variable in the data set. 
+\code{"comp"} is a distinct competence level for each person, where 1 corresponds to the lowest competence
+level, and 5 corresponds to the highest competence level. \code{"failMin"} is an indicator which equals 1
+if the examinee fails to fulfill the minimal standard, 0 otherwise. \code{"passReg"} is an indicator which equals 1
+if the examinee fulfills or outperforms the regular standard, and \code{"passOpt"} is an indicator which equals 1
+if the examinee fulfills the optimal standard. The following variables beginning with "le" denote the linking
+errors of each criteria, i.e. \code{"lePassreg"} is the linking error for the indicator of fulfilling the
+regular standard.
+
+Please note that the \code{"score"} variable contains the three imputations of the reading competence.
 Hence, each individual is represented in several rows. This is quite usual if multiple imputed data is 
 presented in a long format dataset. \code{eatRep} strictly requires the long format. To transform wide-format
 data frame into long-format data frames (and vice versa), use the \code{reshape2} package. Please note further 
-that the dataset does not contain any replicates, only the information required for generating them, captured 
+that the dataset does not contain any replicates, only the information required for generating them are captured
 in the \code{"JKZone"} and \code{"JKrep"} variables. 
 
 \subsection{Populations means, standard deviations, variances and mean differences}
@@ -191,34 +201,36 @@ in the \code{"JKZone"} and \code{"JKrep"} variables.
 We now want to compute the means by each country, considering the clustered structure as well as the multiple 
 imputed data structure. The replicates do not need to be created separately, as they will be generated in each 
 analysis automatically. Even in large data sets this takes only a few seconds. First we create a subset which 
-only contains data from the first nest. The analysis then is conducted with this subset.\\
+only contains reading data from the first nest from the year 2010. The analysis then is conducted with this subset.\\
 
 <<readingMeansByCountrydef>>=
-readN1<- subset(reading, nest == 1 ) 
-means <- jk2.mean(datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
-         PSU = "JKZone", repInd = "JKrep", imp = "imputation", groups = "country", 
+read  <- subset(lsa, domain == "reading")
+readN1<- subset(read, nest == 1 )
+read10<- subset(readN1, year == 2010 )
+means <- jk2.mean(datL = read10, ID = "idstud", wgt = "wgt", type = "JK2",
+         PSU = "jkzone", repInd = "jkrep", imp = "imp", groups = "country",
          dependent = "score")
 @
 
-When applying the jackknife method, the primary sampling unit (PSU) often is the jackknife zone (JKZone),
-and the replication indicator often is the jackknife replicate indicator (JKrep). While the function is operating, 
+When applying the jackknife method, the primary sampling unit (PSU) often is the jackknife zone (jkzone),
+and the replication indicator often is the jackknife replicate indicator (jkrep). While the function is operating,
 some additional information is displayed on console. First we see that only one analysis is run according to
 \code{'group.splits = 1'}. We will subsequently exemplify this enigmatic message. Further, we see that \code{jk2.mean}
 assumes an ``unnested'', i.e. a structure with three imputations. This refers to what we've called 
-``imputation replicates''. The output then speaks about 81 replicate weights which are created due to 81 distinct 
+``imputation replicates''. The output then speaks about 62 replicate weights which are created due to 62 distinct
 jackknifing zones in the JKZone variable. This information refers to the ``cluster replicates'' and implies that 
-the subsequent analysis has to be repeated 81 times \emph{for each imputation}. Hence, $3\times 81=243$ analyses are
+the subsequent analysis has to be repeated 62 times \emph{for each imputation}. Hence, $3\times 62=186$ analyses are
 run overall.\\ 
 
-In each of the 81 replication samples, one unit (e.g. school) of a certain jackknifing zone is missing and the weights 
+In each of the 62 replication samples, one unit (e.g. school) of a certain jackknifing zone is missing and the weights
 of the other school within the same zone are doubled. The data in all other zones remain unchanged. The analyses are
-repeated 81 times, \emph{using the same plausible value} as the dependent variable. Only the weights vary between the
-``cluster replicates'': each of the 81 replicates once a time is used as the weighting variable. Each of the 81 
+repeated 62 times, \emph{using the same plausible value} as the dependent variable. Only the weights vary between the
+``cluster replicates'': each of the 62 replicates once a time is used as the weighting variable. Each of the 62
 analysis revealed slighty different results. This variation is used to estimate the sampling variance 
 \emph{due to the clustered structure} which then is used to compute the standard error, which is pooled across 
-81 ``cluster replicates''. When finished, the analysis approaches the second ``imputation replicate'' and switches 
-to the second plausible value which now is used as the dependent variable in 81 analyses due to the 
-81 ``cluster replicates''. After all, three pooled estimates and three pooled standard errors resulted 
+62 ``cluster replicates''. When finished, the analysis approaches the second ``imputation replicate'' and switches
+to the second plausible value which now is used as the dependent variable in 62 analyses due to the
+62 ``cluster replicates''. After all, three pooled estimates and three pooled standard errors resulted
 which differ slightly in each ``imputation replicate''. The three estimates and standard errors are pooled 
 once again, this time according to \citet{Rubin1987}. To sum up, the pooled results are pooled again to account for 
 both: multiple imputed data in a clustered sample.\\
@@ -227,59 +239,51 @@ The little dots continuously appearing on the console therefore refer to ``imput
 to work as a rough progress bar. Each dot represents one ``imputation replication''. When the procedure finished, 
 the results are pooled in the case of more than one imputation.\\
 
-<<readingMeansByCountryResultsdef>>=
-means[c(1:4,19:20),]
+The output is a list of data frames which is not intended to be inspected by the user. Instead, a reporting
+function transform the raw output in a more user-friendly format which can be saved as an Excel or csv
+file for further treatment. The reporting function has an additional argument \code{add} which can be used
+to ``enrich'' the output by further columns which contain, for example, the domain. The raw output does not
+include any information about the domain. The reporting function may be used as follows:\\
+
+<<reporting01>>=
+res01 <- report(jk2.out = means, add = list(domain = "reading"))
+print(res01, digits = 4)
 @
 
-The output is a data frame in the long format with 30 rows and at least six columns. To keep the 
-overview, only a few selected rows are displayed here. For each subpopulation denoted by the 
-\code{groups} statement (here: \code{LandA}, \code{LandB} and \code{LandC}), each dependent 
-variable (here: only the reading competence), each parameter (we requested mean, variance, 
-standard deviation and sample size or population size) and each coefficient (i.e., the 
-estimate and the corresponding standard error) the corresponding value is given. However, 
-the output is more suited for further processing than for clear arragement, as the
-values are displayed in the long format as well as in exponential notation, for example. 
-To display the results in the more common wide format, use the \code{reshape2} package. 
-Alternatively, an abbreviated display of the results is provided by the \code{dM} 
-function (whereas dM stands for ``display means''). You may think of \code{dM} as 
-a simple summary function which is not intended for saving results or further processing
-as the results are displayed in an abbreviated (i.e., rounded) manner to offer clear 
-arrangement on console. The \code{dM} function has an additional argument to omit 
-displaying parameters or coefficients you are not interested in at the moment. \\
-
-<<readingMeansByCountryResultsdefSummary>>=
-dM(means, omitTerms = c("var", "Ncases","NcasesValid", "meanGroupDiff") )
-@
-
-Can we see see how the results would change if we do not consider the clustered 
-structure? Yes, we can. We simply leave out the jackknifing arguments \code{JKZone} 
-and \code{JKrep}. The type argument then is automatically ignored likewise, whether 
+For each subpopulation denoted by the \code{groups} statement (here: \code{LandA}, \code{LandB} and \code{LandC}),
+each dependent variable (here: only the reading competence "score"), each parameter and each coefficient (i.e., the
+estimate and the corresponding standard error) the corresponding value is given. Can we see see how the results would
+change if we do not consider the clustered structure? Yes, we can. We simply leave out the jackknifing arguments
+\code{JKZone} and \code{JKrep}. The type argument then is automatically ignored likewise, whether
 specified or not. The results will be pooled only due to multiple imputed data:\\
 
 <<readingMeansByCountry2def>>=
-means <- jk2.mean(datL = readN1, ID = "idstud", wgt = "wgtSTUD", 
-         imp = "imputation", groups = "country", dependent = "score")
-dM(means, omitTerms = c("var", "Ncases","NcasesValid", "meanGroupDiff") )
+means <- jk2.mean(datL = read10, ID = "idstud", wgt = "wgt",
+         imp = "imp", groups = "country", dependent = "score")
+res02 <- report(jk2.out = means, add = list(domain = "reading"))
+print(res02, digits = 4)
 @
 
 We see that the means are completely unaffected, but the standard errors for the mean
-estimates are considerably lower. (Standard errors for standard deviations and for
-variances are not implemented yet.) If we decide to leave out the weights as well,
+estimates are considerably lower. (Standard errors for standard deviations are not
+implemented yet.) If we decide to leave out the weights as well,
 we would additionally expect to receive different means now:\\
 
 <<readingMeansByCountry3def>>=
-means <- jk2.mean(datL = readN1, ID = "idstud", 
-         imp = "imputation", groups = "country", dependent = "score")
-dM(means, omitTerms = c("var", "Ncases","NcasesValid", "meanGroupDiff") )
+means <- jk2.mean(datL = read10, ID = "idstud", imp = "imp", groups = "country",
+         dependent = "score")
+res03 <- report(jk2.out = means, add = list(domain = "reading"))
+print(res03, digits = 4)
 @
 
 If we additionally decide to ignore the imputations and treat, for example, the first plausible value as it would have been 
 a fully observed measure of the latent competency, the function call would be the following:\\
 
 <<readingMeansByCountry4def>>=
-means <- jk2.mean(datL = subset(readN1,imputation==1),  ID = "idstud", 
-         imp = "imputation", groups = "country", dependent = "score")
-dM(means, omitTerms = c("var", "Ncases","NcasesValid", "meanGroupDiff") )
+means <- jk2.mean(datL = subset(read10,imp==1),  ID = "idstud",
+         imp = "imp", groups = "country", dependent = "score")
+res04 <- report(jk2.out = means, add = list(domain = "reading"))
+print(res04, digits = 4)
 @
 
 The estimation of standard errors now no longer accounts for the uncertainty due to imputation. Furthermore, also the 
@@ -306,31 +310,20 @@ country}, sex and country have to be part of the \code{groups} statement, wherea
 used in the \code{group.differences.by} argument. Both features are illustrated in the following example:\\
 
 <<readingMeansByCountry4def>>=
-means <- jk2.mean(datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
-         PSU = "JKZone", repInd = "JKrep", imp = "imputation", groups = c("sex","country"), 
+means <- jk2.mean(datL = read10, ID = "idstud", wgt = "wgt", type = "JK2",
+         PSU = "jkzone", repInd = "jkrep", imp = "imp", groups = c("sex","country"),
          group.splits = c(0,2), group.differences.by = "sex", dependent = "score")
+res05 <- report(jk2.out = means, add = list(domain = "reading"))
+print(res05, digits = 4)
 @
 
-First note the \code{group.splits} is set to \code{c(0,2)}, which means that we request descriptives for the whole 
+First note the \code{group.splits} is set to \code{c(0,2)}, which means that we request descriptives for the whole
 population and the 6 subpopulations. Consequently, two analyses are conducted. The \code{group.differences.by} only
 applies for the second analysis, as the gender group is not considered relating to the whole population analysis. 
 To estimate sex differences \emph{across all countries}, only sex has to be part of the \code{group} statement, 
 and only sex has to be used in the \code{group.differences.by} argument. The output of the analysis is nearly the 
 same as we would have omitted the \code{group.differences.by} argument, but now, some additional lines have joined. 
-Again, we might use the \code{dM} function to display the part of the results we are interested in, but for the 
-representation within this pdf document, an alternative way is more clearly arranged. Note that now we do \emph{not} exclude 
-\code{meanGroupDiff} from the results to summarize:\\
-
-<<readingMeansByCountry5def>>=
-### 'conventional' representation using 'dM'
-results1 <- dM(means, omitTerms = c("var","Ncases", "NcasesValid"))
-### alternative representation
-results2 <- means[grep("^mean", means[,"parameter"]) ,]
-results2 <- reshape2::dcast ( results2, group + parameter ~ coefficient, value.var = "value")
-print ( results2, digits = 4 ) 
-@
-
-The output now changed slightly: additionally to several group columns, one column for group membership is provided. 
+Additionally to several group columns, one column for group membership is provided.
 The last line labelled \code{wholeGroup} provides results concerning the whole population. The line labelled 
 \code{male\_LandC} contains values for the males in LandC. Moreover, three mean differences were computed. In each
 federal state, the difference between males and females is given. \\
@@ -344,13 +337,11 @@ must contain values which are included in \code{groups}: We add the term \code{w
 into the argument \code{group.differences.by}:\\
 
 <<read5def>>=
-means <- jk2.mean(datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2",
-         PSU = "JKZone", repInd = "JKrep", imp = "imputation", groups = c("sex","country"),
-         group.differences.by = c("sex", "wholePop"), dependent = "score")
-### alternative representation
-results <- means[grep("^mean|^wholePop", means[,"parameter"]) ,]
-results <- reshape2::dcast ( results, group + parameter ~ coefficient, value.var = "value")
-print ( results, digits = 3)
+means <- jk2.mean(datL = read10, ID = "idstud", wgt = "wgt", type = "JK2",
+         PSU = "jkzone", repInd = "jkrep", imp = "imp", groups = c("sex","country"),
+         group.splits = 0:2, group.differences.by = "sex", cross.differences = TRUE,
+         dependent = "score")
+res06 <- report(jk2.out = means, add = list(domain = "reading"))
 @
 
 We see in the first line of the \code{results} object that the group differences in 
@@ -366,13 +357,14 @@ The amount of the deviation (7.13) is less than twice the standard error of the 
 Computation of frequency tables works in the same manner as in the examples mentioned before. 
 Representative for several possible analyses only one example is given below. Consider the 
 \code{score} column we used as the dependent variable in all previous analyses. Suppose we
-define a cut score criterion, i.e. all persons with at least 500 points passed, the other 
-ones failed. We now may be interested whether the percentage of pass/fails differs between 
-countries. We henceforward consider the column \code{passed} as dependent variable which is 
+define a cut score criterion, i.e. all persons with at least 465 points passed, the other
+ones failed. The indicator variable \code{passReg} defines whether the ``regular standard''
+was fulfilled or not. We now may be interested whether the percentage of pass/fails differs between
+countries. We henceforward consider the column \code{passReg} as dependent variable which is
 a simple indicator, i.e. a categorical variable with two categories (computation of frequency 
 tables for variables with more than two categories are possible, too). Categorical variables 
 are often represented as factors in R, which is quite straightforward. However, the 
-\code{"passed"} variable is of class numeric. This is an inconsistency which may cause annoying 
+\code{passReg} variable is of class numeric. This is an inconsistency which may cause annoying
 misinterpretations when such variables are called in functions related to the generalized linear 
 model like \code{aov()}, \code{glm()} etc. For the computations of frequency tables it is not 
 necessary to convert the variable class to factor.\\ 
@@ -386,29 +378,36 @@ To call for the chi square test, we can use the \code{group.differences.by} argu
 specify \code{chiSquare = TRUE}:\\
 
 <<hiseiFreqsByCountryGenderdef>>=
-freqs <- jk2.table( datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
-         PSU = "JKZone", repInd = "JKrep", imp = "imputation", groups = c("country", "sex"), 
-	       group.differences.by = "sex", chiSquare = TRUE, dependent = "passed")
-dT(freqs, percent = TRUE)
+freqs <- jk2.table( datL = read10, ID = "idstud", wgt = "wgt", type = "JK2",
+         PSU = "jkzone", repInd = "jkrep", imp = "imp", groups = c("country", "sex"),
+	       group.differences.by = "sex", chiSquare = TRUE, dependent = "comp")
+res07 <- report(jk2.out = freqs, add = list(domain = "reading"))
+print(res07, digits = 4)
 @
+
+The reporting function \code{report} summarizes the results.
 
 The output is a single data frame in the long format. To make the output more pleasing to the 
 eye, a short summary function \code{dT} is just waiting to do her job, to summarize the results.
 The first column refers to the groups specified in the analysis (in our example: 
 \code{country} and \code{sex}). The next column gives the name of the dependent variable 
-(i.e. ``passed''). The ``labels'' of the dependent variable now are captured in the 
-column names of the summary table. We see that in country \code{"LandA"} 35.8 percent of the 
-females and 47.8 percent of the males \emph{do not pass}. As in the examples mentioned 
-before, these analyses may be conducted without considering clustered structure. See whether 
-the standard errors will change.\\ 
+(i.e. ``passReg''). The ``modus'' simply tells which analysis was conducted. If a specific
+kind of comparison was computed, the ``comparison'' columns gives information whether group
+differences, cross level differences or cross level differences of group differences were
+computed. The ``labels'' of the dependent variable now are captured in the \code{parameter} column.
+We see that in country \code{"LandA"} 73.1 percent of the females and 67.7 percent of the males
+fulfills the regular standard. The first three lines of the output indicate that in all countries
+the percentage of females fulfilling the standards exceeds the percentage of males. The differences,
+however, is non significant in each country.\\
 
-Unfortunately, the results of the chi square test are not yet captured by the \code{dT} function, 
+Unfortunately, the results of the chi square test are not yet captured by the \code{report} function,
 so we have to extract them from the \code{freqs} object by ourself:\\
 
 <<hiseiFreqsExtraction>>=
 options(scipen=4)
 cols <- c("group", "coefficient", "value")
-res  <- freqs[which(freqs[,"parameter"] == "chiSquareTest"), cols ]
+frqs <- freqs[["resT"]][["noTrend"]]
+res  <- frqs[which(frqs[,"parameter"] == "chiSquareTest"), cols ]
 wide <- reshape2::dcast(res, group~coefficient, value.var = "value")
 wide <- wide[,-grep("Approx", colnames(wide))]
 print(wide, digits = 1)
@@ -427,14 +426,9 @@ differences \emph{separately for each category} of the dependent variable within
 The conclusion we draw from this analysis, however, is quite equivalent to the preceding analysis: \\
 
 <<hiseiFreqsByCountryGenderdef2>>=
-freqs <- jk2.table( datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
-         PSU = "JKZone", repInd = "JKrep", imp = "imputation", groups = c("country", "sex"), 
-	       group.differences.by = "sex", chiSquare = FALSE, dependent = "passed")
-### with a little reshaping endeavor
-result<- freqs[grep("meanGroupDiff", freqs[,"parameter"]),]
-result<- reshape2::dcast(result, country+sex+parameter~coefficient, value.var="value")
-result[,"p.value"] <- 2*(1-pnorm ( abs ( result[,"est"] / result[,"se"] ) ))
-print(result, digits = 1)
+freqs <- jk2.table( datL = read10, ID = "idstud", wgt = "wgt", type = "JK2",
+         PSU = "jkzone", repInd = "jkrep", imp = "imp", groups = c("country", "sex"),
+	       group.differences.by = "sex", chiSquare = FALSE, dependent = "passReg")
 @
 
 Let's devote little attention to the problem of missing values. In the example mentioned above, 
@@ -454,13 +448,12 @@ in some of the imputations and repeat the analysis subsequently. You will see th
 has joined to the output, which is labelled \code{"<NA>"}. \\
 
 <<redefineValues2def>>=
-readN1[,"passedNA"] <- readN1[,"passed"]
-readN1[ sample(nrow(readN1), 100, FALSE) ,"passedNA"]   <- NA
-freqs2<- jk2.table( datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
-         PSU = "JKZone", repInd = "JKrep", imp = "imputation", groups = c("country", "sex"), 
+read10[,"passedNA"] <- read10[,"passReg"]
+read10[ sample(nrow(read10), 100, FALSE) ,"passedNA"]   <- NA
+freqs2<- jk2.table( datL = read10, ID = "idstud", wgt = "wgt", type = "JK2",
+         PSU = "jkzone", repInd = "jkrep", imp = "imp", groups = c("country", "sex"),
 	       dependent = "passedNA", separate.missing.indicator = TRUE)
-dT(freqs2)
-@	  
+@
 
 \subsection{Quantiles}
 \label{subsec:quantiles}
@@ -483,9 +476,9 @@ propose to estimate, for example linear or logistic regression. We start with a 
 example using the same data as before.\\
 
 <<regression1def>>=
-mod1  <- jk2.glm(datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
-         PSU = "JKZone", repInd = "JKrep", imp = "imputation", groups = "country",
-         formula = score~sex*income, family=gaussian(link="identity") )
+mod1  <- jk2.glm(datL = read10, ID = "idstud", wgt = "wgt", type = "JK2",
+         PSU = "jkzone", repInd = "jkrep", imp = "imp", groups = "country",
+         formula = score~sex*ses, family=gaussian(link="identity"), poolMethod = "scalar")
 @
 
 As we might have expected, the outcome is a single data frame in the long format. 
@@ -506,7 +499,7 @@ fitted, and the dependent variable. In the heading we find information about bot
 regression results are displayed underneath. \\
 
 <<regression1defResults1>>=
-res   <- dG(mod1, analyses = 1:2)
+res   <- report(mod1, printGlm = TRUE)
 @
 
 Remember what was said about factors in the chapter about frequency tables: The gender variable 
@@ -526,10 +519,10 @@ of a grouping variable). This is to test whether the effect of sex varies across
 To simplify displaying the results, we use the same workaround as in the example before. \\
 
 <<regression2def>>=
-mod1  <- jk2.glm(datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
-         PSU = "JKZone", repInd = "JKrep", imp = "imputation", 
-         formula = passed~country*sex, family=binomial(link="logit") )
-res   <- dG(mod1)
+mod1  <- jk2.glm(datL = read10, ID = "idstud", wgt = "wgt", type = "JK2",
+         PSU = "jkzone", repInd = "jkrep", imp = "imp",
+         formula = passReg~country*sex, family=binomial(link="logit") )
+res   <- report(mod1, printGlm = TRUE)
 @
 
 Inspecting the output, we found that the probability of success significantly depends on the 
@@ -546,7 +539,7 @@ favorite reference group by itself. The effects are expressed in relation to \co
 To interpretate the effects, the coefficients may be transformed to odds ratios:\\
 
 <<transformdef>>=
-exp(mod1[c(1,3,5,7,9),"value"])
+#exp(mod1[c(1,3,5,7,9),"value"])
 @
 
 In \code{LandB} the odds ratio to pass is 0.58 times the corresponding odds ratio in 
@@ -563,17 +556,17 @@ the first example in section 3---R choosed the females to be the reference. Why?
 because ``female'' comes before ``male'' in the alphabet. Let's redefine the gender variable:\\
 
 <<recodeSexdef>>=
-readN1[,"sexRecoded"] <- factor(readN1[,"sex"], levels = c("male", "female") )
+read10[,"sexRecoded"] <- factor(read10[,"sex"], levels = c("male", "female") )
 @
 
 The simple intervention provokes R to use the first label mentioned in the 
 \code{levels}-argument as reference group when repeating the last example:\\
 
 <<regressionReplicationdef>>=
-mod1  <- jk2.glm(datL = readN1, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
-         PSU = "JKZone", repInd = "JKrep", imp = "imputation", 
-         formula = passed~country*sexRecoded, family=binomial(link="logit") )
-res   <- dG(mod1)
+mod1  <- jk2.glm(datL = read10, ID = "idstud", wgt = "wgt", type = "JK2",
+         PSU = "jkzone", repInd = "jkrep", imp = "imp",
+         formula = passReg~country*sexRecoded, family=binomial(link="logit") )
+res   <- report(mod1, printGlm = TRUE)
 @
 
 \subsection{Which of both determination coefficients should I pay attention?}
@@ -637,10 +630,12 @@ All analyses specified so far treated 3 imputations. Considering the nested stru
 For the purpose of illutration, we repeat our very first example, using nested imputations now:\\
 
 <<nestEx2def>>=
-means <- jk2.mean(datL = reading, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
-         PSU = "JKZone", repInd = "JKrep", nest="nest", imp = "imputation", 
+read      <- subset(lsa, domain == "reading")
+readN1.10 <- subset(read, year == 2010 )
+means <- jk2.mean(datL = readN1.10, ID = "idstud", wgt = "wgt", type = "JK2",
+         PSU = "jkzone", repInd = "jkrep", nest="nest", imp = "imp",
          groups = "country", dependent = "score")
-dM(means, omitTerms = c("var", "Ncases", "NcasesValid", "meanGroupDiff"))
+res   <- report(means)
 @
 
 The only thing we have to change is that we use now the whole data and additionally specify the variable
@@ -654,10 +649,10 @@ We now want to predict ``reading ability'' by \code{sex} and \code{income}. Usin
 as group variable likewise allows for investigating whether the potential effects vary across countries.\\
 
 <<nestEx3def>>=
-mod1  <- jk2.glm(datL = reading, ID = "idstud", wgt = "wgtSTUD", type = "JK2", 
-         PSU = "JKZone", repInd = "JKrep", nest="nest", imp = "imputation", 
-         groups = "country", formula = score~sex+income, family=gaussian(link="identity") )
-res   <- dG(mod1)
+mod1  <- jk2.glm(datL = readN1.10, ID = "idstud", wgt = "wgt", type = "JK2",
+         PSU = "jkzone", repInd = "jkrep", nest="nest", imp = "imp",
+         groups = "country", formula = score~sex+ses, family=gaussian(link="identity") )
+res   <- report(mod1)
 @
 
 

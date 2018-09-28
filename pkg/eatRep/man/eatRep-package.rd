@@ -55,9 +55,9 @@
   We then have four loops in a nested structure. Hence, the corresponding analyses may take considerably 
   computational effort. 
  
-  \emph{Important note:} The structure of the the \code{eatRep}-functions varied substantially between versions 
+  \emph{Important note:} The structure of the the \code{eatRep} functions varied substantially between versions
   0.5.0 and 0.6.0. Up to version 0.5.0, the data has to be provided in the wide format. Beginning with version 
-  0.6.0, \code{eatRep}-functions need the long format. This distinction practically means that version 0.5.0 
+  0.6.0, \code{eatRep} functions need the long format. This distinction practically means that version 0.5.0
   allows to analyze data where, for example, the number of imputations is different between independent and 
   dependent variables, albeit the second one is \emph{not} nested within the first one. This case is conceptually 
   questionable and it is not clear how to imply the pooling rules. Hence, this is no longer supported in version 
@@ -67,8 +67,8 @@
 \tabular{ll}{
 Package: \tab eatRep\cr
 Type: \tab Package\cr
-Version: \tab 0.9.1\cr
-Date: \tab 2017-11-17\cr
+Version: \tab 0.9.3\cr
+Date: \tab 2018-09-28\cr
 License: \tab GPL(>=2)
 }
 }
