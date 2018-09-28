@@ -639,7 +639,7 @@ pers  <- data.frame ( idstud = datW[,"id"] , group1 = datW[,"sex"],
 
 # define 18 models, splitting according to person groups and item groups separately
 # by default, multicore processing is applied
-l1    <- splitModels ( qMatrix = qMat, person.groups = pers)
+l1    <- splitModels ( qMatrix = qMat, person.groups = pers, nCores = 1)
 
 # apply 'defineModel' for each of the 18 models in 'l1'
 modMul<- defineModel(dat = datW, items = qMat[,1], id = "id", 
@@ -832,7 +832,7 @@ pers  <- data.frame ( idstud = datT1[,"id"] , country = datT1[,"country"])
 # Running second step: split models according to person groups
 # ('all.persons' must be FALSE, otherwise the whole group would be treated as
 # a separate distinct group.)
-modT1P<- splitModels ( person.groups = pers , all.persons = FALSE, nCores = 1)
+modT1P<- eatModel::splitModels ( person.groups = pers , all.persons = FALSE, nCores = 1)
 
 # define the 2 country-specific 2-dimensional models, specifying latent regression 
 # model and fixed item parameters.
@@ -873,7 +873,7 @@ datT2<- reshape2::dcast(subset ( sciences, year == 2013),
         formula = id+grade+country~variable, value.var="value")
 
 # First step: item calibration in separate unidimensional models for each domain
-modsT2<- splitModels ( qMatrix = qMat, nCores = 1)
+modsT2<- eatModel::splitModels ( qMatrix = qMat, nCores = 1)
 
 # define 2 models. Items which occur only in the Q matrix will be ignored.
 defT2 <- defineModel(dat = datT2, id = "id", check.for.linking = TRUE,
@@ -926,7 +926,7 @@ persT2<- data.frame ( idstud = datT2[,"id"] , country = datT2[,"country"])
 # Running second step: split models according to person groups (countries)
 # ('all.persons' must be FALSE, otherwise the whole group would be treated as
 # a separate distinct group.)
-modT2P<- splitModels ( person.groups = persT2 , all.persons = FALSE, nCores = 1)
+modT2P<- eatModel::splitModels ( person.groups = persT2 , all.persons = FALSE, nCores = 1)
 
 # define the 2 country-specific 2-dimensional models, specifying latent regression
 # model and fixed item parameters. We used the transformed item parameters (captured
@@ -962,7 +962,7 @@ dTrend<- prepRep ( calibT2 = T.t1t2, bistaTransfT1 = dfrT1P, bistaTransfT2 = dfr
 # Example 6b needs the objects created in example 6a
 # We use the 'dTrend' object to perform some trend analyses.
 
-# load the 'eatRep' package ... note: needs eatRep version 0.8.0 or higher
+# load the 'eatRep' package ... note: needs eatRep version 0.9.2 or higher
 library(eatRep)
 
 # merge background variables from original data to the 'dTrend' frame
@@ -977,26 +977,31 @@ dTrend[,"idclass"] <- substr(as.character(dTrend[,"id"]),1,2)
 subSam<- dTrend[intersect(which(dTrend[,"dimension"] == "knowledge"),which(dTrend[,"year"] == 2003)),]
 m01   <- jk2.mean(datL = subSam, ID="id", imp = "imp", groups = "model",
          dependent = "valueTransfBista")
+r01   <- report(m01, add = list(domain = "knowledge"))
 
 # same example as before, now additionally using weights
 m02   <- jk2.mean(datL = subSam, ID="id", imp = "imp", groups = "model",
          wgt = "wgt", dependent = "valueTransfBista")
+r02   <- report(m02, add = list(domain = "knowledge"))
 
 # now additionally using replication methods (jk2)
 m03   <- jk2.mean(datL = subSam, ID="id", imp = "imp", groups = "model", type = "jk2",
          wgt = "wgt", PSU = "jkzone", repInd = "jkrep", dependent = "valueTransfBista")
+r03   <- report(m03, add = list(domain = "knowledge"))
 
 # additionally: sex differences in each country, using 'group.differences.by' argument
 m04   <- jk2.mean(datL = subSam, ID="id", imp = "imp", groups = c("sex", "model"),
          group.differences.by = "sex", type = "jk2",wgt = "wgt", PSU = "jkzone",
          repInd = "jkrep", dependent = "valueTransfBista")
+r04   <- report(m04, add = list(domain = "knowledge"))
 
 # additionally: differ the sex-specific means in each country from the sex-specific means
 # in the whole population? Are the differences (male vs. female) in each country different
 # from the difference (male vs. female) in the whole population?
 m05   <- jk2.mean(datL = subSam, ID="id", imp = "imp", groups = c("sex", "model"),
-         group.differences.by = c("wholePop", "sex"), type = "jk2",wgt = "wgt",
+         group.differences.by = "sex", cross.differences = TRUE, type = "jk2",wgt = "wgt",
          PSU = "jkzone", repInd = "jkrep", dependent = "valueTransfBista")
+r05   <- report(m05, add = list(domain = "knowledge"))
 
 # additionally: trend estimation for each country- and sex-specific mean, each country-
 # specific sex differences and each difference between country-specific sex difference
@@ -1007,19 +1012,23 @@ m05   <- jk2.mean(datL = subSam, ID="id", imp = "imp", groups = c("sex", "model"
 # (Due to unbalanced sample data, we switch to 'jk1' method for the remainder of 6b.)
 subS2 <- dTrend[which(dTrend[,"dimension"] == "knowledge"),]
 m06   <- jk2.mean(datL = subS2, ID="id", imp = "imp", groups = c("sex", "model"),
-         group.differences.by = c("wholePop", "sex"), type = "jk1",wgt = "wgt",
+         group.differences.by = "sex", cross.differences = TRUE, type = "jk1",wgt = "wgt",
          PSU = "idclass", trend = "year", linkErr = "trendErrorTransfBista",
          dependent = "valueTransfBista")
+r06   <- report(m06, trendDiffs = TRUE, add = list(domain = "knowledge"))
+
 
 # additionally: repeat this analysis for both domains, 'knowledge' and 'procedural',
 # using a 'by'-loop. Now we use the whole 'dTrend' data instead of subsamples
-m07   <- do.call("rbind", by ( data = dTrend, INDICES = dTrend[,"dimension"],
+m07   <- by ( data = dTrend, INDICES = as.character(dTrend[,"dimension"]),
          FUN = function ( subdat ) {
          m07a <- jk2.mean(datL = subdat, ID="id", imp = "imp", groups = c("sex", "model"),
-                 group.differences.by = c("wholePop", "sex"), type = "jk1",wgt = "wgt",
+                 group.differences.by = "sex", cross.differences = TRUE, type = "jk1",wgt = "wgt",
                  PSU = "idclass", trend = "year", linkErr = "trendErrorTransfBista",
                  dependent = "valueTransfBista")
-         return(m07a)}))
+         return(m07a)})
+r07   <- lapply(names(m07), FUN = function (domain) {report(m07[[domain]], trendDiffs = TRUE, add = list(domain = domain))})
+r07   <- do.call("rbind", r07)
 
 
 ################################################################################
@@ -1029,7 +1038,7 @@ m07   <- do.call("rbind", by ( data = dTrend, INDICES = dTrend[,"dimension"],
 # Example 6c needs the objects created in example 6a. Additionally, the merged
 # 'dTrend' frame created in Example 6a and augmented in 6b is necessary.
 
-# load the 'eatRep' package ... note: needs eatRep version 0.8.0 or higher
+# load the 'eatRep' package ... note: needs eatRep version 0.9.2 or higher
 library(eatRep)
 
 # compute frequencies for trait levels, only for domain 'knowledge', without trend
@@ -1037,14 +1046,17 @@ library(eatRep)
 subSam<- dTrend[intersect(which(dTrend[,"dimension"] == "knowledge"),which(dTrend[,"year"] == 2003)),]
 freq01<- jk2.table(datL = subSam, ID="id", imp = "imp", groups = "model",
          dependent = "traitLevel")
+res01 <- report(freq01, add = list(domain = "knowledge"))
 
 # same example as before, now additionally using weights
 freq02<- jk2.table(datL = subSam, ID="id", imp = "imp", groups = "model",
          wgt = "wgt", dependent = "traitLevel")
+res02 <- report(freq02, add = list(domain = "knowledge"))
 
 # now additionally using replication methods (jk2)
 freq03<- jk2.table(datL = subSam, ID="id", imp = "imp", groups = "model", type = "jk2",
          wgt = "wgt", PSU = "jkzone", repInd = "jkrep", dependent = "traitLevel")
+res03 <- report(freq03, add = list(domain = "knowledge"))
 
 # additionally: sex differences in each country, using 'group.differences.by' argument
 # Note: for frequency tables group differences may result in a chi square test or in
@@ -1053,18 +1065,21 @@ freq03<- jk2.table(datL = subSam, ID="id", imp = "imp", groups = "model", type =
 freq04<- jk2.table(datL = subSam, ID="id", imp = "imp", groups = c("model", "sex"),
          type = "jk2", group.differences.by = "sex", chiSquare = TRUE, wgt = "wgt",
          PSU = "jkzone", repInd = "jkrep", dependent = "traitLevel")
+res04 <- report(freq04, add = list(domain = "knowledge"))
 
 # now request differences for each trait level category
 freq05<- jk2.table(datL = subSam, ID="id", imp = "imp", groups = c("model", "sex"),
          type = "jk2", group.differences.by = "sex", chiSquare = FALSE, wgt = "wgt",
          PSU = "jkzone", repInd = "jkrep", dependent = "traitLevel")
+res05 <- report(freq05, add = list(domain = "knowledge"))
 
 # additionally: differ the sex-specific means in each country from the sex-specific means
 # in the whole population? Are the differences (male vs. female) in each country different
 # from the difference (male vs. female) in the whole population?
 freq06<- jk2.table(datL = subSam, ID="id", imp = "imp", groups = c("model", "sex"),
-         type = "jk2", group.differences.by = c("wholePop", "sex"), chiSquare = FALSE,
+         type = "jk2", group.differences.by = "sex", cross.differences = TRUE, chiSquare = FALSE,
          wgt = "wgt", PSU = "jkzone", repInd = "jkrep", dependent = "traitLevel")
+res06 <- report(freq06, add = list(domain = "knowledge"))
 
 # additionally: trend estimation for each country- and sex-specific mean, each country-
 # specific sex differences and each difference between country-specific sex difference
@@ -1075,19 +1090,21 @@ freq06<- jk2.table(datL = subSam, ID="id", imp = "imp", groups = c("model", "sex
 # (Due to unbalanced sample data, we switch to 'jk1' method for the remainder of 6c.)
 subS2 <- dTrend[which(dTrend[,"dimension"] == "knowledge"),]
 freq07<- jk2.table(datL = subS2, ID="id", imp = "imp", groups = c("model", "sex"),
-         type = "jk1", group.differences.by = c("wholePop", "sex"), chiSquare = FALSE,
-         wgt = "wgt", PSU = "idclass", trend = "trend",
-         linkErr = "trendErrorTraitLevel", dependent = "traitLevel")
+         type = "jk1", group.differences.by = "sex", cross.differences = TRUE, chiSquare = FALSE,
+         wgt = "wgt", PSU = "idclass", trend = "trend", linkErr = "trendErrorTraitLevel", dependent = "traitLevel")
+res07 <- report(freq07, add = list(domain = "knowledge"))
 
 # additionally: repeat this analysis for both domains, 'knowledge' and 'procedural',
 # using a 'by'-loop. Now we use the whole 'dTrend' data instead of subsamples
-freq08<- do.call("rbind", by ( data = dTrend, INDICES = dTrend[,"dimension"],
+freq08<- by ( data = dTrend, INDICES = as.character(dTrend[,"dimension"]),
          FUN = function ( subdat ) {
          f08 <- jk2.table(datL = subdat, ID="id", imp = "imp", groups = c("model", "sex"),
-                type = "jk1", group.differences.by = c("wholePop", "sex"), chiSquare = FALSE,
+                type = "jk1", group.differences.by = "sex", cross.differences = TRUE, chiSquare = FALSE,
                 wgt = "wgt", PSU = "idclass", trend = "trend",
                 linkErr = "trendErrorTraitLevel", dependent = "traitLevel")
-         return(f08)}))
+         return(f08)})
+res08 <- lapply(names(freq08), FUN = function (domain) { report(freq08[[domain]], add = list(domain = domain))})
+res08 <- do.call("rbind", res08)
 
 
 ################################################################################
@@ -1097,7 +1114,7 @@ freq08<- do.call("rbind", by ( data = dTrend, INDICES = dTrend[,"dimension"],
 # Example 6c needs the objects created in example 6a. Additionally, the merged
 # 'dTrend' frame created in Example 6a and augmented in 6b is necessary.
 
-# load the 'eatRep' package ... note: needs eatRep version 0.8.0 or higher
+# load the 'eatRep' package ... note: needs eatRep version 0.9.2 or higher
 library(eatRep)
 
 # regress procedural compentence on knowledge competence ... it's necessary to
@@ -1109,25 +1126,27 @@ datGlm<- reshape2::dcast(dTrend, value.var = "valueTransfBista",
 dat03 <- datGlm[which(datGlm[,"trend"] == "T1"),]
 m08   <- jk2.glm(datL = dat03, ID="id", imp="imp", wgt="wgt", PSU="jkzone",
          repInd = "jkrep", type = "jk2", formula = procedural~knowledge)
-res08 <- dG(m08)
+res08 <- report(m08)
 
 # compute regression with two regressors separately for each country
 m09   <- jk2.glm(datL = dat03, ID="id", imp="imp", wgt="wgt", PSU="jkzone",
          repInd = "jkrep", type = "jk2", groups = "model",
          formula = procedural~sex+knowledge)
-res09 <- dG(m09)
+res09 <- report(m09)
 
 # differ country-specific regression coefficients from the regression coefficents
 # in the whole population?
 m10   <- jk2.glm(datL = dat03, ID="id", imp="imp", wgt="wgt", PSU="jkzone",
-         repInd = "jkrep", type = "jk2", groups = "model",
-         group.differences.by.wholePop = TRUE, formula = procedural~sex+knowledge)
+         repInd = "jkrep", type = "jk2", groups = "model", group.splits = 0:1,
+         cross.differences = TRUE, formula = procedural~sex+knowledge)
+res10 <- report(m10)
 
 # differ country-specific regression coefficients from the regression coefficents
 # in the whole population? Are these differences different for 2003 vs. 2013?
 m11   <- jk2.glm(datL = datGlm, ID="id", imp="imp", wgt="wgt", PSU="jkzone",
-         repInd = "jkrep", type = "jk2", groups = "model", trend = "trend",
-         group.differences.by.wholePop = TRUE, formula = procedural~sex+knowledge)
+         repInd = "jkrep", type = "jk2", groups = "model", group.splits = 0:1,
+         cross.differences = TRUE, trend = "trend", formula = procedural~sex+knowledge)
+res11 <- report(m11, trendDiffs = TRUE)
 
 
 ################################################################################
