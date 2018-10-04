@@ -2070,7 +2070,7 @@ getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV, n
                    ret  <- rbind(ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = infit$itemfit[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = NA, par = "est",  derived.par = "infit", value = infit$itemfit[,"Infit"], stringsAsFactors = FALSE),
                                       data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = infit$itemfit[,"parameter"], var2 = NA , type = "fixed", indicator.group = "items", group = NA, par = "est",  derived.par = "outfit", value = infit$itemfit[,"Outfit"], stringsAsFactors = FALSE) )
                    ret[,"var1"]    <- as.character(ret[,"var1"])
-                   ret[,"toMerge"] <- halve.string(ret[,"var1"], ":", first=TRUE)[,1]
+                   ret[,"toMerge"] <- halveString(ret[,"var1"], ":", first=TRUE)[,1]
                    ret  <- merge(ret, qL[,c("item", "dimensionName")], by.x = "toMerge", by.y = "item", all.x = TRUE)
                    ret  <- ret[,-match(c("group", "toMerge"), colnames(ret))]
                    colnames(ret) <- recode(colnames(ret), "'dimensionName'='group'")
@@ -2082,7 +2082,7 @@ getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV, n
                    indD5<- data.frame ( from = indD5, to = paste(to1, to2, sep="_"), stringsAsFactors = FALSE)
                    recSt<- paste("'",indD5[,"from"] , "' = '" , indD5[,"to"],"'", collapse="; ",sep="")
                    indD <- grep(":DIF", ret[,"var1"])
-                   indD2<- halve.string(ret[indD,"var1"], pattern = ":DIF_", first=TRUE)
+                   indD2<- halveString(ret[indD,"var1"], pattern = ":DIF_", first=TRUE)
                    indD3<- removeNumeric(indD2[,2])
                    indD4<- removeNonNumeric(indD2[,2])
                    ret[indD,"var1"] <- paste("item_", indD2[,1], "_X_", paste(indD3, indD4, sep="_"), sep="")
@@ -2159,7 +2159,7 @@ getTamResults     <- function(runModelObj, omitFit, omitRegr, omitWle, omitPV, n
                  colnames(eaps)[cols] <- paste(colnames(eaps)[cols], ".Dim1", sep="")
               }
               eaps <- melt(eaps, id.vars = "pid", measure.vars = grep("EAP", colnames(eaps)), na.rm=TRUE)
-              eaps[,"group"] <- colnames(qMatrix)[as.numeric(removePattern ( string = halve.string(string = as.character(eaps[,"variable"]), pattern = "\\.", first = FALSE)[,"X2"], pattern = "Dim"))+1]
+              eaps[,"group"] <- colnames(qMatrix)[as.numeric(removePattern ( string = halveString(string = as.character(eaps[,"variable"]), pattern = "\\.", first = FALSE)[,"X2"], pattern = "Dim"))+1]
               eaps[,"par"]   <- "est"
               eaps[grep("^SD.",as.character(eaps[,"variable"])),"par"]   <- "se"
               ret  <- rbind ( ret, data.frame ( model = attr(runModelObj, "analysis.name"), source = "tam", var1 = eaps[,"pid"], var2 = NA , type = "indicator", indicator.group = "persons", group = eaps[,"group"], par = "eap", derived.par = eaps[,"par"], value = eaps[,"value"] , stringsAsFactors = FALSE))
@@ -3000,7 +3000,7 @@ userSpecifiedList <- function ( l, l.default ) {
 
 ### splits the string only on the first or the last occurrence of the separator
 ### uses no longer package "stringr"
-halve.string <- function (string, pattern, first = TRUE )  {
+halveString <- function (string, pattern, first = TRUE )  {
      allSplit<- strsplit(x = string, split = pattern)
      if(first==TRUE)  {
         ret <- as.matrix(data.frame(X1 = unlist(lapply(allSplit, FUN = function (l) { l[1]})),
