@@ -1,12 +1,12 @@
-\name{aggregate.data}
-\alias{aggregate.data}
+\name{aggregateData}
+\alias{aggregateData}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Aggregate variables to items and/or scales.}
 \description{This is the old version of \code{aggregateData} from the \code{eatPrep}
 package. The function actually is deprecated and might only be used if aggregation
 information from the IQB database is not available.}
 \usage{
-aggregate.data (all.daten,spalten, unexpected.pattern.as.na = TRUE, verboseAll = FALSE )
+aggregateData (all.daten,spalten, unexpected.pattern.as.na = TRUE, verboseAll = FALSE )
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -46,7 +46,7 @@ dat <- data.frame ( id = paste0("P", 11:50),
        matrix(data = sample(x=0:1, size = 400, replace = TRUE),nrow=40, ncol = 10))
 ### aggregate Item 0+1+2 and 4+5 and 8+9: define sequential letter
 colnames(dat)[-1] <- c("I1a", "I1b", "I1c", "I2a", "I3a", "I3b", "I4a", "I5a", "I6a", "I6b")
-agg <- aggregate.data(dat, -1)
+agg <- aggregateData(dat, -1)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

@@ -26,7 +26,7 @@ Name or column number of the variable identifier.
 %%     ~~Describe \code{file} here~~
 Name or column number of the rater identifier variable.
 }
-  \item{varCol}{
+  \item{valueCol}{
 %%     ~~Describe \code{file} here~~
 Name or column number of the value variable.
 }

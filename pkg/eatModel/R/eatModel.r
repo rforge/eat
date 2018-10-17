@@ -151,7 +151,7 @@ make.pseudo <- function(datLong, idCol, varCol, codCol, valueCol, n.pseudo, rand
                return(datWeg)}
 
 ### function by Alexander Robitzsch calculates mean agreement among raters
-mean.agree <- function( dat , tolerance = 0 , weight.mean = TRUE ){
+meanAgree <- function( dat , tolerance = 0 , weight.mean = TRUE ){
     # INPUT:
     # dat       ... dataframe
     # tolerance ... see function agree
@@ -174,7 +174,7 @@ mean.agree <- function( dat , tolerance = 0 , weight.mean = TRUE ){
     list( "agree.pairwise" = dfr , "meanagree" = meanagree )   }
 
 ### function by Alexander Robitzsch calculates mean Cohen's kappa among raters
-mean.kappa <- function( dat , weight = "unweighted" , weight.mean = TRUE ){
+meanKappa <- function( dat , weight = "unweighted" , weight.mean = TRUE ){
     # INPUT:
     # dat       ... dataframe
     # weight    ... see function kappa2 in irr
@@ -196,7 +196,7 @@ mean.kappa <- function( dat , weight = "unweighted" , weight.mean = TRUE ){
     meankappa <- ifelse( weight == TRUE , weighted.mean( dfr$kappa , dfr$N ) , mean( dfr$kappa , na.rm = TRUE) )
     list( "agree.pairwise" = dfr , "meankappa" = meankappa )     }
 
-aggregate.data <- function(all.daten,spalten, unexpected.pattern.as.na = TRUE, verboseAll = FALSE ) {
+aggregateData <- function(all.daten,spalten, unexpected.pattern.as.na = TRUE, verboseAll = FALSE ) {
                    if(missing(spalten)) {spalten <- colnames(all.daten)} else {spalten <- colnames(all.daten[,spalten,drop=FALSE])}
                    noAgg <- setdiff(colnames(all.daten), spalten)
                    daten <- all.daten[,spalten, drop=FALSE]

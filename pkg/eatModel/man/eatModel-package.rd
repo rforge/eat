@@ -86,8 +86,8 @@
 \tabular{ll}{
 Package: \tab eatModel\cr
 Type: \tab Package\cr
-Version: \tab 0.6.21\cr
-Date: \tab 2018-10-04\cr
+Version: \tab 0.6.22\cr
+Date: \tab 2018-10-11\cr
 License: \tab GPL(>=2)
 }
 }
@@ -103,7 +103,7 @@ A Generalized Form of the Rasch Model. In M. Von Davier & C. H. Carstensen (Eds.
 \emph{Multivariate and Mixture Distribution Rasch Models} (pp. 57-75). New York: Springer.
 
 Robitzsch, A., Kiefer, T., & Wu, M. (2018). TAM: Test analysis modules. R package version
-2.10-24. https://CRAN.R-project.org/package=TAM
+2.13-15. https://CRAN.R-project.org/package=TAM
 
 Wu, M.L., Adams, R.J., Wilson, M.R., & Haldane, S.A. (2007). \emph{ACER ConQuest
 Version 2.0. Generalised Item Response Modeling Software.} Camberwell, Victoria: ACER Press.
