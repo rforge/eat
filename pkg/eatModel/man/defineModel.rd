@@ -301,7 +301,10 @@ with width 2 in ConQuest.
   \item{allowAllScoresEverywhere}{
 %%     ~~Describe \code{dif.term} here~~
 Applies only if \code{software = "Conquest"}. Defines score statement generation 
-in multidimensional polytomous models. 
+in multidimensional polytomous models. Consider two dimensions, `reading' and `listening'.
+In `reading', values 0, 1, 2, 3 occur. In `listening', values 1, 2, 3, 4 occur. If \code{TRUE},
+values 0, 1, 2, 3, 4 are defined for both dimensions. Otherwise, values 0, 1, 2, 3
+are defined for `reading', values 1, 2, 3, 4 are defined for `listening'.
 }
   \item{guessMat}{
 %%     ~~Describe \code{dif.term} here~~
